@@ -7,14 +7,16 @@ shape, error `source.pointer` syntax, and reserved link names. `jsonapi-java-ann
 metadata-only domain-mapping annotations. `jsonapi-java-jackson3` owns the Jackson 3 document
 writer/reader, domain-to-resource mapping, compound inclusion, sparse fieldsets, flat DTO binding,
 typed domain envelopes, and presence-aware PATCH binding (low-level commands and direct typed PATCH
-DTOs). `jsonapi-java-jackson-api` owns
+DTOs). `jsonapi-java-jackson2` owns the Jackson 2 validated document writer with the same
+validate-before-emit and provenance-composition semantics; its remaining capabilities follow in
+later parity stories. `jsonapi-java-jackson-api` owns
 Jackson-major-neutral policy, diagnostics, contexts, envelope values, and presence-aware update
 contracts. How those modules fit together is in [`docs/architecture.md`](architecture.md). Writer output is cross-checked against pinned JSON:API 1.1 draft schemas as supplemental
 evidence only. The version-neutral document corpus, closed negative corpus, and dual-success
 ambiguous primary-data cases in the Jackson API test-fixtures corpus (`jsonapi/corpus/1.1/`) are
 shared wire resources for every Jackson major. Capability, schema, and context selections belong
-to each adapter's local specifications. Jackson 2 presence-aware PATCH binding, query parsing, and
-Spring adapters remain deferred.
+to each adapter's local specifications. Jackson 2 document reading, domain mapping, PATCH binding,
+presence-aware PATCH binding, query parsing, and Spring adapters remain deferred.
 
 ## Document structure (supported)
 
@@ -110,9 +112,9 @@ Spring adapters remain deferred.
 
 | Rule                                             | Status    | Notes                                                                                                 |
 |--------------------------------------------------|-----------|-------------------------------------------------------------------------------------------------------|
-| JSON serialization                               | supported | `jsonapi-java-jackson3` validate-then-write                                                           |
+| JSON serialization                               | supported | `jsonapi-java-jackson3` and `jsonapi-java-jackson2` validate-then-write                                                                                               |
 | Canonical member ordering                        | supported | Standard members in model accessor order; additional members insertion order; `hreflang` always array |
-| Golden fixture write comparisons                 | supported | Jackson 3 adapter-owned writer checks cover direct core models, canonical corpus round trips, sink parity, and exact UTF-8; paths and resources remain in Jackson API test fixtures |
+| Golden fixture write comparisons                 | supported | Adapter-owned writer checks cover direct core models, provenance composition, sink parity, and exact UTF-8 (Jackson 3 also canonical corpus round trips); paths and resources remain in Jackson API test fixtures |
 | JSON deserialization                             | supported | Token-driven decode via public core constructors; explicit `PrimaryDataKind`                          |
 | Malformed input diagnostics with source location | supported | `JsonApiDocumentReadException` with category, pointer, and safe location                              |
 | Shared read-only negative corpus                 | supported | Closed read-only `negative/` corpus; each adapter names its fixture files directly with version-neutral expectations |
