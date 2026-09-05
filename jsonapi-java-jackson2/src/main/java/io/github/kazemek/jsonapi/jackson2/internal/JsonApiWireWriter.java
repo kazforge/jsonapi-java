@@ -401,6 +401,11 @@ final class JsonApiWireWriter {
   }
 
   private static void writeNumber(Number number, JsonGenerator gen) throws IOException {
+    if (number instanceof Byte || number instanceof Short) {
+      // Jackson 2 has no byte/short generator overloads; widen through int.
+      gen.writeNumber(number.intValue());
+      return;
+    }
     switch (number) {
       case BigDecimal bigDecimal -> gen.writeNumber(bigDecimal);
       case BigInteger bigInteger -> gen.writeNumber(bigInteger);
@@ -408,8 +413,6 @@ final class JsonApiWireWriter {
       case Float f -> gen.writeNumber(f);
       case Long l -> gen.writeNumber(l);
       case Integer i -> gen.writeNumber(i);
-      case Short s -> gen.writeNumber(s.intValue());
-      case Byte b -> gen.writeNumber(b.intValue());
       default -> gen.writeNumber(number.toString());
     }
   }

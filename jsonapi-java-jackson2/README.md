@@ -25,7 +25,9 @@ implementation.
 ## Minimal usage
 
 ```java
-com.fasterxml.jackson.databind.json.JsonMapper callerMapper = JsonMapper.builder().build();
+import com.fasterxml.jackson.databind.json.JsonMapper;
+
+JsonMapper callerMapper = JsonMapper.builder().build();
 
 JsonApiDocumentWriter writer = JsonApiJackson2.writer(callerMapper);
 String json = writer.writeValueAsString(document);

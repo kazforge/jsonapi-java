@@ -180,17 +180,45 @@ public final class JsonApiDocumentWriter {
    */
   private JsonApiDocument validatedDocument(MappedDocument mapped) {
     Objects.requireNonNull(mapped, MAPPED_PARAM);
-    Set<ResourceIdentity> mappedExemptions = mapped.sparseFieldsetLinkageExemptions();
-    ValidationContext effective =
-        mappedExemptions.isEmpty() ? context : mergedContext(mappedExemptions);
-    validator.validate(mapped.document(), effective);
+    validator.validate(
+        mapped.document(), effectiveContext(mapped.sparseFieldsetLinkageExemptions()));
     return mapped.document();
   }
 
-  private ValidationContext mergedContext(Set<ResourceIdentity> mappedExemptions) {
-    Set<ResourceIdentity> exemptions = new HashSet<>(context.sparseFieldsetLinkageExemptions());
+  private ValidationContext effectiveContext(Set<ResourceIdentity> mappedExemptions) {
+    if (mappedExemptions.isEmpty()) {
+      return context;
+    }
+    Set<ResourceIdentity> exemptions = new HashSet<>();
+    exemptions.addAll(context.sparseFieldsetLinkageExemptions());
     exemptions.addAll(mappedExemptions);
     return context.withSparseFieldsetLinkageExemptions(exemptions);
+  }
+
+  /** Caller-owned sink that swallows generator close so the underlying stream stays open. */
+  private static final class NonClosingOutputStream extends FilterOutputStream {
+
+    private NonClosingOutputStream(OutputStream delegate) {
+      super(delegate);
+    }
+
+    @Override
+    public void close() {
+      // Caller owns the underlying stream.
+    }
+  }
+
+  /** Caller-owned sink that swallows generator close so the underlying writer stays open. */
+  private static final class NonClosingWriter extends FilterWriter {
+
+    private NonClosingWriter(Writer delegate) {
+      super(delegate);
+    }
+
+    @Override
+    public void close() {
+      // Caller owns the underlying writer.
+    }
   }
 
   /**
@@ -198,12 +226,7 @@ public final class JsonApiDocumentWriter {
    * reader's non-closing input handling: the caller owns the underlying sink.
    */
   private static OutputStream nonClosing(OutputStream delegate) {
-    return new FilterOutputStream(delegate) {
-      @Override
-      public void close() {
-        // Caller owns the underlying stream.
-      }
-    };
+    return new NonClosingOutputStream(delegate);
   }
 
   /**
@@ -211,11 +234,6 @@ public final class JsonApiDocumentWriter {
    * reader's non-closing input handling: the caller owns the underlying sink.
    */
   private static Writer nonClosing(Writer delegate) {
-    return new FilterWriter(delegate) {
-      @Override
-      public void close() {
-        // Caller owns the underlying writer.
-      }
-    };
+    return new NonClosingWriter(delegate);
   }
 }

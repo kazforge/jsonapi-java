@@ -121,6 +121,8 @@ class JsonApiWireWriterSpec extends Specification {
     !tree.get('data').get('attributes').get('listValue').get(2).get('deep').booleanValue()
     tree.get('data').get('attributes').get('@attribute-note').asText() == 'attribute'
     tree.get('data').get('relationships').get('author').get('data').get('id').asText() == 'p1'
+    tree.get('data').get('relationships').get('author').get('data').get('meta').get('identifierNote').asText() == 'identifier'
+    tree.get('data').get('relationships').get('author').get('data').get('@identifier-note').asText() == 'identifier'
     tree.get('data').get('relationships').get('author').get('links').get('self').get('href').asText() == objectLink.href()
     tree.get('data').get('relationships').get('author').get('meta').get('relationshipNote').asText() == 'relationship'
     tree.get('data').get('links').get('self').get('hreflang').size() == 2
@@ -182,15 +184,16 @@ class JsonApiWireWriterSpec extends Specification {
 
   def "writes every document data variant"() {
     expect:
-    readTree(writeDirect { JsonGenerator generator ->
-      JsonApiWireWriter.writeDocumentData(data, generator)
-    }).toString() == expected
+    readTree(writeDirect { JsonGenerator generator -> JsonApiWireWriter.writeDocumentData(data, generator) }).toString() == expected
 
     where:
     data                                                               | expected
     null                                                               | 'null'
     DocumentData.NullData.INSTANCE                                    | 'null'
     new DocumentData.SingleIdentifier(ResourceIdentifier.of('people', 'p1')) | '{"type":"people","id":"p1"}'
+    new DocumentData.SingleIdentifier(new ResourceIdentifier(
+        'people', 'p2', null, Meta.of([identifierNote: 'note']), ['@identifier-note': 'note'])
+        ) | '{"type":"people","id":"p2","meta":{"identifierNote":"note"},"@identifier-note":"note"}'
     new DocumentData.IdentifierCollection([
       ResourceIdentifier.withLid('people', 'local-p1')
     ]) | '[{"type":"people","lid":"local-p1"}]'
@@ -201,9 +204,7 @@ class JsonApiWireWriterSpec extends Specification {
 
   def "writes every relationship data variant"() {
     expect:
-    readTree(writeDirect { JsonGenerator generator ->
-      JsonApiWireWriter.writeRelationshipData(data, generator)
-    }).toString() == expected
+    readTree(writeDirect { JsonGenerator generator -> JsonApiWireWriter.writeRelationshipData(data, generator) }).toString() == expected
 
     where:
     data                                                                   | expected
