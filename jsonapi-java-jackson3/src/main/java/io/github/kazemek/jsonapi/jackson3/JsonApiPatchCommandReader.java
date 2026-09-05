@@ -34,9 +34,10 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Close/ownership rules match {@link JsonApiDocumentReader}: convenience overloads close parsers
  * they create; caller-owned streams and parsers stay open. Construct via {@link
- * JsonApiJackson3#patchReader(JsonMapper)} or its overloads. Safe for concurrent use once created.
+ * JsonApiJackson3#patchCommandReader(JsonMapper)} or its overloads. Safe for concurrent use once
+ * created.
  */
-public final class JsonApiPatchReader {
+public final class JsonApiPatchCommandReader {
 
   private static final String RESOURCE_TYPE = "resourceType";
 
@@ -44,7 +45,7 @@ public final class JsonApiPatchReader {
   private final JsonMapper binderMapper;
   private final DomainPatchBinder binder;
 
-  JsonApiPatchReader(
+  JsonApiPatchCommandReader(
       JsonMapper base,
       ValidationContext validationContext,
       IdentifierConverter identifierConverter,

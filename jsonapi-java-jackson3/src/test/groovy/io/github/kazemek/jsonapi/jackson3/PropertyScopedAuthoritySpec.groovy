@@ -247,7 +247,7 @@ class PropertyScopedAuthoritySpec extends Specification {
 
   def "low-level PATCH applies the property deserializer after identifier parsing"() {
     given:
-    def reader = JsonApiJackson3.patchReader(
+    def reader = JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(),
         ValidationContext.defaults(),
         identifierConverter())
@@ -266,7 +266,7 @@ class PropertyScopedAuthoritySpec extends Specification {
     def mapper = JsonMapper.builder()
         .enable(SerializationFeature.WRAP_ROOT_VALUE)
         .build()
-    def reader = JsonApiJackson3.patchReader(mapper, ValidationContext.defaults(), identifierConverter())
+    def reader = JsonApiJackson3.patchCommandReader(mapper, ValidationContext.defaults(), identifierConverter())
 
     when:
     def command = reader.readValue(
@@ -304,7 +304,7 @@ class PropertyScopedAuthoritySpec extends Specification {
     def mapper = JsonMapper.builder()
         .addMixIn(MixinIdArticle, IdDeserializerMixIn)
         .build()
-    def reader = JsonApiJackson3.patchReader(
+    def reader = JsonApiJackson3.patchCommandReader(
         mapper, ValidationContext.defaults(), identifierConverter())
 
     when:
@@ -317,7 +317,7 @@ class PropertyScopedAuthoritySpec extends Specification {
 
   def "low-level PATCH normalizes identifier converter mapping exceptions"() {
     given:
-    def reader = JsonApiJackson3.patchReader(
+    def reader = JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(), ValidationContext.defaults(), mappingThrowingConverter())
 
     when:

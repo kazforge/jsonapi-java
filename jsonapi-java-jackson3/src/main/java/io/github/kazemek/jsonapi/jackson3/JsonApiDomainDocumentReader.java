@@ -49,8 +49,11 @@ import tools.jackson.databind.json.JsonMapper;
  * injected.
  *
  * <p>Construct instances via {@link JsonApiJackson3#domainDocumentReader(JsonMapper,
- * DocumentReadContext, ResourceTypeRegistry)} or its overloads, never directly. The reader is safe
- * for concurrent use once created.
+ * DocumentReadContext, ResourceTypeRegistry)} or its overloads, never directly. Construction
+ * re-resolves every registered target against the reader's configured resource metadata and rejects
+ * keys that disagree with {@link MappingDiagnostic#RESOURCE_TYPE_MISMATCH} without a document
+ * location; missing or invalid consumer metadata keeps its existing resolver diagnostic. The reader
+ * is safe for concurrent use once created.
  */
 public final class JsonApiDomainDocumentReader {
 
@@ -69,13 +72,31 @@ public final class JsonApiDomainDocumentReader {
     this.documentReader = new JsonApiDocumentReader(base, context);
     this.registry = Objects.requireNonNull(registry, "registry");
     this.binderMapper = base.rebuild().addModule(new MetaBindingModule()).build();
+    MappingDefinitionCache metadataAuthority = new MappingDefinitionCache(binderMapper);
+    requireRegistryCoherence(this.registry, metadataAuthority);
     this.binder =
         new DomainResourceBinder(
-            binderMapper,
-            identifierConverter,
-            new MappingDefinitionCache(binderMapper),
-            linkageMappers);
+            binderMapper, identifierConverter, metadataAuthority, linkageMappers);
     this.metaConverter = new BinderMetaConverter(binderMapper);
+  }
+
+  private static void requireRegistryCoherence(
+      ResourceTypeRegistry registry, MappingDefinitionCache metadataAuthority) {
+    for (ResourceTypeRegistry.RegisteredType registered : registry.registrations()) {
+      String configuredType = metadataAuthority.requireResourceTypeName(registered.rawClass());
+      if (!configuredType.equals(registered.type())) {
+        throw JsonApiMappingException.withoutLocation(
+            MappingDiagnostic.RESOURCE_TYPE_MISMATCH,
+            registered.rawClass(),
+            "Registered JSON:API type '"
+                + registered.type()
+                + "' for "
+                + registered.rawClass().getName()
+                + " does not match configured resource type '"
+                + configuredType
+                + "'");
+      }
+    }
   }
 
   /** Decodes, validates, and binds the JSON:API document in the given string. */

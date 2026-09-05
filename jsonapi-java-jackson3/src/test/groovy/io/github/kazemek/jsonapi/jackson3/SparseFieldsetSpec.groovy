@@ -85,12 +85,12 @@ class SparseFieldsetSpec extends Specification {
   }
 
   @Unroll
-  def "toMappedResourceCollection applies #description"() {
+  def "toMappedCollectionDocument applies #description"() {
     given:
     def selection = selectionFor(fieldsets)
 
     when:
-    def mapped = mapper.toMappedResourceCollection(
+    def mapped = mapper.toMappedCollectionDocument(
         List.of(article()), null, selection, RepresentationPolicy.defaults())
 
     then:
@@ -290,7 +290,7 @@ class SparseFieldsetSpec extends Specification {
     def selection = selectionFor(["articles": ["title"]])
 
     when:
-    mapper.toResourceCollection(
+    mapper.toCollectionDocument(
         [article()], null, selection, RepresentationPolicy.defaults())
 
     then:

@@ -2,12 +2,14 @@
 
 **Status:** Accepted
 **Date:** 2026-09-04
+**Amended:** 2026-09-05 (Context list syncs the low-level PATCH capability name to
+`JsonApiPatchCommandReader`; no decision text changed)
 
 ## Context
 
 The public Jackson surface is capability-oriented: `JsonApiDocumentReader`,
 `JsonApiDocumentWriter`, `JsonApiResourceMapper`, `JsonApiResourceBinder`,
-`JsonApiDomainDocumentReader`, `JsonApiPatchReader`, and `JsonApiPatchDtoReader`.
+`JsonApiDomainDocumentReader`, `JsonApiPatchCommandReader`, and `JsonApiPatchDtoReader`.
 Those are useful advanced seams, but ordinary application code must understand and
 coordinate internal pipeline phases (map, decorate, validate, write; decode, validate,
 bind; select representation; supply validation context; project PATCH).

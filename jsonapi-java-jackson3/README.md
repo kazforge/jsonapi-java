@@ -105,7 +105,7 @@ JsonApiJackson3.resourceMapper(mapper, identifierConverter);
 JsonApiJackson3.resourceMapper(mapper, identifierConverter, decoratorRegistry);
 JsonApiJackson3.resourceBinder(mapper, identifierConverter, linkageMappers);
 JsonApiJackson3.domainDocumentReader(mapper, readContext, registry, identifierConverter, linkageMappers);
-JsonApiJackson3.patchReader(mapper, validationContext, identifierConverter, linkageMappers);
+JsonApiJackson3.patchCommandReader(mapper, validationContext, identifierConverter, linkageMappers);
 JsonApiJackson3.patchDtoReader(mapper, validationContext, identifierConverter, linkageMappers);
 ```
 
@@ -270,7 +270,7 @@ ResourceObject resource = mapper.toResource(someAnnotatedPojo);
 Collection primary data (also a `JsonApiDocument`; feed it to the same writer):
 
 ```java
-JsonApiDocument collDoc = mapper.toResourceCollection(allPojos);
+JsonApiDocument collDoc = mapper.toCollectionDocument(allPojos);
 ```
 
 Typed domain envelope (validated JSON:API JSON → flat DTOs; no `JsonApiDocument` in routine
@@ -298,10 +298,10 @@ Optional<Object> includedAuthor =
 Presence-aware PATCH (validated update document → immutable command of supplied changes only):
 
 ```java
-JsonApiPatchReader patchReader = JsonApiJackson3.patchReader(callerMapper);
+JsonApiPatchCommandReader commandReader = JsonApiJackson3.patchCommandReader(callerMapper);
 
 PatchCommand<FlatArticleDto> command =
-    patchReader.readValue(updateJson, FlatArticleDto.class);
+    commandReader.readValue(updateJson, FlatArticleDto.class);
 Object identity = command.identity();
 List<PatchChange> changes = command.changes();
 ```
@@ -334,7 +334,7 @@ into the application's declared DTO type, so applications can consume typed DTOs
 on `JsonApiDomainDocument` (the envelope stays available for document metadata, `included`, or
 explicit representation-state access).
 
-`patchReader` forces `DocumentUsage.UPDATE_REQUEST` and `PrimaryDataKind.RESOURCE` for validate-on-read,
+`patchCommandReader` forces `DocumentUsage.UPDATE_REQUEST` and `PrimaryDataKind.RESOURCE` for validate-on-read,
 binds only supplied mapped attributes and relationships into a `PatchCommand` (never a complete
 DTO), never reads `included`, and keeps binder failures as resource-relative `JsonApiMappingException`
 pointers. Pass optional `EndpointIdentity` on the factory `ValidationContext`. Applications own
@@ -451,7 +451,8 @@ Diagnostic locations for nested failures are engine-accumulated wire-name locati
 By default, `@JsonApiId` and `@JsonApiLocalId` values become the JSON:API `"id"` / `"lid"` strings
 via `Object.toString()`. One `IdentifierConverter` serves both identity roles: their Java scalar
 conversion is equivalent, only the wire member differs. Pass an
-`IdentifierConverter` to `resourceMapper`, `resourceBinder`, `patchReader`, or `patchDtoReader` only
+`IdentifierConverter` to `resourceMapper`, `resourceBinder`, `patchCommandReader`, or `patchDtoReader`
+only
 when you need a different wire form; read binding inverts it through `IdentifierConverter.parse(String)`.
 
 Mapped ordinary values use configured Jackson at the property boundary: resource attributes and
@@ -463,7 +464,8 @@ relationship linkage, and `PatchPresence` state; those adapter-owned states are 
 property serializer or deserializer. If no mapped property can be resolved, the adapter retains its
 ordinary type/module conversion fallback.
 
-`JsonApiJackson3.writer` / `resourceMapper` / `resourceBinder` / `patchReader` / `patchDtoReader`
+`JsonApiJackson3.writer` / `resourceMapper` / `resourceBinder` / `patchCommandReader` /
+`patchDtoReader`
 derive isolated mappers via `rebuild()`; `reader` uses the supplied mapper directly for token-driven
 decoding, and `domainDocumentReader` uses it for decoding while deriving its binder mapper. No
 construction path mutates the caller's mapper. Writers validate before emission. Readers decode
@@ -554,7 +556,10 @@ artifact; both majors share the neutral contracts of
 - **Typed domain envelope:** `JsonApiDomainDocumentReader` composes the document reader with the
   flat DTO binder. Primary and included resources bind only through the `ResourceTypeRegistry`
   (keyed by each registered raw class's configured class-level resource metadata; build it with
-  `ResourceTypeRegistry.builder(callerMapper)` so keys and binding agree on configured metadata);
+  `ResourceTypeRegistry.builder(callerMapper)` so keys and binding agree on configured metadata).
+  Reader construction re-resolves every registered key against its own configured metadata and
+  rejects disagreement with `RESOURCE_TYPE_MISMATCH` and no location; distinct mapper instances
+  with agreeing keys remain usable;
   unregistered types fail with `UNREGISTERED_RESOURCE_TYPE` at the document pointer
   (`/data`, `/data/n`, `/included/n`), duplicate type registrations fail at `build()` with
   `CONFLICTING_TYPE_REGISTRATION` and no location. Identifier primary data never binds; absent
@@ -590,8 +595,8 @@ artifact; both majors share the neutral contracts of
 - **Sparse fieldsets:** `RepresentationSelection.fieldsets()` + `FieldPolicy` select attributes and
   relationships by final JSON:API names (absent type key = unrestricted; present empty list selects
   no attributes/relationships, while non-field resource members such as mapped resource meta remain
-  independent). Applied only by `toMappedDocument` / `toMappedResourceCollection`; non-mapped
-  `toDocument` / `toResourceCollection` overloads reject a non-empty fieldset map with
+  independent). Applied only by `toMappedDocument` / `toMappedCollectionDocument`; non-mapped
+  `toDocument` / `toCollectionDocument` overloads reject a non-empty fieldset map with
   `FIELDSETS_REQUIRE_MAPPED_DOCUMENT`. Inclusion traversal may still follow fieldset-excluded
   relationships on validated include paths; the resulting `MappedDocument` carries sparse-fieldset
   linkage-exemption provenance — the identities of included resources whose linking relationship an
@@ -615,7 +620,8 @@ artifact; both majors share the neutral contracts of
 - **Mapping grammar:** JSON:API member-name validation delegates to
   `core.validation.MemberNames`. Do not import `core.internal`.
 - **Presence-aware PATCH:** This name is the omitted / explicit-null / present update contract
-  (ADR-012), not the typed nested-shape declaration in ADR-014. `JsonApiPatchReader` validates with
+  (ADR-012), not the typed nested-shape declaration in ADR-014. `JsonApiPatchCommandReader` validates
+  with
   forced `UPDATE_REQUEST` usage, then binds only supplied mapped attributes and relationships into
   a common `PatchCommand`. Never call `JsonApiResourceBinder` / whole-DTO construction, never read
   `included`, never prefix binder pointers with `/data`. Explicit attribute JSON `null` stores

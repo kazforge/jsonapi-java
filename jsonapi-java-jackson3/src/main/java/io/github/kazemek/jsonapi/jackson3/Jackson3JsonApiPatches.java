@@ -22,13 +22,15 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   private static final String DOCUMENT = "document";
 
   private final JsonMapper baseMapper;
-  private final JsonApiPatchReader patchReader;
+  private final JsonApiPatchCommandReader patchCommandReader;
   private final JsonApiPatchDtoReader patchDtoReader;
 
   Jackson3JsonApiPatches(
-      JsonMapper baseMapper, JsonApiPatchReader patchReader, JsonApiPatchDtoReader patchDtoReader) {
+      JsonMapper baseMapper,
+      JsonApiPatchCommandReader patchCommandReader,
+      JsonApiPatchDtoReader patchDtoReader) {
     this.baseMapper = Objects.requireNonNull(baseMapper, "baseMapper");
-    this.patchReader = Objects.requireNonNull(patchReader, "patchReader");
+    this.patchCommandReader = Objects.requireNonNull(patchCommandReader, "patchCommandReader");
     this.patchDtoReader = Objects.requireNonNull(patchDtoReader, "patchDtoReader");
   }
 
@@ -64,14 +66,14 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   public <T> PatchCommand<T> readCommand(String json, Class<T> resourceType) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
-    return patchReader.readValue(json, resourceType);
+    return patchCommandReader.readValue(json, resourceType);
   }
 
   @Override
   public <T> PatchCommand<T> readCommand(InputStream json, Class<T> resourceType) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
-    return patchReader.readValue(json, resourceType);
+    return patchCommandReader.readValue(json, resourceType);
   }
 
   @Override
@@ -79,7 +81,7 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   public PatchCommand<?> readCommand(String json, Type resourceType) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
-    return patchReader.readValue(json, baseMapper.constructType(resourceType));
+    return patchCommandReader.readValue(json, baseMapper.constructType(resourceType));
   }
 
   @Override
@@ -87,7 +89,7 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   public PatchCommand<?> readCommand(InputStream json, Type resourceType) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
-    return patchReader.readValue(json, baseMapper.constructType(resourceType));
+    return patchCommandReader.readValue(json, baseMapper.constructType(resourceType));
   }
 
   @Override
@@ -108,7 +110,7 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   public <T> PatchCommand<T> bindCommand(JsonApiDocument document, Class<T> resourceType) {
     Objects.requireNonNull(document, DOCUMENT);
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
-    return patchReader.fromDocument(document, resourceType);
+    return patchCommandReader.fromDocument(document, resourceType);
   }
 
   @Override
@@ -116,6 +118,6 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   public PatchCommand<?> bindCommand(JsonApiDocument document, Type resourceType) {
     Objects.requireNonNull(document, DOCUMENT);
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
-    return patchReader.fromDocument(document, baseMapper.constructType(resourceType));
+    return patchCommandReader.fromDocument(document, baseMapper.constructType(resourceType));
   }
 }
