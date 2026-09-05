@@ -9,6 +9,7 @@ nullaway = "0.14.1"
 errorprone-plugin = "5.1.1"
 nullaway-plugin = "3.2.0"
 archunit = "1.5.0"
+jackson2 = "2.22.2"
 jackson3 = "3.2.2"
 json-schema-validator = "3.0.7"
 
@@ -22,6 +23,7 @@ nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
 errorprone-plugin = { module = "net.ltgt.errorprone:net.ltgt.errorprone.gradle.plugin", version.ref = "errorprone-plugin" }
 nullaway-plugin = { module = "net.ltgt.nullaway:net.ltgt.nullaway.gradle.plugin", version.ref = "nullaway-plugin" }
 archunit = { module = "com.tngtech.archunit:archunit", version.ref = "archunit" }
+jackson2-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson2" }
 jackson3-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson3" }
 jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.22" }
 json-schema-validator = { module = "com.networknt:json-schema-validator", version.ref = "json-schema-validator" }
