@@ -182,7 +182,7 @@ class CompoundSerializationSpec extends Specification {
     def selection = selectionFor(["author"])
 
     when:
-    mapper.toResourceCollection(
+    mapper.toCollectionDocument(
         [article(), new Tag("java")], null, selection, includePolicy(IncludePolicy.allowAll()))
 
     then:
@@ -198,7 +198,7 @@ class CompoundSerializationSpec extends Specification {
         new Article("2", "C", "D", List.of(), ezra()))
 
     when:
-    def document = mapper.toResourceCollection(
+    def document = mapper.toCollectionDocument(
         resources, null, selectionFor(["author"]), includePolicy(IncludePolicy.allowAll()))
 
     then:
@@ -215,7 +215,7 @@ class CompoundSerializationSpec extends Specification {
     def policy = includePolicy(IncludePolicy.allowAll(), 0, 100)
 
     when:
-    mapper.toResourceCollection([], base.constructType(Article), null, selection, policy)
+    mapper.toCollectionDocument([], base.constructType(Article), null, selection, policy)
 
     then:
     def exception = thrown(JsonApiMappingException)
@@ -231,7 +231,7 @@ class CompoundSerializationSpec extends Specification {
     ]
 
     when:
-    def document = mapper.toResourceCollection(
+    def document = mapper.toCollectionDocument(
         resources,
         null,
         selectionFor(["author", "comments"]),

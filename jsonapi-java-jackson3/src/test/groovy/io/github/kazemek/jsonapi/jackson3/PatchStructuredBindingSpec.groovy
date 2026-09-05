@@ -108,7 +108,7 @@ class PatchStructuredBindingSpec extends Specification {
     def mapper = JsonMapper.builder()
         .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
         .build()
-    def reader = JsonApiJackson3.patchReader(mapper)
+    def reader = JsonApiJackson3.patchCommandReader(mapper)
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"address":{"street_name":"S"}}}}'
 
@@ -196,7 +196,7 @@ class PatchStructuredBindingSpec extends Specification {
     def mapper = JsonMapper.builder()
         .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
         .build()
-    def reader = JsonApiJackson3.patchReader(mapper)
+    def reader = JsonApiJackson3.patchCommandReader(mapper)
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"address":{"streetName":"S"}}}}'
 
@@ -213,7 +213,7 @@ class PatchStructuredBindingSpec extends Specification {
 
   def "nested property-level @JsonDeserialize is honored while the surrounding bean still recurses"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"address":{"street":"S","note":"n"}}}}'
 
@@ -233,7 +233,7 @@ class PatchStructuredBindingSpec extends Specification {
 
   def "nested property-level deserialization failure reports the nested wire pointer"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"address":{"street":"S","note":{"bad":"shape"}}}}}'
 
@@ -248,7 +248,7 @@ class PatchStructuredBindingSpec extends Specification {
 
   def "low-level nested array member is a single frozen atomic replacement"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"address":{"street":"S","initials":["A","B"]}}}}'
 
@@ -288,7 +288,7 @@ class PatchStructuredBindingSpec extends Specification {
 
   def "low-level nested generic JavaType is preserved through atomic conversion"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"box":{"numbers":["1","2"]}}}}'
 
@@ -339,7 +339,7 @@ class PatchStructuredBindingSpec extends Specification {
   def "typed and low-level paths express the same nested presence for the same request"() {
     given:
     def typedReader = JsonApiJackson3.patchDtoReader(JsonMapper.builder().build())
-    def lowLevelReader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def lowLevelReader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def partial = '{"data":{"type":"articles","id":"1","attributes":{"address":{"street":"New Street"}}}}'
     def withNull = '{"data":{"type":"articles","id":"1","attributes":{"address":{"street":"S","city":null}}}}'
     def empty = '{"data":{"type":"articles","id":"1","attributes":{"address":{}}}}'
@@ -403,7 +403,7 @@ class PatchStructuredBindingSpec extends Specification {
 
   def "low-level bean-valued setter @JsonDeserialize stays atomic and applies the deserializer"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"outer":{"details":{"name":"x"}}}}}'
 
@@ -423,7 +423,7 @@ class PatchStructuredBindingSpec extends Specification {
 
   def "low-level bean-valued creator-parameter @JsonDeserialize stays atomic and applies the deserializer"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"outer":{"details":{"name":"x"}}}}}'
 
@@ -443,7 +443,7 @@ class PatchStructuredBindingSpec extends Specification {
 
   def "low-level bean-valued setter @JsonDeserialize(as=...) stays atomic rather than recursing"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"outer":{"profile":{"name":"N","email":"E"}}}}}'
 

@@ -71,9 +71,9 @@ class GenericDomainWriteSpec extends Specification {
     def policy = RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll())
 
     when:
-    def collection = mapper.toResourceCollection([root], rootType, null)
-    def compound = mapper.toResourceCollection([root], rootType, null, selection, policy)
-    def mapped = mapper.toMappedResourceCollection([root], rootType, null, selection, policy)
+    def collection = mapper.toCollectionDocument([root], rootType, null)
+    def compound = mapper.toCollectionDocument([root], rootType, null, selection, policy)
+    def mapped = mapper.toMappedCollectionDocument([root], rootType, null, selection, policy)
 
     then:
     ((DocumentData.ResourceCollection) collection.data()).resources()[0].id() == "r1"
@@ -92,7 +92,7 @@ class GenericDomainWriteSpec extends Specification {
     ]
 
     when:
-    def document = mapper.toResourceCollection(resources, resourceType, null)
+    def document = mapper.toCollectionDocument(resources, resourceType, null)
 
     then:
     ((DocumentData.ResourceCollection) document.data()).resources()*.type() ==
@@ -111,7 +111,7 @@ class GenericDomainWriteSpec extends Specification {
     def policy = RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll())
 
     when:
-    mapper.toResourceCollection([], rootType, null, selection, policy)
+    mapper.toCollectionDocument([], rootType, null, selection, policy)
 
     then:
     def ex = thrown(JsonApiMappingException)
@@ -127,7 +127,7 @@ class GenericDomainWriteSpec extends Specification {
     def policy = RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.denyAll())
 
     when:
-    mapper.toResourceCollection([], rootType, null, selection, policy)
+    mapper.toCollectionDocument([], rootType, null, selection, policy)
 
     then:
     def ex = thrown(JsonApiMappingException)

@@ -81,7 +81,7 @@ RepresentationSelection selection =
     RepresentationSelection.builder().include(IncludePath.of("comments.author")).build();
 RepresentationPolicy policy =
     RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll());
-PatchCommand<ArticleDto> command = /* from JsonApiJackson3.patchReader(...).readValue(...) */;
+PatchCommand<ArticleDto> command = /* from JsonApiJackson3.patchCommandReader(...).readValue(...) */;
 PatchPresence<String> title = /* from an ArticlePatchDto member after patchDtoReader binding */;
 ```
 

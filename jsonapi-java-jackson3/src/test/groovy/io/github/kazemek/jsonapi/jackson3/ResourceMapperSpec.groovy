@@ -187,14 +187,14 @@ class ResourceMapperSpec extends Specification {
   @Unroll
   def "maps #id to resource collection"() {
     when:
-    def actual = mapper.toResourceCollection(input)
+    def actual = mapper.toCollectionDocument(input)
 
     then:
     actual == expected
 
     where:
     id | input | expected
-    "toResourceCollection wraps in resource-collection document" | List.of(new Article("1", "One", "B1", List.of(), null), new Article("2", "Two", "B2", List.of(), null)) | new JsonApiDocument(new DocumentData.ResourceCollection(List.of(articleResource("1", "One", "B1", List.of(), null), articleResource("2", "Two", "B2", List.of(), null))), null, null, null, null, null, Map.of())
+    "toCollectionDocument wraps in resource-collection document" | List.of(new Article("1", "One", "B1", List.of(), null), new Article("2", "Two", "B2", List.of(), null)) | new JsonApiDocument(new DocumentData.ResourceCollection(List.of(articleResource("1", "One", "B1", List.of(), null), articleResource("2", "Two", "B2", List.of(), null))), null, null, null, null, null, Map.of())
   }
 
   @Unroll

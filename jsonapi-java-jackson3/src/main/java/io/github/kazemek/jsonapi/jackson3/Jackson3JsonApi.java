@@ -64,8 +64,8 @@ public final class Jackson3JsonApi implements JsonApi {
         new JsonApiDocumentWriter(
             documentMapper,
             ValidationContext.defaults().withDocumentUsage(DocumentUsage.CREATE_REQUEST));
-    JsonApiPatchReader patchReader =
-        JsonApiJackson3.patchReader(
+    JsonApiPatchCommandReader patchCommandReader =
+        JsonApiJackson3.patchCommandReader(
             baseMapper, ValidationContext.defaults(), identifierConverter, linkageMappers);
     JsonApiPatchDtoReader patchDtoReader =
         JsonApiJackson3.patchDtoReader(
@@ -81,7 +81,7 @@ public final class Jackson3JsonApi implements JsonApi {
             createWriter);
     this.relationships = new Jackson3JsonApiRelationships(identifierReader, responseWriter);
     this.documents = new Jackson3JsonApiDocuments(baseMapper, responseWriter);
-    this.patches = new Jackson3JsonApiPatches(baseMapper, patchReader, patchDtoReader);
+    this.patches = new Jackson3JsonApiPatches(baseMapper, patchCommandReader, patchDtoReader);
   }
 
   @Override

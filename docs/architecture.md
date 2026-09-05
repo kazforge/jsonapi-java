@@ -108,7 +108,7 @@ that boundary.
 Public Jackson 3 entry points are created from `JsonApiJackson3`. Codec paths are
 `JsonApiDocumentReader` / `JsonApiDocumentWriter`. Mapping paths are `JsonApiResourceMapper`
 (write), `JsonApiResourceBinder` (flat read), `JsonApiDomainDocumentReader` (typed envelope),
-`JsonApiPatchReader`, and `JsonApiPatchDtoReader`.
+`JsonApiPatchCommandReader`, and `JsonApiPatchDtoReader`.
 
 ## Level-1 application contract
 
@@ -149,7 +149,7 @@ JSON:API representation and configured Jackson are both authoritative, in differ
 | Property discovery, visibility, mix-ins, creators, serializers/deserializers, and external JSON:API member names | Configured Jackson |
 | Ordinary attribute and resource/relationship-meta property serialization and deserialization; `RelationshipLinkage` identifier-meta conversion | Configured Jackson at the mapped property / wrapper meta `JavaType` |
 | Bean construction, creators, naming, visibility, modules | Configured Jackson |
-| `ResourceTypeRegistry` | Explicit wire-type → Java-target dispatch. It does not interpret annotations; registration keys come from the same configured-Jackson metadata authority. |
+| `ResourceTypeRegistry` | Explicit wire-type → Java-target dispatch. It does not interpret annotations; registration keys come from the same configured-Jackson metadata authority, and a consuming domain reader re-checks every key against its own configured metadata at construction. |
 | `ResourceDecorator` / `ResourceDecoration` / `RelationshipDecoration` | Application/runtime decoration that adds only `ResourceObject.links` and mapped `Relationship.links`. Keys are the mapped logical property name; configured Jackson still owns the final wire name. Decoration never replaces mapping semantics and never resurrects fieldset-omitted relationships. |
 
 `MappingDefinitionCache` is the Jackson 3 source of class-level resource metadata and of the two
@@ -172,7 +172,7 @@ Applications authorize and apply the result.
 
 ```mermaid
 flowchart TB
-  DOC["Validated update JsonApiDocument"] --> LOW["JsonApiPatchReader"]
+  DOC["Validated update JsonApiDocument"] --> LOW["JsonApiPatchCommandReader"]
   DOC --> TYPED["JsonApiPatchDtoReader"]
   LOW --> CMD["PatchCommand: identity plus supplied PatchChange list"]
   TYPED --> DTO["Annotated DTO: each patchable member is PatchPresence of T"]
@@ -233,7 +233,7 @@ or persistence behavior.
 
 ```mermaid
 flowchart LR
-  CTX["RepresentationSelection plus<br/>RepresentationPolicy"] --> MAP["toMappedDocument / toMappedResourceCollection"]
+  CTX["RepresentationSelection plus<br/>RepresentationPolicy"] --> MAP["toMappedDocument / toMappedCollectionDocument"]
   MAP --> MD["MappedDocument<br/>document plus exemption identities"]
   MD --> WRITER["JsonApiDocumentWriter"]
   WRITER --> COMPOSE["Compose exemptions into bound ValidationContext"]
@@ -241,7 +241,7 @@ flowchart LR
 ```
 
 - Fieldsets apply only on the `MappedDocument` mapping overloads. The unmapped `toDocument` /
-  `toResourceCollection` overloads reject a non-empty fieldset map.
+  `toCollectionDocument` overloads reject a non-empty fieldset map.
 - Exemptions name included resources whose inbound linkage an applied fieldset removed.
 - The writer composes those identities into its bound `ValidationContext` before validation.
   Callers do not translate mapping provenance into validation policy.

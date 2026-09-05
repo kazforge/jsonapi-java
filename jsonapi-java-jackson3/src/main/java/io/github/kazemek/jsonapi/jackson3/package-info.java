@@ -59,15 +59,16 @@
  * <p>Typed domain envelopes use {@link JsonApiJackson3#domainDocumentReader} with an explicit
  * {@link ResourceTypeRegistry}: a dispatch-only registry keyed by each registered target's
  * configured class-level resource metadata (build via {@link
- * ResourceTypeRegistry#builder(tools.jackson.databind.json.JsonMapper)}); a {@link
+ * ResourceTypeRegistry#builder(tools.jackson.databind.json.JsonMapper)}); reader construction
+ * re-resolves every key against its own configured metadata and rejects disagreement. A {@link
  * JsonApiDomainDocument} carries flat primary DTOs and independently bound {@code included} DTOs
  * (wire-ordered, dual id/lid identity lookup, never injected into relationships). Identifier
  * primary data stays as core {@link io.github.kazemek.jsonapi.core.model.ResourceIdentifier} values
  * and error documents never bind.
  *
- * <p>Presence-aware resource updates use {@link JsonApiJackson3#patchReader} to derive a {@link
- * JsonApiPatchReader} that applies validate-on-read with {@code DocumentUsage.UPDATE_REQUEST} and
- * binds only supplied mapped members into a common {@link
+ * <p>Presence-aware resource updates use {@link JsonApiJackson3#patchCommandReader} to derive a
+ * {@link JsonApiPatchCommandReader} that applies validate-on-read with {@code
+ * DocumentUsage.UPDATE_REQUEST} and binds only supplied mapped members into a common {@link
  * io.github.kazemek.jsonapi.jackson.patch.PatchCommand} without constructing a DTO or reading
  * {@code included}. Direct typed PATCH DTO binding uses {@link JsonApiJackson3#patchDtoReader} to
  * derive a {@link JsonApiPatchDtoReader} that binds the validated update directly into an

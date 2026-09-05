@@ -2,6 +2,8 @@
 
 **Status:** Accepted
 **Date:** 2026-08-24
+**Amended:** 2026-09-05 (registry coherence construction guarantee; decorator collaborator on the
+canonical resource-mapper seam)
 
 ## Context
 
@@ -32,11 +34,19 @@ For Jackson 3, the canonical public factory forms are:
 |---|---|
 | document writer | `ValidationContext` |
 | document reader | `DocumentReadContext` |
-| resource mapper | `IdentifierConverter` |
+| resource mapper | `IdentifierConverter`, `ResourceDecoratorRegistry` |
 | resource binder | `IdentifierConverter`, relationship linkage mappers |
 | typed domain document reader | `DocumentReadContext`, `ResourceTypeRegistry`, `IdentifierConverter`, relationship linkage mappers |
-| presence-aware PATCH reader | `ValidationContext`, `IdentifierConverter`, relationship linkage mappers |
+| presence-aware PATCH command reader | `ValidationContext`, `IdentifierConverter`, relationship linkage mappers |
 | typed PATCH DTO reader | `ValidationContext`, `IdentifierConverter`, relationship linkage mappers |
+
+`ResourceTypeRegistry` construction requires an explicit configured mapper; the no-argument
+default-mapper builder is not part of the API. A consuming typed domain document reader
+re-resolves every registered target against its own configured class-level resource metadata when
+the reader is constructed and rejects disagreement with `RESOURCE_TYPE_MISMATCH` (no document
+location). Registries built from distinct mapper instances remain usable together when their
+registered resource-type keys agree; only class-level resource metadata is checked eagerly, not
+full property mappings.
 
 The mapper is the caller's configured Jackson authority. Adapter factories do not mutate it. A
 capability may derive an isolated mapper internally when its implementation needs adapter modules or

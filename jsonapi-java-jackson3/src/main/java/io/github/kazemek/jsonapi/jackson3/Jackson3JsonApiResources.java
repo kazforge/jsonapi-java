@@ -311,7 +311,7 @@ final class Jackson3JsonApiResources implements JsonApiResources {
   }
 
   private MappedDocument mappedCollection(Iterable<?> resources, ResourceWriteOptions options) {
-    return resourceMapper.toMappedResourceCollection(
+    return resourceMapper.toMappedCollectionDocument(
         resources, options.envelope(), options.selection(), representationPolicy);
   }
 

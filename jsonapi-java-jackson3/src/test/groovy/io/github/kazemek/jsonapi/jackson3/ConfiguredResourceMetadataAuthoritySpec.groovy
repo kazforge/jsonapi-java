@@ -230,7 +230,7 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
 
   def "low-level PATCH recognizes the mix-in-declared resource type"() {
     given:
-    def reader = JsonApiJackson3.patchReader(mixinMapper())
+    def reader = JsonApiJackson3.patchCommandReader(mixinMapper())
 
     when:
     def command = reader.readValue(updateJson("mixin-patch-articles", "7", "New"), MixinPatchTarget)
@@ -411,5 +411,92 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
     def ex = thrown(JsonApiMappingException)
     ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_COLLECTION_TYPE
     ex.resourceClass() == MixinComment
+  }
+
+  // ---- 7. registry/reader coherence ----------------------------------------
+
+  def "domain reader rejects a registry key that disagrees with its configured metadata"() {
+    given:
+    def plainMapper = JsonMapper.builder().build()
+    def overrideMapper = JsonMapper.builder()
+        .addMixIn(DirectlyTypedArticle, OverridingTypeMixin)
+        .build()
+    def registry = ResourceTypeRegistry.builder(plainMapper)
+        .register(DirectlyTypedArticle)
+        .build()
+
+    when:
+    JsonApiJackson3.domainDocumentReader(
+        overrideMapper, DocumentReadContext.resourceDefaults(), registry)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.RESOURCE_TYPE_MISMATCH
+    ex.resourceClass() == DirectlyTypedArticle
+    ex.location() == null
+    ex.message.contains("direct-articles")
+    ex.message.contains("override-articles")
+  }
+
+  def "domain reader rejects the reverse configured disagreement eagerly"() {
+    given:
+    def plainMapper = JsonMapper.builder().build()
+    def overrideMapper = JsonMapper.builder()
+        .addMixIn(DirectlyTypedArticle, OverridingTypeMixin)
+        .build()
+    def registry = ResourceTypeRegistry.builder(overrideMapper)
+        .register(DirectlyTypedArticle)
+        .build()
+
+    when:
+    JsonApiJackson3.domainDocumentReader(
+        plainMapper, DocumentReadContext.resourceDefaults(), registry)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.RESOURCE_TYPE_MISMATCH
+    ex.resourceClass() == DirectlyTypedArticle
+    ex.location() == null
+  }
+
+  def "domain reader accepts distinct equivalent mappers and still binds"() {
+    given:
+    def registryMapper = JsonMapper.builder().build()
+    def readerMapper = JsonMapper.builder().build()
+    def registry = ResourceTypeRegistry.builder(registryMapper)
+        .register(MixinFlatArticleWithDirectType)
+        .build()
+    def reader = JsonApiJackson3.domainDocumentReader(
+        readerMapper, DocumentReadContext.resourceDefaults(), registry)
+
+    when:
+    def envelope = reader.readValue(
+        '{"data":{"type":"direct-flat-articles","id":"3","attributes":{"title":"Enveloped"}}}')
+
+    then:
+    ((DomainData.SingleResource) envelope.data()).resource() instanceof MixinFlatArticleWithDirectType
+  }
+
+  def "domain reader keeps the missing-metadata diagnostic for the consumer"() {
+    given:
+    def registry = ResourceTypeRegistry.builder(mixinMapper())
+        .register(MixinFlatArticle)
+        .build()
+
+    when:
+    JsonApiJackson3.domainDocumentReader(
+        JsonMapper.builder().build(), DocumentReadContext.resourceDefaults(), registry)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.MISSING_RESOURCE_ANNOTATION
+    ex.resourceClass() == MixinFlatArticle
+    ex.location() == null
+  }
+
+  @JsonApiResource(type = "direct-flat-articles")
+  static class MixinFlatArticleWithDirectType {
+    String id
+    @JsonApiAttribute String title
   }
 }

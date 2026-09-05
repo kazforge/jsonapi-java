@@ -54,7 +54,7 @@ import tools.jackson.databind.JavaType;
  * envelope argument.
  *
  * <p>Sparse fieldsets are applied only by {@link #toMappedDocument(Object, DocumentEnvelope,
- * RepresentationSelection, RepresentationPolicy)} and {@link #toMappedResourceCollection(Iterable,
+ * RepresentationSelection, RepresentationPolicy)} and {@link #toMappedCollectionDocument(Iterable,
  * DocumentEnvelope, RepresentationSelection, RepresentationPolicy)}. Those overloads return a
  * {@link MappedDocument} carrying the identities of included resources whose inbound linkage was
  * removed by an applied fieldset; a document writer composes that provenance into validation. The
@@ -219,29 +219,29 @@ public final class JsonApiResourceMapper {
     return new MappedDocument(document, includedResult.sparseFieldsetLinkageExemptions());
   }
 
-  public JsonApiDocument toResourceCollection(Iterable<?> resources) {
-    return toResourceCollection(resources, null);
+  public JsonApiDocument toCollectionDocument(Iterable<?> resources) {
+    return toCollectionDocument(resources, null);
   }
 
-  public JsonApiDocument toResourceCollection(
+  public JsonApiDocument toCollectionDocument(
       Iterable<?> resources, @Nullable DocumentEnvelope envelope) {
     Objects.requireNonNull(resources, RESOURCES);
     List<Object> snapshot = materialize(resources);
     List<JavaType> resourceTypes = inferredTypes(snapshot);
-    return toResourceCollection(snapshot, resourceTypes, envelope);
+    return toCollectionDocument(snapshot, resourceTypes, envelope);
   }
 
   /** Maps a homogeneous collection using a complete declared element type and optional envelope. */
-  public JsonApiDocument toResourceCollection(
+  public JsonApiDocument toCollectionDocument(
       Iterable<?> resources, JavaType resourceType, @Nullable DocumentEnvelope envelope) {
     Objects.requireNonNull(resources, RESOURCES);
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
     List<Object> snapshot = materialize(resources);
-    return toResourceCollection(
+    return toCollectionDocument(
         snapshot, effectiveTypes(snapshot, repeatedType(snapshot.size(), resourceType)), envelope);
   }
 
-  private JsonApiDocument toResourceCollection(
+  private JsonApiDocument toCollectionDocument(
       List<Object> snapshot, List<JavaType> resourceTypes, @Nullable DocumentEnvelope envelope) {
     List<ResourceObject> resourceObjects = new ArrayList<>(snapshot.size());
     for (int i = 0; i < snapshot.size(); i++) {
@@ -255,16 +255,16 @@ public final class JsonApiResourceMapper {
    * Maps a primary collection to a document with optional envelope members and explicit compound
    * inclusion from {@code selection} governed by {@code policy}. The iterable is materialized once
    * and reused for type validation, primary mapping, and inclusion traversal. Rejects a non-empty
-   * fieldset map; use {@link #toMappedResourceCollection} when applying sparse fieldsets.
+   * fieldset map; use {@link #toMappedCollectionDocument} when applying sparse fieldsets.
    */
-  public JsonApiDocument toResourceCollection(
+  public JsonApiDocument toCollectionDocument(
       Iterable<?> resources,
       @Nullable DocumentEnvelope envelope,
       RepresentationSelection selection,
       RepresentationPolicy policy) {
     Objects.requireNonNull(resources, RESOURCES);
     List<Object> snapshot = materialize(resources);
-    return toResourceCollection(
+    return toCollectionDocument(
         snapshot,
         inferredTypes(snapshot),
         envelope,
@@ -276,7 +276,7 @@ public final class JsonApiResourceMapper {
    * Maps a homogeneous collection with explicit compound inclusion using the complete declared
    * element type supplied by the caller.
    */
-  public JsonApiDocument toResourceCollection(
+  public JsonApiDocument toCollectionDocument(
       Iterable<?> resources,
       JavaType resourceType,
       @Nullable DocumentEnvelope envelope,
@@ -285,7 +285,7 @@ public final class JsonApiResourceMapper {
     Objects.requireNonNull(resources, RESOURCES);
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
     List<Object> snapshot = materialize(resources);
-    return toResourceCollection(
+    return toCollectionDocument(
         snapshot,
         effectiveTypes(snapshot, repeatedType(snapshot.size(), resourceType)),
         envelope,
@@ -293,7 +293,7 @@ public final class JsonApiResourceMapper {
         resourceType);
   }
 
-  private JsonApiDocument toResourceCollection(
+  private JsonApiDocument toCollectionDocument(
       List<Object> snapshot,
       List<JavaType> resourceTypes,
       @Nullable DocumentEnvelope envelope,
@@ -318,14 +318,14 @@ public final class JsonApiResourceMapper {
    * Returns a {@link MappedDocument} whose linkage exemptions fold fieldset-removed linking
    * relationships across primary and included selective writes.
    */
-  public MappedDocument toMappedResourceCollection(
+  public MappedDocument toMappedCollectionDocument(
       Iterable<?> resources,
       @Nullable DocumentEnvelope envelope,
       RepresentationSelection selection,
       RepresentationPolicy policy) {
     Objects.requireNonNull(resources, RESOURCES);
     List<Object> snapshot = materialize(resources);
-    return toMappedResourceCollection(
+    return toMappedCollectionDocument(
         snapshot,
         inferredTypes(snapshot),
         envelope,
@@ -337,7 +337,7 @@ public final class JsonApiResourceMapper {
    * Maps a homogeneous collection with inclusion and sparse fieldsets using a complete declared
    * type.
    */
-  public MappedDocument toMappedResourceCollection(
+  public MappedDocument toMappedCollectionDocument(
       Iterable<?> resources,
       JavaType resourceType,
       @Nullable DocumentEnvelope envelope,
@@ -346,7 +346,7 @@ public final class JsonApiResourceMapper {
     Objects.requireNonNull(resources, RESOURCES);
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
     List<Object> snapshot = materialize(resources);
-    return toMappedResourceCollection(
+    return toMappedCollectionDocument(
         snapshot,
         effectiveTypes(snapshot, repeatedType(snapshot.size(), resourceType)),
         envelope,
@@ -354,7 +354,7 @@ public final class JsonApiResourceMapper {
         resourceType);
   }
 
-  private MappedDocument toMappedResourceCollection(
+  private MappedDocument toMappedCollectionDocument(
       List<Object> snapshot,
       List<JavaType> resourceTypes,
       @Nullable DocumentEnvelope envelope,
@@ -385,7 +385,7 @@ public final class JsonApiResourceMapper {
       throw JsonApiMappingException.withoutLocation(
           MappingDiagnostic.FIELDSETS_REQUIRE_MAPPED_DOCUMENT,
           null,
-          "Non-empty fieldsets require toMappedDocument / toMappedResourceCollection; types: "
+          "Non-empty fieldsets require toMappedDocument / toMappedCollectionDocument; types: "
               + representation.selection().fieldsets().keySet());
     }
   }

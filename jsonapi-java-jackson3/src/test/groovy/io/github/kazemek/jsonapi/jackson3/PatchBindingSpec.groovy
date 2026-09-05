@@ -72,7 +72,7 @@ class PatchBindingSpec extends Specification {
   @Unroll
   def "binds patch #id into an explicit command"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json = TestFixtureResources.readCorpusUtf8("patch/${resource}.json")
 
     when:
@@ -132,7 +132,7 @@ class PatchBindingSpec extends Specification {
   @Unroll
   def "binds array-valued relationship patch #id explicitly"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json = TestFixtureResources.readCorpusUtf8("patch/${resource}.json")
 
     when:
@@ -160,7 +160,7 @@ class PatchBindingSpec extends Specification {
   @Unroll
   def "rejects patch #id with a mapping diagnostic"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json = TestFixtureResources.readCorpusUtf8("patch/${resource}.json")
 
     when:
@@ -193,7 +193,7 @@ class PatchBindingSpec extends Specification {
     def context = endpointIdentity == null
         ? ValidationContext.defaults()
         : ValidationContext.defaults().withExpectedEndpointIdentity(endpointIdentity)
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build(), context)
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build(), context)
     def json = TestFixtureResources.readCorpusUtf8("patch/${resource}.json")
 
     when:
@@ -213,7 +213,7 @@ class PatchBindingSpec extends Specification {
 
   def "custom deserializer applies to attribute change"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json = '{"data":{"type":"things","id":"1","attributes":{"title":"hello"}}}'
 
     when:
@@ -232,7 +232,7 @@ class PatchBindingSpec extends Specification {
       def identifier = ((RelationshipData.SingleLinkage) data).identifier()
       return new FlatAuthor(identifier.type(), identifier.id())
     } as RelationshipLinkageMapper
-    def reader = JsonApiJackson3.patchReader(
+    def reader = JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(),
         ValidationContext.defaults(),
         IdentifierConverter.defaults(),
@@ -252,7 +252,7 @@ class PatchBindingSpec extends Specification {
 
   def "explicit null on Optional attribute stores value == null"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json = '{"data":{"type":"articles","id":"1","attributes":{"title":null}}}'
 
     when:
@@ -266,7 +266,7 @@ class PatchBindingSpec extends Specification {
 
   def "fromDocument missing id"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def document = new JsonApiDocument(
         new DocumentData.SingleResource(ResourceObject.ofType("articles")),
         null, null, null, null, null, Map.of())
@@ -283,7 +283,7 @@ class PatchBindingSpec extends Specification {
   def "fromDocument JavaType returns PatchCommand wildcard with raw resourceType"() {
     given:
     def mapper = JsonMapper.builder().build()
-    def reader = JsonApiJackson3.patchReader(mapper)
+    def reader = JsonApiJackson3.patchCommandReader(mapper)
     def document = decodeUpdateDocument(
         '{"data":{"type":"articles","id":"1","attributes":{"title":"Hello"}}}')
     def javaType = mapper.constructType(FlatArticle)
@@ -302,7 +302,7 @@ class PatchBindingSpec extends Specification {
   def "generic attribute type resolves through the parameterized JavaType"() {
     given:
     def mapper = JsonMapper.builder().build()
-    def reader = JsonApiJackson3.patchReader(mapper)
+    def reader = JsonApiJackson3.patchCommandReader(mapper)
     def document = decodeUpdateDocument(
         '{"data":{"type":"things","id":"1","attributes":{"value":"42"}}}')
     def javaType = mapper.typeFactory.constructParametricType(GenericValue, Integer)
@@ -323,7 +323,7 @@ class PatchBindingSpec extends Specification {
     def mapper = JsonMapper.builder()
         .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
         .build()
-    def reader = JsonApiJackson3.patchReader(mapper)
+    def reader = JsonApiJackson3.patchCommandReader(mapper)
     def json = '{"data":{"type":"things","id":"1","attributes":{"count":null}}}'
 
     when:
@@ -339,12 +339,12 @@ class PatchBindingSpec extends Specification {
     given:
     def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"Hello"}}}'
     def mapper = JsonMapper.builder().build()
-    def mapperReader = JsonApiJackson3.patchReader(mapper)
+    def mapperReader = JsonApiJackson3.patchCommandReader(mapper)
     def javaType = JsonMapper.builder().build().constructType(FlatArticle)
 
     when:
     def fromMapper = mapperReader.readValue(json, FlatArticle)
-    def fromJavaType = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def fromJavaType = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
         .readValue(json, javaType)
 
     then:
@@ -369,7 +369,7 @@ class PatchBindingSpec extends Specification {
             return "parsed-" + wire
           }
         }
-    def reader = JsonApiJackson3.patchReader(
+    def reader = JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(), ValidationContext.defaults(), converter)
     def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'
 
@@ -382,7 +382,7 @@ class PatchBindingSpec extends Specification {
 
   def "fromDocument rejects null and non-single-resource primary data"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def metaOnly = new JsonApiDocument(
         null, null, Meta.of([note: "x"]), null, null, null, Map.of())
 
@@ -429,7 +429,7 @@ class PatchBindingSpec extends Specification {
 
   def "caller-owned stream and parser remain open on success and failure"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def mapper = JsonMapper.builder().build()
     def successBytes =
         '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'.bytes
@@ -470,7 +470,7 @@ class PatchBindingSpec extends Specification {
 
   def "duplicate mapping definitions fail before a command escapes"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'
 
     when:
@@ -482,7 +482,7 @@ class PatchBindingSpec extends Specification {
 
   def "typed identity is never listed among changes"() {
     given:
-    def reader = JsonApiJackson3.patchReader(JsonMapper.builder().build())
+    def reader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
     def json =
         '{"data":{"type":"articles","id":"1","attributes":{"title":"T"},"relationships":{"author":{"data":null}}}}'
 
@@ -497,7 +497,7 @@ class PatchBindingSpec extends Specification {
   def "byte array Class and JavaType entry points bind successfully"() {
     given:
     def mapper = JsonMapper.builder().build()
-    def reader = JsonApiJackson3.patchReader(mapper)
+    def reader = JsonApiJackson3.patchCommandReader(mapper)
     def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"Hello"}}}'.bytes
     def javaType = mapper.constructType(FlatArticle)
 
@@ -514,7 +514,7 @@ class PatchBindingSpec extends Specification {
   def "JavaType stream and parser entry points leave caller-owned sources open"() {
     given:
     def mapper = JsonMapper.builder().build()
-    def reader = JsonApiJackson3.patchReader(mapper)
+    def reader = JsonApiJackson3.patchCommandReader(mapper)
     def javaType = mapper.constructType(FlatArticle)
     def bytes = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'.bytes
     def stream = new CloseTrackingInputStream(new ByteArrayInputStream(bytes))
@@ -561,7 +561,7 @@ class PatchBindingSpec extends Specification {
     def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'
 
     when:
-    JsonApiJackson3.patchReader(
+    JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(), ValidationContext.defaults(), throwing)
         .readValue(json, FlatArticle)
 
@@ -570,7 +570,7 @@ class PatchBindingSpec extends Specification {
     throwingEx.diagnostic() == MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED
 
     when:
-    JsonApiJackson3.patchReader(
+    JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(), ValidationContext.defaults(), nullParse)
         .readValue(json, FlatArticle)
 
@@ -586,7 +586,7 @@ class PatchBindingSpec extends Specification {
       invoked = true
       return null
     } as RelationshipLinkageMapper
-    def reader = JsonApiJackson3.patchReader(
+    def reader = JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(),
         ValidationContext.defaults(),
         IdentifierConverter.defaults(),
@@ -608,7 +608,7 @@ class PatchBindingSpec extends Specification {
     def mapper = { RelationshipData data, JavaType target ->
       throw new IllegalStateException("boom")
     } as RelationshipLinkageMapper
-    def reader = JsonApiJackson3.patchReader(
+    def reader = JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(),
         ValidationContext.defaults(),
         IdentifierConverter.defaults(),
@@ -637,7 +637,7 @@ class PatchBindingSpec extends Specification {
       def identifier = ((RelationshipData.SingleLinkage) data).identifier()
       return new FlatAuthor(identifier.type(), identifier.id())
     } as RelationshipLinkageMapper
-    def reader = JsonApiJackson3.patchReader(
+    def reader = JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(),
         ValidationContext.defaults(),
         IdentifierConverter.defaults(),
@@ -668,7 +668,7 @@ class PatchBindingSpec extends Specification {
             return "b-" + wire
           }
         }
-    def reader = JsonApiJackson3.patchReader(
+    def reader = JsonApiJackson3.patchCommandReader(
         JsonMapper.builder().build(), ValidationContext.defaults(), converter)
     def json = '{"data":{"type":"articles","id":"9","attributes":{"title":"T"}}}'
 

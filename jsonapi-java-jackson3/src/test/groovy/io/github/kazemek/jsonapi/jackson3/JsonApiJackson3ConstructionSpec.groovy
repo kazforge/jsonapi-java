@@ -1,8 +1,11 @@
 package io.github.kazemek.jsonapi.jackson3
 
+import io.github.kazemek.jsonapi.core.model.JsonApiDocument
 import io.github.kazemek.jsonapi.core.validation.ValidationContext
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter
+import io.github.kazemek.jsonapi.jackson.mapping.MappedDocument
+import io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoratorRegistry
 import java.lang.reflect.Modifier
 import spock.lang.Specification
 import tools.jackson.databind.json.JsonMapper
@@ -39,6 +42,33 @@ class JsonApiJackson3ConstructionSpec extends Specification {
     }
   }
 
+  def "renamed command and collection surface exposes no pre-alpha names"() {
+    expect:
+    JsonApiJackson3.declaredMethods.every { it.name != 'patchReader' }
+    JsonApiJackson3.declaredMethods.any { it.name == 'patchCommandReader' }
+    JsonApiResourceMapper.declaredMethods.every {
+      it.name != 'toResourceCollection' && it.name != 'toMappedResourceCollection'
+    }
+    JsonApiResourceMapper.declaredMethods.any {
+      it.name == 'toCollectionDocument' && it.returnType == JsonApiDocument
+    }
+    JsonApiResourceMapper.declaredMethods.any {
+      it.name == 'toMappedCollectionDocument' && it.returnType == MappedDocument
+    }
+  }
+
+  def "registry construction requires an explicit configured mapper"() {
+    expect:
+    ResourceTypeRegistry.declaredMethods.any {
+      Modifier.isPublic(it.modifiers) && Modifier.isStatic(it.modifiers) &&
+          it.name == 'builder' && it.parameterTypes.toList() == [JsonMapper]
+    }
+    !ResourceTypeRegistry.declaredMethods.any {
+      Modifier.isPublic(it.modifiers) && Modifier.isStatic(it.modifiers) &&
+          it.name == 'builder' && it.parameterTypes.length == 0
+    }
+  }
+
   private static List<FactoryShape> canonicalFactories() {
     [
       new FactoryShape('writer', JsonApiDocumentWriter, [JsonMapper, ValidationContext]),
@@ -49,7 +79,8 @@ class JsonApiJackson3ConstructionSpec extends Specification {
       new FactoryShape('resourceMapper', JsonApiResourceMapper,
       [
         JsonMapper,
-        IdentifierConverter
+        IdentifierConverter,
+        ResourceDecoratorRegistry
       ]),
       new FactoryShape('resourceBinder', JsonApiResourceBinder,
       [
@@ -65,7 +96,7 @@ class JsonApiJackson3ConstructionSpec extends Specification {
         IdentifierConverter,
         Map
       ]),
-      new FactoryShape('patchReader', JsonApiPatchReader,
+      new FactoryShape('patchCommandReader', JsonApiPatchCommandReader,
       [
         JsonMapper,
         ValidationContext,
@@ -89,7 +120,7 @@ class JsonApiJackson3ConstructionSpec extends Specification {
       JsonApiResourceMapper,
       JsonApiResourceBinder,
       JsonApiDomainDocumentReader,
-      JsonApiPatchReader,
+      JsonApiPatchCommandReader,
       JsonApiPatchDtoReader,
     ]
   }

@@ -50,8 +50,8 @@ class FlatMetaMappingSpec extends Specification {
     JsonApiJackson3.resourceBinder(JsonMapper.builder().build())
   }
 
-  static def patchReader() {
-    JsonApiJackson3.patchReader(JsonMapper.builder().build())
+  static def patchCommandReader() {
+    JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
   }
 
   static def patchDtoReader() {
@@ -82,7 +82,7 @@ class FlatMetaMappingSpec extends Specification {
     def json = '{"data":{"type":"articles","id":"1","meta":{"value":"42"}}}'
 
     when:
-    def command = patchReader().readValue(json, ArticleWithBoxMeta)
+    def command = patchCommandReader().readValue(json, ArticleWithBoxMeta)
 
     then: // the nested value converts as Integer, not Object/String/raw type
     command.changes() == [
@@ -111,7 +111,7 @@ class FlatMetaMappingSpec extends Specification {
     def json = '{"data":{"type":"articles","id":"1","meta":{"city":null}}}'
 
     when: // the city setter's @JsonSetter(nulls = Nulls.AS_EMPTY) null provider yields "" for null
-    def command = patchReader().readValue(json, ArticleWithNullEmptyCityMeta)
+    def command = patchCommandReader().readValue(json, ArticleWithNullEmptyCityMeta)
 
     then: // not the root String deserializer's null value (null)
     command.changes() == [
@@ -130,7 +130,7 @@ class FlatMetaMappingSpec extends Specification {
         '{"data":{"type":"articles","id":"1","meta":{"contact":{"kind":"email","email":"a@b.c"}}}}'
 
     when: // the polymorphic contact converts through the property's TypeDeserializer path
-    def command = patchReader().readValue(json, ArticleWithTypedContactMeta)
+    def command = patchCommandReader().readValue(json, ArticleWithTypedContactMeta)
 
     then:
     command.changes() == [
@@ -154,7 +154,7 @@ class FlatMetaMappingSpec extends Specification {
     when: // the root TypeDeserializer decoration must not disqualify the decorated POJO
     def bound = binder().fromResource(mapper().toResource(new ConcreteTypedMetaArticle(
         "1", new ConcreteTypedMeta("v"))), ConcreteTypedMetaArticle)
-    def command = patchReader().readValue(json, ConcreteTypedMetaArticle)
+    def command = patchCommandReader().readValue(json, ConcreteTypedMetaArticle)
 
     then:
     bound.meta() == new ConcreteTypedMeta("v")
@@ -171,7 +171,7 @@ class FlatMetaMappingSpec extends Specification {
     when: // the TypeDeserializer selects the concrete subtype from the discriminator
     def bound = binder().fromResource(mapper().toResource(new PolyMetaArticle(
         "1", new SourceMeta("cms", "n"))), PolyMetaArticle)
-    def command = patchReader().readValue(json, PolyMetaArticle)
+    def command = patchCommandReader().readValue(json, PolyMetaArticle)
 
     then:
     bound.meta() == new SourceMeta("cms", "n")
@@ -236,7 +236,7 @@ class FlatMetaMappingSpec extends Specification {
   def "fromDocument skips a data-less relationship with meta on the low-level path"() {
     given:
     def document = dataLessMetaDocument(null)
-    def command = patchReader().fromDocument(document, ArticleWithMeta)
+    def command = patchCommandReader().fromDocument(document, ArticleWithMeta)
 
     expect:
     command.identity() == "1"
@@ -246,7 +246,7 @@ class FlatMetaMappingSpec extends Specification {
   def "fromDocument skips a data-less relationship with meta but keeps other supplied changes on the low-level path"() {
     given:
     def document = dataLessMetaDocument([title: "T"])
-    def command = patchReader().fromDocument(document, ArticleWithMeta)
+    def command = patchCommandReader().fromDocument(document, ArticleWithMeta)
 
     expect:
     command.changes() == [
