@@ -203,6 +203,11 @@ public final class JsonApiDocumentWriter {
     }
 
     @Override
+    public void write(byte[] source, int offset, int length) throws IOException {
+      out.write(source, offset, length);
+    }
+
+    @Override
     public void close() {
       // Caller owns the underlying stream.
     }

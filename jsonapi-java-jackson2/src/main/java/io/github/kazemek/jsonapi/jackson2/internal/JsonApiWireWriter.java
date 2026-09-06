@@ -93,12 +93,8 @@ final class JsonApiWireWriter {
   static void writeResourceObject(ResourceObject resource, JsonGenerator gen) throws IOException {
     gen.writeStartObject();
     writeStringMember(gen, JsonApiMembers.TYPE, resource.type());
-    if (resource.id() != null) {
-      writeStringMember(gen, JsonApiMembers.ID, resource.id());
-    }
-    if (resource.lid() != null) {
-      writeStringMember(gen, JsonApiMembers.LID, resource.lid());
-    }
+    writeOptionalStringMember(gen, JsonApiMembers.ID, resource.id());
+    writeOptionalStringMember(gen, JsonApiMembers.LID, resource.lid());
     Attributes attributes = resource.attributes();
     if (attributes != null) {
       gen.writeFieldName(JsonApiMembers.ATTRIBUTES);
@@ -136,12 +132,8 @@ final class JsonApiWireWriter {
       throws IOException {
     gen.writeStartObject();
     writeStringMember(gen, JsonApiMembers.TYPE, identifier.type());
-    if (identifier.id() != null) {
-      writeStringMember(gen, JsonApiMembers.ID, identifier.id());
-    }
-    if (identifier.lid() != null) {
-      writeStringMember(gen, JsonApiMembers.LID, identifier.lid());
-    }
+    writeOptionalStringMember(gen, JsonApiMembers.ID, identifier.id());
+    writeOptionalStringMember(gen, JsonApiMembers.LID, identifier.lid());
     Meta identifierMeta = identifier.meta();
     if (identifierMeta != null) {
       gen.writeFieldName(JsonApiMembers.META);
@@ -226,18 +218,10 @@ final class JsonApiWireWriter {
   static void writeObjectLink(Link.ObjectLink link, JsonGenerator gen) throws IOException {
     gen.writeStartObject();
     writeStringMember(gen, JsonApiMembers.HREF, link.href());
-    if (link.rel() != null) {
-      writeStringMember(gen, JsonApiMembers.REL, link.rel());
-    }
-    if (link.describedby() != null) {
-      writeStringMember(gen, JsonApiMembers.DESCRIBEDBY, link.describedby());
-    }
-    if (link.title() != null) {
-      writeStringMember(gen, JsonApiMembers.TITLE, link.title());
-    }
-    if (link.type() != null) {
-      writeStringMember(gen, JsonApiMembers.TYPE, link.type());
-    }
+    writeOptionalStringMember(gen, JsonApiMembers.REL, link.rel());
+    writeOptionalStringMember(gen, JsonApiMembers.DESCRIBEDBY, link.describedby());
+    writeOptionalStringMember(gen, JsonApiMembers.TITLE, link.title());
+    writeOptionalStringMember(gen, JsonApiMembers.TYPE, link.type());
     if (link.hreflang() != null) {
       gen.writeFieldName(JsonApiMembers.HREFLANG);
       gen.writeStartArray();
@@ -261,9 +245,7 @@ final class JsonApiWireWriter {
 
   static void writeJsonApiObject(JsonApiObject jsonapi, JsonGenerator gen) throws IOException {
     gen.writeStartObject();
-    if (jsonapi.version() != null) {
-      writeStringMember(gen, JsonApiMembers.VERSION, jsonapi.version());
-    }
+    writeOptionalStringMember(gen, JsonApiMembers.VERSION, jsonapi.version());
     List<String> ext = jsonapi.ext();
     if (ext != null) {
       gen.writeFieldName(JsonApiMembers.EXT);
@@ -296,26 +278,16 @@ final class JsonApiWireWriter {
 
   static void writeErrorObject(ErrorObject error, JsonGenerator gen) throws IOException {
     gen.writeStartObject();
-    if (error.id() != null) {
-      writeStringMember(gen, JsonApiMembers.ID, error.id());
-    }
+    writeOptionalStringMember(gen, JsonApiMembers.ID, error.id());
     Links errorLinks = error.links();
     if (errorLinks != null) {
       gen.writeFieldName(JsonApiMembers.LINKS);
       writeLinks(errorLinks, gen);
     }
-    if (error.status() != null) {
-      writeStringMember(gen, JsonApiMembers.STATUS, error.status());
-    }
-    if (error.code() != null) {
-      writeStringMember(gen, JsonApiMembers.CODE, error.code());
-    }
-    if (error.title() != null) {
-      writeStringMember(gen, JsonApiMembers.TITLE, error.title());
-    }
-    if (error.detail() != null) {
-      writeStringMember(gen, JsonApiMembers.DETAIL, error.detail());
-    }
+    writeOptionalStringMember(gen, JsonApiMembers.STATUS, error.status());
+    writeOptionalStringMember(gen, JsonApiMembers.CODE, error.code());
+    writeOptionalStringMember(gen, JsonApiMembers.TITLE, error.title());
+    writeOptionalStringMember(gen, JsonApiMembers.DETAIL, error.detail());
     ErrorSource source = error.source();
     if (source != null) {
       gen.writeFieldName(JsonApiMembers.SOURCE);
@@ -332,15 +304,9 @@ final class JsonApiWireWriter {
 
   static void writeErrorSource(ErrorSource source, JsonGenerator gen) throws IOException {
     gen.writeStartObject();
-    if (source.pointer() != null) {
-      writeStringMember(gen, JsonApiMembers.POINTER, source.pointer());
-    }
-    if (source.parameter() != null) {
-      writeStringMember(gen, JsonApiMembers.PARAMETER, source.parameter());
-    }
-    if (source.header() != null) {
-      writeStringMember(gen, JsonApiMembers.HEADER, source.header());
-    }
+    writeOptionalStringMember(gen, JsonApiMembers.POINTER, source.pointer());
+    writeOptionalStringMember(gen, JsonApiMembers.PARAMETER, source.parameter());
+    writeOptionalStringMember(gen, JsonApiMembers.HEADER, source.header());
     writeAdditionalMembers(source.additionalMembers(), gen);
     gen.writeEndObject();
   }
@@ -398,6 +364,19 @@ final class JsonApiWireWriter {
       throws IOException {
     gen.writeFieldName(name);
     gen.writeString(value);
+  }
+
+  /**
+   * Writes a string member that is present only when its value exists: write the member name and
+   * string value when the value is non-null, and write nothing when the value is absent. Absence
+   * stays distinct from an explicit JSON null, which {@code writeOpenValue} emits for sealed model
+   * variants.
+   */
+  private static void writeOptionalStringMember(
+      JsonGenerator gen, String name, @Nullable String value) throws IOException {
+    if (value != null) {
+      writeStringMember(gen, name, value);
+    }
   }
 
   private static void writeNumber(Number number, JsonGenerator gen) throws IOException {

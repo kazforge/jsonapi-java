@@ -187,13 +187,11 @@ class JsonApiWireWriterSpec extends Specification {
     readTree(writeDirect { JsonGenerator generator -> JsonApiWireWriter.writeDocumentData(data, generator) }).toString() == expected
 
     where:
-    data                                                               | expected
-    null                                                               | 'null'
-    DocumentData.NullData.INSTANCE                                    | 'null'
+    data                    | expected
+    null                    | 'null'
+    DocumentData.NullData.INSTANCE | 'null'
     new DocumentData.SingleIdentifier(ResourceIdentifier.of('people', 'p1')) | '{"type":"people","id":"p1"}'
-    new DocumentData.SingleIdentifier(new ResourceIdentifier(
-        'people', 'p2', null, Meta.of([identifierNote: 'note']), ['@identifier-note': 'note'])
-        ) | '{"type":"people","id":"p2","meta":{"identifierNote":"note"},"@identifier-note":"note"}'
+    metaCarryingIdentifier() | '{"type":"people","id":"p2","meta":{"identifierNote":"note"},"@identifier-note":"note"}'
     new DocumentData.IdentifierCollection([
       ResourceIdentifier.withLid('people', 'local-p1')
     ]) | '[{"type":"people","lid":"local-p1"}]'
@@ -238,6 +236,11 @@ class JsonApiWireWriterSpec extends Specification {
 
   private static Object readTree(String json) {
     return JsonMapper.builder().build().readTree(json)
+  }
+
+  private static DocumentData metaCarryingIdentifier() {
+    return new DocumentData.SingleIdentifier(new ResourceIdentifier(
+        'people', 'p2', null, Meta.of([identifierNote: 'note']), ['@identifier-note': 'note']))
   }
 
   private static String writeDirect(Closure writer) {
