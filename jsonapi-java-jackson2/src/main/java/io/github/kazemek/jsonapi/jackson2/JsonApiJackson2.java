@@ -2,19 +2,21 @@ package io.github.kazemek.jsonapi.jackson2;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.github.kazemek.jsonapi.core.validation.ValidationContext;
+import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext;
 import io.github.kazemek.jsonapi.jackson2.internal.JsonApiDocumentModule;
 import java.util.Objects;
 
 /**
- * Factory for the Jackson 2 JSON:API document writer.
+ * Factory for the Jackson 2 JSON:API document writer and validated document reader.
  *
- * <p>Callers supply an already-configured {@link JsonMapper}. The canonical factory accepts that
- * mapper first, followed by the capability-specific {@link ValidationContext}; the convenience
- * factory selects documented defaults and delegates. Mapper builders are intentionally not
- * accepted, and factory construction never mutates or replaces the caller's configuration in place.
- * The writer derives a codec-configured mapper via {@link JsonMapper#rebuild()} and registers only
- * the internal JSON:API document module. Public surface consists of {@link JsonApiDocumentWriter};
- * additional capabilities follow in later parity stories per ADR-016's semantic cross-major policy.
+ * <p>Callers supply an already-configured {@link JsonMapper}. Each canonical factory accepts that
+ * mapper first, followed by the capability-specific context; the writer convenience factory selects
+ * documented defaults and delegates. Mapper builders are intentionally not accepted, and factory
+ * construction never mutates or replaces the caller's configuration in place. The writer derives a
+ * codec-configured mapper via {@link JsonMapper#rebuild()} and registers only the internal JSON:API
+ * document module; the reader uses the supplied mapper directly for token-driven parsing. Public
+ * surface consists of {@link JsonApiDocumentWriter} and {@link JsonApiDocumentReader}; additional
+ * capabilities follow in later parity stories per ADR-016's semantic cross-major policy.
  */
 public final class JsonApiJackson2 {
 
@@ -38,6 +40,16 @@ public final class JsonApiJackson2 {
     Objects.requireNonNull(base, "base");
     Objects.requireNonNull(context, CONTEXT);
     return new JsonApiDocumentWriter(documentMapper(base), context);
+  }
+
+  /**
+   * Returns a reader bound to the given read context. Decoding is token-driven and does not use
+   * document serializers, so the caller mapper is used as-is.
+   */
+  public static JsonApiDocumentReader reader(JsonMapper base, DocumentReadContext context) {
+    Objects.requireNonNull(base, "base");
+    Objects.requireNonNull(context, CONTEXT);
+    return new JsonApiDocumentReader(base, context);
   }
 
   /**

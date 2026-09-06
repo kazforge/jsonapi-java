@@ -4,6 +4,7 @@ import io.github.kazemek.jsonapi.core.model.DocumentData
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument
 import io.github.kazemek.jsonapi.core.model.ResourceObject
 import io.github.kazemek.jsonapi.core.validation.ValidationContext
+import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext
 import java.lang.reflect.Modifier
 
 import com.fasterxml.jackson.databind.json.JsonMapper
@@ -35,6 +36,18 @@ class JsonApiJackson2ConstructionSpec extends Specification {
       method.name == 'writer' &&
           method.returnType == JsonApiDocumentWriter &&
           method.parameterTypes.toList() == [JsonMapper, ValidationContext]
+    }
+  }
+
+  def "the reader capability has a mapper-instance canonical factory form"() {
+    expect:
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'reader' &&
+          method.returnType == JsonApiDocumentReader &&
+          method.parameterTypes.toList() == [
+            JsonMapper,
+            DocumentReadContext
+          ]
     }
   }
 
