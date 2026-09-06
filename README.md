@@ -10,7 +10,7 @@ that an application's endpoint behavior is automatically JSON:API compliant.
 
 ## Status
 
-**Pre-alpha.** The Gradle build, CI pipeline, architecture decisions, `jsonapi-java-core` document model and validation, `jsonapi-java-annotations`, Jackson 3 document codec and domain mapping (compound inclusion, sparse fieldsets, flat DTO binding, typed envelopes, presence-aware PATCH binding and direct typed PATCH DTO binding), and Jackson-major-neutral contracts in `jsonapi-java-jackson-api` are in place. Query parsing and Spring adapters are not started.
+**Pre-alpha.** The Gradle build, CI pipeline, architecture decisions, `jsonapi-java-core` document model and validation, `jsonapi-java-annotations`, Jackson 3 document codec and domain mapping (compound inclusion, sparse fieldsets, flat DTO binding, typed envelopes, presence-aware PATCH binding and direct typed PATCH DTO binding), the Jackson 2 validated document writer, and Jackson-major-neutral contracts in `jsonapi-java-jackson-api` are in place. Remaining Jackson 2 parity capabilities, query parsing, and Spring adapters are not started.
 
 Maven group: `io.github.kazemek`. Java packages: `io.github.kazemek.jsonapi.*`.
 
@@ -35,6 +35,7 @@ executable coverage.
 | `jsonapi-java-core/`           | Zero-dependency JSON:API document model and validation                                           |
 | `jsonapi-java-annotations/`    | Dependency-free domain-mapping annotations                                                       |
 | `jsonapi-java-jackson3/`       | Jackson 3 document codec, domain-to-resource mapping, flat DTO reads, typed domain envelopes, and presence-aware PATCH |
+| `jsonapi-java-jackson2/`       | Jackson 2 validated document writer (parity artifact; further capabilities follow) |
 | `jsonapi-java-jackson-api/`    | Public Jackson-major-neutral API surface: document, mapping, PATCH, representation, and diagnostic contracts; shared passive carriers and JSON/schema test fixtures via `testFixtures` |
 | `build-logic/`                 | Shared Gradle convention plugins                                                                 |
 | `docs/`                        | Vision, architecture overview, conformance, and architecture decision records |
@@ -47,7 +48,7 @@ executable coverage.
 | [`jsonapi-java-annotations`](jsonapi-java-annotations/README.md) | Available | Dependency-free domain-mapping role annotations                            |
 | [`jsonapi-java-jackson3`](jsonapi-java-jackson3/README.md)       | Available | Jackson 3 document codec, annotated domain mapping, and presence-aware PATCH binding (commands and direct typed PATCH DTOs) |
 | [`jsonapi-java-jackson-api`](jsonapi-java-jackson-api/README.md)       | Available | Public Jackson-major-neutral API surface shared by Jackson 2, Jackson 3, and future framework integrations |
-| `jsonapi-java-jackson2`                                          | Planned   | Separately compiled Jackson 2 parity artifact                              |
+| [`jsonapi-java-jackson2`](jsonapi-java-jackson2/README.md)       | Available | Jackson 2 validated document writer (first Jackson 2 parity artifact; further capabilities follow) |
 | `jsonapi-java-query`                                             | Planned   | Optional query-parameter parsing                                           |
 | `jsonapi-java-spring-webmvc`                                     | Planned   | Jackson 3-based Spring WebMVC transport and DTO binding                    |
 | `jsonapi-java-spring-webflux`                                    | Future evaluation | Separately scoped reactive adapter candidate                               |
@@ -61,6 +62,7 @@ not duplicate those module-specific contracts.
 - [Core module](jsonapi-java-core/README.md)
 - [Annotations module](jsonapi-java-annotations/README.md)
 - [Jackson 3 module](jsonapi-java-jackson3/README.md)
+- [Jackson 2 module](jsonapi-java-jackson2/README.md)
 - [Jackson API module](jsonapi-java-jackson-api/README.md)
 - [Vision](docs/vision.md) — stable product direction and principles
 - [Architecture](docs/architecture.md) — current cross-module mental model and flows
