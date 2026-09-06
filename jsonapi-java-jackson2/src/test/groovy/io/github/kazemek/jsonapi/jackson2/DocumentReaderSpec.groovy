@@ -402,7 +402,7 @@ class DocumentReaderSpec extends Specification {
     overloads.size() == 4
     overloads.every { IOException in it.exceptionTypes }
     overloads.any { it.parameterTypes.toList() == [String] }
-    overloads.any { it.parameterTypes.toList() == [byte[]] }
+    overloads.any { it.parameterTypes.toList() == [byte[].class] }
     overloads.any { it.parameterTypes.toList() == [InputStream] }
     overloads.any { it.parameterTypes.toList() == [JsonParser] }
   }
