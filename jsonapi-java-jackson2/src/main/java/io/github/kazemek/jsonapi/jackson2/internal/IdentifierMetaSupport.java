@@ -4,6 +4,7 @@ import io.github.kazemek.jsonapi.core.model.JsonApiMembers;
 import io.github.kazemek.jsonapi.core.model.Meta;
 import io.github.kazemek.jsonapi.core.model.ResourceIdentifier;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingLocation;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -33,6 +34,15 @@ final class IdentifierMetaSupport {
         JsonApiMembers.DATA,
         Integer.toString(index),
         JsonApiMembers.META);
+  }
+
+  /**
+   * Copies linkage identity and identifier meta, dropping additional members (existing built-in
+   * read-side conversion scope).
+   */
+  static ResourceIdentifier copyLinkageIdentifier(ResourceIdentifier identifier) {
+    return new ResourceIdentifier(
+        identifier.type(), identifier.id(), identifier.lid(), identifier.meta(), Map.of());
   }
 
   /** Overlays identifier meta while preserving type, id, lid, and additional members. */

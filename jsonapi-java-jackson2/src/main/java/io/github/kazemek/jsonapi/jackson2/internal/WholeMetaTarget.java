@@ -16,12 +16,13 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Whole-meta target-shape rules for the write mapping role (ADR-015).
+ * Whole-meta target-shape rules for the read/write domain-mapping roles (ADR-015).
  *
- * <p>The mapping cache/resolver is deliberately kind-agnostic; the write mapping validates its
- * role's wrapper chain against these rules. Read/write mapping allows at most one {@link Optional}
- * wrapper around a Bean / {@link Map} / {@link Object} target. Identifier meta on an opt-in {@code
- * RelationshipLinkage<T, M>} follows the same object-shape rule for {@code M} (ADR-017).
+ * <p>The mapping cache/resolver is deliberately kind-agnostic; each consuming entry point validates
+ * its role's wrapper chain against these rules. Read/write mapping allows at most one {@link
+ * Optional} wrapper around a Bean / {@link Map} / {@link Object} target. Identifier meta on an
+ * opt-in {@code RelationshipLinkage<T, M>} follows the same object-shape rule for {@code M}
+ * (ADR-017).
  *
  * <p>Whether an effective target is a legal whole-meta object target is decided by Jackson, not a
  * manually maintained scalar taxonomy: after rejecting primitives, containers, and the already
@@ -100,6 +101,25 @@ final class WholeMetaTarget {
         throw invalidIdentifierMetaTarget(property, rawType, location);
       }
     }
+  }
+
+  /** Validates whole-meta targets using effective deserialization-side property types. */
+  void validateReadWriteTargets(ReadResourceMapping mapping, Class<?> rawType) {
+    ReadMappingProperty resourceMeta = mapping.resourceMeta();
+    if (resourceMeta != null && invalidReadWriteTarget(resourceMeta.type())) {
+      throw invalidTarget(
+          "Resource meta", resourceMeta, rawType, RelationshipMetaSupport.resourceMetaLocation());
+    }
+    for (ReadMappingProperty property : mapping.relationshipMetaProperties()) {
+      if (invalidReadWriteTarget(property.type())) {
+        throw invalidTarget(
+            "Relationship meta",
+            property,
+            rawType,
+            RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()));
+      }
+    }
+    validateRelationshipLinkageMeta(mapping.relationships(), rawType);
   }
 
   private static JsonApiMappingException invalidIdentifierMetaTarget(

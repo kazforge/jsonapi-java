@@ -87,11 +87,38 @@ class JsonApiJackson2ConstructionSpec extends Specification {
     }
   }
 
+  def "the resource binder capability has a mapper-instance canonical factory form and meaningful conveniences"() {
+    expect:
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'resourceBinder' &&
+          method.returnType == JsonApiResourceBinder &&
+          method.parameterTypes.toList() == [JsonMapper]
+    }
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'resourceBinder' &&
+          method.returnType == JsonApiResourceBinder &&
+          method.parameterTypes.toList() == [
+            JsonMapper,
+            IdentifierConverter
+          ]
+    }
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'resourceBinder' &&
+          method.returnType == JsonApiResourceBinder &&
+          method.parameterTypes.toList() == [
+            JsonMapper,
+            IdentifierConverter,
+            Map
+          ]
+    }
+  }
+
   def "the capability instances are constructed through the facade"() {
     expect:
     JsonApiDocumentWriter.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
     JsonApiDocumentReader.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
     JsonApiResourceMapper.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
+    JsonApiResourceBinder.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
   }
 
   def "factory construction rejects missing inputs with named parameters"() {
@@ -122,6 +149,21 @@ class JsonApiJackson2ConstructionSpec extends Specification {
     then:
     def missingDecorators = thrown(NullPointerException)
     missingDecorators.message == 'decorators'
+
+    when:
+    JsonApiJackson2.resourceBinder(JsonMapper.builder().build(), (IdentifierConverter) null)
+
+    then:
+    def missingBinderConverter = thrown(NullPointerException)
+    missingBinderConverter.message == 'identifierConverter'
+
+    when:
+    JsonApiJackson2.resourceBinder(
+        JsonMapper.builder().build(), IdentifierConverter.defaults(), (Map) null)
+
+    then:
+    def missingLinkageMappers = thrown(NullPointerException)
+    missingLinkageMappers.message == 'linkageMappers'
   }
 
   def "the convenience factory binds the documented default validation context"() {
