@@ -2,11 +2,12 @@
 
 Jackson 2 implementation of the validated JSON:API document codec: validating and writing, plus
 token-driven reading of, [JSON:API v1.1](https://jsonapi.org/) documents with deterministic wire
-semantics.
+semantics, plus advanced domain-to-resource mapping with compound inclusion, sparse fieldsets, and
+additive decoration.
 
-> This is a Jackson 2 parity artifact. It currently holds the document writer and the validated
-> document reader; domain mapping, flat binding, presence-aware PATCH, and the Level-1 configured
-> runtime follow in later parity stories. The Jackson 3 module
+> This is a Jackson 2 parity artifact. It currently holds the document writer, the validated
+> document reader, and the advanced write-side resource mapper; flat DTO binding, presence-aware
+> PATCH, and the Level-1 configured runtime follow in later parity stories. The Jackson 3 module
 > ([jsonapi-java-jackson3](../jsonapi-java-jackson3/README.md)) owns the full capability set
 > today.
 
@@ -14,15 +15,16 @@ semantics.
 
 | Package                                        | Role                                                                  |
 |------------------------------------------------|-----------------------------------------------------------------------|
-| `io.github.kazemek.jsonapi.jackson2`           | Public codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, and token-driven `JsonApiDocumentReader` |
-| `io.github.kazemek.jsonapi.jackson2.internal`  | Streaming document serializer, wire emission, and token-driven wire decoding; not public API |
+| `io.github.kazemek.jsonapi.jackson2`           | Public codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, token-driven `JsonApiDocumentReader`, and `JsonApiResourceMapper` for domain-to-resource mapping |
+| `io.github.kazemek.jsonapi.jackson2.internal`  | Streaming document serializer, wire emission, token-driven wire decoding, the mapping engine, and module registration; not public API |
 | `io.github.kazemek.jsonapi.jackson.*`          | Public Jackson-major-neutral API contracts (in `jsonapi-java-jackson-api`): `api`, `document`, `mapping`, `patch`, `representation`, `diagnostic` |
 
-Validation policy, read policy, provenance values, and diagnostics (`ValidationContext`,
-`DocumentReadContext`, `MappedDocument`, `JsonApiValidationException`,
-`JsonApiDocumentReadException`) live in `jsonapi-java-core` and `jsonapi-java-jackson-api` and are
-imported from there; this module holds only the Jackson 2-bound writer and its emission
-implementation plus the Jackson 2-bound reader and its token-driven decoding implementation.
+Validation policy, read policy, mapping policy, contexts, provenance values, and diagnostics
+(`ValidationContext`, `DocumentReadContext`, `RepresentationSelection`, `RepresentationPolicy`,
+`MappedDocument`, `IdentifierConverter`, `ResourceDecoratorRegistry`, `RelationshipLinkage`,
+`JsonApiValidationException`, `JsonApiDocumentReadException`, `MappingDiagnostic`) live in
+`jsonapi-java-core` and `jsonapi-java-jackson-api` and are imported from there; this module holds
+only the Jackson 2-bound writer, reader, resource mapper, and their implementations.
 
 ## Minimal usage
 
@@ -62,30 +64,90 @@ exemption set validates exactly like plain document writing, and unrelated full-
 still fail:
 
 ```java
-MappedDocument mapped = /* one mapping call in a later mapping story */;
+MappedDocument mapped = mapper.toMappedDocument(article, null, fieldsets, policy);
 String json = JsonApiJackson2.writer(callerMapper).writeValueAsString(mapped);
 ```
+
+## Domain-to-resource mapping
+
+```java
+JsonMapper callerMapper = JsonMapper.builder().build();
+JsonApiResourceMapper mapper = JsonApiJackson2.resourceMapper(callerMapper);
+
+JsonApiDocument doc = mapper.toDocument(someAnnotatedPojo);
+String json = JsonApiJackson2.writer(callerMapper).writeValueAsString(doc);
+```
+
+The mapper produces core model objects; serialization stays an explicit handoff to the
+`JsonApiDocumentWriter`. Annotations assign semantic roles only (`@JsonApiResource`, `@JsonApiId`,
+`@JsonApiLocalId`, `@JsonApiAttribute`, `@JsonApiRelationship`, `@JsonApiMeta`,
+`@JsonApiRelationshipMeta`); configured Jackson owns property discovery, visibility, external
+naming, mix-ins, creators, and value conversion. Unannotated Jackson-visible properties do not
+participate, except the conventional identifier whose Jackson external name is `id`.
+
+Key semantics (identical to the Jackson 3 mapper):
+
+- **Independent identity roles:** `@JsonApiId` maps only `ResourceObject.id` and `@JsonApiLocalId`
+  maps only `ResourceObject.lid`; neither role falls back to the other. `toMappedCreateDocument`
+  maps an identity-less primary with absent `id`/`lid` and leaves that leniency to core
+  create-request validation.
+- **Linkage-oriented relationships (ADR-018):** every selected ordinary relationship emits present
+  `data` — `null` linkage for a null/empty `Optional` to-one, `[]` for an empty to-many.
+- **Whole-meta (ADR-015):** `@JsonApiMeta` and `@JsonApiRelationshipMeta(relationship = "...")`
+  map Bean / `Map` / `Object` targets (at most one `Optional` wrapper) through the mapped
+  property's contextualized Jackson property writer.
+- **Identifier meta (ADR-017):** the opt-in `RelationshipLinkage<T, M>` wrapper overlays `meta`
+  onto that occurrence's `ResourceIdentifier` while preserving type/id/lid/additional members.
+- **Typed generics:** convenience methods infer the root `JavaType` from the runtime class; pass a
+  complete `com.fasterxml.jackson.databind.JavaType` for parameterized roots so generic members,
+  relationship linkage, and include traversal retain their declared bindings. Distinct
+  parameterizations cache independent mappings; each mapper instance owns its cache keyed by
+  complete `JavaType`.
+- **Optional attributes/meta/relationships:** present `Optional` unwraps on write; empty values
+  omit the member or emit null linkage. The derived mapping mapper registers the pinned JDK 8
+  datatype module only when the caller's configuration cannot serialize a present `Optional`;
+  caller-supplied Optional handling is detected behaviorally and always wins.
+- **Compound inclusion (explicit selection/policy):** `toDocument(..., selection, policy)` /
+  `toCollectionDocument(..., selection, policy)` traverse opt-in include paths with path
+  prevalidation, depth/count limits, deterministic first-discovery order, cycle protection, and
+  alias-aware identity deduplication. Relationship mapping alone never requests inclusion.
+- **Sparse fieldsets:** applied only by the `toMappedDocument` / `toMappedCollectionDocument`
+  overloads, validated by final wire name against `FieldPolicy`; the returned `MappedDocument`
+  carries the identities of included resources whose inbound linkage an applied fieldset removed.
+  Plain-document overloads reject a non-empty fieldset map.
+- **Additive decoration (advanced):** `ResourceDecoratorRegistry` decorators add only
+  `ResourceObject.links` and `Relationship.links` for already-mapped relationships, keyed by the
+  Jackson logical property name; they never replace linkage/meta or resurrect a fieldset-omitted
+  relationship.
 
 ## Construction policy
 
 The canonical seam follows ADR-016: a fully configured `JsonMapper` instance, followed by the
-capability context:
+capability context and collaborators:
 
 ```java
-JsonApiJackson2.writer(mapper);                       // default validation context
-JsonApiJackson2.writer(mapper, validationContext);    // canonical mapper-instance form
-JsonApiJackson2.reader(mapper, readContext);          // canonical mapper-instance form
+JsonApiJackson2.writer(mapper);                                        // default validation context
+JsonApiJackson2.writer(mapper, validationContext);                     // canonical mapper-instance form
+JsonApiJackson2.reader(mapper, readContext);                           // canonical mapper-instance form
+JsonApiJackson2.resourceMapper(mapper);                                // default identifier conversion
+JsonApiJackson2.resourceMapper(mapper, identifierConverter);
+JsonApiJackson2.resourceMapper(mapper, decoratorRegistry);
+JsonApiJackson2.resourceMapper(mapper, identifierConverter, decoratorRegistry);
 ```
 
 The writer derives its codec mapper via `rebuild()` and registers only the internal JSON:API
-document module; the reader uses the supplied mapper directly for token-driven parsing and never
-mutates it. The caller's mapper is never mutated by either path, and the codec mapper is not
-public. `JsonMapper.Builder` overloads are intentionally not part of the API. Jackson 2's checked
+document module; the reader uses the supplied mapper directly for token-driven parsing; the
+resource mapper derives an isolated mapping mapper via `rebuild()` and registers only the internal
+meta-binding module plus, when the caller lacks Optional support, the pinned JDK 8 datatype module.
+No construction path mutates the caller's mapper, and derived mappers are not public.
+`JsonMapper.Builder` overloads are intentionally not part of the API. Jackson 2's checked
 `JsonProcessingException` mechanics propagate from emission methods unchanged; every reader
 overload declares checked `IOException`, Jackson parse failures surface as payload-safe
 `JsonApiDocumentReadException` (`MALFORMED_JSON`), and unrelated source I/O propagates unchanged.
 Core validation failures stay unchecked `JsonApiValidationException` on writes and become
 `JsonApiDocumentReadException` with `ValidationRuleCode` plus JSON Pointer-like path on reads.
+Mapping failures throw `JsonApiMappingException` with `MappingDiagnostic` values per the
+mapping-location contract.
 
 ## Wire semantics
 
@@ -103,12 +165,16 @@ Core validation failures stay unchecked `JsonApiValidationException` on writes a
   Parsers created by convenience overloads are closed; caller-owned streams and parsers stay open.
 - Writer output and corpus documents are cross-checked against the shared passive JSON/schema
   corpus in adapter-owned tests; reader expectations live here, not in shared fixtures.
+- Mapped attributes and meta write through their fully contextualized Jackson property writers, so
+  configured serializers, null serializers, inclusion, naming, mix-ins, and runtime subtype
+  behavior remain authoritative at the property boundary. JSON:API remains authoritative for
+  identifier wire strings and relationship linkage.
 
 ## Non-goals
 
-Domain mapping, flat DTO binding, typed envelopes, presence-aware PATCH binding, and the Level-1
-configured runtime are later Jackson 2 parity stories. HTTP `fields[TYPE]` parsing, field
-authorization, domain graph hydration, persistence lookup, and command application remain
+Flat DTO binding, typed envelopes, presence-aware PATCH binding, and the Level-1 configured
+runtime are later Jackson 2 parity stories. HTTP `fields[TYPE]` parsing, field authorization,
+domain graph hydration, persistence lookup, and command application remain
 application/adapter responsibilities. Both majors share the neutral contracts of
 [jsonapi-java-jackson-api](../jsonapi-java-jackson-api/README.md) per ADR-007.
 
@@ -116,6 +182,7 @@ application/adapter responsibilities. Both majors share the neutral contracts of
 
 - [Architecture overview](../docs/architecture.md)
 - [Conformance checklist](../docs/conformance.md)
+- [ADR-005 — Domain mapping and inclusion](../docs/adr/005-domain-mapping-and-inclusion.md)
 - [ADR-016 — Mapper-instance construction for Jackson adapters](../docs/adr/016-jackson-adapter-construction.md)
 - [ADR-010 — Architectural tests](../docs/adr/010-architectural-tests.md)
 - [Canonical fixtures](../jsonapi-java-jackson-api/src/testFixtures/resources/jsonapi/corpus/1.1/README.md)
@@ -131,17 +198,49 @@ application/adapter responsibilities. Both majors share the neutral contracts of
   source location). Emission failures propagate Jackson 2 checked `IOException` mechanics rather
   than a new exception family, and every reader overload declares `IOException` while Jackson parse
   failures become payload-safe `MALFORMED_JSON` values. Do not expose the codec mapper publicly.
+- **Map then write:** `JsonApiResourceMapper` produces core model objects; feed them to a writer
+  for serialization. Mapping uses Jackson's logical property model and caches `ResourceMapping` by
+  complete declared `JavaType` on the derived mapper instance (no cross-mapper cache, no partial
+  configuration hash). Ordinary concrete roots infer that type; direct parameterized roots use the
+  `JavaType` overloads. Configured Jackson is the single authority for class-level resource
+  metadata: `@JsonApiResource` is read through mapper introspection via direct-class annotation
+  lookup, so class-level mix-ins provide or override it without inheriting from supertypes or
+  interfaces. Mapping diagnostics use `MappingDiagnostic` + domain class rather than core
+  validation codes.
+- **Local render versus include traversal:** each local member render reads its accessor once and
+  supplies that already-read value to property-scoped serialization. Include traversal retains its
+  separate on-path relationship read; fieldset-excluded and off-path properties remain unread.
+  Never introduce a value-snapshot architecture that rereads or replays accessors.
+- **Property-scoped serialization:** mapped attributes and meta go through raw-value-capable
+  copies of Jackson's bean property writers (registered by an internal module), preserving
+  suppression, contextual/null/type serializers, and omission-vs-emitted-null. Custom
+  `BeanPropertyWriter` replacements have no raw-value contract and are rejected rather than
+  silently rereading the accessor.
+- **Mapping-location contract:** every `JsonApiMappingException` carries an optional location that
+  is either absent (`null`) or a valid RFC 6901 JSON Pointer built through `MappingLocation`,
+  whose segments are individually escaped. Producers mapping one resource emit resource-relative
+  pointers over JSON:API member names (`/id`, `/lid`, `/attributes/<wire-name>`,
+  `/relationships/<wire-name>/data`, `/meta`, `/relationships/<wire-name>/meta`,
+  `/relationships/<wire-name>/data[/index]/meta`). Failures without a meaningful member coordinate
+  (missing annotations, invalid type names, include-path and fieldset specification errors) carry
+  an absent location; the identifying names stay in the message.
 - **Mapper isolation:** factories accept configured `JsonMapper` instances, never builders, and
   do not mutate them. Close only generators created by convenience overloads; leave caller-owned
   streams/writers/generators open.
+- **Optional support fallback:** the derived mapping mapper detects caller Optional support by
+  behaviorally probing a present-`Optional` serialization and registers the pinned JDK 8 datatype
+  module only when the probe fails. Preserve caller-supplied Optional serialization; never
+  register the fallback unconditionally.
 - **Architectural tests:** `Jackson2DependencyRulesSpec` allows JDK, JSpecify, core public
   packages, annotations, the common contracts package, module-owned types, and
   `com.fasterxml.jackson..`; bans `core.internal` and Jackson 3 (`tools.jackson..`) in
   production sources, and asserts no moved common-contract type is re-declared here (ADR-010).
 - **Tests:** Spock specs under `src/test/groovy/` are boring and explicit: setup, invoke the
   production API, assert directly. Shared test fixtures provide passive corpus/schema resources
-  via `jsonapi-java-jackson-api` test fixtures; writer expectations belong in adapter tests. Do
-  not introduce shared test orchestration, scenario registries, or assertion frameworks. Small
-  duplication between the Jackson 2 and Jackson 3 test suites is acceptable.
+  and major-neutral application-shaped DTOs via `jsonapi-java-jackson-api` test fixtures; writer
+  and mapper expectations belong in adapter tests. Do not introduce shared test orchestration,
+  scenario registries, or assertion frameworks. Small duplication between the Jackson 2 and
+  Jackson 3 test suites is acceptable. Keep Jackson-major-specific fixture shapes in small
+  `*Fixtures.java` containers next to the owning spec.
 - **Nullness:** Production packages are `@NullMarked` (JSpecify only). Use `@Nullable` for
   absence and intentionally null map values. Do not import `core.internal`.
