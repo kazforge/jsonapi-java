@@ -385,6 +385,26 @@ class ResourceBinderSpec extends Specification {
     thing.value == "hello"
   }
 
+  def "crossed direction-specific names retain their logical read mappings"() {
+    given:
+    def namingStrategy = new DirectionalityReadFixtures.CrossedDirectionPropertyNamingStrategy()
+    def mapper = JsonMapper.builder().propertyNamingStrategy(namingStrategy).build()
+    def localBinder = JsonApiJackson2.resourceBinder(mapper)
+    def resource = resource(
+        "crossed-names",
+        "1",
+        ["attribute-wire": "bound"],
+        rels("relationship-wire", single(PEOPLE, "p1")))
+
+    when:
+    def dto = localBinder.fromResource(resource, DirectionalityReadFixtures.CrossedNames)
+
+    then:
+    dto.id == "1"
+    dto.attributeValue() == "bound"
+    dto.relationshipValue() == ResourceIdentifier.of(PEOPLE, "p1")
+  }
+
   def "custom deserializer applies to attribute value"() {
     given:
     def localBinder = JsonApiJackson2.resourceBinder(JsonMapper.builder().build())

@@ -589,20 +589,40 @@ final class MappingDefinitionResolver {
       pairs.add(new PropertyPair(definition, null));
     }
     for (BeanPropertyDefinition definition : serializationDescription.findProperties()) {
-      PropertyPair match = null;
-      for (PropertyPair pair : pairs) {
-        if (pair.matches(definition)) {
-          match = pair;
-          break;
-        }
-      }
+      // Logical identity takes precedence because externally configured names can cross between
+      // properties. External names are only a fallback when they identify one deserialization
+      // property; a second serialization definition never overwrites an existing pairing.
+      PropertyPair match =
+          findUniqueDeserializationMatch(
+              pairs, definition, BeanPropertyDefinition::getInternalName);
       if (match == null) {
+        match = findUniqueDeserializationMatch(pairs, definition, BeanPropertyDefinition::getName);
+      }
+      if (match == null || match.serialization() != null) {
         pairs.add(new PropertyPair(null, definition));
       } else {
         match.setSerialization(definition);
       }
     }
     return pairs;
+  }
+
+  private static @Nullable PropertyPair findUniqueDeserializationMatch(
+      List<PropertyPair> pairs,
+      BeanPropertyDefinition candidate,
+      Function<BeanPropertyDefinition, String> nameExtractor) {
+    String candidateName = nameExtractor.apply(candidate);
+    PropertyPair match = null;
+    for (PropertyPair pair : pairs) {
+      if (!pair.matchesDeserializationName(candidateName, nameExtractor)) {
+        continue;
+      }
+      if (match != null) {
+        return null;
+      }
+      match = pair;
+    }
+    return match;
   }
 
   private static final class PropertyPair {
@@ -629,11 +649,9 @@ final class MappingDefinitionResolver {
       serialization = definition;
     }
 
-    boolean matches(BeanPropertyDefinition candidate) {
-      BeanPropertyDefinition existing = deserialization != null ? deserialization : serialization;
-      return existing != null
-          && (existing.getName().equals(candidate.getName())
-              || existing.getInternalName().equals(candidate.getInternalName()));
+    boolean matchesDeserializationName(
+        String candidateName, Function<BeanPropertyDefinition, String> nameExtractor) {
+      return deserialization != null && nameExtractor.apply(deserialization).equals(candidateName);
     }
 
     BeanPropertyDefinition primary() {
