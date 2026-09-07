@@ -9,15 +9,17 @@ writer/reader, domain-to-resource mapping, compound inclusion, sparse fieldsets,
 typed domain envelopes, and presence-aware PATCH binding (low-level commands and direct typed PATCH
 DTOs). `jsonapi-java-jackson2` owns the Jackson 2 validated document writer with the same
 validate-before-emit and provenance-composition semantics, plus the token-driven validated document
-reader with the same decode-then-validate semantics; its remaining capabilities follow in
-later parity stories. `jsonapi-java-jackson-api` owns
+reader with the same decode-then-validate semantics, plus advanced write-side domain-to-resource
+mapping through `JsonApiJackson2.resourceMapper` with the same mapping, inclusion, fieldset, and
+decoration semantics as Jackson 3; its remaining capabilities (flat DTO binding, presence-aware
+PATCH binding, and the Level-1 runtime) follow in later parity stories. `jsonapi-java-jackson-api` owns
 Jackson-major-neutral policy, diagnostics, contexts, envelope values, and presence-aware update
 contracts. How those modules fit together is in [`docs/architecture.md`](architecture.md). Writer output is cross-checked against pinned JSON:API 1.1 draft schemas as supplemental
 evidence only. The version-neutral document corpus, closed negative corpus, and dual-success
 ambiguous primary-data cases in the Jackson API test-fixtures corpus (`jsonapi/corpus/1.1/`) are
 shared wire resources for every Jackson major. Capability, schema, and context selections belong
-to each adapter's local specifications. Jackson 2 domain mapping, PATCH binding,
-presence-aware PATCH binding, query parsing, and Spring adapters remain deferred.
+to each adapter's local specifications. Jackson 2 flat DTO binding, presence-aware PATCH binding,
+query parsing, and Spring adapters remain deferred.
 
 ## Document structure (supported)
 
@@ -147,16 +149,16 @@ control per schema kind (response, create-resource, update-resource, update-rela
 harness rejects invalid documents. The same spec keeps explicit expected failures for the three
 documented draft-schema gaps above, so a schema change forces an intentional review.
 
-## Domain mapping (supported; Jackson 2 parity — deferred)
+## Domain mapping (supported; Jackson 2 flat binding and PATCH — deferred)
 
 | Rule                                                    | Status       | Notes                                                                                                                                                                                                                          |
 |---------------------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Jackson-visible domain-to-resource mapping (write-side) | supported    | Produce ResourceObject from annotated types                                                                                                                                                                                    |
+| Jackson-visible domain-to-resource mapping (write-side) | supported    | Produce ResourceObject from annotated types; Jackson 3 via `JsonApiJackson3.resourceMapper`, Jackson 2 via `JsonApiJackson2.resourceMapper`                                                                                                                                                    |
 | Independent id/lid identity roles in domain mapping      | supported    | `@JsonApiId` maps only `ResourceObject.id`; `@JsonApiLocalId` maps only `ResourceObject.lid`; neither role falls back to the other on write, flat read, linkage, or included resources; document validation owns usage legality (create-request lid-only states) |
 | Relationship `data`-presence boundary (ADR-018)          | supported    | Mapped relationships are linkage-oriented: every selected mapped relationship emits `data` (explicit null, single, or collection; empty to-many is `[]`, never absent); a wire relationship without `data` binds no linkage on flat reads while its `meta` still binds; links-only/meta-only relationships remain core/document-level, preserved by the codec in both directions and never produced by ordinary mapping or decoration |
 | Compound inclusion (explicit context / IncludePolicy)   | supported    | Opt-in paths and policy only — no automatic graph traversal                                                                                                                                                                    |
 | Sparse fieldsets on write                               | supported    | `RepresentationSelection` fieldsets + `RepresentationPolicy` / `FieldPolicy`; `MappedDocument` linkage-exemption provenance composed into validation by the document writer; HTTP `fields[TYPE]` parsing and caller authorization remain application/adapter responsibilities            |
-| Resource-link decoration on write                       | supported    | `ResourceDecorator`/`ResourceDecoration`/`RelationshipDecoration` (major-neutral; decoration adds only `ResourceObject.links` and mapped `Relationship.links`, keyed by logical property name, never resurrects fieldset-omitted relationships; Jackson 3 via `ResourceDecoratorRegistry` on `JsonApiJackson3.resourceMapper`; Jackson 2 binding deferred) |
+| Resource-link decoration on write                       | supported    | `ResourceDecorator`/`ResourceDecoration`/`RelationshipDecoration` (major-neutral; decoration adds only `ResourceObject.links` and mapped `Relationship.links`, keyed by logical property name, never resurrects fieldset-omitted relationships; Jackson 3 via `ResourceDecoratorRegistry` on `JsonApiJackson3.resourceMapper`; Jackson 2 via `ResourceDecoratorRegistry` on `JsonApiJackson2.resourceMapper`) |
 | Flat resource-to-DTO binding                            | supported    | Validated document first; linkage only — never reads `included`                                                                                                                                                                |
 | Typed domain document envelopes                         | supported    | `JsonApiDomainDocument` via `JsonApiJackson3.domainDocumentReader`                                                                                                                                                             |
 | Independent typed binding of `included` resources       | supported    | Wire-ordered `IncludedResources` with dual id/lid lookup; no relationship injection                                                                                                                                            |

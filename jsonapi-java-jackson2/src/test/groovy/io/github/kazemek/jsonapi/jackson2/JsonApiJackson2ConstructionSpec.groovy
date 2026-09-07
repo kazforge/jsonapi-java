@@ -5,6 +5,8 @@ import io.github.kazemek.jsonapi.core.model.JsonApiDocument
 import io.github.kazemek.jsonapi.core.model.ResourceObject
 import io.github.kazemek.jsonapi.core.validation.ValidationContext
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext
+import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter
+import io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoratorRegistry
 import java.lang.reflect.Modifier
 
 import com.fasterxml.jackson.databind.json.JsonMapper
@@ -51,9 +53,45 @@ class JsonApiJackson2ConstructionSpec extends Specification {
     }
   }
 
-  def "the capability instance is constructed through the facade"() {
+  def "the resource mapper capability has a mapper-instance canonical factory form and meaningful conveniences"() {
+    expect:
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'resourceMapper' &&
+          method.returnType == JsonApiResourceMapper &&
+          method.parameterTypes.toList() == [JsonMapper]
+    }
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'resourceMapper' &&
+          method.returnType == JsonApiResourceMapper &&
+          method.parameterTypes.toList() == [
+            JsonMapper,
+            IdentifierConverter
+          ]
+    }
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'resourceMapper' &&
+          method.returnType == JsonApiResourceMapper &&
+          method.parameterTypes.toList() == [
+            JsonMapper,
+            ResourceDecoratorRegistry
+          ]
+    }
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'resourceMapper' &&
+          method.returnType == JsonApiResourceMapper &&
+          method.parameterTypes.toList() == [
+            JsonMapper,
+            IdentifierConverter,
+            ResourceDecoratorRegistry
+          ]
+    }
+  }
+
+  def "the capability instances are constructed through the facade"() {
     expect:
     JsonApiDocumentWriter.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
+    JsonApiDocumentReader.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
+    JsonApiResourceMapper.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
   }
 
   def "factory construction rejects missing inputs with named parameters"() {
@@ -70,6 +108,20 @@ class JsonApiJackson2ConstructionSpec extends Specification {
     then:
     def missingContext = thrown(NullPointerException)
     missingContext.message == 'context'
+
+    when:
+    JsonApiJackson2.resourceMapper(JsonMapper.builder().build(), (IdentifierConverter) null)
+
+    then:
+    def missingConverter = thrown(NullPointerException)
+    missingConverter.message == 'identifierConverter'
+
+    when:
+    JsonApiJackson2.resourceMapper(JsonMapper.builder().build(), (ResourceDecoratorRegistry) null)
+
+    then:
+    def missingDecorators = thrown(NullPointerException)
+    missingDecorators.message == 'decorators'
   }
 
   def "the convenience factory binds the documented default validation context"() {

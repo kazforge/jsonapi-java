@@ -21,8 +21,9 @@ explains how those pieces fit together.
 ## Module responsibilities
 
 These are ownership boundaries, not a complete Gradle dependency graph. Jackson 2 currently
-implements the validated document codec (writer plus token-driven reader) and consumes the same
-`jackson-api` contracts; its remaining capabilities follow in later parity stories.
+implements the validated document codec (writer plus token-driven reader) and the advanced
+write-side resource mapper, consuming the same `jackson-api` contracts; flat DTO binding,
+presence-aware PATCH, and the Level-1 runtime follow in later parity stories.
 
 ```mermaid
 flowchart TB
@@ -31,7 +32,7 @@ flowchart TB
     ANN["jsonapi-java-annotations<br/>mapping role metadata only"]
     COMMON["jsonapi-java-jackson-api<br/>Jackson-major-neutral API surface"]
     J3["jsonapi-java-jackson3<br/>Jackson 3 codec, introspection, and binding"]
-    J2["jsonapi-java-jackson2<br/>Jackson 2 validated document writer and reader"]
+    J2["jsonapi-java-jackson2<br/>Jackson 2 codec, reader, and write-side domain mapping"]
   end
 
   APP["Application: persistence, endpoints, authorization, query"]
@@ -60,7 +61,7 @@ Shared test fixtures live in the Jackson API `java-test-fixtures` source set as 
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free mapping-role metadata. No codecs or converters. |
 | [`jsonapi-java-jackson-api`](../jsonapi-java-jackson-api/README.md) | Public Jackson-major-neutral API surface: document, mapping, PATCH, representation, and diagnostic contracts shared by Jackson majors; the Level-1 application operation contract (`JsonApi` root plus resources, relationships, documents, and patches facets); passive carriers and shared JSON/schema test fixtures. |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Jackson 3 factories, token-driven codecs, configured-Jackson introspection, and domain/PATCH binding, plus the configured `Jackson3JsonApi` runtime implementing the Level-1 contract (via `JsonApiJackson3.jsonApi`/`builder`). |
-| [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Jackson 2 validated document writer (`JsonApiJackson2.writer` + `JsonApiDocumentWriter`) with provenance-aware `MappedDocument` output forms, plus the token-driven validated document reader (`JsonApiJackson2.reader` + `JsonApiDocumentReader`); further parity capabilities follow separately. |
+| [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Jackson 2 validated document writer (`JsonApiJackson2.writer` + `JsonApiDocumentWriter`) with provenance-aware `MappedDocument` output forms, the token-driven validated document reader (`JsonApiJackson2.reader` + `JsonApiDocumentReader`), and the advanced write-side resource mapper (`JsonApiJackson2.resourceMapper` + `JsonApiResourceMapper` with compound inclusion, sparse fieldsets, and additive decoration); flat binding, PATCH, and runtime parity follow separately. |
 | Application code | Persistence, HTTP, authorization, query execution, and applying PATCH commands. |
 
 [ADR-007](adr/007-module-boundaries.md) records why these modules exist.
@@ -115,11 +116,14 @@ Public Jackson 3 entry points are created from `JsonApiJackson3`. Codec paths ar
 `JsonApiDocumentReader` / `JsonApiDocumentWriter`. Mapping paths are `JsonApiResourceMapper`
 (write), `JsonApiResourceBinder` (flat read), `JsonApiDomainDocumentReader` (typed envelope),
 `JsonApiPatchCommandReader`, and `JsonApiPatchDtoReader`. The Jackson 2 module currently exposes
-the writer and reader seams: `JsonApiJackson2.writer(mapper[, validationContext])` returns its
-`JsonApiDocumentWriter` with the same validate-before-emit and provenance-composition semantics,
-and `JsonApiJackson2.reader(mapper, readContext)` returns its token-driven
-`JsonApiDocumentReader` with the same decode-then-validate semantics (every overload declares
-checked `IOException`; Jackson parse failures become payload-safe `MALFORMED_JSON`).
+the writer, reader, and write-side mapping seams: `JsonApiJackson2.writer(mapper[,
+validationContext])` returns its `JsonApiDocumentWriter` with the same validate-before-emit and
+provenance-composition semantics, `JsonApiJackson2.reader(mapper, readContext)` returns its
+token-driven `JsonApiDocumentReader` with the same decode-then-validate semantics (every overload
+declares checked `IOException`; Jackson parse failures become payload-safe `MALFORMED_JSON`), and
+`JsonApiJackson2.resourceMapper(...)` returns its `JsonApiResourceMapper` with the same
+mapping, compound-inclusion, sparse-fieldset, and decoration semantics as `JsonApiJackson3.resourceMapper`
+(mapping diagnostics use resource-relative `MappingLocation` pointers).
 
 ## Level-1 application contract
 
@@ -139,8 +143,8 @@ full contract, including the frozen configured-Jackson, additive-decoration, id/
 ADR-018, and create-request boundaries
 and the Jackson 2 parity argument. The Jackson 3 implementation is the configured
 `Jackson3JsonApi` runtime in `jsonapi-java-jackson3`; Jackson 2 runtime parity follows
-separately (its validated document writer is already implemented in `jsonapi-java-jackson2`, as is its
-validated token-driven document reader).
+separately (its validated document writer, validated token-driven document reader, and advanced
+write-side resource mapper are already implemented in `jsonapi-java-jackson2`).
 
 Convenience writes infer a root `JavaType` from the concrete runtime class. Directly parameterized
 roots such as `Container<Thing>` use the overloads that accept a complete `JavaType`; that declared
