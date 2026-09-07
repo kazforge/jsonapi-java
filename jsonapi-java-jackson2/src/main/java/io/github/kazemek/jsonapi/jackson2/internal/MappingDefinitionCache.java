@@ -51,6 +51,16 @@ public final class MappingDefinitionCache {
   }
 
   /**
+   * Resolves the serialization-oriented mapping for {@code javaType}, preserving full
+   * parameterization so property types introspect with type variables bound (for example {@code
+   * GenericPatch<String>} resolves its members as {@code String}). Distinct parameterizations of
+   * the same raw class map independently through the validated cache.
+   */
+  ResourceMapping resolve(JavaType javaType) {
+    return resolveValidated(javaType).mapping();
+  }
+
+  /**
    * Resolves a write mapping and memoizes the generic-member validation result under the
    * complete-type key. Property types introspect with type variables bound, so distinct
    * parameterizations of the same raw class map independently.
