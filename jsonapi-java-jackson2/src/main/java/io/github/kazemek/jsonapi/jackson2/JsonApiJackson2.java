@@ -1,5 +1,8 @@
 package io.github.kazemek.jsonapi.jackson2;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
@@ -8,16 +11,19 @@ import io.github.kazemek.jsonapi.core.validation.ValidationContext;
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext;
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter;
 import io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoratorRegistry;
+import io.github.kazemek.jsonapi.jackson2.internal.DomainResourceBinder;
 import io.github.kazemek.jsonapi.jackson2.internal.DomainResourceWriter;
 import io.github.kazemek.jsonapi.jackson2.internal.JsonApiDocumentModule;
 import io.github.kazemek.jsonapi.jackson2.internal.MappingDefinitionCache;
 import io.github.kazemek.jsonapi.jackson2.internal.MetaBindingModule;
+import java.io.IOException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Factory for the Jackson 2 JSON:API document writer, validated document reader, and resource
- * mapper.
+ * Factory for the Jackson 2 JSON:API document writer, validated document reader, resource mapper,
+ * and flat DTO resource binder.
  *
  * <p>Callers supply an already-configured {@link JsonMapper}. Each canonical factory accepts that
  * mapper first, followed by the capability-specific context and collaborators; the writer
@@ -28,13 +34,15 @@ import java.util.Optional;
  * directly for token-driven parsing; the resource mapper derives an isolated mapping mapper via
  * {@link JsonMapper#rebuild()} with only mapping-required internal module support, including a
  * caller-preserving JDK 8 {@code Optional} fallback. Public surface consists of {@link
- * JsonApiDocumentWriter}, {@link JsonApiDocumentReader}, and {@link JsonApiResourceMapper};
- * additional capabilities follow in later parity stories per ADR-016's semantic cross-major policy.
+ * JsonApiDocumentWriter}, {@link JsonApiDocumentReader}, {@link JsonApiResourceMapper}, and {@link
+ * JsonApiResourceBinder}; additional capabilities follow in later parity stories per ADR-016's
+ * semantic cross-major policy.
  */
 public final class JsonApiJackson2 {
 
   private static final String CONTEXT = "context";
   private static final String IDENTIFIER_CONVERTER = "identifierConverter";
+  private static final String LINKAGE_MAPPERS = "linkageMappers";
 
   private JsonApiJackson2() {}
 
@@ -118,6 +126,44 @@ public final class JsonApiJackson2 {
   }
 
   /**
+   * Returns a flat DTO binder with default identifier conversion and no custom relationship linkage
+   * mappers. Derives a new mapper via {@link JsonMapper#rebuild()} and never mutates the caller's
+   * mapper.
+   */
+  public static JsonApiResourceBinder resourceBinder(JsonMapper base) {
+    return resourceBinder(base, IdentifierConverter.defaults(), Map.of());
+  }
+
+  /**
+   * Returns a flat DTO binder with the given identifier converter and no custom relationship
+   * linkage mappers. Derives a new mapper via {@link JsonMapper#rebuild()} and never mutates the
+   * caller's mapper.
+   */
+  public static JsonApiResourceBinder resourceBinder(
+      JsonMapper base, IdentifierConverter identifierConverter) {
+    return resourceBinder(base, identifierConverter, Map.of());
+  }
+
+  /**
+   * Returns a flat DTO binder with the given identifier converter and relationship linkage mappers
+   * keyed by relationship target class. Derives a new mapper via {@link JsonMapper#rebuild()} and
+   * never mutates the caller's mapper.
+   */
+  public static JsonApiResourceBinder resourceBinder(
+      JsonMapper base,
+      IdentifierConverter identifierConverter,
+      Map<Class<?>, RelationshipLinkageMapper> linkageMappers) {
+    Objects.requireNonNull(base, "base");
+    Objects.requireNonNull(identifierConverter, IDENTIFIER_CONVERTER);
+    Objects.requireNonNull(linkageMappers, LINKAGE_MAPPERS);
+    JsonMapper derived = resourceBindingMapper(base);
+    DomainResourceBinder binder =
+        new DomainResourceBinder(
+            derived, identifierConverter, new MappingDefinitionCache(derived), linkageMappers);
+    return new JsonApiResourceBinder(derived, binder);
+  }
+
+  /**
    * Returns {@code true} when the caller's configured mapper already serializes a present {@code
    * Optional} without the adapter's fallback (JDK 8 datatype module, a custom serializer, or a
    * relaxed bean-serialization configuration). Any failure counts as missing support.
@@ -127,7 +173,25 @@ public final class JsonApiJackson2 {
       ((DefaultSerializerProvider) mapper.getSerializerProviderInstance())
           .serializeValue(buffer, Optional.of("probe"));
       return true;
-    } catch (RuntimeException | java.io.IOException e) {
+    } catch (RuntimeException | IOException e) {
+      return false;
+    }
+  }
+
+  /**
+   * Returns {@code true} when the caller's configured mapper already deserializes a present {@code
+   * Optional} without the adapter's fallback (JDK 8 datatype module or a custom deserializer). Any
+   * failure counts as missing support.
+   */
+  private static boolean supportsOptionalDeserialization(JsonMapper mapper) {
+    JavaType type = mapper.constructType(new TypeReference<Optional<String>>() {});
+    try (TokenBuffer buffer = new TokenBuffer(mapper, false)) {
+      buffer.writeString("probe");
+      try (JsonParser parser = buffer.asParser(mapper)) {
+        mapper.readValue(parser, type);
+        return true;
+      }
+    } catch (RuntimeException | IOException e) {
       return false;
     }
   }
@@ -144,6 +208,24 @@ public final class JsonApiJackson2 {
   private static JsonMapper resourceMappingMapper(JsonMapper base) {
     JsonMapper.Builder derived = base.rebuild().addModule(new MetaBindingModule());
     if (!supportsOptionalSerialization(base)) {
+      derived = derived.addModule(new Jdk8Module());
+    }
+    return derived.build();
+  }
+
+  /**
+   * Derives a mapper for resource mapping introspection, identifier conversion, and flat binder
+   * construction. Registers {@link MetaBindingModule} so built-in {@code ResourceIdentifier} values
+   * can round-trip identifier meta. When the caller's configuration cannot deserialize a present
+   * {@code Optional}, the derived binder mapper also registers the pinned JDK 8 datatype module so
+   * the supported cross-major Optional contract holds on the default configured-mapper path;
+   * caller-supplied Optional handling is detected behaviorally and always wins. Does not register
+   * the JSON:API document module because the binder produces application values, not serialized
+   * output.
+   */
+  private static JsonMapper resourceBindingMapper(JsonMapper base) {
+    JsonMapper.Builder derived = base.rebuild().addModule(new MetaBindingModule());
+    if (!supportsOptionalDeserialization(base)) {
       derived = derived.addModule(new Jdk8Module());
     }
     return derived.build();

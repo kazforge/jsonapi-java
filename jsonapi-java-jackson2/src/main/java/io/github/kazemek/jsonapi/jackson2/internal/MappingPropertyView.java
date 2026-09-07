@@ -7,9 +7,10 @@ import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
  * Direction-neutral view of one JSON:API-mapped Jackson property.
  *
  * <p>{@link #logicalName()} is the Jackson internal property identity (Java field, record
- * component, or JavaBean name). {@link #jsonapiName()} is the JSON:API member name on the wire:
- * configured Jackson's external name for attributes and relationships, and the target
- * relationship's external name for relationship meta.
+ * component, or JavaBean name). {@link #jacksonName()} is the configured Jackson external name used
+ * for bean construction. {@link #jsonapiName()} is the JSON:API member name on the wire: configured
+ * Jackson's external name for attributes and relationships, and the target relationship's external
+ * name for relationship meta.
  */
 interface MappingPropertyView {
 
@@ -22,4 +23,9 @@ interface MappingPropertyView {
   PropertyRole role();
 
   JavaType type();
+
+  /** Configured Jackson external name used as the {@code convertValue} map key. */
+  default String jacksonName() {
+    return definition().getName();
+  }
 }

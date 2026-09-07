@@ -1,6 +1,7 @@
 package io.github.kazemek.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
@@ -329,10 +330,11 @@ final class MappingDefinitionResolver {
         MappingDefinitionResolver::relationshipLocation);
     rejectAttributeRelationshipCollisions(attributeProperties, relationshipProperties, rawType);
     requireSingleResourceMeta(resourceMetaProperties, rawType);
-    // Relationship-meta target validation already ran in bindWriteRelationshipMeta during
-    // classifyProperties: it rejects unknown targets and duplicate target identities (by the
-    // relationship property's Java logical name) and rewrites each meta property's jsonapiName
-    // to the target relationship's wire name, so no post-binding target check remains needed.
+    // Relationship-meta target validation already ran in the write and read binding steps
+    // (bindWriteRelationshipMeta during classifyProperties and bindReadRelationshipMeta during
+    // resolveRead): each binding rejects unknown targets and duplicate target identities (by the
+    // relationship property's Java logical name) and rewrites each meta property's jsonapiName to
+    // the target relationship's wire name, so no post-binding target check remains needed.
   }
 
   /**
@@ -483,6 +485,213 @@ final class MappingDefinitionResolver {
             "Attribute and relationship name collision: " + attribute.jsonapiName());
       }
     }
+  }
+
+  /**
+   * Resolves the minimum deserialization-aware mapping view needed by ordinary flat reads.
+   *
+   * <p>Role and JSON:API wire-name interpretation is shared with the write mapping, but the
+   * property definitions and effective target types come from Jackson's deserialization side. The
+   * serialization definitions are retained only to preserve role annotations and to diagnose a
+   * supplied member whose serialization-only declaration is absent from the effective read model.
+   */
+  static ReadResourceMapping resolveRead(
+      BeanDescription deserializationDescription,
+      BeanDescription serializationDescription,
+      Class<?> rawType,
+      AnnotatedClass resourceMetadata,
+      Map<String, JavaType> deserializationTypes) {
+    String resourceType = validateResourceTypeName(resourceTypeName(resourceMetadata), rawType);
+    List<ReadMappingProperty> identifierProperties = new ArrayList<>();
+    List<ReadMappingProperty> localIdProperties = new ArrayList<>();
+    List<ReadMappingProperty> attributeProperties = new ArrayList<>();
+    List<ReadMappingProperty> relationshipProperties = new ArrayList<>();
+    List<ReadMappingProperty> resourceMetaProperties = new ArrayList<>();
+    List<ReadMappingProperty> relationshipMetaProperties = new ArrayList<>();
+
+    for (PropertyPair pair :
+        mergeProperties(deserializationDescription, serializationDescription)) {
+      BeanPropertyDefinition propertyDefinition = pair.primary();
+      RoleAnnotations annotations = RoleAnnotations.from(pair.definitions());
+      String jacksonName = propertyDefinition.getName();
+      String logicalName = propertyDefinition.getInternalName();
+      rejectConflictingJacksonName(annotations, jacksonName, rawType);
+      PropertyRole role = resolveRole(annotations, jacksonName, logicalName, rawType);
+      if (role == null) {
+        continue;
+      }
+      String jsonapiName = resolveJsonapiName(annotations, jacksonName, role);
+      validateJsonApiName(jsonapiName, role, logicalName, rawType);
+      ReadMappingProperty mappingProperty =
+          new ReadMappingProperty(
+              propertyDefinition,
+              pair.serialization() == null ? null : pair.serialization().getAccessor(),
+              pair.deserialization() == null ? null : pair.deserialization().getMutator(),
+              deserializationTypes.get(jacksonName),
+              logicalName,
+              jsonapiName,
+              role);
+      switch (role) {
+        case ID -> identifierProperties.add(mappingProperty);
+        case LOCAL_ID -> localIdProperties.add(mappingProperty);
+        case ATTRIBUTE -> attributeProperties.add(mappingProperty);
+        case RELATIONSHIP -> relationshipProperties.add(mappingProperty);
+        case RESOURCE_META -> resourceMetaProperties.add(mappingProperty);
+        case RELATIONSHIP_META -> relationshipMetaProperties.add(mappingProperty);
+      }
+    }
+    List<ReadMappingProperty> boundRelationshipMeta =
+        bindReadRelationshipMeta(relationshipMetaProperties, relationshipProperties, rawType);
+    validatePropertyRoles(
+        identifierProperties,
+        localIdProperties,
+        attributeProperties,
+        relationshipProperties,
+        resourceMetaProperties,
+        rawType);
+
+    ReadMappingProperty identifier =
+        identifierProperties.isEmpty() ? null : identifierProperties.getFirst();
+    ReadMappingProperty localId = localIdProperties.isEmpty() ? null : localIdProperties.getFirst();
+    ReadMappingProperty resourceMeta =
+        resourceMetaProperties.isEmpty() ? null : resourceMetaProperties.getFirst();
+    return new ReadResourceMapping(
+        resourceType,
+        identifier,
+        localId,
+        List.copyOf(attributeProperties),
+        List.copyOf(relationshipProperties),
+        resourceMeta,
+        List.copyOf(boundRelationshipMeta),
+        deserializationDescription.getType(),
+        creatorPropertyNames(deserializationDescription));
+  }
+
+  /**
+   * Collects the configured Jackson external names of the deserialization-introspected properties
+   * that carry constructor parameters: the effective creator properties used by message-independent
+   * missing-creator-input classification.
+   */
+  private static Set<String> creatorPropertyNames(BeanDescription deserializationDescription) {
+    Set<String> creatorNames = new HashSet<>();
+    for (BeanPropertyDefinition definition : deserializationDescription.findProperties()) {
+      if (definition.hasConstructorParameter()) {
+        creatorNames.add(definition.getName());
+      }
+    }
+    return Set.copyOf(creatorNames);
+  }
+
+  private static List<PropertyPair> mergeProperties(
+      BeanDescription deserializationDescription, BeanDescription serializationDescription) {
+    List<PropertyPair> pairs = new ArrayList<>();
+    for (BeanPropertyDefinition definition : deserializationDescription.findProperties()) {
+      pairs.add(new PropertyPair(definition, null));
+    }
+    for (BeanPropertyDefinition definition : serializationDescription.findProperties()) {
+      // Logical identity takes precedence because externally configured names can cross between
+      // properties. External names are only a fallback when they identify one deserialization
+      // property; a second serialization definition never overwrites an existing pairing.
+      PropertyPair match =
+          findUniqueDeserializationMatch(
+              pairs, definition, BeanPropertyDefinition::getInternalName);
+      if (match == null) {
+        match = findUniqueDeserializationMatch(pairs, definition, BeanPropertyDefinition::getName);
+      }
+      if (match == null || match.serialization() != null) {
+        pairs.add(new PropertyPair(null, definition));
+      } else {
+        match.setSerialization(definition);
+      }
+    }
+    return pairs;
+  }
+
+  private static @Nullable PropertyPair findUniqueDeserializationMatch(
+      List<PropertyPair> pairs,
+      BeanPropertyDefinition candidate,
+      Function<BeanPropertyDefinition, String> nameExtractor) {
+    String candidateName = nameExtractor.apply(candidate);
+    PropertyPair match = null;
+    for (PropertyPair pair : pairs) {
+      if (!pair.matchesDeserializationName(candidateName, nameExtractor)) {
+        continue;
+      }
+      if (match != null) {
+        return null;
+      }
+      match = pair;
+    }
+    return match;
+  }
+
+  private static final class PropertyPair {
+
+    private final @Nullable BeanPropertyDefinition deserialization;
+    private @Nullable BeanPropertyDefinition serialization;
+
+    PropertyPair(
+        @Nullable BeanPropertyDefinition deserialization,
+        @Nullable BeanPropertyDefinition serialization) {
+      this.deserialization = deserialization;
+      this.serialization = serialization;
+    }
+
+    @Nullable BeanPropertyDefinition deserialization() {
+      return deserialization;
+    }
+
+    @Nullable BeanPropertyDefinition serialization() {
+      return serialization;
+    }
+
+    void setSerialization(BeanPropertyDefinition definition) {
+      serialization = definition;
+    }
+
+    boolean matchesDeserializationName(
+        String candidateName, Function<BeanPropertyDefinition, String> nameExtractor) {
+      return deserialization != null && nameExtractor.apply(deserialization).equals(candidateName);
+    }
+
+    BeanPropertyDefinition primary() {
+      return deserialization != null
+          ? deserialization
+          : Objects.requireNonNull(serialization, "serialization");
+    }
+
+    List<BeanPropertyDefinition> definitions() {
+      if (deserialization != null && serialization != null) {
+        return List.of(deserialization, serialization);
+      }
+      return List.of(primary());
+    }
+  }
+
+  private static List<ReadMappingProperty> bindReadRelationshipMeta(
+      List<ReadMappingProperty> relationshipMetaProperties,
+      List<ReadMappingProperty> relationshipProperties,
+      Class<?> rawType) {
+    if (relationshipMetaProperties.isEmpty()) {
+      return List.of();
+    }
+    Map<String, ReadMappingProperty> byIdentity = relationshipByIdentity(relationshipProperties);
+    Set<String> seen = new HashSet<>();
+    List<ReadMappingProperty> bound = new ArrayList<>();
+    for (ReadMappingProperty property : relationshipMetaProperties) {
+      ReadMappingProperty target =
+          requireRelationshipMetaTarget(property, byIdentity, seen, rawType);
+      bound.add(
+          new ReadMappingProperty(
+              property.definition(),
+              property.serializationMember(),
+              property.deserializationMember(),
+              property.deserializationType(),
+              property.logicalName(),
+              target.jsonapiName(),
+              property.role()));
+    }
+    return bound;
   }
 
   private static MappingLocation attributeLocation(String jsonapiName) {

@@ -15,6 +15,19 @@ public final class LocalIdFixtures {
 
   private LocalIdFixtures() {}
 
+  /** Getter-only local-id role: a supplied wire lid fails at {@code /lid}. */
+  @JsonApiResource(type = "getter-only-lid")
+  public static final class GetterOnlyLocalId {
+
+    @JsonApiId public String id;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonApiLocalId
+    public String getLocalId() {
+      return "derived";
+    }
+  }
+
   /**
    * Renamed local-id property: configured Jackson naming stays, the wire member stays {@code lid}.
    */
