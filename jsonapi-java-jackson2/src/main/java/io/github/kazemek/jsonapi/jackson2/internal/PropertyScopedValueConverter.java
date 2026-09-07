@@ -61,7 +61,9 @@ final class PropertyScopedValueConverter {
       @Nullable Object rawValue,
       @Nullable Object fallbackValue) {
     try {
-      SerializerPropertyResolution resolution = matchingSerializerProperty(beanType, wireName);
+      SerializerProvider provider = serializationMapper.getSerializerProviderInstance();
+      SerializerPropertyResolution resolution =
+          matchingSerializerProperty(provider, beanType, wireName);
       if (!resolution.beanSerializerAvailable()) {
         return new SerializationResult(true, mapper.convertValue(fallbackValue, Object.class));
       }
@@ -69,7 +71,6 @@ final class PropertyScopedValueConverter {
         return new SerializationResult(false, null);
       }
       BeanPropertyWriter property = Objects.requireNonNull(resolution.property());
-      SerializerProvider provider = serializationMapper.getSerializerProviderInstance();
       try (TokenBuffer buffer = conversionBuffer(provider)) {
         serializePropertyValue(property, sourceBean, rawValue, buffer, provider);
         try (JsonParser parser = buffer.asParser(mapper)) {
@@ -104,7 +105,7 @@ final class PropertyScopedValueConverter {
       case RawValueUnwrappingBeanPropertyWriter rawUnwrappingProperty ->
           rawUnwrappingProperty.serializeAsRawProperty(sourceBean, rawValue, buffer, provider);
       case UnwrappingBeanPropertyWriter unwrappingProperty ->
-          new RawValueUnwrappingBeanPropertyWriter(unwrappingProperty)
+          RawValueUnwrappingBeanPropertyWriter.of(unwrappingProperty, provider)
               .serializeAsRawProperty(sourceBean, rawValue, buffer, provider);
       default ->
           new RawValueBeanPropertyWriter(property)
@@ -126,8 +127,7 @@ final class PropertyScopedValueConverter {
    * serializer uses the ordinary conversion fallback.
    */
   private SerializerPropertyResolution matchingSerializerProperty(
-      JavaType beanType, String wireName) {
-    SerializerProvider context = serializationMapper.getSerializerProviderInstance();
+      SerializerProvider context, JavaType beanType, String wireName) {
     com.fasterxml.jackson.databind.JsonSerializer<Object> root;
     try {
       root = context.findValueSerializer(beanType);

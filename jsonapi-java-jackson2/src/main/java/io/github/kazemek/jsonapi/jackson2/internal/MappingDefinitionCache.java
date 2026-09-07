@@ -26,7 +26,6 @@ import org.jspecify.annotations.Nullable;
 public final class MappingDefinitionCache {
 
   private final JsonMapper mapper;
-  private final Map<JavaType, ResourceMapping> cache = new ConcurrentHashMap<>();
   private final Map<JavaType, ValidatedMapping> validatedCache = new ConcurrentHashMap<>();
   private final Map<JavaType, Optional<String>> resourceTypeNames = new ConcurrentHashMap<>();
 
@@ -52,10 +51,7 @@ public final class MappingDefinitionCache {
         javaType,
         type -> {
           ResourceMapping mapping =
-              cache.computeIfAbsent(
-                  type,
-                  ignored ->
-                      computeMapping(type.getRawClass(), type, mapper.getSerializationConfig()));
+              computeMapping(type.getRawClass(), type, mapper.getSerializationConfig());
           return new ValidatedMapping(
               mapping,
               Optional.ofNullable(ResolvedTypeSupport.findUnresolvedProperty(mapping, type)));

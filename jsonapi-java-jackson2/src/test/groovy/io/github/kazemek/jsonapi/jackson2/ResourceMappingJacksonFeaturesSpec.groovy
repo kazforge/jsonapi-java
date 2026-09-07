@@ -1,9 +1,13 @@
 package io.github.kazemek.jsonapi.jackson2
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonUnwrapped
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.AnnotationIntrospector
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember
 import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.databind.util.NameTransformer
 import io.github.kazemek.jsonapi.annotation.JsonApiAttribute
 import io.github.kazemek.jsonapi.annotation.JsonApiId
 import io.github.kazemek.jsonapi.annotation.JsonApiResource
@@ -115,6 +119,41 @@ class ResourceMappingJacksonFeaturesSpec extends Specification {
 
     then:
     resource.attributes().attributes().title == "[FORMATTED] Hello"
+  }
+
+  def "unwrapping property with runtime POJO keeps the transformed member names"() {
+    given:
+    def mapper = JsonApiJackson2.resourceMapper(JsonMapper.builder().build())
+    def thing =
+        new JacksonFeatureFixtures.UnwrappedObjectThing("1", new JacksonFeatureFixtures.UnwrappedNestedValue())
+
+    when:
+    def resource = mapper.toResource(thing)
+
+    then:
+    // The raw path resolves the unwrapping serializer through the dynamic (declared-Object)
+    // route. Property-scoped mapping reads the flattened name/value tokens back as one untyped
+    // value — the flattened member name is consumed and the value lands under the member's wire
+    // name, exactly as the Jackson 3 reference does for the same fixture.
+    resource.attributes().attributes() == [details: "iv"]
+  }
+
+  def "custom introspector unwrapping transformer is honored without @JsonUnwrapped"() {
+    given:
+    def jacksonMapper = JsonMapper.builder()
+        .annotationIntrospector(new JacksonFeatureFixtures.CustomUnwrappingIntrospector())
+        .build()
+    def mapper = JsonApiJackson2.resourceMapper(jacksonMapper)
+    def thing =
+        new JacksonFeatureFixtures.CustomUnwrappedThing("1", new JacksonFeatureFixtures.UnwrappedNestedValue())
+
+    when:
+    def resource = mapper.toResource(thing)
+
+    then:
+    // Same property-scoped collapse as above; the custom-introspector transformer drives the
+    // dynamic-serializer resolution inside the raw path.
+    resource.attributes().attributes() == [details: "iv"]
   }
 
   def "identifier converter returning null is rejected"() {

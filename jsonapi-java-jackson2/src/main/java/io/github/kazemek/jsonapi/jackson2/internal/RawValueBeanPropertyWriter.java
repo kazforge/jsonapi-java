@@ -99,7 +99,7 @@ final class RawValueBeanPropertyWriter extends BeanPropertyWriter {
           "Property-scoped serialization does not support custom BeanPropertyWriter replacements");
     }
     if (delegate instanceof UnwrappingBeanPropertyWriter unwrappingDelegate) {
-      new RawValueUnwrappingBeanPropertyWriter(unwrappingDelegate)
+      RawValueUnwrappingBeanPropertyWriter.of(unwrappingDelegate, provider)
           .serializeAsRawProperty(bean, value, generator, provider);
       return;
     }

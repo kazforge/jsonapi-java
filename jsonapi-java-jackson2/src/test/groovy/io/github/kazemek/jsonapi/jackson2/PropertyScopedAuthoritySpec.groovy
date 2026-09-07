@@ -277,7 +277,7 @@ class PropertyScopedAuthoritySpec extends Specification {
 
     DirectPropertyArticle(
     String id,
-    @JsonApiAttribute String title,
+    String title,
     StructuredValue details,
     MetaValue meta,
     ResourceIdentifier author,

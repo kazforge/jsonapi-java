@@ -21,8 +21,9 @@ explains how those pieces fit together.
 ## Module responsibilities
 
 These are ownership boundaries, not a complete Gradle dependency graph. Jackson 2 currently
-implements the validated document codec (writer plus token-driven reader) and consumes the same
-`jackson-api` contracts; its remaining capabilities follow in later parity stories.
+implements the validated document codec (writer plus token-driven reader) and the advanced
+write-side resource mapper, consuming the same `jackson-api` contracts; flat DTO binding,
+presence-aware PATCH, and the Level-1 runtime follow in later parity stories.
 
 ```mermaid
 flowchart TB
@@ -115,11 +116,14 @@ Public Jackson 3 entry points are created from `JsonApiJackson3`. Codec paths ar
 `JsonApiDocumentReader` / `JsonApiDocumentWriter`. Mapping paths are `JsonApiResourceMapper`
 (write), `JsonApiResourceBinder` (flat read), `JsonApiDomainDocumentReader` (typed envelope),
 `JsonApiPatchCommandReader`, and `JsonApiPatchDtoReader`. The Jackson 2 module currently exposes
-the writer and reader seams: `JsonApiJackson2.writer(mapper[, validationContext])` returns its
-`JsonApiDocumentWriter` with the same validate-before-emit and provenance-composition semantics,
-and `JsonApiJackson2.reader(mapper, readContext)` returns its token-driven
-`JsonApiDocumentReader` with the same decode-then-validate semantics (every overload declares
-checked `IOException`; Jackson parse failures become payload-safe `MALFORMED_JSON`).
+the writer, reader, and write-side mapping seams: `JsonApiJackson2.writer(mapper[,
+validationContext])` returns its `JsonApiDocumentWriter` with the same validate-before-emit and
+provenance-composition semantics, `JsonApiJackson2.reader(mapper, readContext)` returns its
+token-driven `JsonApiDocumentReader` with the same decode-then-validate semantics (every overload
+declares checked `IOException`; Jackson parse failures become payload-safe `MALFORMED_JSON`), and
+`JsonApiJackson2.resourceMapper(...)` returns its `JsonApiResourceMapper` with the same
+mapping, compound-inclusion, sparse-fieldset, and decoration semantics as `JsonApiJackson3.resourceMapper`
+(mapping diagnostics use resource-relative `MappingLocation` pointers).
 
 ## Level-1 application contract
 

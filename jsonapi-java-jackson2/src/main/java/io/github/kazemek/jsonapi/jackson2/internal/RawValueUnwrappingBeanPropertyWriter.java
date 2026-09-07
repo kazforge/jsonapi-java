@@ -17,25 +17,44 @@ import org.jspecify.annotations.Nullable;
  * Raw-value variant of {@link UnwrappingBeanPropertyWriter}.
  *
  * <p>The unwrapping subclass exists so the delegate's unwrapping serializer state stays reachable
- * through the inherited dynamic-serializer lookup. The unwrapping name transformer is rebuilt from
- * the property's {@link JsonUnwrapped} annotation, which is exactly what the standard Jackson
- * annotation introspector derives it from; a custom introspector that returns a different
- * transformer only affects the defensive dynamic-serializer path, because the contextualized
- * serializer is already assigned when the raw path runs.
+ * through the inherited dynamic-serializer lookup. The unwrapping name transformer cannot be read
+ * back from the delegate (its {@code _nameTransformer} field is protected and inaccessible across
+ * packages), so it is reconstructed the same way Jackson built the delegate: from the mapper's
+ * {@code AnnotationIntrospector#findUnwrappingNameTransformer} on the property member, falling back
+ * to the {@link JsonUnwrapped} annotation. The introspector lookup honors custom introspectors; the
+ * annotation fallback covers construction paths without a serializer provider.
  */
 final class RawValueUnwrappingBeanPropertyWriter extends UnwrappingBeanPropertyWriter {
 
   private final UnwrappingBeanPropertyWriter delegate;
 
   RawValueUnwrappingBeanPropertyWriter(UnwrappingBeanPropertyWriter base) {
-    super(base, unwrappedTransformer(base));
+    super(base, annotationTransformer(base));
     this.delegate = base;
+  }
+
+  private RawValueUnwrappingBeanPropertyWriter(
+      UnwrappingBeanPropertyWriter base, NameTransformer transformer) {
+    super(base, transformer);
+    this.delegate = base;
+  }
+
+  /** Reconstructs the delegate's transformer from the mapper-configured introspector. */
+  static RawValueUnwrappingBeanPropertyWriter of(
+      UnwrappingBeanPropertyWriter base, SerializerProvider provider) {
+    NameTransformer supplied =
+        provider
+            .getConfig()
+            .getAnnotationIntrospector()
+            .findUnwrappingNameTransformer(base.getMember());
+    return new RawValueUnwrappingBeanPropertyWriter(
+        base, supplied != null ? supplied : annotationTransformer(base));
   }
 
   // BeanPropertyWriter.getAnnotation returns null for absent annotations (null when the member is
   // unavailable), so the null check is live even though the dataflow inspection cannot see it.
   @SuppressWarnings("ConstantConditions")
-  private static NameTransformer unwrappedTransformer(UnwrappingBeanPropertyWriter base) {
+  private static NameTransformer annotationTransformer(UnwrappingBeanPropertyWriter base) {
     JsonUnwrapped annotation = base.getAnnotation(JsonUnwrapped.class);
     if (annotation == null || !annotation.enabled()) {
       return NameTransformer.NOP;
