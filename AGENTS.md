@@ -20,7 +20,11 @@
 - Dependency verification is checksum-enforced by `gradle/verification-metadata.xml`. After a
   dependency change or verification failure, run
   `./gradlew --refresh-dependencies --write-verification-metadata sha256 clean build`; never disable
-  verification globally.
+  verification globally. Preserve the IntelliJ Gradle-sync exceptions when regenerating: the
+  `*-sources.jar` / `*-javadoc.jar` trusted-artifact classifier rules, the `gradle:gradle`
+  `-src.zip` checksum (refresh it when bumping the wrapper), and the Groovy 4.0.32 DSL-parser
+  `.module` / `.pom` checksums (refresh that pin if the wrapper's bundled Groovy changes). Do not
+  widen those exceptions to group-level trusts or `verify-metadata=false`.
 
 # Repository Shape
 
