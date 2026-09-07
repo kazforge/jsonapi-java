@@ -1,10 +1,7 @@
 package io.github.kazemek.jsonapi.jackson2
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
@@ -14,20 +11,16 @@ import io.github.kazemek.jsonapi.annotation.JsonApiId
 import io.github.kazemek.jsonapi.annotation.JsonApiResource
 import io.github.kazemek.jsonapi.core.model.DocumentData
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument
-import io.github.kazemek.jsonapi.core.model.Meta
 import io.github.kazemek.jsonapi.core.model.ResourceIdentifier
 import io.github.kazemek.jsonapi.core.model.ResourceObject
 import io.github.kazemek.jsonapi.core.validation.DocumentUsage
 import io.github.kazemek.jsonapi.core.validation.EndpointIdentity
 import io.github.kazemek.jsonapi.core.validation.ValidationContext
-import io.github.kazemek.jsonapi.core.validation.ValidationRuleCode
 import io.github.kazemek.jsonapi.fixtures.TestFixtureResources
 import io.github.kazemek.jsonapi.fixtures.domainpatch.Article
-import io.github.kazemek.jsonapi.fixtures.domainpatch.ArticleWithMeta
 import io.github.kazemek.jsonapi.fixtures.domainread.FlatArticle
 import io.github.kazemek.jsonapi.fixtures.domainread.FlatCountedThing
 import io.github.kazemek.jsonapi.fixtures.domainread.FlatThingWithIgnored
-import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiDocumentReadException
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext

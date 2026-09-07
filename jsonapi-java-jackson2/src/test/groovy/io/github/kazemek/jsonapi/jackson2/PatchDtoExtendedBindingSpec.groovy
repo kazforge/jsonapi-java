@@ -9,12 +9,10 @@ import io.github.kazemek.jsonapi.core.model.ResourceIdentifier
 import io.github.kazemek.jsonapi.fixtures.TestFixtureResources
 import io.github.kazemek.jsonapi.fixtures.domainpatch.ArticlePatch
 import io.github.kazemek.jsonapi.fixtures.domainpatch.ArticleWithAddressPatch
-import io.github.kazemek.jsonapi.fixtures.domainpatch.ArticleWithMapMetaPatch
 import io.github.kazemek.jsonapi.fixtures.domainpatch.ArticleWithMetaPatch
 import io.github.kazemek.jsonapi.fixtures.domainpatch.ArticleMetaPatch
 import io.github.kazemek.jsonapi.fixtures.domainpatch.AuthorMeta
 import io.github.kazemek.jsonapi.fixtures.domainpatch.WholeMetaTargetFixtures
-import io.github.kazemek.jsonapi.fixtures.domainread.FlatArticle
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic
 import io.github.kazemek.jsonapi.jackson.patch.PatchPresence

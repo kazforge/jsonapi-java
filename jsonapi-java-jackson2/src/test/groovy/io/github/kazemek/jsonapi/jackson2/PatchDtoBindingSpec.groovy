@@ -1,6 +1,5 @@
 package io.github.kazemek.jsonapi.jackson2
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationContext
@@ -11,15 +10,12 @@ import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import io.github.kazemek.jsonapi.annotation.JsonApiAttribute
 import io.github.kazemek.jsonapi.annotation.JsonApiId
-import io.github.kazemek.jsonapi.annotation.JsonApiRelationship
 import io.github.kazemek.jsonapi.annotation.JsonApiResource
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument
-import io.github.kazemek.jsonapi.core.model.ResourceIdentifier
 import io.github.kazemek.jsonapi.core.validation.DocumentUsage
 import io.github.kazemek.jsonapi.core.validation.ValidationContext
 import io.github.kazemek.jsonapi.fixtures.TestFixtureResources
 import io.github.kazemek.jsonapi.fixtures.domainpatch.ArticlePatch
-import io.github.kazemek.jsonapi.fixtures.domainread.FlatArticle
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext

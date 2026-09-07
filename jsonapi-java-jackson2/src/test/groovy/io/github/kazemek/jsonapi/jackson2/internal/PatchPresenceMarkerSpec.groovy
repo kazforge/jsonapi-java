@@ -3,7 +3,6 @@ package io.github.kazemek.jsonapi.jackson2.internal
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import io.github.kazemek.jsonapi.jackson.patch.PatchPresence
