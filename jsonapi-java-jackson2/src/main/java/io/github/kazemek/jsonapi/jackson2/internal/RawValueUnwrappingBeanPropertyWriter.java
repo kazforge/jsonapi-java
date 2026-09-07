@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.impl.PropertySerializerMap;
 import com.fasterxml.jackson.databind.ser.impl.UnwrappingBeanPropertyWriter;
 import com.fasterxml.jackson.databind.util.NameTransformer;
+import java.io.IOException;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -91,7 +92,7 @@ final class RawValueUnwrappingBeanPropertyWriter extends UnwrappingBeanPropertyW
 
   void serializeAsRawProperty(
       Object bean, @Nullable Object value, JsonGenerator generator, SerializerProvider provider)
-      throws Exception {
+      throws IOException {
     if (value == null) {
       return;
     }
@@ -103,7 +104,7 @@ final class RawValueUnwrappingBeanPropertyWriter extends UnwrappingBeanPropertyW
   }
 
   private JsonSerializer<Object> resolveSerializer(Object value, SerializerProvider provider)
-      throws Exception {
+      throws JsonMappingException {
     JsonSerializer<Object> serializer = delegate.getSerializer();
     if (serializer != null) {
       return serializer;
@@ -134,7 +135,7 @@ final class RawValueUnwrappingBeanPropertyWriter extends UnwrappingBeanPropertyW
       JsonGenerator generator,
       SerializerProvider provider,
       JsonSerializer<Object> serializer)
-      throws Exception {
+      throws IOException {
     if (value == bean && _handleSelfReference(bean, generator, provider, serializer)) {
       return;
     }

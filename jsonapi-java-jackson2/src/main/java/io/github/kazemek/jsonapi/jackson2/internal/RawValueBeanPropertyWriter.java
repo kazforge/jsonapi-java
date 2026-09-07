@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.impl.PropertySerializerMap;
 import com.fasterxml.jackson.databind.ser.impl.UnwrappingBeanPropertyWriter;
 import com.fasterxml.jackson.databind.util.NameTransformer;
+import java.io.IOException;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -92,7 +93,7 @@ final class RawValueBeanPropertyWriter extends BeanPropertyWriter {
 
   void serializeAsRawProperty(
       Object bean, @Nullable Object value, JsonGenerator generator, SerializerProvider provider)
-      throws Exception {
+      throws IOException {
     if (usesCustomSerializationBehavior()) {
       throw new UnsupportedOperationException(
           "Property-scoped serialization does not support custom BeanPropertyWriter replacements");
@@ -116,7 +117,7 @@ final class RawValueBeanPropertyWriter extends BeanPropertyWriter {
   }
 
   private void serializeSuppressedNullProperty(JsonGenerator generator, SerializerProvider provider)
-      throws Exception {
+      throws IOException {
     if (delegate.isUnwrapping()) {
       return;
     }
@@ -131,7 +132,7 @@ final class RawValueBeanPropertyWriter extends BeanPropertyWriter {
   }
 
   private JsonSerializer<Object> resolveSerializer(Object value, SerializerProvider provider)
-      throws Exception {
+      throws JsonMappingException {
     JsonSerializer<Object> serializer = delegate.getSerializer();
     if (serializer != null) {
       return serializer;
@@ -162,7 +163,7 @@ final class RawValueBeanPropertyWriter extends BeanPropertyWriter {
       JsonGenerator generator,
       SerializerProvider provider,
       JsonSerializer<Object> serializer)
-      throws Exception {
+      throws IOException {
     if (value == bean && _handleSelfReference(bean, generator, provider, serializer)) {
       return;
     }

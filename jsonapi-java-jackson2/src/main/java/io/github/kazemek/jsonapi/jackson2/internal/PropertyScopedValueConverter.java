@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.impl.UnwrappingBeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
+import java.io.IOException;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -96,7 +97,7 @@ final class PropertyScopedValueConverter {
       @Nullable Object rawValue,
       TokenBuffer buffer,
       SerializerProvider provider)
-      throws Exception {
+      throws IOException {
     switch (property) {
       case RawValueBeanPropertyWriter rawProperty ->
           rawProperty.serializeAsRawProperty(sourceBean, rawValue, buffer, provider);
