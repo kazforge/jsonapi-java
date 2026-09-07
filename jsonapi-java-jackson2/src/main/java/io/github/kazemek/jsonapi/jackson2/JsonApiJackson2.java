@@ -23,7 +23,7 @@ import java.util.Optional;
 
 /**
  * Factory for the Jackson 2 JSON:API document writer, validated document reader, resource mapper,
- * and flat DTO resource binder.
+ * flat DTO resource binder, and presence-aware PATCH readers.
  *
  * <p>Callers supply an already-configured {@link JsonMapper}. Each canonical factory accepts that
  * mapper first, followed by the capability-specific context and collaborators; the writer
@@ -34,9 +34,9 @@ import java.util.Optional;
  * directly for token-driven parsing; the resource mapper derives an isolated mapping mapper via
  * {@link JsonMapper#rebuild()} with only mapping-required internal module support, including a
  * caller-preserving JDK 8 {@code Optional} fallback. Public surface consists of {@link
- * JsonApiDocumentWriter}, {@link JsonApiDocumentReader}, {@link JsonApiResourceMapper}, and {@link
- * JsonApiResourceBinder}; additional capabilities follow in later parity stories per ADR-016's
- * semantic cross-major policy.
+ * JsonApiDocumentWriter}, {@link JsonApiDocumentReader}, {@link JsonApiResourceMapper}, {@link
+ * JsonApiResourceBinder}, {@link JsonApiPatchCommandReader}, and {@link JsonApiPatchDtoReader};
+ * additional capabilities follow in later parity stories per ADR-016's semantic cross-major policy.
  */
 public final class JsonApiJackson2 {
 
@@ -161,6 +161,108 @@ public final class JsonApiJackson2 {
         new DomainResourceBinder(
             derived, identifierConverter, new MappingDefinitionCache(derived), linkageMappers);
     return new JsonApiResourceBinder(derived, binder);
+  }
+
+  /**
+   * Returns a presence-aware PATCH command reader with {@link ValidationContext#defaults()},
+   * default identifier conversion, and no custom relationship linkage mappers. Forces {@code
+   * DocumentUsage.UPDATE_REQUEST} and {@code PrimaryDataKind.RESOURCE} for validate-on-read.
+   */
+  public static JsonApiPatchCommandReader patchCommandReader(JsonMapper base) {
+    return patchCommandReader(
+        base, ValidationContext.defaults(), IdentifierConverter.defaults(), Map.of());
+  }
+
+  /**
+   * Returns a presence-aware PATCH command reader with the given validation context, default
+   * identifier conversion, and no custom relationship linkage mappers. Forces update-request usage
+   * while preserving other context fields (including expected endpoint identity).
+   */
+  public static JsonApiPatchCommandReader patchCommandReader(
+      JsonMapper base, ValidationContext validationContext) {
+    return patchCommandReader(base, validationContext, IdentifierConverter.defaults(), Map.of());
+  }
+
+  /**
+   * Returns a presence-aware PATCH command reader with the given validation context and identifier
+   * converter, and no custom relationship linkage mappers.
+   */
+  public static JsonApiPatchCommandReader patchCommandReader(
+      JsonMapper base,
+      ValidationContext validationContext,
+      IdentifierConverter identifierConverter) {
+    return patchCommandReader(base, validationContext, identifierConverter, Map.of());
+  }
+
+  /**
+   * Returns a presence-aware PATCH command reader with the given validation context, identifier
+   * converter, and relationship linkage mappers keyed by relationship target class. Snapshots the
+   * linkage-mapper map with {@link Map#copyOf}; derives a binder mapper via {@link
+   * JsonMapper#rebuild()} and never mutates the caller's mapper.
+   */
+  public static JsonApiPatchCommandReader patchCommandReader(
+      JsonMapper base,
+      ValidationContext validationContext,
+      IdentifierConverter identifierConverter,
+      Map<Class<?>, RelationshipLinkageMapper> linkageMappers) {
+    Objects.requireNonNull(base, "base");
+    Objects.requireNonNull(validationContext, CONTEXT);
+    Objects.requireNonNull(identifierConverter, IDENTIFIER_CONVERTER);
+    Objects.requireNonNull(linkageMappers, LINKAGE_MAPPERS);
+    return new JsonApiPatchCommandReader(
+        base, validationContext, identifierConverter, linkageMappers);
+  }
+
+  /**
+   * Returns a direct typed PATCH DTO reader with {@link ValidationContext#defaults()}, default
+   * identifier conversion, and no custom relationship linkage mappers. Forces {@code
+   * DocumentUsage.UPDATE_REQUEST} and {@code PrimaryDataKind.RESOURCE} for validate-on-read.
+   * Derives a binder mapper via {@link JsonMapper#rebuild()} plus the internal {@code
+   * PatchPresence} module and never mutates the caller's mapper.
+   */
+  public static JsonApiPatchDtoReader patchDtoReader(JsonMapper base) {
+    return patchDtoReader(
+        base, ValidationContext.defaults(), IdentifierConverter.defaults(), Map.of());
+  }
+
+  /**
+   * Returns a direct typed PATCH DTO reader with the given validation context, default identifier
+   * conversion, and no custom relationship linkage mappers. Forces update-request usage while
+   * preserving other context fields (including expected endpoint identity).
+   */
+  public static JsonApiPatchDtoReader patchDtoReader(
+      JsonMapper base, ValidationContext validationContext) {
+    return patchDtoReader(base, validationContext, IdentifierConverter.defaults(), Map.of());
+  }
+
+  /**
+   * Returns a direct typed PATCH DTO reader with the given validation context and identifier
+   * converter, and no custom relationship linkage mappers.
+   */
+  public static JsonApiPatchDtoReader patchDtoReader(
+      JsonMapper base,
+      ValidationContext validationContext,
+      IdentifierConverter identifierConverter) {
+    return patchDtoReader(base, validationContext, identifierConverter, Map.of());
+  }
+
+  /**
+   * Returns a direct typed PATCH DTO reader with the given validation context, identifier
+   * converter, and relationship linkage mappers keyed by relationship target class. Snapshots the
+   * linkage-mapper map with {@link Map#copyOf}; derives a binder mapper via {@link
+   * JsonMapper#rebuild()} plus the internal {@code PatchPresence} module and never mutates the
+   * caller's mapper.
+   */
+  public static JsonApiPatchDtoReader patchDtoReader(
+      JsonMapper base,
+      ValidationContext validationContext,
+      IdentifierConverter identifierConverter,
+      Map<Class<?>, RelationshipLinkageMapper> linkageMappers) {
+    Objects.requireNonNull(base, "base");
+    Objects.requireNonNull(validationContext, CONTEXT);
+    Objects.requireNonNull(identifierConverter, IDENTIFIER_CONVERTER);
+    Objects.requireNonNull(linkageMappers, LINKAGE_MAPPERS);
+    return new JsonApiPatchDtoReader(base, validationContext, identifierConverter, linkageMappers);
   }
 
   /**

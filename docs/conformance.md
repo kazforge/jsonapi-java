@@ -12,16 +12,16 @@ validate-before-emit and provenance-composition semantics, plus the token-driven
 reader with the same decode-then-validate semantics, plus advanced write-side domain-to-resource
 mapping through `JsonApiJackson2.resourceMapper` with the same mapping, inclusion, fieldset, and
 decoration semantics as Jackson 3, plus flat resource-to-DTO binding through
-`JsonApiJackson2.resourceBinder` with the same flat-binding semantics as Jackson 3; its remaining
-capabilities (typed envelopes, presence-aware PATCH binding, and the Level-1 runtime) follow in
-later parity stories. `jsonapi-java-jackson-api` owns
+`JsonApiJackson2.resourceBinder` with the same flat-binding semantics as Jackson 3, plus
+presence-aware PATCH binding through `JsonApiJackson2.patchCommandReader` / `patchDtoReader` with
+the same PATCH semantics as Jackson 3; its remaining capabilities (typed envelopes and the Level-1
+runtime) follow in later parity stories. `jsonapi-java-jackson-api` owns
 Jackson-major-neutral policy, diagnostics, contexts, envelope values, and presence-aware update
 contracts. How those modules fit together is in [`docs/architecture.md`](architecture.md). Writer output is cross-checked against pinned JSON:API 1.1 draft schemas as supplemental
 evidence only. The version-neutral document corpus, closed negative corpus, and dual-success
 ambiguous primary-data cases in the Jackson API test-fixtures corpus (`jsonapi/corpus/1.1/`) are
 shared wire resources for every Jackson major. Capability, schema, and context selections belong
-to each adapter's local specifications. Jackson 2 typed envelopes, presence-aware PATCH binding,
-query parsing, and Spring adapters remain deferred.
+to each adapter's local specifications. Jackson 2 typed envelopes, query parsing, and Spring adapters remain deferred.
 
 ## Document structure (supported)
 
@@ -84,7 +84,7 @@ query parsing, and Spring adapters remain deferred.
 | Omitted/present-empty attribute and relationship wrappers; explicit-null attribute values preserved             | supported    | Absent vs `Attributes.empty()` vs explicit null values; no normalization                     |
 | Optional expected endpoint identity comparison                                                                  | supported    | `ENDPOINT_IDENTITY_MISMATCH` at `/data/type` or `/data/id`; supplied via `ValidationContext` |
 | Update rules scoped to the primary resource                                                                     | supported    | `included` resources keep response semantics; full linkage still enforced                    |
-| Command application                                                                                             | out of scope | Applications apply authorized update commands; Jackson 2 binding remains deferred            |
+| Command application                                                                                             | out of scope | Applications apply authorized update commands                                             |
 | HTTP/route identity derivation and mutation                                                                     | out of scope | Application-owned; core compares only a supplied expected identity                           |
 
 ## Resource create request validation (supported)
@@ -151,7 +151,7 @@ control per schema kind (response, create-resource, update-resource, update-rela
 harness rejects invalid documents. The same spec keeps explicit expected failures for the three
 documented draft-schema gaps above, so a schema change forces an intentional review.
 
-## Domain mapping (supported; Jackson 2 typed envelopes and PATCH — deferred)
+## Domain mapping (supported; Jackson 2 typed envelopes — deferred)
 
 | Rule                                                    | Status       | Notes                                                                                                                                                                                                                          |
 |---------------------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -164,9 +164,9 @@ documented draft-schema gaps above, so a schema change forces an intentional rev
 | Flat resource-to-DTO binding                            | supported    | Validated document first; linkage only — never reads `included`; Jackson 3 via `JsonApiJackson3.resourceBinder`, Jackson 2 via `JsonApiJackson2.resourceBinder`                                                                |
 | Typed domain document envelopes                         | supported    | `JsonApiDomainDocument` via `JsonApiJackson3.domainDocumentReader`                                                                                                                                                             |
 | Independent typed binding of `included` resources       | supported    | Wire-ordered `IncludedResources` with dual id/lid lookup; no relationship injection                                                                                                                                            |
-| Presence-aware resource-update commands                 | supported    | Jackson 3 binding supported; Jackson 2 binding remains deferred                                |
-| Direct typed PATCH DTO binding                          | supported    | `PatchPresence` tri-state; Jackson 3 binding supported; Jackson 2 binding remains deferred     |
-| Recursive structured value PATCH semantics              | supported    | `StructuredPatch` payload for structured attributes on both PATCH paths (ADR-014); Jackson 3 binding supported; Jackson 2 binding remains deferred |
+| Presence-aware resource-update commands                 | supported    | Jackson 3 via `JsonApiJackson3.patchCommandReader`, Jackson 2 via `JsonApiJackson2.patchCommandReader` |
+| Direct typed PATCH DTO binding                          | supported    | `PatchPresence` tri-state; Jackson 3 via `JsonApiJackson3.patchDtoReader`, Jackson 2 via `JsonApiJackson2.patchDtoReader` |
+| Recursive structured value PATCH semantics              | supported    | `StructuredPatch` payload for structured attributes on both PATCH paths (ADR-014); Jackson 3 and Jackson 2 binding supported |
 | Automatic domain graph hydration                        | out of scope | Linkage resolution remains application policy                                                                                                                                                                                  |
 | Automatic mutation of domain or persistence objects     | out of scope | Applications apply authorized update commands                                                                                                                                                                                  |
 
