@@ -44,7 +44,6 @@ final class MappingDefinitionResolver {
         classified.attributes,
         classified.relationships,
         classified.resourceMeta,
-        classified.relationshipMeta,
         rawType);
 
     MappingProperty identifier =
@@ -320,7 +319,6 @@ final class MappingDefinitionResolver {
       List<? extends MappingPropertyView> attributeProperties,
       List<? extends MappingPropertyView> relationshipProperties,
       List<? extends MappingPropertyView> resourceMetaProperties,
-      List<? extends MappingPropertyView> relationshipMetaProperties,
       Class<?> rawType) {
     requireSingleIdentityRole(identifierProperties, localIdProperties, rawType);
     rejectDuplicateNames(
@@ -332,7 +330,11 @@ final class MappingDefinitionResolver {
         MappingDefinitionResolver::relationshipLocation);
     rejectAttributeRelationshipCollisions(attributeProperties, relationshipProperties, rawType);
     requireSingleResourceMeta(resourceMetaProperties, rawType);
-    validateRelationshipMetaTargets(relationshipMetaProperties, relationshipProperties, rawType);
+    // Relationship-meta target validation already ran in the write and read binding steps
+    // (bindWriteRelationshipMeta during classifyProperties and bindReadRelationshipMeta during
+    // resolveRead): each binding rejects unknown targets and duplicate target identities (by the
+    // relationship property's Java logical name) and rewrites each meta property's jsonapiName to
+    // the target relationship's wire name, so no post-binding target check remains needed.
   }
 
   /**
@@ -449,45 +451,6 @@ final class MappingDefinitionResolver {
     return target;
   }
 
-  private static void validateRelationshipMetaTargets(
-      List<? extends MappingPropertyView> relationshipMetaProperties,
-      List<? extends MappingPropertyView> relationshipProperties,
-      Class<?> rawType) {
-    if (relationshipMetaProperties.isEmpty()) {
-      return;
-    }
-    Set<String> relationshipNames = new HashSet<>();
-    for (MappingPropertyView relationship : relationshipProperties) {
-      relationshipNames.add(relationship.jsonapiName());
-    }
-    Set<String> seen = new HashSet<>();
-    for (MappingPropertyView property : relationshipMetaProperties) {
-      String target = property.jsonapiName();
-      if (!relationshipNames.contains(target)) {
-        throw JsonApiMappingException.withoutLocation(
-            MappingDiagnostic.UNRESOLVED_RELATIONSHIP_META,
-            rawType,
-            "@JsonApiRelationshipMeta for property '"
-                + property.logicalName()
-                + "' references unknown relationship '"
-                + target
-                + "' on "
-                + rawType.getName());
-      }
-      if (!seen.add(target)) {
-        throw new JsonApiMappingException(
-            MappingDiagnostic.DUPLICATE_ROLE,
-            rawType,
-            RelationshipMetaSupport.relationshipMetaLocation(target),
-            "Multiple relationship meta properties target relationship '"
-                + target
-                + "' on "
-                + rawType.getName()
-                + "; at most one is allowed");
-      }
-    }
-  }
-
   private static void rejectDuplicateNames(
       List<? extends MappingPropertyView> properties,
       Class<?> rawType,
@@ -585,7 +548,6 @@ final class MappingDefinitionResolver {
         attributeProperties,
         relationshipProperties,
         resourceMetaProperties,
-        boundRelationshipMeta,
         rawType);
 
     ReadMappingProperty identifier =
