@@ -30,8 +30,8 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Ordinary application code should prefer the Level-1 configured runtime: {@link
  * #jsonApi(JsonMapper)} for documented defaults or {@link #builder(JsonMapper)} for coherent
- * application-lifetime configuration. The capability factories below remain the advanced
- * mechanism/control seams.
+ * application-lifetime configuration, including an optional resource-write {@code jsonapi.version}
+ * default. The capability factories below remain the advanced mechanism/control seams.
  */
 public final class JsonApiJackson3 {
 
@@ -43,7 +43,8 @@ public final class JsonApiJackson3 {
 
   /**
    * Returns a Level-1 configured runtime with documented defaults: default identifier conversion,
-   * no custom linkage mappers, the default representation policy, and no resource decorators.
+   * no custom linkage mappers, the default representation policy, no resource decorators, and no
+   * resource-write {@code jsonapi.version} default.
    */
   public static Jackson3JsonApi jsonApi(JsonMapper base) {
     Objects.requireNonNull(base, "base");

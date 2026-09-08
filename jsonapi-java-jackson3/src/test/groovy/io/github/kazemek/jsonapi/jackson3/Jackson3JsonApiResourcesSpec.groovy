@@ -136,6 +136,125 @@ class Jackson3JsonApiResourcesSpec extends Specification {
     roundTrip.jsonapi() == JsonApiObject.ofVersion("1.1")
   }
 
+  def "unconfigured runtime does not inject a jsonapi version"() {
+    when:
+    def json = jsonApi.resources().writeOne(new Article("1", "T", "B", List.of(), null))
+
+    then:
+    !json.contains('"jsonapi"')
+  }
+
+  def "configured runtime preserves its jsonapi version string on single resource writes"() {
+    given:
+    def runtime = JsonApiJackson3.builder(JsonMapper.builder().build())
+        .jsonApiVersion("custom-version")
+        .build()
+
+    when:
+    def document = runtime.documents().read(
+        runtime.resources().writeOne(new Article("1", "T", "B", List.of(), null)),
+        DocumentReadContext.resourceDefaults())
+
+    then:
+    document.jsonapi() == JsonApiObject.ofVersion("custom-version")
+  }
+
+  def "configured runtime applies its jsonapi version to collection writes"() {
+    given:
+    def runtime = JsonApiJackson3.builder(JsonMapper.builder().build())
+        .jsonApiVersion("1.1")
+        .build()
+
+    when:
+    def document = runtime.documents().read(
+        runtime.resources().writeMany([
+          new Article("1", "A", "B", List.of(), null),
+          new Article("2", "C", "D", List.of(), null),
+        ]),
+        DocumentReadContext.resourceDefaults())
+
+    then:
+    document.jsonapi() == JsonApiObject.ofVersion("1.1")
+  }
+
+  def "configured runtime applies its jsonapi version to create authoring"() {
+    given:
+    def runtime = JsonApiJackson3.builder(JsonMapper.builder().build())
+        .jsonApiVersion("1.1")
+        .build()
+
+    when:
+    def document = runtime.documents().read(
+        runtime.resources().writeCreateDocument(new Article("1", "T", "B", List.of(), null)),
+        DocumentReadContext.resourceDefaults())
+
+    then:
+    document.jsonapi() == JsonApiObject.ofVersion("1.1")
+  }
+
+  def "configured runtime applies its jsonapi version to update authoring"() {
+    given:
+    def runtime = JsonApiJackson3.builder(JsonMapper.builder().build())
+        .jsonApiVersion("1.1")
+        .build()
+
+    when:
+    def document = runtime.documents().read(
+        runtime.resources().writeUpdateDocument(
+        new Article("1", "T", "B", List.of(), null),
+        new EndpointIdentity("articles", "1")),
+        DocumentReadContext.resourceDefaults())
+
+    then:
+    document.jsonapi() == JsonApiObject.ofVersion("1.1")
+  }
+
+  def "explicit resource-write jsonapi object takes precedence over the runtime default"() {
+    given:
+    def runtime = JsonApiJackson3.builder(JsonMapper.builder().build())
+        .jsonApiVersion("1.1")
+        .build()
+    def explicit = JsonApiObject.ofVersion("1.0")
+    def options = new ResourceWriteOptions(
+        new DocumentEnvelope(null, null, explicit),
+        RepresentationSelection.none())
+
+    when:
+    def document = runtime.documents().read(
+        runtime.resources().writeOne(
+        new Article("1", "T", "B", List.of(), null),
+        options),
+        DocumentReadContext.resourceDefaults())
+
+    then:
+    document.jsonapi() == explicit
+  }
+
+  def "jsonapi version configuration rejects null"() {
+    when:
+    JsonApiJackson3.builder(JsonMapper.builder().build()).jsonApiVersion(null)
+
+    then:
+    thrown(NullPointerException)
+  }
+
+  def "configured jsonapi version reaches resource output streams"() {
+    given:
+    def runtime = JsonApiJackson3.builder(JsonMapper.builder().build())
+        .jsonApiVersion("1.1")
+        .build()
+    def out = new TrackingOutputStream(new ByteArrayOutputStream())
+
+    when:
+    runtime.resources().writeOne(new Article("1", "T", "B", List.of(), null), out)
+
+    then:
+    runtime.documents().read(
+        new ByteArrayInputStream(out.bytes()),
+        DocumentReadContext.resourceDefaults()).jsonapi() == JsonApiObject.ofVersion("1.1")
+    !out.closed
+  }
+
   def "writeCreateDocument authors a lid-only document while response writes require id"() {
     given:
     def local = new LocalIdentityArticle(null, "lid-1", "Draft")

@@ -58,6 +58,7 @@ Jackson3JsonApi jsonApi =
         .identifierConverter(identifierConverter)
         .representationPolicy(policy)
         .decorators(decorators)
+        .jsonApiVersion("1.1")
         .build();
 
 String createJson = jsonApi.resources().writeCreateDocument(draft);
@@ -70,6 +71,13 @@ document envelope, and expected update identity stay per-operation arguments. Th
 the same documented defaults as the capability factories when a setting is omitted, and there is
 no base validation-context setting: response, create, update, and linkage operations each select
 their usage internally.
+
+`jsonApiVersion("1.1")` is optional. When configured, ordinary `resources()` writes inherit that
+value as the top-level `jsonapi.version` whenever the per-write envelope does not supply a
+`JsonApiObject`. An explicit per-write object wins completely. The value describes the JSON:API
+document version advertised to clients; it is not HTTP API or business versioning and does not
+replace media-type extension/profile negotiation. The setting does not affect `documents()`,
+`relationships()`, or advanced writer paths, which remain explicit.
 
 ## Advanced capability APIs
 
@@ -502,6 +510,7 @@ artifact; both majors share the neutral contracts of
 - [ADR-015 — Flat whole-object mapping for resource-side meta](../docs/adr/015-flat-whole-object-meta-mapping.md)
 - [ADR-016 — Mapper-instance construction for Jackson adapters](../docs/adr/016-jackson-adapter-construction.md)
 - [ADR-017 — Opt-in RelationshipLinkage for resource identifier meta](../docs/adr/017-resource-identifier-meta-mapping.md)
+- [ADR-019 — Major-neutral Level-1 application API contract](../docs/adr/019-level-one-application-api-contract.md)
 - [Canonical fixtures](../jsonapi-java-jackson-api/src/testFixtures/resources/jsonapi/corpus/1.1/README.md)
 - [Jackson API module](../jsonapi-java-jackson-api/README.md)
 - [Root agent workflow](../AGENTS.md)

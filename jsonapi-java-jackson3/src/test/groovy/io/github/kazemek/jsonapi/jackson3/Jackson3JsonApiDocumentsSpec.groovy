@@ -62,6 +62,20 @@ class Jackson3JsonApiDocumentsSpec extends Specification {
     actual == document
   }
 
+  def "configured resource version does not affect raw document writes"() {
+    given:
+    def runtime = JsonApiJackson3.builder(JsonMapper.builder().build())
+        .jsonApiVersion("1.1")
+        .build()
+    def document = JsonApiDocument.withMeta(Meta.of([count: 2]))
+
+    when:
+    def written = runtime.documents().write(document)
+
+    then:
+    runtime.documents().read(written, DocumentReadContext.resourceDefaults()).jsonapi() == null
+  }
+
   def "stream sinks mirror string results without closing caller streams"() {
     given:
     def document = JsonApiDocument.withMeta(Meta.of([count: 2]))

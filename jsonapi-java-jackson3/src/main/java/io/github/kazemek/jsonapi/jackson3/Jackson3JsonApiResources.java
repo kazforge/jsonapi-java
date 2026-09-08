@@ -2,6 +2,7 @@ package io.github.kazemek.jsonapi.jackson3;
 
 import io.github.kazemek.jsonapi.core.model.DocumentData;
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument;
+import io.github.kazemek.jsonapi.core.model.JsonApiObject;
 import io.github.kazemek.jsonapi.core.model.ResourceObject;
 import io.github.kazemek.jsonapi.core.validation.DocumentUsage;
 import io.github.kazemek.jsonapi.core.validation.EndpointIdentity;
@@ -13,6 +14,7 @@ import io.github.kazemek.jsonapi.jackson.api.ResourceWriteOptions;
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingLocation;
+import io.github.kazemek.jsonapi.jackson.document.DocumentEnvelope;
 import io.github.kazemek.jsonapi.jackson.mapping.MappedDocument;
 import io.github.kazemek.jsonapi.jackson.representation.RepresentationPolicy;
 import java.io.InputStream;
@@ -46,6 +48,7 @@ final class Jackson3JsonApiResources implements JsonApiResources {
   private final JsonApiDocumentReader resourceReader;
   private final JsonApiDocumentWriter responseWriter;
   private final JsonApiDocumentWriter createWriter;
+  private final @Nullable JsonApiObject defaultJsonApi;
 
   Jackson3JsonApiResources(
       JsonMapper baseMapper,
@@ -54,7 +57,8 @@ final class Jackson3JsonApiResources implements JsonApiResources {
       JsonApiResourceBinder resourceBinder,
       JsonApiDocumentReader resourceReader,
       JsonApiDocumentWriter responseWriter,
-      JsonApiDocumentWriter createWriter) {
+      JsonApiDocumentWriter createWriter,
+      @Nullable JsonApiObject defaultJsonApi) {
     this.baseMapper = Objects.requireNonNull(baseMapper, "baseMapper");
     this.representationPolicy =
         Objects.requireNonNull(representationPolicy, "representationPolicy");
@@ -63,6 +67,7 @@ final class Jackson3JsonApiResources implements JsonApiResources {
     this.resourceReader = Objects.requireNonNull(resourceReader, "resourceReader");
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter");
     this.createWriter = Objects.requireNonNull(createWriter, "createWriter");
+    this.defaultJsonApi = defaultJsonApi;
   }
 
   @Override
@@ -302,17 +307,25 @@ final class Jackson3JsonApiResources implements JsonApiResources {
 
   private MappedDocument mappedSingle(Object resource, ResourceWriteOptions options) {
     return resourceMapper.toMappedDocument(
-        resource, options.envelope(), options.selection(), representationPolicy);
+        resource, effectiveEnvelope(options), options.selection(), representationPolicy);
   }
 
   private MappedDocument mappedCreate(Object resource, ResourceWriteOptions options) {
     return resourceMapper.toMappedCreateDocument(
-        resource, options.envelope(), options.selection(), representationPolicy);
+        resource, effectiveEnvelope(options), options.selection(), representationPolicy);
   }
 
   private MappedDocument mappedCollection(Iterable<?> resources, ResourceWriteOptions options) {
     return resourceMapper.toMappedCollectionDocument(
-        resources, options.envelope(), options.selection(), representationPolicy);
+        resources, effectiveEnvelope(options), options.selection(), representationPolicy);
+  }
+
+  private DocumentEnvelope effectiveEnvelope(ResourceWriteOptions options) {
+    DocumentEnvelope envelope = options.envelope();
+    if (envelope.jsonapi() != null || defaultJsonApi == null) {
+      return envelope;
+    }
+    return new DocumentEnvelope(envelope.links(), envelope.meta(), defaultJsonApi);
   }
 
   private JsonApiDocumentWriter updateWriter(@Nullable EndpointIdentity expectedIdentity) {

@@ -1,5 +1,6 @@
 package io.github.kazemek.jsonapi.jackson3;
 
+import io.github.kazemek.jsonapi.core.model.JsonApiObject;
 import io.github.kazemek.jsonapi.core.validation.DocumentUsage;
 import io.github.kazemek.jsonapi.core.validation.ValidationContext;
 import io.github.kazemek.jsonapi.jackson.api.JsonApi;
@@ -13,6 +14,7 @@ import io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoratorRegistry;
 import io.github.kazemek.jsonapi.jackson.representation.RepresentationPolicy;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -21,18 +23,19 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Obtain instances through {@link JsonApiJackson3#jsonApi(JsonMapper)} for documented defaults
  * or {@link JsonApiJackson3#builder(JsonMapper)} for coherent application-lifetime configuration
- * (identifier conversion, custom linkage mapping, representation policy, and resource decoration).
- * The runtime is immutable and safe for concurrent use once created.
+ * (identifier conversion, custom linkage mapping, representation policy, resource decoration, and
+ * an optional resource-write JSON:API version default). The runtime is immutable and safe for
+ * concurrent use once created.
  *
  * <p>The runtime coordinates the existing capability pipeline internally — resource mapping with
  * configured decoration, mapped-document validation, document writing, document decoding with
  * aggregate validation, flat DTO binding, and PATCH projection — so ordinary callers never
  * orchestrate those phases manually. The advanced capability APIs remain public and unchanged.
  *
- * <p>Request-scoped values (representation selection, document envelope, expected update identity,
- * per-write {@code jsonapi} object) stay method arguments, never runtime configuration. An absent
- * per-write {@code jsonapi} member remains distinct from an explicit value, leaving room for a
- * future application-lifetime default to apply only when the caller supplied none.
+ * <p>Request-scoped values (representation selection, document envelope, and expected update
+ * identity) stay method arguments. An absent per-write {@code jsonapi} member may inherit the
+ * configured application-lifetime default on {@link JsonApiResources} writes, while an explicit
+ * value always wins completely. Raw document and minimal linkage writes remain explicit.
  */
 public final class Jackson3JsonApi implements JsonApi {
 
@@ -46,7 +49,8 @@ public final class Jackson3JsonApi implements JsonApi {
       IdentifierConverter identifierConverter,
       Map<Class<?>, RelationshipLinkageMapper> linkageMappers,
       RepresentationPolicy representationPolicy,
-      ResourceDecoratorRegistry decorators) {
+      ResourceDecoratorRegistry decorators,
+      @Nullable JsonApiObject defaultJsonApi) {
     Objects.requireNonNull(baseMapper, "baseMapper");
     Objects.requireNonNull(representationPolicy, "representationPolicy");
     JsonMapper documentMapper = JsonApiJackson3.documentMapper(baseMapper);
@@ -78,7 +82,8 @@ public final class Jackson3JsonApi implements JsonApi {
             resourceBinder,
             resourceReader,
             responseWriter,
-            createWriter);
+            createWriter,
+            defaultJsonApi);
     this.relationships = new Jackson3JsonApiRelationships(identifierReader, responseWriter);
     this.documents = new Jackson3JsonApiDocuments(baseMapper, responseWriter);
     this.patches = new Jackson3JsonApiPatches(baseMapper, patchCommandReader, patchDtoReader);
@@ -115,6 +120,7 @@ public final class Jackson3JsonApi implements JsonApi {
     private Map<Class<?>, RelationshipLinkageMapper> linkageMappers = Map.of();
     private RepresentationPolicy representationPolicy = RepresentationPolicy.defaults();
     private ResourceDecoratorRegistry decorators = ResourceDecoratorRegistry.empty();
+    private @Nullable JsonApiObject defaultJsonApi;
 
     Builder(JsonMapper baseMapper) {
       this.baseMapper = Objects.requireNonNull(baseMapper, "baseMapper");
@@ -153,6 +159,20 @@ public final class Jackson3JsonApi implements JsonApi {
       return this;
     }
 
+    /**
+     * Advertises the given JSON:API version on resource documents written by this runtime when a
+     * write does not supply an explicit {@code jsonapi} object. This setting describes the document
+     * {@code jsonapi.version}; it is not HTTP API or business versioning and does not negotiate
+     * media type extensions or profiles.
+     *
+     * <p>The supplied value is preserved as-is and must not be {@code null}.
+     */
+    public Builder jsonApiVersion(String jsonApiVersion) {
+      this.defaultJsonApi =
+          JsonApiObject.ofVersion(Objects.requireNonNull(jsonApiVersion, "jsonApiVersion"));
+      return this;
+    }
+
     /** Builds an immutable runtime. */
     public Jackson3JsonApi build() {
       return new Jackson3JsonApi(
@@ -160,7 +180,8 @@ public final class Jackson3JsonApi implements JsonApi {
           identifierConverter,
           Map.copyOf(linkageMappers),
           representationPolicy,
-          decorators);
+          decorators,
+          defaultJsonApi);
     }
   }
 }
