@@ -34,6 +34,19 @@ class Jackson3JsonApiRelationshipsSpec extends Specification {
     jsonApi.relationships().readToOne(json) == null
   }
 
+  def "configured resource version does not affect linkage writes"() {
+    given:
+    def runtime = JsonApiJackson3.builder(JsonMapper.builder().build())
+        .jsonApiVersion("1.1")
+        .build()
+
+    when:
+    def json = runtime.relationships().writeToOne(ResourceIdentifier.of("people", "p1"))
+
+    then:
+    !json.contains('"jsonapi"')
+  }
+
   def "round-trips a to-many linkage document including the empty collection"() {
     given:
     def identifiers = [

@@ -15,6 +15,12 @@
  * documents, and presence-aware PATCH, while the capability factories below remain the advanced
  * mechanism/control seams.
  *
+ * <p>An optional {@link Jackson3JsonApi.Builder#jsonApiVersion(String)} setting supplies an
+ * application-lifetime default for the top-level {@code jsonapi.version} on ordinary resource
+ * writes when no per-write {@code JsonApiObject} is present. It describes the JSON:API document
+ * version, not HTTP API or business versioning, and does not replace media-type extension/profile
+ * negotiation. Raw document, linkage, and advanced writer paths remain explicit.
+ *
  * <p>Jackson-major adapters use a configured {@link tools.jackson.databind.json.JsonMapper} as the
  * canonical construction input. Capability-specific contexts and policy objects remain explicit,
  * and convenience factories choose documented defaults on top of the mapper-instance seam; {@code
