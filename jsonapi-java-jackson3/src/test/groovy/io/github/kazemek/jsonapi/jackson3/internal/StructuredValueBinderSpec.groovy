@@ -96,18 +96,13 @@ class StructuredValueBinderSpec extends Specification {
     ex.location() == META
   }
 
-  def "typed engine converts a non-object wire against a presence-aware shape at a non-attribute pointer"() {
+  def "typed engine defers atomic conversion against a presence-aware shape"() {
     given:
     def binder = new StructuredValueBinder(mapper())
     def target = mapper().typeFactory.constructParametricType(PatchPresence, AddressPatch)
 
-    when:
-    binder.typedMemberValue("not-an-object", target, META, AddressPatch)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
-    ex.location() == META
+    expect:
+    binder.typedMemberValue("not-an-object", target, META, AddressPatch) == "not-an-object"
   }
 
   def "low-level engine binds an ordinary domain bean from a non-attribute pointer"() {

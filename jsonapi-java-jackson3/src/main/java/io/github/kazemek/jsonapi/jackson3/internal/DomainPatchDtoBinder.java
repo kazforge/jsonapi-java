@@ -26,12 +26,12 @@ import tools.jackson.databind.json.JsonMapper;
  * {@code @JsonSerialize}; violations fail with {@link
  * MappingDiagnostic#INVALID_PATCH_PROPERTY_TYPE} at the member's resource-relative wire location
  * before any member binds. The identifier property is a normal identifier (never a patchable
- * member). Supplied members convert against the unwrapped inner {@code T} type (converting explicit
- * JSON {@code null} through it first) and are placed into a synthetic property map as an internal
- * {@link PresenceMarker}, then the bean is constructed with a single {@link
- * JsonMapper#convertValue(Object, JavaType)} so creators, deserializers, converters, and configured
- * modules remain authoritative (ADR-004). The JSON:API identifier is parsed first and then follows
- * the same target-property deserialization at construction time. Omitted members bind to {@code
+ * member). Supplied atomic members retain their JSON-compatible wire values in a synthetic property
+ * map as an internal {@link PresenceMarker}; the marker deserializer performs the sole inner-type
+ * conversion while the bean is constructed with a single {@link JsonMapper#convertValue(Object,
+ * JavaType)}. Creators, deserializers, converters, and configured modules therefore remain
+ * authoritative (ADR-004). The JSON:API identifier is parsed first and then follows the same
+ * target-property deserialization at construction time. Omitted members bind to {@code
  * PatchPresence.omitted()}; supplied unknown members fail with {@link
  * MappingDiagnostic#UNKNOWN_PATCH_MEMBER} at their escaped supplied wire name. Document {@code
  * included} is never read.

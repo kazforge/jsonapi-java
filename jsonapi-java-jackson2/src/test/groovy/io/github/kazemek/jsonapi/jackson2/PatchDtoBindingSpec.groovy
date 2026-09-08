@@ -1,10 +1,14 @@
 package io.github.kazemek.jsonapi.jackson2
 
+import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JavaType
+import com.fasterxml.jackson.databind.JsonSerializer
+import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
@@ -244,6 +248,18 @@ class PatchDtoBindingSpec extends Specification {
     patch.title == PatchPresence.present("HELLO")
   }
 
+  def "deserializes an atomic inner type once during DTO construction"() {
+    given:
+    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
+    def json = '{"data":{"type":"single-pass-things","id":"1","attributes":{"title":"hello"}}}'
+
+    when:
+    def patch = reader.readValue(json, SinglePassPatch)
+
+    then:
+    patch.title == PatchPresence.present(new SinglePassValue("hello!"))
+  }
+
   def "identifier conversion inverts the wire identifier"() {
     given:
     def converter = new IdentifierConverter() {
@@ -315,6 +331,48 @@ class PatchDtoBindingSpec extends Specification {
   static class InnerCustomizedPatch {
     @JsonApiId String id
     @JsonApiAttribute PatchPresence<String> title
+  }
+
+  @JsonApiResource(type = "single-pass-things")
+  static class SinglePassPatch {
+    @JsonApiId String id
+    @JsonApiAttribute PatchPresence<SinglePassValue> title
+  }
+
+  @JsonDeserialize(using = SinglePassDeserializer)
+  @JsonSerialize(using = SinglePassSerializer)
+  static class SinglePassValue {
+    String value
+
+    SinglePassValue(String value) {
+      this.value = value
+    }
+
+    boolean equals(Object other) {
+      other instanceof SinglePassValue && value == other.value
+    }
+
+    int hashCode() {
+      Objects.hash(value)
+    }
+  }
+
+  static class SinglePassDeserializer extends StdDeserializer<SinglePassValue> {
+    SinglePassDeserializer() {
+      super(SinglePassValue)
+    }
+
+    @Override
+    SinglePassValue deserialize(JsonParser parser, DeserializationContext context) {
+      new SinglePassValue(parser.getValueAsString() + "!")
+    }
+  }
+
+  static class SinglePassSerializer extends JsonSerializer<SinglePassValue> {
+    @Override
+    void serialize(SinglePassValue value, JsonGenerator generator, SerializerProvider provider) {
+      generator.writeString(value.value)
+    }
   }
 
   @JsonApiResource(type = "int-articles")

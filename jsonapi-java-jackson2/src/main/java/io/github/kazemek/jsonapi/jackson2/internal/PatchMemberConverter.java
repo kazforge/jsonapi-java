@@ -19,14 +19,18 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Shared per-member conversion for the low-level {@link PatchCommand} path and the direct typed
- * PATCH DTO path, so the two cannot silently drift.
+ * Shared conversion support for the low-level {@link PatchCommand} path and the direct typed PATCH
+ * DTO's identity and relationship-linkage paths.
  *
- * <p>All conversion runs against an explicit conversion-target {@link JavaType}: the property
- * accessor type on the low-level path, and the single {@link PatchPresence} type argument (the
- * unwrapped inner type) on the DTO path. To-many detection, property-level {@code @JsonDeserialize}
- * handling, primitive-null rules, linkage resolution, and final collection coercion all use that
- * target type.
+ * <p>Low-level attribute and whole-meta conversion runs against the property's explicit {@link
+ * JavaType} target. Typed DTO atomic attributes and meta deliberately bypass this collaborator:
+ * their JSON-compatible values remain in an internal {@link PresenceMarker}, and the contextual
+ * {@link PatchPresence} deserializer performs the sole inner-type conversion during whole-DTO
+ * construction.
+ *
+ * <p>Relationship linkage conversion uses the unwrapped {@link PatchPresence} type argument on the
+ * DTO path. To-many detection, property-level {@code @JsonDeserialize} handling, primitive-null
+ * rules, linkage resolution, and final collection coercion use the applicable explicit target type.
  *
  * <p>Diagnostic locations follow the {@link MappingLocation} contract: callers supply the failing
  * member's resource-relative location so failures never report Jackson logical property names.

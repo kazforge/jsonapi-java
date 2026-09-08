@@ -31,12 +31,13 @@ import org.jspecify.annotations.Nullable;
  * PatchCommand} path and the direct typed PATCH DTO path.
  *
  * <p>The engine owns member resolution (deserialization-side Jackson introspection), shape and
- * boundary classification, nested conversion, null policy, wire-pointer accumulation, and lazy
- * nested declaration validation. It has no {@link ResourceMapping} / {@link MappingProperty} /
- * {@code @JsonApiAttribute} / {@link io.github.kazemek.jsonapi.jackson.patch.PatchChange}
- * dependency: callers supply the declared {@link JavaType}, wire value, starting pointer, and
- * (low-level) accessor, so a later structured JSON:API {@code meta} mapping can reuse the same
- * machinery at its own location with a stricter outer-state policy.
+ * boundary classification, low-level nested conversion, typed marker-tree construction, null
+ * policy, wire-pointer accumulation, and lazy nested declaration validation. It has no {@link
+ * ResourceMapping} / {@link MappingProperty} / {@code @JsonApiAttribute} / {@link
+ * io.github.kazemek.jsonapi.jackson.patch.PatchChange} dependency: callers supply the declared
+ * {@link JavaType}, wire value, starting pointer, and (low-level) accessor, so a later structured
+ * JSON:API {@code meta} mapping can reuse the same machinery at its own location with a stricter
+ * outer-state policy.
  *
  * <p>Two modes: the typed mode recurses only through deliberately presence-aware nested PATCH
  * shapes (every visible member exactly {@code PatchPresence<T>}, no wrapper-level customization);
@@ -81,9 +82,9 @@ final class StructuredValueBinder {
    * <p>{@code declaredPatchPresenceType} must be exactly {@code PatchPresence<T>} (top-level
    * members are validated eagerly by the typed binder; nested members by the engine on shape
    * entry). Returns the value to place inside an internal {@link PresenceMarker} with {@code
-   * present=true}: a converted atomic value, {@code null}, or a nested marker map that the single
-   * whole-tree {@code convertValue} reads through the inner type (preserving the strict marker
-   * invariant).
+   * present=true}: the original JSON-compatible atomic value, {@code null}, or a nested marker map
+   * that the single whole-tree {@code convertValue} reads through the inner type (preserving the
+   * strict marker invariant).
    */
   @Nullable Object typedMemberValue(
       @Nullable Object wire,
@@ -101,17 +102,17 @@ final class StructuredValueBinder {
                 + pointer
                 + "'");
       }
-      return nullValue(effective, pointer, rawType);
+      return null;
     }
     Shape shape = shapeOf(effective);
     if (shape == null) {
-      return convertAtomic(wire, inner, pointer, rawType);
+      return wire;
     }
     if (shape.presenceAware()) {
       if (wire instanceof Map<?, ?> map) {
         return bindTypedShape(map, shape, pointer, rawType);
       }
-      return convertAtomic(wire, inner, pointer, rawType);
+      return wire;
     }
     if (shape.mixed()) {
       throw invalidPatchPropertyType(
@@ -122,7 +123,7 @@ final class StructuredValueBinder {
               + " must be declared exactly as PatchPresence<T> when the shape is used as a nested "
               + "PATCH shape");
     }
-    return convertAtomic(wire, inner, pointer, rawType);
+    return wire;
   }
 
   private Map<String, Object> bindTypedShape(
@@ -411,41 +412,6 @@ final class StructuredValueBinder {
             : 0;
     result = 31 * result + config.getDefaultVisibilityChecker().hashCode();
     return result;
-  }
-
-  // ============================== SHARED CONVERSION ==============================
-
-  private @Nullable Object convertAtomic(
-      @Nullable Object wire, JavaType targetType, MappingLocation pointer, Class<?> rawType) {
-    try {
-      return mapper.convertValue(wire, targetType);
-    } catch (RuntimeException e) {
-      throw new JsonApiMappingException(
-          MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE,
-          rawType,
-          pointer,
-          "Failed to convert the nested structured value at '" + pointer + "'",
-          e);
-    }
-  }
-
-  // getNullValue returns Java null for ordinary scalar inners (e.g. String) and
-  // Optional.empty() for Optional inners; the analyzer does not model that nullability.
-  @SuppressWarnings("DataFlowIssue")
-  private @Nullable Object nullValue(JavaType type, MappingLocation pointer, Class<?> rawType) {
-    try {
-      DefaultDeserializationContext context =
-          ((DefaultDeserializationContext) mapper.getDeserializationContext())
-              .createInstance(mapper.getDeserializationConfig(), null, null);
-      JsonDeserializer<Object> deserializer = context.findRootValueDeserializer(type);
-      if (deserializer == null) {
-        throw unsupported(
-            rawType, pointer, "Cannot resolve a deserializer for '" + type.toCanonical() + "'");
-      }
-      return deserializer.getNullValue(context);
-    } catch (com.fasterxml.jackson.databind.JsonMappingException e) {
-      throw new IllegalStateException("Failed to resolve a deserializer for " + type, e);
-    }
   }
 
   // ============================== HELPERS ==============================

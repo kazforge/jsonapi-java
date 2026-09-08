@@ -160,17 +160,20 @@ low-level path represents requested changes independently of a PATCH DTO.
   (`@JsonAlias`) are later supported, they would be resolved from Jackson's actual deserialization
   alias metadata, never approximated via the internal name.
 - **Nested atomic conversion authority:** nested atomic conversion preserves the applicable
-  configured Jackson deserialization semantics, including property-scoped customization
-  (`@JsonDeserialize using = ...`, converters, content/key deserializers, and type refinement as
-  Jackson applies them during normal binding). Both PATCH paths share one location-neutral
-  property-scoped conversion collaborator (`PropertyScopedValueConverter`), which resolves the
-  containing bean's fully-contextualized `SettableBeanProperty` and delegates to
-  `SettableBeanProperty.deserialize`, preserving the property's `TypeDeserializer` (polymorphic
-  values) and null provider; members without a bean-based property fall back to ordinary
-  `convertValue` (type-level and module authority still apply). Whether a member is considered
-  customized is decided from Jackson's effective deserialization and serialization property metadata
-  on both the serialization-side and deserialization-side members (setter-, creator-parameter-,
-  field-, and getter-placed `@JsonDeserialize` / `@JsonSerialize` are all detected, symmetrically).
+  configured Jackson deserialization semantics. On the low-level path, property-scoped
+  customization (`@JsonDeserialize using = ...`, converters, content/key deserializers, and type
+  refinement as Jackson applies them during normal binding) is handled by the location-neutral
+  `PropertyScopedValueConverter`, which resolves the containing bean's fully-contextualized
+  `SettableBeanProperty` and delegates to `SettableBeanProperty.deserialize`, preserving the
+  property's `TypeDeserializer` (polymorphic values) and null provider; members without a bean-based
+  property fall back to ordinary `convertValue` (type-level and module authority still apply).
+  On the typed path, nested atomic values remain JSON-compatible values in the `PresenceMarker`
+  tree, and the contextual `PatchPresence` deserializer reads each inner type exactly once. Typed
+  wrapper-level customization is rejected, while inner-type deserializers and modules remain
+  authoritative through that contextual read. Whether a low-level member is considered customized
+  is decided from Jackson's effective deserialization and serialization property metadata on both
+  the serialization-side and deserialization-side members (setter-, creator-parameter-, field-,
+  and getter-placed `@JsonDeserialize` / `@JsonSerialize` are all detected, symmetrically).
   Type-refinement checks use the member's resolved property `JavaType` (the deserialization-side
   primary type), never `AnnotatedMember.getType()` — for a setter that returns the method return
   type (`void`) instead of the setter parameter type, which makes `as`/`contentAs`/`keyAs`
@@ -217,5 +220,5 @@ low-level path represents requested changes independently of a PATCH DTO.
   policy, without a second recursion model.
 - Recursive structured values are not recursive JSON:API relationship graph mutation; relationships
   remain linkage-oriented atomic replacement.
-- The neutral contracts stay Jackson-import-free and the engine stays adapter-internal (pinned to
-  the module's Jackson line), so a future Jackson 2 adapter can consume the same contracts.
+- The neutral contracts stay Jackson-import-free and the engine stays adapter-internal, with each
+  adapter pinned to its module's Jackson line while both consume the same contracts.
