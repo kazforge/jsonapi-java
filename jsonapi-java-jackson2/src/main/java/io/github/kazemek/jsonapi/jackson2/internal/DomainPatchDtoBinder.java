@@ -309,7 +309,7 @@ public final class DomainPatchDtoBinder {
         properties.put(property.jacksonName(), new PresenceMarker(false, null));
         continue;
       }
-      Object value = converter.convertRelationship(property, data, innerType(property));
+      Object value = converter.convertRelationshipForPatchDto(property, data, innerType(property));
       properties.put(property.jacksonName(), new PresenceMarker(true, value));
     }
   }

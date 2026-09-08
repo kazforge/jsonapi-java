@@ -30,7 +30,9 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Relationship linkage conversion uses the unwrapped {@link PatchPresence} type argument on the
  * DTO path. To-many detection, property-level {@code @JsonDeserialize} handling, primitive-null
- * rules, linkage resolution, and final collection coercion use the applicable explicit target type.
+ * rules, and linkage resolution use the applicable explicit target type. The low-level path also
+ * performs final collection coercion here; the direct typed DTO path leaves final target coercion
+ * to the contextual {@link PatchPresence} deserializer so the declared inner type is read once.
  *
  * <p>Diagnostic locations follow the {@link MappingLocation} contract: callers supply the failing
  * member's resource-relative location so failures never report Jackson logical property names.
@@ -201,14 +203,24 @@ final class PatchMemberConverter {
    */
   @Nullable Object convertRelationship(
       MappingProperty property, RelationshipData data, JavaType targetType) {
+    return finalizeRelationshipValue(
+        convertRelationshipLinkage(property, data, targetType), targetType, property);
+  }
+
+  /** Converts linkage for a typed PATCH DTO without coercing the complete inner target type yet. */
+  @Nullable Object convertRelationshipForPatchDto(
+      MappingProperty property, RelationshipData data, JavaType targetType) {
+    return convertRelationshipLinkage(property, data, targetType);
+  }
+
+  private @Nullable Object convertRelationshipLinkage(
+      MappingProperty property, RelationshipData data, JavaType targetType) {
     JavaType mappingType =
         RelationshipLinkageSupport.targetMappingType(targetType, mapper.getTypeFactory());
     RelationshipLinkageMapper linkageMapper =
         RelationshipLinkageSupport.selectLinkageMapper(targetType, property, linkageMappers);
-    Object wrapped =
-        RelationshipLinkageSupport.convertLinkage(
-            property, data, linkageMapper, mappingType, mapper);
-    return finalizeRelationshipValue(wrapped, targetType, property);
+    return RelationshipLinkageSupport.convertLinkage(
+        property, data, linkageMapper, mappingType, mapper);
   }
 
   private @Nullable Object finalizeRelationshipValue(

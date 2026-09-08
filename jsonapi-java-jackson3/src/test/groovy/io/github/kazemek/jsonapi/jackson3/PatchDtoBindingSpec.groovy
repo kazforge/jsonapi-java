@@ -351,6 +351,25 @@ class PatchDtoBindingSpec extends Specification {
     dto.title == PatchPresence.present(new SinglePassValue("hello!"))
   }
 
+  def "deserializes an optional relationship inner type once during DTO construction"() {
+    given:
+    def linkageMapper = { RelationshipData data, JavaType target ->
+      new SinglePassValue("hello")
+    } as RelationshipLinkageMapper
+    def reader = JsonApiJackson3.patchDtoReader(
+        JsonMapper.builder().build(),
+        ValidationContext.defaults(),
+        IdentifierConverter.defaults(),
+        [(SinglePassValue): linkageMapper])
+    def json = '{"data":{"type":"single-pass-things","id":"1","relationships":{"author":{"data":{"type":"people","id":"p1"}}}}}'
+
+    when:
+    def dto = reader.readValue(json, SinglePassRelationshipPatch)
+
+    then:
+    dto.author == PatchPresence.present(Optional.of(new SinglePassValue("hello!")))
+  }
+
   def "property-level @JsonDeserialize(converter) on a PatchPresence member is rejected"() {
     given:
     def reader = JsonApiJackson3.patchDtoReader(JsonMapper.builder().build())
@@ -956,6 +975,12 @@ class PatchDtoBindingSpec extends Specification {
   static class SinglePassPatch {
     @JsonApiId String id
     @JsonApiAttribute PatchPresence<SinglePassValue> title
+  }
+
+  @JsonApiResource(type = "single-pass-things")
+  static class SinglePassRelationshipPatch {
+    @JsonApiId String id
+    @JsonApiRelationship PatchPresence<Optional<SinglePassValue>> author
   }
 
   @JsonApiResource(type = "articles")

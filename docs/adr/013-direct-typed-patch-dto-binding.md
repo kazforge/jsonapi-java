@@ -71,10 +71,11 @@ application-owned annotated PATCH DTO:
   Inner-type customization (type-level deserializers/converters, modules, naming) remains fully
   supported through normal Jackson conversion.
 - The low-level `PatchCommand<T>` path (ADR-012) stays available and unchanged. The direct typed DTO
-  path reuses the internal conversion collaborator for identity parsing and relationship-linkage
-  conversion, while atomic `PatchPresence<T>` attributes and meta values remain JSON-compatible
-  marker values until the contextual deserializer converts the inner type exactly once. This keeps
-  configured Jackson authority consistent without converting typed atomic values twice.
+  path reuses the internal conversion collaborator for identity parsing and JSON:API relationship
+  linkage shaping, while supplied `PatchPresence<T>` attributes, meta values, and relationship
+  targets remain marker-ready until the contextual deserializer converts the declared inner type
+  exactly once. This keeps configured Jackson authority consistent without converting typed values
+  twice.
 - Applications own authorization and application; the library validates, converts, and binds only.
 
 ## Consequences
@@ -90,5 +91,6 @@ application-owned annotated PATCH DTO:
   per-member types that differ from another DTO for the same JSON:API type.
 - Records and other immutable PATCH DTOs work because omitted members bind to `Omitted()` rather
   than requiring fabricated defaults.
-- The internal marker/deserializer machinery is adapter-internal and pinned to the module's
-  Jackson line (3.2.2); the neutral `PatchPresence` contract does not depend on it.
+- The internal marker/deserializer machinery is adapter-internal and pinned to each module's Jackson
+  line (2.22.2 for Jackson 2 and 3.2.2 for Jackson 3); the neutral `PatchPresence` contract does not
+  depend on it.
