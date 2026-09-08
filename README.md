@@ -51,7 +51,7 @@ executable coverage.
 | [`jsonapi-java-jackson-api`](jsonapi-java-jackson-api/README.md)       | Available | Public Jackson-major-neutral API surface shared by Jackson 2, Jackson 3, and future framework integrations |
 | [`jsonapi-java-jackson2`](jsonapi-java-jackson2/README.md)       | Available | Jackson 2 Level-1 application runtime, validated document writer/reader, write-side domain-to-resource mapping, flat resource-to-DTO binding, and presence-aware PATCH binding (commands and direct typed PATCH DTOs) |
 | `jsonapi-java-query`                                             | Planned   | Optional query-parameter parsing                                           |
-| `jsonapi-java-spring-webmvc`                                     | Planned   | Jackson 3-based Spring WebMVC transport and DTO binding                    |
+| `jsonapi-java-spring-webmvc`                                     | Planned   | Spring WebMVC transport and DTO binding over the major-neutral `JsonApi` contract |
 | `jsonapi-java-spring-webflux`                                    | Future evaluation | Separately scoped reactive adapter candidate                               |
 
 Planned and future-evaluation modules have no usable entry point yet. Use each available module

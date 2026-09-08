@@ -10,18 +10,25 @@ import io.github.kazemek.jsonapi.core.model.Links
 import io.github.kazemek.jsonapi.core.model.Meta
 import io.github.kazemek.jsonapi.core.model.RelationshipData
 import io.github.kazemek.jsonapi.core.model.ResourceIdentifier
+import io.github.kazemek.jsonapi.core.model.ResourceIdentity
+import io.github.kazemek.jsonapi.core.validation.DocumentUsage
 import io.github.kazemek.jsonapi.core.validation.EndpointIdentity
 import io.github.kazemek.jsonapi.core.validation.JsonApiValidationException
 import io.github.kazemek.jsonapi.core.validation.ValidationContext
+import io.github.kazemek.jsonapi.fixtures.localid.LocalIdentityArticle
+import io.github.kazemek.jsonapi.fixtures.localid.LocalIdentityArticleWithAuthor
 import io.github.kazemek.jsonapi.fixtures.domainread.FlatArticle
 import io.github.kazemek.jsonapi.fixtures.domainwrite.Article
 import io.github.kazemek.jsonapi.fixtures.domainwrite.Comment
 import io.github.kazemek.jsonapi.fixtures.domainwrite.Person
 import io.github.kazemek.jsonapi.jackson.api.ResourceWriteOptions
+import io.github.kazemek.jsonapi.jackson.diagnostic.CodecFailureCategory
+import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiDocumentReadException
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic
 import io.github.kazemek.jsonapi.jackson.document.DocumentEnvelope
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext
+import io.github.kazemek.jsonapi.jackson.document.PrimaryDataKind
 import io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoration
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter
 import io.github.kazemek.jsonapi.jackson.mapping.ResourceDecorator
@@ -215,6 +222,46 @@ class Jackson2JsonApiResourcesSpec extends Specification {
     document.jsonapi() == JsonApiObject.ofVersion("1.1")
   }
 
+  def "configured runtime preserves arbitrary jsonapi version strings"() {
+    given:
+    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
+        .jsonApiVersion("custom-version")
+        .build()
+
+    when:
+    def document = runtime.documents().read(
+        runtime.resources().writeOne(new Article("1", "T", "B", List.of(), null)),
+        DocumentReadContext.resourceDefaults())
+
+    then:
+    document.jsonapi() == JsonApiObject.ofVersion("custom-version")
+  }
+
+  def "jsonapi version configuration rejects null"() {
+    when:
+    JsonApiJackson2.builder(JsonMapper.builder().build()).jsonApiVersion(null)
+
+    then:
+    thrown(NullPointerException)
+  }
+
+  def "configured jsonapi version reaches resource output streams"() {
+    given:
+    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
+        .jsonApiVersion("1.1")
+        .build()
+    def out = new TrackingOutputStream(new ByteArrayOutputStream())
+
+    when:
+    runtime.resources().writeOne(new Article("1", "T", "B", List.of(), null), out)
+
+    then:
+    runtime.documents().read(
+        new ByteArrayInputStream(out.bytes()),
+        DocumentReadContext.resourceDefaults()).jsonapi() == JsonApiObject.ofVersion("1.1")
+    !out.closed
+  }
+
   def "representation policy and decoration are coordinated internally"() {
     given:
     def links = Links.ofLinks([self: new Link.StringLink("https://example.test/articles/1")])
@@ -273,6 +320,95 @@ class Jackson2JsonApiResourcesSpec extends Specification {
 
     then:
     thrown(JsonApiValidationException)
+  }
+
+  def "identity-less create with inclusion emits requested included resources"() {
+    given:
+    def options = new ResourceWriteOptions(
+        new DocumentEnvelope(null, null, null),
+        RepresentationSelection.builder()
+        .include(IncludePath.of("comments.author"))
+        .fields("articles", "title", "comments")
+        .build())
+    def policy = RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll())
+    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
+        .representationPolicy(policy)
+        .build()
+    def draft = new LocalIdentityArticleWithAuthor(
+        null, null, "Draft", null, [
+          new Comment("c1", "Nice", new Person("p1", "Alice"))
+        ])
+    def createContext = DocumentReadContext.of(
+        ValidationContext.defaults().withDocumentUsage(DocumentUsage.CREATE_REQUEST),
+        PrimaryDataKind.RESOURCE)
+
+    when:
+    def json = runtime.resources().writeCreateDocument(draft, options)
+    def roundTrip = runtime.documents().read(json, createContext)
+    def primary = (roundTrip.data() as DocumentData.SingleResource).resource()
+
+    then:
+    !primary.hasId()
+    !primary.hasLid()
+    roundTrip.included() != null
+    roundTrip.included().collect { [it.type(), it.id()] } == [
+      ["comments", "c1"],
+      ["people", "p1"]
+    ]
+  }
+
+  def "resource-write options preserve sparse-fieldset provenance"() {
+    given:
+    def options = new ResourceWriteOptions(
+        new DocumentEnvelope(null, null, null),
+        RepresentationSelection.builder()
+        .include(IncludePath.of("comments"))
+        .fields("articles", "title")
+        .build())
+    def policy = RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll())
+    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
+        .representationPolicy(policy)
+        .build()
+    def article = new Article("1", "Hello", "Body text", [
+      new Comment("c1", "Nice", null)
+    ], null)
+    def readContext = DocumentReadContext.of(
+        ValidationContext.defaults().withSparseFieldsetLinkageExemptions(
+        Set.of(ResourceIdentity.ofId("comments", "c1"))),
+        PrimaryDataKind.RESOURCE)
+
+    when:
+    def json = runtime.resources().writeOne(article, options)
+    def roundTrip = runtime.documents().read(json, readContext)
+
+    then:
+    roundTrip.included() != null
+    roundTrip.included().size() == 1
+    roundTrip.included()[0].type() == "comments"
+    !json.contains("Body text")
+    json.contains("Hello")
+  }
+
+  def "id and lid bind to independent roles without coercion"() {
+    given:
+    def article = new LocalIdentityArticle("1", "lid-1", "T")
+
+    when:
+    def json = jsonApi.resources().writeOne(article)
+    def actual = jsonApi.resources().readOne(json, LocalIdentityArticle)
+
+    then:
+    actual.id() == "1"
+    actual.localId() == "lid-1"
+
+    when:
+    jsonApi.resources().readOne(
+        '{"data":{"type":"articles","lid":"lid-9","attributes":{"title":"T"}}}',
+        LocalIdentityArticle)
+
+    then:
+    def validation = thrown(JsonApiDocumentReadException)
+    validation.category() == CodecFailureCategory.AGGREGATE_VALIDATION
   }
 
   def "builder identifier and linkage configuration applies to resource reads and writes"() {

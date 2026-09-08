@@ -39,8 +39,9 @@ String json = jsonApi.resources().writeOne(article);
 ArticleDto readBack = jsonApi.resources().readOne(json, ArticleDto.class);
 List<ArticleDto> all = jsonApi.resources().readMany(collectionJson, ArticleDto.class);
 
-ResourceIdentifier author = jsonApi.relationships().readToOne(linkageJson);
-String linkageJson = jsonApi.relationships().writeToOne(author);
+ResourceIdentifier author = ResourceIdentifier.of("people", "p1");
+String writtenLinkageJson = jsonApi.relationships().writeToOne(author);
+ResourceIdentifier roundTripAuthor = jsonApi.relationships().readToOne(writtenLinkageJson);
 
 ArticlePatch patch = jsonApi.patches().readPatch(patchJson, ArticlePatch.class);
 PatchCommand<ArticleDto> command = jsonApi.patches().readCommand(patchJson, ArticleDto.class);
