@@ -40,13 +40,11 @@ For Jackson 3, the canonical public factory forms are:
 | presence-aware PATCH command reader | `ValidationContext`, `IdentifierConverter`, relationship linkage mappers |
 | typed PATCH DTO reader | `ValidationContext`, `IdentifierConverter`, relationship linkage mappers |
 
-`ResourceTypeRegistry` construction requires an explicit configured mapper; the no-argument
-default-mapper builder is not part of the API. A consuming typed domain document reader
-re-resolves every registered target against its own configured class-level resource metadata when
-the reader is constructed and rejects disagreement with `RESOURCE_TYPE_MISMATCH` (no document
-location). Registries built from distinct mapper instances remain usable together when their
-registered resource-type keys agree; only class-level resource metadata is checked eagerly, not
-full property mappings.
+`ResourceTypeRegistry` is a Jackson-major-neutral value built with explicit wire type strings and
+`java.lang.reflect.Type` targets; it does not retain a mapper or infer names. A consuming typed
+domain document reader converts each target through its configured mapper, then re-resolves its
+class-level resource metadata and rejects disagreement with `RESOURCE_TYPE_MISMATCH` (no document
+location). Only class-level resource metadata is checked eagerly, not full property mappings.
 
 The mapper is the caller's configured Jackson authority. Adapter factories do not mutate it. A
 capability may derive an isolated mapper internally when its implementation needs adapter modules or

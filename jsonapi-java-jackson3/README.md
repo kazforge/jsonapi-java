@@ -286,9 +286,9 @@ signatures):
 
 ```java
 ResourceTypeRegistry registry =
-    ResourceTypeRegistry.builder(callerMapper)
-        .register(FlatArticleDto.class)
-        .register(AuthorDto.class)
+     ResourceTypeRegistry.builder()
+         .register("articles", FlatArticleDto.class)
+         .register("people", AuthorDto.class)
         .build();
 
 JsonApiDomainDocumentReader domainReader =
@@ -564,8 +564,10 @@ artifact; both majors share the neutral contracts of
    `JsonApiMappingException`, never `JsonApiDocumentReadException`.
 - **Typed domain envelope:** `JsonApiDomainDocumentReader` composes the document reader with the
   flat DTO binder. Primary and included resources bind only through the `ResourceTypeRegistry`
-  (keyed by each registered raw class's configured class-level resource metadata; build it with
-  `ResourceTypeRegistry.builder(callerMapper)` so keys and binding agree on configured metadata).
+  (keyed by explicitly registered JSON:API type strings; build it with
+  `ResourceTypeRegistry.builder().register("articles", FlatArticleDto.class)`). The consuming
+  reader converts each neutral target through its configured mapper and verifies the configured
+  class-level resource metadata agrees with the explicit key.
   Reader construction re-resolves every registered key against its own configured metadata and
   rejects disagreement with `RESOURCE_TYPE_MISMATCH` and no location; distinct mapper instances
   with agreeing keys remain usable;
