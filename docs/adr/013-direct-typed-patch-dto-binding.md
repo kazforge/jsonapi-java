@@ -19,8 +19,9 @@ therefore silently lose presence information.
 
 ## Decision
 
-Add an opt-in Jackson 3 path that decodes and aggregate-validates a JSON:API resource-update
-document and binds it **directly** into an application-owned annotated PATCH DTO:
+Add an opt-in typed PATCH DTO path to the Jackson 2 and Jackson 3 adapters. Each path decodes and
+aggregate-validates a JSON:API resource-update document and binds it **directly** into an
+application-owned annotated PATCH DTO:
 
 - The PATCH DTO uses the familiar annotations (`@JsonApiResource`, `@JsonApiId`,
   `@JsonApiAttribute`, `@JsonApiRelationship`). There is no `PatchCommand -> DTO` projector and no
@@ -50,13 +51,14 @@ document and binds it **directly** into an application-owned annotated PATCH DTO
   through a single `convertValue` over a synthetic property map, except that wrapper-level
   `@JsonDeserialize` / `@JsonSerialize` customization on `PatchPresence<T>` properties is rejected
   (below). Inner-type Jackson customization remains fully supported through normal conversion.
-- Construction uses a minimal internal presence marker (`present` boolean + already-converted
-  inner value) plus a small internal `PatchPresence` deserializer registered on the derived binder
+- Construction uses a minimal internal presence marker (`present` boolean + JSON-compatible inner
+  value) plus a small contextual `PatchPresence` deserializer registered on the derived binder
   mapper. The marker's wire shape is deterministic and independent of any caller property naming
   strategy: an internal serializer always emits exactly the `present` and `value` member names, and
-  serializes the inner value through the caller-derived configuration so inner-type serializers and
-  modules remain authoritative. The `present` boolean is a primitive, so no caller `JsonInclude`
-  configuration (`NON_ABSENT`, `NON_EMPTY`, `NON_NULL`) can collapse the tri-state:
+  the deserializer performs the sole atomic inner-type conversion through the caller-derived
+  configuration so inner-type deserializers and modules remain authoritative. The `present` boolean
+  is a primitive, so no caller `JsonInclude` configuration (`NON_ABSENT`, `NON_EMPTY`, `NON_NULL`)
+  can collapse the tri-state:
   `Omitted()`, `Present(null)`, and `Present(value)` survive. A marker that is not exactly this
   internal shape (unknown or mangled member names, a non-boolean or absent `present`, or a
   non-object value) fails loudly instead of silently reconstructing `Omitted()`.
@@ -68,8 +70,12 @@ document and binds it **directly** into an application-owned annotated PATCH DTO
   refinement (`as`/`keyAs`/`contentAs`), and the same customizations supplied through mix-ins.
   Inner-type customization (type-level deserializers/converters, modules, naming) remains fully
   supported through normal Jackson conversion.
-- The low-level `PatchCommand<T>` path (ADR-012) stays available and unchanged. Both paths share
-  per-member conversion through one internal collaborator so they cannot silently drift.
+- The low-level `PatchCommand<T>` path (ADR-012) stays available and unchanged. The direct typed DTO
+  path reuses the internal conversion collaborator for identity parsing and JSON:API relationship
+  linkage shaping, while supplied `PatchPresence<T>` attributes, meta values, and relationship
+  targets remain marker-ready until the contextual deserializer converts the declared inner type
+  exactly once. This keeps configured Jackson authority consistent without converting typed values
+  twice.
 - Applications own authorization and application; the library validates, converts, and binds only.
 
 ## Consequences
@@ -78,12 +84,13 @@ document and binds it **directly** into an application-owned annotated PATCH DTO
   tri-state keeps omitted distinct from explicit null.
 - Direct binding is the safer default for unknown members: they fail loudly instead of being
   silently dropped.
-- `PatchPresence` lives in the Jackson-major-neutral contracts; a future Jackson 2 adapter can
-  consume the same type.
+- `PatchPresence` lives in the Jackson-major-neutral contracts, and the same typed marker/deserializer
+  contract is implemented by both Jackson adapters.
 - PATCH DTOs are a separate shape from normal read/write DTOs: one Java type cannot dual-use as
   both (dual-use is unsupported because the shapes are disjoint), and applications may declare
   per-member types that differ from another DTO for the same JSON:API type.
 - Records and other immutable PATCH DTOs work because omitted members bind to `Omitted()` rather
   than requiring fabricated defaults.
-- The internal marker/deserializer machinery is adapter-internal and pinned to the module's
-  Jackson line (3.2.2); the neutral `PatchPresence` contract does not depend on it.
+- The internal marker/deserializer machinery is adapter-internal and pinned to each module's Jackson
+  line (2.22.2 for Jackson 2 and 3.2.2 for Jackson 3); the neutral `PatchPresence` contract does not
+  depend on it.

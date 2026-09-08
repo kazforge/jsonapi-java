@@ -630,9 +630,11 @@ artifact; both majors share the neutral contracts of
   [architecture](../docs/architecture.md#terminology).
 - **Direct typed PATCH DTO:** `JsonApiPatchDtoReader` shares the same validate-on-read contract and
   binds the update into an annotated PATCH DTO whose patchable members are exactly
-  `PatchPresence<T>`. Both paths share `PatchMemberConverter` (per-member conversion against an
-  explicit target `JavaType`); the DTO path converts through the unwrapped inner type and wraps in
-  `Present`/`Omitted`. Declaration violations (`INVALID_PATCH_PROPERTY_TYPE`) and unknown supplied
+   `PatchPresence<T>`. Both paths preserve configured Jackson authority at their conversion boundary;
+   the DTO path keeps JSON-compatible atomic values in its internal marker and lets the contextual
+   `PatchPresence` deserializer perform the single inner-`T` conversion during whole-DTO construction,
+   then wraps in `Present`/`Omitted`. JSON:API relationship linkage still uses its dedicated
+   conversion path. Declaration violations (`INVALID_PATCH_PROPERTY_TYPE`) and unknown supplied
   members (`UNKNOWN_PATCH_MEMBER`) fail at bind time; the declaration check covers role-annotated
   members and rejects every wrapper-level Jackson customization path (custom `using`
   serializers/deserializers, converters, key/content/null customizers, typing, type refinement,
