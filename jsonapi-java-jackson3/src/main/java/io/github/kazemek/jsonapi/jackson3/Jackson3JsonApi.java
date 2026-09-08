@@ -77,13 +77,13 @@ public final class Jackson3JsonApi implements JsonApi {
     this.resources =
         new Jackson3JsonApiResources(
             baseMapper,
-            representationPolicy,
+            new Jackson3JsonApiResources.ResourceConfiguration(
+                representationPolicy, defaultJsonApi),
             resourceMapper,
             resourceBinder,
             resourceReader,
             responseWriter,
-            createWriter,
-            defaultJsonApi);
+            createWriter);
     this.relationships = new Jackson3JsonApiRelationships(identifierReader, responseWriter);
     this.documents = new Jackson3JsonApiDocuments(baseMapper, responseWriter);
     this.patches = new Jackson3JsonApiPatches(baseMapper, patchCommandReader, patchDtoReader);
