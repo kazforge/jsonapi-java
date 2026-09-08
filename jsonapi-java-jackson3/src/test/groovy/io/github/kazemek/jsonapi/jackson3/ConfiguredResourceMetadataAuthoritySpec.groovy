@@ -9,6 +9,7 @@ import io.github.kazemek.jsonapi.core.model.ResourceIdentifier
 import io.github.kazemek.jsonapi.core.model.ResourceObject
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext
 import io.github.kazemek.jsonapi.jackson.mapping.DomainData
+import io.github.kazemek.jsonapi.jackson.mapping.ResourceTypeRegistry
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic
 import io.github.kazemek.jsonapi.jackson.patch.PatchChange
@@ -276,8 +277,8 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
   def "registry keys derive from configured metadata and dispatch honors mix-ins"() {
     given:
     def base = mixinMapper()
-    def registry = ResourceTypeRegistry.builder(base)
-        .register(MixinFlatArticle)
+    def registry = ResourceTypeRegistry.builder()
+        .register("mixin-flat-articles", MixinFlatArticle)
         .build()
     def reader = JsonApiJackson3.domainDocumentReader(
         base, DocumentReadContext.resourceDefaults(), registry)
@@ -294,8 +295,8 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
   def "JavaType registration keys through configured metadata too"() {
     given:
     def base = mixinMapper()
-    def registry = ResourceTypeRegistry.builder(base)
-        .register(base.constructType(MixinFlatArticle))
+    def registry = ResourceTypeRegistry.builder()
+        .register("mixin-flat-articles", base.constructType(MixinFlatArticle))
         .build()
     def reader = JsonApiJackson3.domainDocumentReader(
         base, DocumentReadContext.resourceDefaults(), registry)
@@ -311,9 +312,12 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
 
   def "registration without the configured mix-in fails with no reflection fallback"() {
     when:
-    ResourceTypeRegistry.builder(JsonMapper.builder().build())
-        .register(MixinFlatArticle)
+    ResourceTypeRegistry.builder()
+        .register("mixin-flat-articles", MixinFlatArticle)
         .build()
+    JsonApiJackson3.domainDocumentReader(
+        JsonMapper.builder().build(), DocumentReadContext.resourceDefaults(),
+        ResourceTypeRegistry.builder().register("mixin-flat-articles", MixinFlatArticle).build())
 
     then:
     def ex = thrown(JsonApiMappingException)
@@ -323,9 +327,12 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
 
   def "registry metadata lookup does not inherit resource annotations"() {
     when:
-    ResourceTypeRegistry.builder(JsonMapper.builder().build())
-        .register(ResourceChild)
+    ResourceTypeRegistry.builder()
+        .register("child", ResourceChild)
         .build()
+    JsonApiJackson3.domainDocumentReader(
+        JsonMapper.builder().build(), DocumentReadContext.resourceDefaults(),
+        ResourceTypeRegistry.builder().register("child", ResourceChild).build())
 
     then:
     def childEx = thrown(JsonApiMappingException)
@@ -333,9 +340,12 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
     childEx.resourceClass() == ResourceChild
 
     when:
-    ResourceTypeRegistry.builder(JsonMapper.builder().build())
-        .register(InterfaceResource)
+    ResourceTypeRegistry.builder()
+        .register("interface", InterfaceResource)
         .build()
+    JsonApiJackson3.domainDocumentReader(
+        JsonMapper.builder().build(), DocumentReadContext.resourceDefaults(),
+        ResourceTypeRegistry.builder().register("interface", InterfaceResource).build())
 
     then:
     def interfaceEx = thrown(JsonApiMappingException)
@@ -345,14 +355,14 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
 
   def "the same class registers under different keys for different configured mappers"() {
     given:
-    def plainKey = ResourceTypeRegistry.builder(JsonMapper.builder().build())
-        .register(DirectlyTypedArticle)
+    def plainKey = ResourceTypeRegistry.builder()
+        .register("direct-articles", DirectlyTypedArticle)
         .build()
     def overrideBase = JsonMapper.builder()
         .addMixIn(DirectlyTypedArticle, OverridingTypeMixin)
         .build()
-    def overrideKey = ResourceTypeRegistry.builder(overrideBase)
-        .register(DirectlyTypedArticle)
+    def overrideKey = ResourceTypeRegistry.builder()
+        .register("override-articles", DirectlyTypedArticle)
         .build()
 
     expect:
@@ -364,9 +374,9 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
 
   def "duplicate configured keys still fail at build with CONFLICTING_TYPE_REGISTRATION"() {
     when:
-    ResourceTypeRegistry.builder(mixinMapper())
-        .register(MixinFlatArticle)
-        .register(ClashingFlatArticle)
+    ResourceTypeRegistry.builder()
+        .register("mixin-flat-articles", MixinFlatArticle)
+        .register("mixin-flat-articles", ClashingFlatArticle)
         .build()
 
     then:
@@ -421,8 +431,8 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
     def overrideMapper = JsonMapper.builder()
         .addMixIn(DirectlyTypedArticle, OverridingTypeMixin)
         .build()
-    def registry = ResourceTypeRegistry.builder(plainMapper)
-        .register(DirectlyTypedArticle)
+    def registry = ResourceTypeRegistry.builder()
+        .register("direct-articles", DirectlyTypedArticle)
         .build()
 
     when:
@@ -444,8 +454,8 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
     def overrideMapper = JsonMapper.builder()
         .addMixIn(DirectlyTypedArticle, OverridingTypeMixin)
         .build()
-    def registry = ResourceTypeRegistry.builder(overrideMapper)
-        .register(DirectlyTypedArticle)
+    def registry = ResourceTypeRegistry.builder()
+        .register("override-articles", DirectlyTypedArticle)
         .build()
 
     when:
@@ -463,8 +473,8 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
     given:
     def registryMapper = JsonMapper.builder().build()
     def readerMapper = JsonMapper.builder().build()
-    def registry = ResourceTypeRegistry.builder(registryMapper)
-        .register(MixinFlatArticleWithDirectType)
+    def registry = ResourceTypeRegistry.builder()
+        .register("direct-flat-articles", MixinFlatArticleWithDirectType)
         .build()
     def reader = JsonApiJackson3.domainDocumentReader(
         readerMapper, DocumentReadContext.resourceDefaults(), registry)
@@ -479,8 +489,8 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
 
   def "domain reader keeps the missing-metadata diagnostic for the consumer"() {
     given:
-    def registry = ResourceTypeRegistry.builder(mixinMapper())
-        .register(MixinFlatArticle)
+    def registry = ResourceTypeRegistry.builder()
+        .register("mixin-flat-articles", MixinFlatArticle)
         .build()
 
     when:

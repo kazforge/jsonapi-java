@@ -13,6 +13,7 @@ import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext;
 import io.github.kazemek.jsonapi.jackson.mapping.DomainData;
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter;
 import io.github.kazemek.jsonapi.jackson.mapping.IncludedResources;
+import io.github.kazemek.jsonapi.jackson.mapping.ResourceTypeRegistry;
 import io.github.kazemek.jsonapi.jackson3.internal.DomainResourceBinder;
 import io.github.kazemek.jsonapi.jackson3.internal.MappingDefinitionCache;
 import io.github.kazemek.jsonapi.jackson3.internal.MetaBindingModule;
@@ -80,18 +81,19 @@ public final class JsonApiDomainDocumentReader {
     this.metaConverter = new BinderMetaConverter(binderMapper);
   }
 
-  private static void requireRegistryCoherence(
+  private void requireRegistryCoherence(
       ResourceTypeRegistry registry, MappingDefinitionCache metadataAuthority) {
-    for (ResourceTypeRegistry.RegisteredType registered : registry.registrations()) {
-      String configuredType = metadataAuthority.requireResourceTypeName(registered.rawClass());
-      if (!configuredType.equals(registered.type())) {
+    for (ResourceTypeRegistry.Registration registered : registry.registrations()) {
+      JavaType targetType = binderMapper.constructType(registered.targetType());
+      String configuredType = metadataAuthority.requireResourceTypeName(targetType.getRawClass());
+      if (!configuredType.equals(registered.jsonApiType())) {
         throw JsonApiMappingException.withoutLocation(
             MappingDiagnostic.RESOURCE_TYPE_MISMATCH,
-            registered.rawClass(),
+            targetType.getRawClass(),
             "Registered JSON:API type '"
-                + registered.type()
+                + registered.jsonApiType()
                 + "' for "
-                + registered.rawClass().getName()
+                + targetType.getRawClass().getName()
                 + " does not match configured resource type '"
                 + configuredType
                 + "'");
@@ -215,7 +217,7 @@ public final class JsonApiDomainDocumentReader {
    */
   private Object bindResource(ResourceObject resource, MappingLocation documentPrefix) {
     ResourceObject checkedResource = Objects.requireNonNull(resource, "resource");
-    ResourceTypeRegistry.RegisteredType registered = registry.resolve(checkedResource.type());
+    ResourceTypeRegistry.Registration registered = registry.resolve(checkedResource.type());
     if (registered == null) {
       throw new JsonApiMappingException(
           MappingDiagnostic.UNREGISTERED_RESOURCE_TYPE,
@@ -223,9 +225,7 @@ public final class JsonApiDomainDocumentReader {
           documentPrefix,
           "No DTO target registered for JSON:API resource type '" + checkedResource.type() + "'");
     }
-    JavaType registeredType = registered.javaType();
-    JavaType targetType =
-        registeredType != null ? registeredType : binderMapper.constructType(registered.rawClass());
+    JavaType targetType = binderMapper.constructType(registered.targetType());
     try {
       return binder.fromResource(checkedResource, targetType);
     } catch (JsonApiMappingException ex) {

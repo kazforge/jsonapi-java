@@ -1,5 +1,7 @@
 package io.github.kazemek.jsonapi.jackson3
 
+import io.github.kazemek.jsonapi.jackson.mapping.ResourceTypeRegistry
+
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument
 import io.github.kazemek.jsonapi.core.validation.ValidationContext
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext
@@ -57,15 +59,15 @@ class JsonApiJackson3ConstructionSpec extends Specification {
     }
   }
 
-  def "registry construction requires an explicit configured mapper"() {
+  def "registry construction is Jackson-major-neutral"() {
     expect:
     ResourceTypeRegistry.declaredMethods.any {
       Modifier.isPublic(it.modifiers) && Modifier.isStatic(it.modifiers) &&
-          it.name == 'builder' && it.parameterTypes.toList() == [JsonMapper]
+          it.name == 'builder' && it.parameterTypes.length == 0
     }
     !ResourceTypeRegistry.declaredMethods.any {
       Modifier.isPublic(it.modifiers) && Modifier.isStatic(it.modifiers) &&
-          it.name == 'builder' && it.parameterTypes.length == 0
+          it.name == 'builder' && it.parameterTypes.any { type -> type.name.contains('JsonMapper') }
     }
   }
 

@@ -22,6 +22,8 @@ import io.github.kazemek.jsonapi.jackson.document.PrimaryDataKind
 import io.github.kazemek.jsonapi.jackson.mapping.DomainData
 import io.github.kazemek.jsonapi.jackson.mapping.IncludedResources
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter
+import io.github.kazemek.jsonapi.jackson.mapping.ResourceTypeRegistry
+import io.github.kazemek.jsonapi.jackson3.ParameterizedBindingFixtures.GenericValue
 import io.github.kazemek.jsonapi.fixtures.domainread.FlatArticle
 import io.github.kazemek.jsonapi.fixtures.domainwrite.Comment
 import io.github.kazemek.jsonapi.fixtures.domainwrite.Person
@@ -42,6 +44,7 @@ import tools.jackson.databind.DeserializationContext
 import tools.jackson.databind.JavaType
 import tools.jackson.databind.deser.std.StdDeserializer
 import tools.jackson.databind.json.JsonMapper
+import tools.jackson.core.type.TypeReference
 import tools.jackson.databind.module.SimpleModule
 
 class DomainDocumentReaderSpec extends Specification {
@@ -330,9 +333,9 @@ class DomainDocumentReaderSpec extends Specification {
   def "JavaType registrations bind through the same registry gate"() {
     given:
     def base = JsonMapper.builder().build()
-    def registry = ResourceTypeRegistry.builder(base)
-        .register(base.constructType(FlatArticle))
-        .register(Person)
+    def registry = ResourceTypeRegistry.builder()
+        .register("articles", base.constructType(FlatArticle))
+        .register("people", Person)
         .build()
     def reader = JsonApiJackson3.domainDocumentReader(
         base, DocumentReadContext.resourceDefaults(), registry)
@@ -348,11 +351,30 @@ class DomainDocumentReaderSpec extends Specification {
         ]
   }
 
+  def "parameterized reflection Type registrations preserve generic envelope binding"() {
+    given:
+    def targetType = new TypeReference<GenericValue<String>>() {}.getType()
+    def registry = ResourceTypeRegistry.builder()
+        .register("things", targetType)
+        .build()
+    def reader = JsonApiJackson3.domainDocumentReader(
+        JsonMapper.builder().build(), DocumentReadContext.resourceDefaults(), registry)
+
+    when:
+    def envelope = reader.readValue(
+        '{"data":{"type":"things","id":"1","attributes":{"value":"text"}}}')
+
+    then:
+    def value = ((DomainData.SingleResource) envelope.data()).resource()
+    value instanceof GenericValue
+    value.value() == "text"
+  }
+
   def "mapper-instance domainDocumentReader overloads bind identically"() {
     given:
     def mapper = JsonMapper.builder().build()
-    def registry = ResourceTypeRegistry.builder(mapper)
-        .register(FlatArticle)
+    def registry = ResourceTypeRegistry.builder()
+        .register("articles", FlatArticle)
         .build()
     def threeArg = JsonApiJackson3.domainDocumentReader(
         mapper, DocumentReadContext.resourceDefaults(), registry)
@@ -520,8 +542,8 @@ class DomainDocumentReaderSpec extends Specification {
 
   def "typed envelope binding rejects supplied getter-only mapped members"() {
     given:
-    def registry = ResourceTypeRegistry.builder(JsonMapper.builder().build())
-        .register(DirectionalityReadFixtures.GetterOnly)
+    def registry = ResourceTypeRegistry.builder()
+        .register("getter-only", DirectionalityReadFixtures.GetterOnly)
         .build()
     def reader = JsonApiJackson3.domainDocumentReader(
         JsonMapper.builder().build(), DocumentReadContext.resourceDefaults(), registry)
@@ -539,8 +561,8 @@ class DomainDocumentReaderSpec extends Specification {
 
   def "typed envelope binding rejects a supplied getter-only identifier at /data/id"() {
     given:
-    def registry = ResourceTypeRegistry.builder(JsonMapper.builder().build())
-        .register(DirectionalityReadFixtures.GetterOnlyIdentifier)
+    def registry = ResourceTypeRegistry.builder()
+        .register("getter-only-id", DirectionalityReadFixtures.GetterOnlyIdentifier)
         .build()
     def reader = JsonApiJackson3.domainDocumentReader(
         JsonMapper.builder().build(), DocumentReadContext.resourceDefaults(), registry)
@@ -557,8 +579,8 @@ class DomainDocumentReaderSpec extends Specification {
 
   def "typed envelope binding rejects a supplied getter-only local-id at /data/lid"() {
     given:
-    def registry = ResourceTypeRegistry.builder(JsonMapper.builder().build())
-        .register(LocalIdFixtures.GetterOnlyLocalId)
+    def registry = ResourceTypeRegistry.builder()
+        .register("getter-only-lid", LocalIdFixtures.GetterOnlyLocalId)
         .build()
     def reader = JsonApiJackson3.domainDocumentReader(
         JsonMapper.builder().build(), DocumentReadContext.resourceDefaults(), registry)
@@ -714,9 +736,9 @@ class DomainDocumentReaderSpec extends Specification {
 
   def "registry declaration failures carry no member location"() {
     when:
-    ResourceTypeRegistry.builder(JsonMapper.builder().build())
-        .register(FlatArticle)
-        .register(FlatNullableIdArticle)
+    ResourceTypeRegistry.builder()
+        .register("articles", FlatArticle)
+        .register("articles", FlatNullableIdArticle)
         .build()
 
     then:
@@ -725,30 +747,27 @@ class DomainDocumentReaderSpec extends Specification {
     conflicting.location() == null
 
     when:
-    ResourceTypeRegistry.builder(JsonMapper.builder().build()).register(Object.class).build()
+    ResourceTypeRegistry.builder().register("", Object.class).build()
 
     then:
     def missing = thrown(JsonApiMappingException)
-    missing.diagnostic() == MappingDiagnostic.MISSING_RESOURCE_ANNOTATION
+    missing.diagnostic() == MappingDiagnostic.INVALID_RESOURCE_TYPE
     missing.location() == null
   }
 
   @Unroll
-  def "registry rejects #resourceClass with an invalid resource type"() {
+  def "registry rejects invalid explicit resource type #jsonApiType"() {
     when:
-    ResourceTypeRegistry.builder(JsonMapper.builder().build()).register(resourceClass).build()
+    ResourceTypeRegistry.builder().register(jsonApiType, Object.class).build()
 
     then:
     def exception = thrown(JsonApiMappingException)
     exception.diagnostic() == MappingDiagnostic.INVALID_RESOURCE_TYPE
-    exception.resourceClass() == resourceClass
+    exception.resourceClass() == Object
     exception.location() == null
 
     where:
-    resourceClass << [
-      EmptyResourceType,
-      InvalidResourceType
-    ]
+    jsonApiType << ["", "bad/type"]
   }
 
   def "domain reader checks an unused registration eagerly"() {
@@ -757,9 +776,9 @@ class DomainDocumentReaderSpec extends Specification {
     def overrideMapper = JsonMapper.builder()
         .addMixIn(FlatArticle, OverrideArticlesMixin)
         .build()
-    def registry = ResourceTypeRegistry.builder(base)
-        .register(FlatArticle)
-        .register(Person)
+    def registry = ResourceTypeRegistry.builder()
+        .register("articles", FlatArticle)
+        .register("people", Person)
         .build()
 
     when:
@@ -781,8 +800,8 @@ class DomainDocumentReaderSpec extends Specification {
     def overrideMapper = JsonMapper.builder()
         .addMixIn(FlatArticle, OverrideArticlesMixin)
         .build()
-    def registry = ResourceTypeRegistry.builder(base)
-        .register(FlatArticle)
+    def registry = ResourceTypeRegistry.builder()
+        .register("articles", FlatArticle)
         .build()
 
     when:
@@ -820,7 +839,7 @@ class DomainDocumentReaderSpec extends Specification {
   def "empty registries stay legal for construction"() {
     given:
     def mapper = JsonMapper.builder().build()
-    def registry = ResourceTypeRegistry.builder(mapper).build()
+    def registry = ResourceTypeRegistry.builder().build()
 
     when:
     def reader = JsonApiJackson3.domainDocumentReader(
@@ -835,9 +854,9 @@ class DomainDocumentReaderSpec extends Specification {
     given:
     def registryMapper = JsonMapper.builder().build()
     def readerMapper = JsonMapper.builder().build()
-    def registry = ResourceTypeRegistry.builder(registryMapper)
-        .register(registryMapper.constructType(FlatArticle))
-        .register(Person)
+    def registry = ResourceTypeRegistry.builder()
+        .register("articles", registryMapper.constructType(FlatArticle))
+        .register("people", Person)
         .build()
     def reader = JsonApiJackson3.domainDocumentReader(
         readerMapper, DocumentReadContext.resourceDefaults(), registry)
@@ -856,8 +875,8 @@ class DomainDocumentReaderSpec extends Specification {
   def "unrelated property invalidity stays deferred until binding"() {
     given:
     def mapper = JsonMapper.builder().build()
-    def registry = ResourceTypeRegistry.builder(mapper)
-        .register(FlatThrowingArticle)
+    def registry = ResourceTypeRegistry.builder()
+        .register("throwing-articles", FlatThrowingArticle)
         .build()
 
     when:
@@ -943,19 +962,19 @@ class DomainDocumentReaderSpec extends Specification {
   }
 
   private static ResourceTypeRegistry registry(List<Class<?>> targetClasses) {
-    def builder = ResourceTypeRegistry.builder(JsonMapper.builder().build())
+    def builder = ResourceTypeRegistry.builder()
     for (Class<?> target : targetClasses) {
-      builder.register(target)
+      builder.register(registryType(target), target)
     }
     builder.build()
   }
 
   private static ResourceTypeRegistry registry(Class<?>... targetClasses) {
-    def builder = ResourceTypeRegistry.builder(JsonMapper.builder().build())
-    for (Class<?> target : targetClasses) {
-      builder.register(target)
-    }
-    builder.build()
+    registry(targetClasses.toList())
+  }
+
+  private static String registryType(Class<?> target) {
+    target.getAnnotation(JsonApiResource).type()
   }
 
   private static JsonApiDomainDocumentReader newReader(Class<?>... targetClasses) {

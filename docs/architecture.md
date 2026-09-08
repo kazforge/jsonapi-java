@@ -172,7 +172,7 @@ JSON:API representation and configured Jackson are both authoritative, in differ
 | Property discovery, visibility, mix-ins, creators, serializers/deserializers, and external JSON:API member names | Configured Jackson |
 | Ordinary attribute and resource/relationship-meta property serialization and deserialization; `RelationshipLinkage` identifier-meta conversion | Configured Jackson at the mapped property / wrapper meta `JavaType` |
 | Bean construction, creators, naming, visibility, modules | Configured Jackson |
-| `ResourceTypeRegistry` | Explicit wire-type → Java-target dispatch. It does not interpret annotations; registration keys come from the same configured-Jackson metadata authority, and a consuming domain reader re-checks every key against its own configured metadata at construction. |
+| `ResourceTypeRegistry` | Jackson-neutral explicit wire-type → `java.lang.reflect.Type` dispatch. It does not interpret annotations; the consuming adapter converts targets through configured Jackson and re-checks each key against configured metadata at construction. |
 | `ResourceDecorator` / `ResourceDecoration` / `RelationshipDecoration` | Application/runtime decoration that adds only `ResourceObject.links` and mapped `Relationship.links`. Keys are the mapped logical property name; configured Jackson still owns the final wire name. Decoration never replaces mapping semantics and never resurrects fieldset-omitted relationships. |
 
 `MappingDefinitionCache` is the Jackson 3 source of class-level resource metadata and of the two

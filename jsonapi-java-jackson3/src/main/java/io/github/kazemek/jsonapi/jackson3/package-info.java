@@ -63,14 +63,14 @@
  * no mapped property can be resolved.
  *
  * <p>Typed domain envelopes use {@link JsonApiJackson3#domainDocumentReader} with an explicit
- * {@link ResourceTypeRegistry}: a dispatch-only registry keyed by each registered target's
- * configured class-level resource metadata (build via {@link
- * ResourceTypeRegistry#builder(tools.jackson.databind.json.JsonMapper)}); reader construction
- * re-resolves every key against its own configured metadata and rejects disagreement. A {@link
- * JsonApiDomainDocument} carries flat primary DTOs and independently bound {@code included} DTOs
- * (wire-ordered, dual id/lid identity lookup, never injected into relationships). Identifier
- * primary data stays as core {@link io.github.kazemek.jsonapi.core.model.ResourceIdentifier} values
- * and error documents never bind.
+ * {@link io.github.kazemek.jsonapi.jackson.mapping.ResourceTypeRegistry}: an immutable,
+ * Jackson-neutral mapping from wire {@code type} strings to {@link java.lang.reflect.Type} targets
+ * (build via {@code ResourceTypeRegistry.builder().register("articles", Article.class)}); reader
+ * construction converts each target through its configured mapper and rejects disagreement between
+ * the explicit key and configured metadata. A {@link JsonApiDomainDocument} carries flat primary
+ * DTOs and independently bound {@code included} DTOs (wire-ordered, dual id/lid identity lookup,
+ * never injected into relationships). Identifier primary data stays as core {@link
+ * io.github.kazemek.jsonapi.core.model.ResourceIdentifier} values and error documents never bind.
  *
  * <p>Presence-aware resource updates use {@link JsonApiJackson3#patchCommandReader} to derive a
  * {@link JsonApiPatchCommandReader} that applies validate-on-read with {@code

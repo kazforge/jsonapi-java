@@ -120,6 +120,13 @@ level links stay distinct from document-level `DocumentEnvelope.links` and from 
 Register decorators through the mapper's immutable `ResourceDecoratorRegistry`; no annotation carries
 decorator metadata.
 
+Advanced heterogeneous binding uses the Jackson-neutral `ResourceTypeRegistry`. Register each
+wire type explicitly with a raw class or `java.lang.reflect.Type` (including parameterized types):
+`ResourceTypeRegistry.builder().register("articles", Article.class).build()`. The registry does
+not infer names or scan classes; Jackson adapters convert targets to their native type model and
+verify configured `@JsonApiResource` metadata. It is used by the advanced typed-domain-envelope
+path only; Level-1 homogeneous reads remain registry-free.
+
 ## Test Fixtures
 
 The `java-test-fixtures` variant contains passive, Jackson-major-neutral DTO carriers and the

@@ -9,7 +9,9 @@
  * contracts {@link io.github.kazemek.jsonapi.jackson.mapping.ResourceDecorator}, {@link
  * io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoration}, {@link
  * io.github.kazemek.jsonapi.jackson.mapping.RelationshipDecoration}, and {@link
- * io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoratorRegistry}.
+ * io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoratorRegistry}. {@link
+ * io.github.kazemek.jsonapi.jackson.mapping.ResourceTypeRegistry} provides explicit heterogeneous
+ * resource-type dispatch without depending on a Jackson major.
  */
 @NullMarked
 package io.github.kazemek.jsonapi.jackson.mapping;
