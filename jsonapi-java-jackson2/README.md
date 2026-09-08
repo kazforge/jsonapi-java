@@ -1,21 +1,21 @@
 # jsonapi-java-jackson2
 
-Jackson 2 implementation of the validated JSON:API document codec: validating and writing, plus
-token-driven reading of, [JSON:API v1.1](https://jsonapi.org/) documents with deterministic wire
+Jackson 2 implementation of the major-neutral Level-1 JSON:API application contract, plus the
+validated JSON:API document codec and advanced capabilities it coordinates: validating and writing,
+plus token-driven reading of, [JSON:API v1.1](https://jsonapi.org/) documents with deterministic wire
 semantics, plus advanced domain-to-resource mapping with compound inclusion, sparse fieldsets, and
 additive decoration, plus validated flat resource-to-DTO binding, plus presence-aware PATCH binding.
 
-> This is a Jackson 2 parity artifact. It currently holds the document writer, the validated
-> document reader, the advanced write-side resource mapper, the flat DTO resource binder, and
-> presence-aware PATCH (low-level commands and direct typed PATCH DTOs); typed envelopes and the
-> Level-1 configured runtime follow in later parity stories. The Jackson 3 module
-> ([jsonapi-java-jackson3](../jsonapi-java-jackson3/README.md)) owns the full capability set today.
+> Ordinary application code should start with the Level-1 configured runtime below. The
+> major-neutral contract lives in `jsonapi-java-jackson-api`
+> ([ADR-019](../docs/adr/019-level-one-application-api-contract.md)); the capability factories
+> after it are advanced mechanism/control seams that stay public and unchanged.
 
 ## Packages
 
 | Package                                        | Role                                                                  |
 |------------------------------------------------|-----------------------------------------------------------------------|
-| `io.github.kazemek.jsonapi.jackson2`           | Public codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, token-driven `JsonApiDocumentReader`, `JsonApiResourceMapper` for domain-to-resource mapping, `JsonApiResourceBinder` for validated flat resource-to-DTO binding, and `JsonApiPatchCommandReader` / `JsonApiPatchDtoReader` for presence-aware PATCH |
+| `io.github.kazemek.jsonapi.jackson2`           | Public Level-1 configured runtime (`Jackson2JsonApi`), codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, token-driven `JsonApiDocumentReader`, `JsonApiResourceMapper` for domain-to-resource mapping, `JsonApiResourceBinder` for validated flat resource-to-DTO binding, and `JsonApiPatchCommandReader` / `JsonApiPatchDtoReader` for presence-aware PATCH |
 | `io.github.kazemek.jsonapi.jackson2.internal`  | Streaming document serializer, wire emission, token-driven wire decoding, the mapping engine, PATCH binding, and module registration; not public API |
 | `io.github.kazemek.jsonapi.jackson.*`          | Public Jackson-major-neutral API contracts (in `jsonapi-java-jackson-api`): `api`, `document`, `mapping`, `patch`, `representation`, `diagnostic` |
 
@@ -25,8 +25,61 @@ Validation policy, read policy, mapping policy, contexts, provenance values, dia
 `JsonApiValidationException`, `JsonApiDocumentReadException`, `MappingDiagnostic`), presence-aware
 update commands (`PatchCommand`, `PatchChange`, `PatchPresence`, `StructuredPatch`), and the
 opt-in identifier-meta wrapper live in `jsonapi-java-core` and `jsonapi-java-jackson-api` and are
-imported from there; this module holds only the Jackson 2-bound writer, reader, resource mapper,
-resource binder, PATCH readers, and their implementations.
+imported from there; this module holds the Jackson 2-bound Level-1 runtime, writer, reader, resource
+mapper, resource binder, PATCH readers, and their implementations.
+
+## Level-1 application runtime
+
+```java
+JsonMapper callerMapper = JsonMapper.builder().build();
+
+Jackson2JsonApi jsonApi = JsonApiJackson2.jsonApi(callerMapper);
+
+String json = jsonApi.resources().writeOne(article);
+ArticleDto readBack = jsonApi.resources().readOne(json, ArticleDto.class);
+List<ArticleDto> all = jsonApi.resources().readMany(collectionJson, ArticleDto.class);
+
+ResourceIdentifier author = jsonApi.relationships().readToOne(linkageJson);
+String linkageJson = jsonApi.relationships().writeToOne(author);
+
+ArticlePatch patch = jsonApi.patches().readPatch(patchJson, ArticlePatch.class);
+PatchCommand<ArticleDto> command = jsonApi.patches().readCommand(patchJson, ArticleDto.class);
+```
+
+The runtime coordinates mapping, configured decoration, validation, and writing internally. Reads are
+strict and homogeneous: `readOne` requires single-resource primary data and `readMany` requires a
+collection; incompatible shapes fail with mapping diagnostics rather than coercing. Document-level
+`links`, `meta`, and `jsonapi` travel through `ResourceWriteOptions`, and create/update authoring
+selects core create/update validation without raw-document choreography:
+
+```java
+Jackson2JsonApi jsonApi = JsonApiJackson2.builder(callerMapper)
+    .identifierConverter(identifierConverter)
+    .linkageMappers(linkageMappers)
+    .representationPolicy(policy)
+    .decorators(decorators)
+    .jsonApiVersion("1.1")
+    .build();
+
+String createJson = jsonApi.resources().writeCreateDocument(draft);
+String updateJson = jsonApi.resources().writeUpdateDocument(
+    article, new EndpointIdentity("articles", "1"));
+```
+
+Only coherent application-lifetime configuration belongs on the builder; representation selection,
+document envelope, and expected update identity stay per-operation arguments. The builder selects the
+same documented defaults as the capability factories when a setting is omitted. There is no base
+validation-context setting: response, create, update, and linkage operations select their usage
+internally.
+
+`jsonApiVersion("1.1")` is optional. When configured, ordinary `resources()` writes inherit that
+value as the top-level `jsonapi.version` whenever the per-write envelope does not supply a
+`JsonApiObject`. An explicit per-write object wins completely. The value describes the JSON:API
+document version advertised to clients; it is not HTTP API or business versioning and does not
+replace media-type extension/profile negotiation. The setting does not affect `documents()`,
+`relationships()`, or advanced writer paths, which remain explicit. Jackson 2 checked stream I/O
+at the Level-1 boundary is exposed as `UncheckedIOException`; existing document-read, validation,
+and mapping exception families remain distinct.
 
 ## Minimal usage
 
@@ -191,6 +244,14 @@ The canonical seam follows ADR-016: a fully configured `JsonMapper` instance, fo
 capability context and collaborators:
 
 ```java
+JsonApiJackson2.jsonApi(mapper);                                        // Level-1 defaults
+JsonApiJackson2.builder(mapper)
+    .identifierConverter(identifierConverter)
+    .linkageMappers(linkageMappers)
+    .representationPolicy(representationPolicy)
+    .decorators(decoratorRegistry)
+    .jsonApiVersion("1.1")
+    .build();
 JsonApiJackson2.writer(mapper);                                        // default validation context
 JsonApiJackson2.writer(mapper, validationContext);                     // canonical mapper-instance form
 JsonApiJackson2.reader(mapper, readContext);                           // canonical mapper-instance form
@@ -215,10 +276,11 @@ fallback only when the caller lacks Optional deserialization support. Both PATCH
 isolated binder mappers the same way (meta-binding module on both paths, `PatchPresence` module
 only on the typed path, plus the Optional deserialization fallback when needed). No construction
 path mutates the caller's mapper, and derived mappers are not public.
-`JsonMapper.Builder` overloads are intentionally not part of the API. Jackson 2's checked
-`JsonProcessingException` mechanics propagate from emission methods unchanged; every reader
-overload declares checked `IOException`, Jackson parse failures surface as payload-safe
-`JsonApiDocumentReadException` (`MALFORMED_JSON`), and unrelated source I/O propagates unchanged.
+`JsonMapper.Builder` overloads are intentionally not part of the API. Advanced Jackson 2 emission
+methods retain their checked `IOException` mechanics; every advanced reader overload declares
+checked `IOException`. The Level-1 runtime adapts unavoidable stream I/O to `UncheckedIOException`.
+Jackson parse failures surface as payload-safe `JsonApiDocumentReadException` (`MALFORMED_JSON`),
+and unrelated source I/O remains distinguishable from payload failures.
 Core validation failures stay unchecked `JsonApiValidationException` on writes and become
 `JsonApiDocumentReadException` with `ValidationRuleCode` plus JSON Pointer-like path on reads.
 Mapping failures throw `JsonApiMappingException` with `MappingDiagnostic` values per the
@@ -283,7 +345,7 @@ locations match Jackson 3 exactly.
 
 ## Non-goals
 
-Typed envelopes and the Level-1 configured runtime are later Jackson 2 parity stories. HTTP
+Typed domain envelopes remain an advanced capability not exposed by the Level-1 runtime. HTTP
 `fields[TYPE]` parsing, field authorization, domain graph hydration, persistence lookup, and
 command application remain application/adapter responsibilities. Both majors share the neutral
 contracts of [jsonapi-java-jackson-api](../jsonapi-java-jackson-api/README.md) per ADR-007.

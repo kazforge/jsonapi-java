@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import io.github.kazemek.jsonapi.core.validation.ValidationContext;
+import io.github.kazemek.jsonapi.jackson.api.JsonApi;
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext;
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter;
 import io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoratorRegistry;
@@ -36,7 +37,8 @@ import java.util.Optional;
  * caller-preserving JDK 8 {@code Optional} fallback. Public surface consists of {@link
  * JsonApiDocumentWriter}, {@link JsonApiDocumentReader}, {@link JsonApiResourceMapper}, {@link
  * JsonApiResourceBinder}, {@link JsonApiPatchCommandReader}, and {@link JsonApiPatchDtoReader};
- * additional capabilities follow in later parity stories per ADR-016's semantic cross-major policy.
+ * ordinary application code can instead use the configured {@link JsonApi} runtime returned by
+ * {@link #jsonApi(JsonMapper)} or {@link #builder(JsonMapper)}.
  */
 public final class JsonApiJackson2 {
 
@@ -45,6 +47,26 @@ public final class JsonApiJackson2 {
   private static final String LINKAGE_MAPPERS = "linkageMappers";
 
   private JsonApiJackson2() {}
+
+  /**
+   * Returns a Level-1 configured runtime with documented defaults: default identifier conversion,
+   * no custom linkage mappers, the default representation policy, no resource decorators, and no
+   * resource-write {@code jsonapi.version} default.
+   */
+  public static Jackson2JsonApi jsonApi(JsonMapper base) {
+    Objects.requireNonNull(base, "base");
+    return builder(base).build();
+  }
+
+  /**
+   * Returns a builder for a Level-1 configured runtime over the given configured mapper. Only
+   * coherent application-lifetime configuration belongs on the builder; request-scoped values stay
+   * per-operation arguments on the resulting runtime.
+   */
+  public static Jackson2JsonApi.Builder builder(JsonMapper base) {
+    Objects.requireNonNull(base, "base");
+    return new Jackson2JsonApi.Builder(base);
+  }
 
   /**
    * Returns a writer that validates with {@link ValidationContext#defaults()} then serializes
