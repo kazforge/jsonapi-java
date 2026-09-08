@@ -14,14 +14,15 @@ mapping through `JsonApiJackson2.resourceMapper` with the same mapping, inclusio
 decoration semantics as Jackson 3, plus flat resource-to-DTO binding through
 `JsonApiJackson2.resourceBinder` with the same flat-binding semantics as Jackson 3, plus
 presence-aware PATCH binding through `JsonApiJackson2.patchCommandReader` / `patchDtoReader` with
-the same PATCH semantics as Jackson 3; its remaining capabilities (typed envelopes and the Level-1
-runtime) follow in later parity stories. `jsonapi-java-jackson-api` owns
+the same PATCH semantics as Jackson 3, and the configured `Jackson2JsonApi` Level-1 runtime.
+`jsonapi-java-jackson-api` owns
 Jackson-major-neutral policy, diagnostics, contexts, envelope values, and presence-aware update
 contracts. How those modules fit together is in [`docs/architecture.md`](architecture.md). Writer output is cross-checked against pinned JSON:API 1.1 draft schemas as supplemental
 evidence only. The version-neutral document corpus, closed negative corpus, and dual-success
 ambiguous primary-data cases in the Jackson API test-fixtures corpus (`jsonapi/corpus/1.1/`) are
 shared wire resources for every Jackson major. Capability, schema, and context selections belong
-to each adapter's local specifications. Jackson 2 typed envelopes, query parsing, and Spring adapters remain deferred.
+to each adapter's local specifications. Jackson 2 typed domain envelopes, query parsing, and Spring
+adapters remain deferred.
 
 ## Document structure (supported)
 
@@ -151,7 +152,7 @@ control per schema kind (response, create-resource, update-resource, update-rela
 harness rejects invalid documents. The same spec keeps explicit expected failures for the three
 documented draft-schema gaps above, so a schema change forces an intentional review.
 
-## Domain mapping (supported; Jackson 2 typed envelopes — deferred)
+## Domain mapping (supported)
 
 | Rule                                                    | Status       | Notes                                                                                                                                                                                                                          |
 |---------------------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -169,6 +170,19 @@ documented draft-schema gaps above, so a schema change forces an intentional rev
 | Recursive structured value PATCH semantics              | supported    | `StructuredPatch` payload for structured attributes on both PATCH paths (ADR-014); Jackson 3 and Jackson 2 binding supported |
 | Automatic domain graph hydration                        | out of scope | Linkage resolution remains application policy                                                                                                                                                                                  |
 | Automatic mutation of domain or persistence objects     | out of scope | Applications apply authorized update commands                                                                                                                                                                                  |
+
+## Level-1 application runtime (supported)
+
+| Rule | Status | Notes |
+|------|--------|-------|
+| Major-neutral `JsonApi` root and four coordinated facets | supported | `Jackson2JsonApi` and `Jackson3JsonApi` are constructed from configured mapper instances |
+| Strict homogeneous resource reads | supported | `readOne` requires one resource; `readMany` requires a resource collection; incompatible shapes are not coerced |
+| Resource, create, and update writes | supported | Resource writes validate as response usage; create/update methods select their core request usage and optional endpoint identity |
+| To-one, explicit-null, and to-many linkage operations | supported | Linkage-only documents remain separate from domain mapping and do not inherit resource-write defaults |
+| Raw document operations with explicit read context | supported | `documents()` preserves explicit context and validates before writing |
+| Presence-aware PATCH projections | supported | Typed `PatchPresence` DTO and low-level `PatchCommand` paths are available through `patches()` |
+| Configured representation, decoration, linkage, and identifier collaborators | supported | Application-lifetime builder settings are applied without mutating the caller mapper; request-scoped selection and envelope remain per operation |
+| Jackson 2 stream I/O at the Level-1 boundary | supported | Unavoidable checked I/O is exposed as `UncheckedIOException`; existing read, validation, and mapping families remain distinct |
 
 ## Query parameters (delegated)
 

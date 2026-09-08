@@ -47,7 +47,7 @@ directly:
 import io.github.kazemek.jsonapi.jackson.api.JsonApi;
 import io.github.kazemek.jsonapi.jackson.api.ResourceWriteOptions;
 
-JsonApi api = /* major-specific implementation, supplied separately, e.g. Jackson 3 */;
+JsonApi api = /* major-specific implementation, supplied separately, e.g. Jackson 2 or 3 */;
 ArticleDto article = api.resources().readOne(json, ArticleDto.class);
 String created = api.resources().writeCreateDocument(article);
 String represented = api.resources()
@@ -59,15 +59,16 @@ readers/writers, resource mapper/binder, `JavaType` overloads, heterogeneous env
 and low-level contexts remain the advanced mechanism/control seams. The contract is
 client/server-neutral and models no Jackson mechanics. See
 [ADR-019](../docs/adr/019-level-one-application-api-contract.md). This module defines the
-contract only; the Jackson 3 implementation is the configured `Jackson3JsonApi` runtime in
-`jsonapi-java-jackson3` (via `JsonApiJackson3.jsonApi`/`builder`).
+contract only; Jackson 2 and Jackson 3 implementations are the configured `Jackson2JsonApi` and
+`Jackson3JsonApi` runtimes in their respective adapter modules (via
+`JsonApiJackson2.jsonApi`/`builder` and `JsonApiJackson3.jsonApi`/`builder`).
 
 ## Minimal usage
 
 This module has no standalone entry points. Consumers use it through a Jackson adapter:
 
 ```java
-// Jackson 3 (or, later, Jackson 2) consumes the same neutral contracts:
+// Jackson 2 and Jackson 3 consume the same neutral contracts:
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext;
 import io.github.kazemek.jsonapi.jackson.representation.IncludePath;
 import io.github.kazemek.jsonapi.jackson.representation.IncludePolicy;

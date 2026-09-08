@@ -1,7 +1,7 @@
 # JSON:API 1.1 document fixtures
 
-Version-neutral JSON:API documents used by adapter tests. Jackson 3 and (later) Jackson 2 tests share
-this corpus; do not fork major-specific copies. The files ship as classpath resources under
+Version-neutral JSON:API documents used by adapter tests. Jackson 2 and Jackson 3 tests share this
+corpus; do not fork major-specific copies. The files ship as classpath resources under
 `jsonapi/corpus/1.1/` and are loaded with the small resource helper in the test-fixture source set.
 
 ## Layout

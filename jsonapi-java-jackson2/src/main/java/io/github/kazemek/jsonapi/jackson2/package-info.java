@@ -1,7 +1,8 @@
 /**
- * Jackson 2 codecs for validating and writing JSON:API document envelopes, validated document
- * reading, advanced annotated-domain-to-resource mapping, validated flat resource-to-DTO binding,
- * and presence-aware PATCH binding.
+ * Jackson 2 codecs for the major-neutral Level-1 JSON:API application contract, plus the advanced
+ * capabilities it coordinates: validating and writing JSON:API document envelopes, validated
+ * document reading, advanced annotated-domain-to-resource mapping, validated flat resource-to-DTO
+ * binding, and presence-aware PATCH binding.
  *
  * <p>Java {@code null} on model components means member absence. Explicit JSON {@code null} uses
  * sealed variants such as {@link io.github.kazemek.jsonapi.core.model.DocumentData.NullData}. Use
@@ -22,11 +23,16 @@
  * io.github.kazemek.jsonapi.jackson.patch.PatchCommand} or directly into an annotated {@link
  * io.github.kazemek.jsonapi.jackson.patch.PatchPresence} DTO.
  *
- * <p>Additional capabilities (typed envelopes and the Level-1 configured runtime) follow in later
- * parity stories; this package holds the validated document-output and document-read contracts plus
- * the advanced domain mapping in both directions and presence-aware PATCH. Cross-major parity is
- * semantic capability symmetry plus equivalent configuration authority per ADR-016, not textual
- * duplication of Jackson 3's convenience overloads.
+ * <p>Use {@link JsonApiJackson2#jsonApi} for ordinary application operations. The resulting {@link
+ * Jackson2JsonApi} coordinates strict homogeneous resource reads, resource and create/update
+ * writes, linkage-only relationship operations, explicit-context raw document operations, and
+ * presence-aware PATCH projections. Its builder accepts application-lifetime identifier conversion,
+ * linkage mappers, representation policy, resource decoration, and an optional resource-write
+ * {@code jsonapi.version} default. Request-scoped representation selection, document envelope, and
+ * expected update identity remain method arguments. The advanced capability factories remain public
+ * mechanism/control seams. Cross-major parity is semantic capability symmetry plus equivalent
+ * configuration authority per ADR-016, not textual duplication of Jackson 3's convenience
+ * overloads.
  *
  * <p>Jackson-major adapters use a fully configured {@link
  * com.fasterxml.jackson.databind.json.JsonMapper} as the canonical construction input, followed by
@@ -59,8 +65,10 @@
  * <p>Codec and mapping policy, diagnostics, contexts, representation selection/policy, decoration
  * registries, provenance values, presence-aware update commands, and the opt-in identifier-meta
  * wrapper are Jackson-major-neutral contracts in {@link io.github.kazemek.jsonapi.jackson}; this
- * package holds only the Jackson 2-bound writer, reader, resource mapper, resource binder, PATCH
- * readers, and their implementations.
+ * package holds the Jackson 2-bound Level-1 runtime, writer, reader, resource mapper, resource
+ * binder, PATCH readers, and their implementations. Level-1 adapts unavoidable Jackson 2 checked
+ * stream I/O to {@link java.io.UncheckedIOException}; existing document-read, validation, and
+ * mapping exception families remain distinct.
  */
 @NullMarked
 package io.github.kazemek.jsonapi.jackson2;
