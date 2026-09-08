@@ -29,11 +29,9 @@ import io.github.kazemek.jsonapi.fixtures.domainwrite.Comment
 import io.github.kazemek.jsonapi.fixtures.domainwrite.Person
 import io.github.kazemek.jsonapi.fixtures.domainread.FlatNullableIdArticle
 import io.github.kazemek.jsonapi.fixtures.TestFixtureResources
-import io.github.kazemek.jsonapi.fixtures.enveloperead.EmptyResourceType
 import io.github.kazemek.jsonapi.fixtures.enveloperead.FlatNode
 import io.github.kazemek.jsonapi.fixtures.enveloperead.FlatStrictArticle
 import io.github.kazemek.jsonapi.fixtures.enveloperead.FlatThrowingArticle
-import io.github.kazemek.jsonapi.fixtures.enveloperead.InvalidResourceType
 import io.github.kazemek.jsonapi.jackson3.LinkageMapperFixtures.FlatAuthor
 import io.github.kazemek.jsonapi.jackson3.LinkageMapperFixtures.FlatMappedArticle
 import spock.lang.Specification
