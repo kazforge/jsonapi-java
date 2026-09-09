@@ -14,14 +14,16 @@ sonar {
         property("sonar.qualitygate.wait", "true")
         // Intentional Jackson 2/Jackson 3 parity duplication: these Jackson 2 production files are
         // adapter-local adaptations of their Jackson 3 counterparts (document codec, read-side,
-        // write-side domain mapping engine, flat DTO resource binding, and presence-aware PATCH
-        // binding), kept adapter-local for Jackson-major isolation per ADR-007. Reassess for
+        // typed domain envelope, write-side domain mapping engine, flat DTO resource binding, and
+        // presence-aware PATCH binding), kept adapter-local for Jackson-major isolation per ADR-007. Reassess for
         // cross-major consolidation only if a Jackson-major-neutral mechanism is ever accepted; do
         // not exclude whole packages.
         property(
             "sonar.cpd.exclusions",
             """
             src/main/java/io/github/kazemek/jsonapi/jackson2/JsonApiDocumentReader.java,
+            src/main/java/io/github/kazemek/jsonapi/jackson2/JsonApiDomainDocument.java,
+            src/main/java/io/github/kazemek/jsonapi/jackson2/JsonApiDomainDocumentReader.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/JsonApiPatchCommandReader.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/JsonApiPatchDtoReader.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/JsonApiResourceBinder.java,
@@ -33,6 +35,7 @@ sonar {
             src/main/java/io/github/kazemek/jsonapi/jackson2/Jackson2JsonApiResources.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/RelationshipLinkageMapper.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/BeanConstruction.java,
+            src/main/java/io/github/kazemek/jsonapi/jackson2/BinderMetaConverter.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/CompoundInclusionEngine.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/DocumentWireReader.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/DomainPatchBinder.java,

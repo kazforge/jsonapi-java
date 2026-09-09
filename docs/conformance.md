@@ -12,7 +12,8 @@ validate-before-emit and provenance-composition semantics, plus the token-driven
 reader with the same decode-then-validate semantics, plus advanced write-side domain-to-resource
 mapping through `JsonApiJackson2.resourceMapper` with the same mapping, inclusion, fieldset, and
 decoration semantics as Jackson 3, plus flat resource-to-DTO binding through
-`JsonApiJackson2.resourceBinder` with the same flat-binding semantics as Jackson 3, plus
+`JsonApiJackson2.resourceBinder` with the same flat-binding semantics as Jackson 3, plus the
+advanced heterogeneous typed domain envelope through `JsonApiJackson2.domainDocumentReader`, plus
 presence-aware PATCH binding through `JsonApiJackson2.patchCommandReader` / `patchDtoReader` with
 the same PATCH semantics as Jackson 3, and the configured `Jackson2JsonApi` Level-1 runtime.
 `jsonapi-java-jackson-api` owns
@@ -21,8 +22,7 @@ contracts. How those modules fit together is in [`docs/architecture.md`](archite
 evidence only. The version-neutral document corpus, closed negative corpus, and dual-success
 ambiguous primary-data cases in the Jackson API test-fixtures corpus (`jsonapi/corpus/1.1/`) are
 shared wire resources for every Jackson major. Capability, schema, and context selections belong
-to each adapter's local specifications. Jackson 2 typed domain envelopes, query parsing, and Spring
-adapters remain deferred.
+to each adapter's local specifications. Query parsing and Spring adapters remain deferred.
 
 ## Document structure (supported)
 
@@ -163,8 +163,8 @@ documented draft-schema gaps above, so a schema change forces an intentional rev
 | Sparse fieldsets on write                               | supported    | `RepresentationSelection` fieldsets + `RepresentationPolicy` / `FieldPolicy`; `MappedDocument` linkage-exemption provenance composed into validation by the document writer; HTTP `fields[TYPE]` parsing and caller authorization remain application/adapter responsibilities            |
 | Resource-link decoration on write                       | supported    | `ResourceDecorator`/`ResourceDecoration`/`RelationshipDecoration` (major-neutral; decoration adds only `ResourceObject.links` and mapped `Relationship.links`, keyed by logical property name, never resurrects fieldset-omitted relationships; Jackson 3 via `ResourceDecoratorRegistry` on `JsonApiJackson3.resourceMapper`; Jackson 2 via `ResourceDecoratorRegistry` on `JsonApiJackson2.resourceMapper`) |
 | Flat resource-to-DTO binding                            | supported    | Validated document first; linkage only — never reads `included`; Jackson 3 via `JsonApiJackson3.resourceBinder`, Jackson 2 via `JsonApiJackson2.resourceBinder`                                                                |
-| Typed domain document envelopes                         | supported    | `JsonApiDomainDocument` via `JsonApiJackson3.domainDocumentReader`                                                                                                                                                             |
-| Independent typed binding of `included` resources       | supported    | Wire-ordered `IncludedResources` with dual id/lid lookup; no relationship injection                                                                                                                                            |
+| Typed domain document envelopes                         | supported    | `JsonApiDomainDocument` via `JsonApiJackson3.domainDocumentReader` and `JsonApiJackson2.domainDocumentReader`; explicit `ResourceTypeRegistry` dispatch remains advanced and Level-1 reads remain homogeneous/registry-free |
+| Independent typed binding of `included` resources       | supported    | Wire-ordered `IncludedResources` with dual id/lid lookup in both Jackson adapters; no relationship injection                                                                                                                   |
 | Presence-aware resource-update commands                 | supported    | Jackson 3 via `JsonApiJackson3.patchCommandReader`, Jackson 2 via `JsonApiJackson2.patchCommandReader` |
 | Direct typed PATCH DTO binding                          | supported    | `PatchPresence` tri-state; Jackson 3 via `JsonApiJackson3.patchDtoReader`, Jackson 2 via `JsonApiJackson2.patchDtoReader` |
 | Recursive structured value PATCH semantics              | supported    | `StructuredPatch` payload for structured attributes on both PATCH paths (ADR-014); Jackson 3 and Jackson 2 binding supported |

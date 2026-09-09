@@ -85,6 +85,16 @@ public final class MappingDefinitionCache {
     return existing.orElse(null);
   }
 
+  /**
+   * Resolves and validates the configured class-level resource type name for a complete Java type.
+   * This intentionally validates only resource metadata, leaving unrelated mapping errors deferred
+   * until the target is actually bound.
+   */
+  public String requireResourceTypeName(JavaType javaType) {
+    return MappingDefinitionResolver.validateResourceTypeName(
+        findResourceTypeName(javaType), javaType.getRawClass());
+  }
+
   private @Nullable String computeResourceTypeName(JavaType javaType) {
     ClassIntrospector introspector = mapper.getSerializationConfig().getClassIntrospector();
     AnnotatedClass annotatedClass =

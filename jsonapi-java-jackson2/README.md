@@ -4,7 +4,8 @@ Jackson 2 implementation of the major-neutral Level-1 JSON:API application contr
 validated JSON:API document codec and advanced capabilities it coordinates: validating and writing,
 plus token-driven reading of, [JSON:API v1.1](https://jsonapi.org/) documents with deterministic wire
 semantics, plus advanced domain-to-resource mapping with compound inclusion, sparse fieldsets, and
-additive decoration, plus validated flat resource-to-DTO binding, plus presence-aware PATCH binding.
+additive decoration, plus validated flat resource-to-DTO binding, typed domain envelopes, and
+presence-aware PATCH binding.
 
 > Ordinary application code should start with the Level-1 configured runtime below. The
 > major-neutral contract lives in `jsonapi-java-jackson-api`
@@ -15,7 +16,7 @@ additive decoration, plus validated flat resource-to-DTO binding, plus presence-
 
 | Package                                        | Role                                                                  |
 |------------------------------------------------|-----------------------------------------------------------------------|
-| `io.github.kazemek.jsonapi.jackson2`           | Public Level-1 configured runtime (`Jackson2JsonApi`), codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, token-driven `JsonApiDocumentReader`, `JsonApiResourceMapper` for domain-to-resource mapping, `JsonApiResourceBinder` for validated flat resource-to-DTO binding, and `JsonApiPatchCommandReader` / `JsonApiPatchDtoReader` for presence-aware PATCH |
+| `io.github.kazemek.jsonapi.jackson2`           | Public Level-1 configured runtime (`Jackson2JsonApi`), codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, token-driven `JsonApiDocumentReader`, `JsonApiResourceMapper` for domain-to-resource mapping, `JsonApiResourceBinder` for validated flat resource-to-DTO binding, `JsonApiDomainDocumentReader` / `JsonApiDomainDocument` for advanced typed envelopes, and `JsonApiPatchCommandReader` / `JsonApiPatchDtoReader` for presence-aware PATCH |
 | `io.github.kazemek.jsonapi.jackson2.internal`  | Streaming document serializer, wire emission, token-driven wire decoding, the mapping engine, PATCH binding, and module registration; not public API |
 | `io.github.kazemek.jsonapi.jackson.*`          | Public Jackson-major-neutral API contracts (in `jsonapi-java-jackson-api`): `api`, `document`, `mapping`, `patch`, `representation`, `diagnostic` |
 
@@ -239,6 +240,47 @@ default primitive-null coercion is preserved as configured: permissive callers b
 to primitive defaults, and `FAIL_ON_NULL_FOR_PRIMITIVES` callers fail that bind at the attribute's
 wire location.
 
+## Typed domain envelope (validated JSON:API JSON → heterogeneous flat DTOs)
+
+Typed domain envelopes are an advanced path for heterogeneous primary and `included` resources;
+ordinary Level-1 `readOne` / `readMany` calls remain strict, homogeneous, and registry-free.
+Register each wire type explicitly with the Jackson-major-neutral `ResourceTypeRegistry`:
+
+```java
+ResourceTypeRegistry registry =
+    ResourceTypeRegistry.builder()
+        .register("articles", FlatArticleDto.class)
+        .register("people", PersonDto.class)
+        .build();
+
+JsonApiDomainDocumentReader reader =
+    JsonApiJackson2.domainDocumentReader(
+        callerMapper, DocumentReadContext.resourceDefaults(), registry);
+
+JsonApiDomainDocument envelope = reader.readValue(json);
+FlatArticleDto article =
+    (FlatArticleDto) ((DomainData.SingleResource) envelope.data()).resource();
+```
+
+The reader first decodes and aggregate-validates through `JsonApiDocumentReader`, then dispatches
+each resource by its explicit wire `type`. Registered reflection `Type` values, including
+parameterized types, are converted through the configured Jackson 2 mapper. Reader construction
+checks every registration against configured `@JsonApiResource` metadata; disagreement fails with
+`RESOURCE_TYPE_MISMATCH`, while an encountered unregistered type fails with
+`UNREGISTERED_RESOURCE_TYPE` at `/data`, `/data/<index>`, or `/included/<index>`.
+
+`included` DTOs remain independently bound, wire-ordered, and available through dual `id`/`lid`
+identity lookup. They are never injected into relationship properties. The envelope preserves
+document errors, `meta`, `jsonapi`, links, additional members, and absent versus explicit-null
+versus present-empty states. `metaAs(Class)` and `metaAs(JavaType)` use the reader-derived,
+caller-configured binding mapper and report conversion failures at `/meta`.
+
+The advanced Jackson 2 reader keeps checked `IOException` declarations and the existing stream and
+parser ownership rules. `fromDocument(JsonApiDocument)` binds an already-created document without
+reparsing or revalidating. Ordinary relationship properties remain linkage-only under
+[ADR-018](../docs/adr/018-relationship-data-presence-in-domain-mapping.md); no graph hydration or
+relationship-target registry dispatch is performed.
+
 ## Construction policy
 
 The canonical seam follows ADR-016: a fully configured `JsonMapper` instance, followed by the
@@ -355,6 +397,9 @@ contracts of [jsonapi-java-jackson-api](../jsonapi-java-jackson-api/README.md) p
 
 - [Architecture overview](../docs/architecture.md)
 - [Conformance checklist](../docs/conformance.md)
+- [ADR-011 — Flat DTO reads remain document-first](../docs/adr/011-flat-dto-read-binding.md)
+- [ADR-018 — Ordinary domain relationships remain linkage-oriented](../docs/adr/018-relationship-data-presence-in-domain-mapping.md)
+- [ADR-019 — Major-neutral Level-1 application API](../docs/adr/019-level-one-application-api-contract.md)
 - [ADR-005 — Domain mapping and inclusion](../docs/adr/005-domain-mapping-and-inclusion.md)
 - [ADR-012 — Resource PATCH binding](../docs/adr/012-resource-patch-binding.md)
 - [ADR-013 — Direct typed PATCH DTO binding](../docs/adr/013-direct-typed-patch-dto-binding.md)
@@ -421,7 +466,15 @@ contracts of [jsonapi-java-jackson-api](../jsonapi-java-jackson-api/README.md) p
   mapped members fail with `NON_DESERIALIZABLE_PROPERTY`. Creator/coercion failures classify
   structurally (instantiation rejection versus missing creator input named by the failure path and
   absent from the synthetic input), never from Jackson exception message text. Bind failures throw
-  `JsonApiMappingException`, never `JsonApiDocumentReadException`.
+   `JsonApiMappingException`, never `JsonApiDocumentReadException`.
+- **Typed domain envelope:** `JsonApiDomainDocumentReader` is the advanced heterogeneous read path.
+  It decodes and validates through `JsonApiDocumentReader`, dispatches primary and `included`
+  resources only through the explicit neutral `ResourceTypeRegistry`, and composes binder locations
+  below document-relative `/data` or `/included` prefixes. `included` stays independently indexed
+  and is never injected into relationships; identifier primary data remains core linkage. The
+  envelope preserves document members and absent/null/empty states, while `metaAs` uses the same
+  derived configured-Jackson mapper as binding. Keep this path separate from registry-free Level-1
+  homogeneous reads.
 - **Presence-aware PATCH:** the omitted / explicit-null / present update contract, not the typed
   nested-shape declaration. `JsonApiPatchCommandReader` validates with forced `UPDATE_REQUEST`
   usage, then binds only supplied mapped attributes and relationships into a common `PatchCommand`.

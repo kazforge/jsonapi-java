@@ -12,6 +12,7 @@ import io.github.kazemek.jsonapi.jackson.api.JsonApi;
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext;
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter;
 import io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoratorRegistry;
+import io.github.kazemek.jsonapi.jackson.mapping.ResourceTypeRegistry;
 import io.github.kazemek.jsonapi.jackson2.internal.DomainResourceBinder;
 import io.github.kazemek.jsonapi.jackson2.internal.DomainResourceWriter;
 import io.github.kazemek.jsonapi.jackson2.internal.JsonApiDocumentModule;
@@ -24,7 +25,7 @@ import java.util.Optional;
 
 /**
  * Factory for the Jackson 2 JSON:API document writer, validated document reader, resource mapper,
- * flat DTO resource binder, and presence-aware PATCH readers.
+ * flat DTO resource binder, typed domain envelope reader, and presence-aware PATCH readers.
  *
  * <p>Callers supply an already-configured {@link JsonMapper}. Each canonical factory accepts that
  * mapper first, followed by the capability-specific context and collaborators; the writer
@@ -36,9 +37,9 @@ import java.util.Optional;
  * {@link JsonMapper#rebuild()} with only mapping-required internal module support, including a
  * caller-preserving JDK 8 {@code Optional} fallback. Public surface consists of {@link
  * JsonApiDocumentWriter}, {@link JsonApiDocumentReader}, {@link JsonApiResourceMapper}, {@link
- * JsonApiResourceBinder}, {@link JsonApiPatchCommandReader}, and {@link JsonApiPatchDtoReader};
- * ordinary application code can instead use the configured {@link JsonApi} runtime returned by
- * {@link #jsonApi(JsonMapper)} or {@link #builder(JsonMapper)}.
+ * JsonApiResourceBinder}, {@link JsonApiDomainDocumentReader}, {@link JsonApiPatchCommandReader},
+ * and {@link JsonApiPatchDtoReader}; ordinary application code can instead use the configured
+ * {@link JsonApi} runtime returned by {@link #jsonApi(JsonMapper)} or {@link #builder(JsonMapper)}.
  */
 public final class JsonApiJackson2 {
 
@@ -183,6 +184,51 @@ public final class JsonApiJackson2 {
         new DomainResourceBinder(
             derived, identifierConverter, new MappingDefinitionCache(derived), linkageMappers);
     return new JsonApiResourceBinder(derived, binder);
+  }
+
+  /**
+   * Returns a typed domain envelope reader with default identifier conversion and no custom
+   * relationship linkage mappers. Document decoding/validation behaves exactly like {@link
+   * #reader(JsonMapper, DocumentReadContext)}; primary and included resources bind through the flat
+   * DTO binder after a {@link ResourceTypeRegistry} lookup, using a mapper derived via {@link
+   * JsonMapper#rebuild()} that never mutates the caller's mapper.
+   */
+  public static JsonApiDomainDocumentReader domainDocumentReader(
+      JsonMapper base, DocumentReadContext context, ResourceTypeRegistry registry) {
+    return domainDocumentReader(base, context, registry, IdentifierConverter.defaults(), Map.of());
+  }
+
+  /**
+   * Returns a typed domain envelope reader with the given identifier converter and no custom
+   * relationship linkage mappers. Derives a new mapper via {@link JsonMapper#rebuild()} and never
+   * mutates the caller's mapper.
+   */
+  public static JsonApiDomainDocumentReader domainDocumentReader(
+      JsonMapper base,
+      DocumentReadContext context,
+      ResourceTypeRegistry registry,
+      IdentifierConverter identifierConverter) {
+    return domainDocumentReader(base, context, registry, identifierConverter, Map.of());
+  }
+
+  /**
+   * Returns a typed domain envelope reader with the given identifier converter and relationship
+   * linkage mappers keyed by relationship target class. Derives a new mapper via {@link
+   * JsonMapper#rebuild()} and never mutates the caller's mapper.
+   */
+  public static JsonApiDomainDocumentReader domainDocumentReader(
+      JsonMapper base,
+      DocumentReadContext context,
+      ResourceTypeRegistry registry,
+      IdentifierConverter identifierConverter,
+      Map<Class<?>, RelationshipLinkageMapper> linkageMappers) {
+    Objects.requireNonNull(base, "base");
+    Objects.requireNonNull(context, CONTEXT);
+    Objects.requireNonNull(registry, "registry");
+    Objects.requireNonNull(identifierConverter, IDENTIFIER_CONVERTER);
+    Objects.requireNonNull(linkageMappers, LINKAGE_MAPPERS);
+    return new JsonApiDomainDocumentReader(
+        base, context, registry, identifierConverter, linkageMappers);
   }
 
   /**
@@ -347,7 +393,7 @@ public final class JsonApiJackson2 {
    * the JSON:API document module because the binder produces application values, not serialized
    * output.
    */
-  private static JsonMapper resourceBindingMapper(JsonMapper base) {
+  static JsonMapper resourceBindingMapper(JsonMapper base) {
     JsonMapper.Builder derived = base.rebuild().addModule(new MetaBindingModule());
     if (!supportsOptionalDeserialization(base)) {
       derived = derived.addModule(new Jdk8Module());

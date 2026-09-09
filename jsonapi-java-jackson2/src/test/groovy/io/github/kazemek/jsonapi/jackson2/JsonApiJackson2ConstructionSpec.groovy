@@ -7,6 +7,7 @@ import io.github.kazemek.jsonapi.core.validation.ValidationContext
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter
 import io.github.kazemek.jsonapi.jackson.mapping.ResourceDecoratorRegistry
+import io.github.kazemek.jsonapi.jackson.mapping.ResourceTypeRegistry
 import java.lang.reflect.Modifier
 
 import com.fasterxml.jackson.databind.json.JsonMapper
@@ -49,6 +50,40 @@ class JsonApiJackson2ConstructionSpec extends Specification {
           method.parameterTypes.toList() == [
             JsonMapper,
             DocumentReadContext
+          ]
+    }
+  }
+
+  def "the domain document reader has mapper-instance factory forms"() {
+    expect:
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'domainDocumentReader' &&
+          method.returnType == JsonApiDomainDocumentReader &&
+          method.parameterTypes.toList() == [
+            JsonMapper,
+            DocumentReadContext,
+            ResourceTypeRegistry
+          ]
+    }
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'domainDocumentReader' &&
+          method.returnType == JsonApiDomainDocumentReader &&
+          method.parameterTypes.toList() == [
+            JsonMapper,
+            DocumentReadContext,
+            ResourceTypeRegistry,
+            IdentifierConverter
+          ]
+    }
+    JsonApiJackson2.declaredMethods.any { method ->
+      method.name == 'domainDocumentReader' &&
+          method.returnType == JsonApiDomainDocumentReader &&
+          method.parameterTypes.toList() == [
+            JsonMapper,
+            DocumentReadContext,
+            ResourceTypeRegistry,
+            IdentifierConverter,
+            Map
           ]
     }
   }
@@ -119,6 +154,8 @@ class JsonApiJackson2ConstructionSpec extends Specification {
     JsonApiDocumentReader.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
     JsonApiResourceMapper.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
     JsonApiResourceBinder.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
+    JsonApiDomainDocumentReader.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
+    JsonApiDomainDocument.declaredConstructors.every { !Modifier.isPublic(it.modifiers) }
   }
 
   def "factory construction rejects missing inputs with named parameters"() {
