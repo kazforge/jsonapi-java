@@ -134,6 +134,7 @@ class Jackson2DependencyRulesSpec extends Specification {
     }
     candidate.methods.findAll { isExposedMember(it) }.each { member ->
       types.addAll(member.allInvolvedRawTypes)
+      types.addAll(member.exceptionTypes)
     }
     candidate.fields.findAll { isExposedMember(it) }.each { member ->
       types.addAll(member.allInvolvedRawTypes)
