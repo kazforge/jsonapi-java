@@ -2,6 +2,7 @@ package io.github.kazemek.jsonapi.jackson.architecture
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 
+import io.github.kazemek.jsonapi.jackson.ArchitectureConstructorSignatureLeakFixture
 import io.github.kazemek.jsonapi.jackson.ArchitectureSignatureLeakFixture
 import io.github.kazemek.jsonapi.jackson.internal.ArchitectureInternalException
 import com.tngtech.archunit.core.domain.JavaClass
@@ -53,7 +54,10 @@ class JacksonApiDependencyRulesSpec extends Specification {
   def "supported public signatures detect declared shared internal exceptions"() {
     given:
     def fixtureClasses = new ClassFileImporter()
-        .importClasses(ArchitectureSignatureLeakFixture, ArchitectureInternalException)
+        .importClasses(
+        ArchitectureConstructorSignatureLeakFixture,
+        ArchitectureSignatureLeakFixture,
+        ArchitectureInternalException)
     def violations = fixtureClasses.findAll { JavaClass candidate ->
       isSupportedPublicType(candidate)
     }.collectMany { JavaClass candidate ->
@@ -63,10 +67,12 @@ class JacksonApiDependencyRulesSpec extends Specification {
     }
 
     expect:
-    violations*.toString() == [
+    violations*.toString().toSet() == [
+      "io.github.kazemek.jsonapi.jackson.ArchitectureConstructorSignatureLeakFixture -> " +
+      "io.github.kazemek.jsonapi.jackson.internal.ArchitectureInternalException",
       "io.github.kazemek.jsonapi.jackson.ArchitectureSignatureLeakFixture -> " +
       "io.github.kazemek.jsonapi.jackson.internal.ArchitectureInternalException"
-    ]
+    ].toSet()
   }
 
   def "level-1 application contract stays free of Jackson implementation types"() {
@@ -123,6 +129,7 @@ class JacksonApiDependencyRulesSpec extends Specification {
     candidate.typeParameters.each { type -> types.addAll(type.allInvolvedRawTypes) }
     candidate.constructors.findAll { isExposedMember(it) }.each { member ->
       types.addAll(member.allInvolvedRawTypes)
+      types.addAll(member.exceptionTypes)
     }
     candidate.methods.findAll { isExposedMember(it) }.each { member ->
       types.addAll(member.allInvolvedRawTypes)
