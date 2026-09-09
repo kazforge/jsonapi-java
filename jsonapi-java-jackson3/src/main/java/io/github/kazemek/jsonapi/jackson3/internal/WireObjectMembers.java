@@ -1,5 +1,6 @@
 package io.github.kazemek.jsonapi.jackson3.internal;
 
+import io.github.kazemek.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
 import java.util.HashSet;
 import java.util.Set;
 import tools.jackson.core.JsonParser;
@@ -25,14 +26,14 @@ final class WireObjectMembers {
   static void forEachMember(
       JsonParser parser, JsonPointerAccumulator pointer, MemberHandler handler) {
     WireTokens.expectToken(parser, JsonToken.START_OBJECT, pointer);
-    pointer.capture(parser);
+    pointer.capture(ReadLocations.token(parser));
     Set<String> seen = new HashSet<>();
     while (parser.nextToken() != JsonToken.END_OBJECT) {
       String name = WireTokens.requireFieldName(parser, pointer);
       WireTokens.rememberMember(seen, name, pointer, parser);
       pointer.push(name);
       parser.nextToken();
-      pointer.capture(parser);
+      pointer.capture(ReadLocations.token(parser));
       handler.accept(name);
       pointer.pop();
     }

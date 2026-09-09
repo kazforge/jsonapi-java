@@ -1,4 +1,4 @@
-package io.github.kazemek.jsonapi.jackson2.internal;
+package io.github.kazemek.jsonapi.jackson.internal.wire;
 
 import io.github.kazemek.jsonapi.core.validation.JsonApiValidationException;
 import java.util.ArrayList;
@@ -8,22 +8,19 @@ import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Relocates core model constructors' hardcoded JSON Pointers onto the wire reader's accumulator
- * path so nested failures report the enclosing document location.
+ * Relocates core model constructors' hardcoded JSON Pointers onto a reader's current base path so
+ * nested failures report the enclosing document location.
  */
-final class ValidationPointers {
+public final class ValidationPointers {
 
   private ValidationPointers() {}
 
-  /**
-   * Runs {@code factory}, remapping any {@link JsonApiValidationException} pointer from {@code
-   * coreRoot} onto {@code pointer.path()}.
-   */
-  static <T> T construct(JsonPointerAccumulator pointer, String coreRoot, Supplier<T> factory) {
+  /** Runs {@code factory}, remapping a core pointer from {@code coreRoot} onto {@code base}. */
+  public static <T> T construct(String base, String coreRoot, Supplier<T> factory) {
     try {
       return factory.get();
     } catch (JsonApiValidationException ex) {
-      throw relocate(ex, pointer, coreRoot);
+      throw relocate(ex, base, coreRoot);
     }
   }
 
@@ -31,14 +28,13 @@ final class ValidationPointers {
    * Adapts open-value maps for public core constructors. Core declares type-use {@code @Nullable}
    * on map values; that annotation is not visible to NullAway across the published JAR boundary.
    */
-  @SuppressWarnings({"NullAway"})
-  static Map<String, Object> forCore(Map<String, @Nullable Object> map) {
+  @SuppressWarnings({"NullAway", "NullableProblems"})
+  public static Map<String, Object> forCore(Map<String, @Nullable Object> map) {
     return map;
   }
 
-  static JsonApiValidationException relocate(
-      JsonApiValidationException ex, JsonPointerAccumulator pointer, String coreRoot) {
-    String base = pointer.path();
+  public static JsonApiValidationException relocate(
+      JsonApiValidationException ex, String base, String coreRoot) {
     if (base.isEmpty() || coreRoot.isEmpty()) {
       return ex;
     }
@@ -55,7 +51,7 @@ final class ValidationPointers {
   }
 
   /** Appends RFC 6901 relative segments onto an escaped reader base path. */
-  static String join(String base, String relativePointer) {
+  public static String join(String base, String relativePointer) {
     if (relativePointer.isEmpty()) {
       return base;
     }

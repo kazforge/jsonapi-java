@@ -1,4 +1,4 @@
-package io.github.kazemek.jsonapi.jackson2.internal;
+package io.github.kazemek.jsonapi.jackson.internal.wire;
 
 import io.github.kazemek.jsonapi.jackson.diagnostic.SourceLocation;
 import java.util.LinkedHashMap;
@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /**
  * Retains the first captured {@link SourceLocation} for each JSON Pointer-like path so aggregate
- * (and post-parse local) failures can resolve the exact or nearest enclosing token location.
+ * and post-parse failures can resolve the exact or nearest enclosing token location.
  */
 public final class ReadLocationIndex {
 

@@ -59,13 +59,28 @@ Shared test fixtures live in the Jackson API `java-test-fixtures` source set as 
 |--------|----------------|
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable JSON:API document model and aggregate validation. No Jackson. |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free mapping-role metadata. No codecs or converters. |
-| [`jsonapi-java-jackson-api`](../jsonapi-java-jackson-api/README.md) | Public Jackson-major-neutral API surface: document, mapping, PATCH, representation, and diagnostic contracts shared by Jackson majors; the Level-1 application operation contract (`JsonApi` root plus resources, relationships, documents, and patches facets); passive carriers and shared JSON/schema test fixtures. |
+| [`jsonapi-java-jackson-api`](../jsonapi-java-jackson-api/README.md) | Public Jackson-major-neutral API surface: document, mapping, PATCH, representation, and diagnostic contracts shared by Jackson majors; the Level-1 application operation contract (`JsonApi` root plus resources, relationships, documents, and patches facets); unsupported Jackson-free implementation helpers used by both adapters; passive carriers and shared JSON/schema test fixtures. |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Jackson 3 factories, token-driven codecs, configured-Jackson introspection, and domain/PATCH binding including the advanced typed domain envelope, plus the configured `Jackson3JsonApi` runtime implementing the Level-1 contract (via `JsonApiJackson3.jsonApi`/`builder`). |
 | [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Jackson 2 configured `Jackson2JsonApi` Level-1 runtime plus validated document writer (`JsonApiJackson2.writer` + `JsonApiDocumentWriter`) with provenance-aware `MappedDocument` output forms, the token-driven validated document reader (`JsonApiJackson2.reader` + `JsonApiDocumentReader`), the advanced write-side resource mapper (`JsonApiJackson2.resourceMapper` + `JsonApiResourceMapper` with compound inclusion, sparse fieldsets, and additive decoration), the flat resource-to-DTO binder (`JsonApiJackson2.resourceBinder` + `JsonApiResourceBinder`), the advanced typed domain envelope (`JsonApiJackson2.domainDocumentReader` + `JsonApiDomainDocumentReader` / `JsonApiDomainDocument`), and presence-aware PATCH (`JsonApiJackson2.patchCommandReader` + `JsonApiPatchCommandReader`, `JsonApiJackson2.patchDtoReader` + `JsonApiPatchDtoReader`). |
 | Application code | Persistence, HTTP, authorization, query execution, and applying PATCH commands. |
 
 [ADR-007](adr/007-module-boundaries.md) records why these modules exist.
 [ADR-010](adr/010-architectural-tests.md) enforces the production dependency allowlists.
+
+### Shared implementation helpers
+
+The `jsonapi-java-jackson-api` artifact also carries a deliberately small,
+Jackson-major-neutral implementation namespace under
+`io.github.kazemek.jsonapi.jackson.internal..`. Its Java-public classes exist only so the Jackson 2
+and Jackson 3 adapters can share neutral bookkeeping without introducing another artifact. The
+namespace is unsupported application API and may not appear in supported public signatures.
+
+The shared helpers cover wire member classification, RFC 6901 pointer and source-location state,
+mapping roles and identifier-meta copies, supplied PATCH markers, representation composition, and
+compound-inclusion identity/order/count/conflict bookkeeping. Jackson parser and location
+conversion, mapper introspection and type models, serializers/deserializers, binders, writers, and
+include traversal remain in each adapter. This boundary and its CPD policy are recorded in
+[ADR-020](adr/020-jackson-neutral-implementation-helpers.md).
 
 ## Primary data flows
 

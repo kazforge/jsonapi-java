@@ -13,6 +13,9 @@ import io.github.kazemek.jsonapi.core.model.ResourceIdentifier;
 import io.github.kazemek.jsonapi.core.model.ResourceObject;
 import io.github.kazemek.jsonapi.core.validation.JsonApiValidationException;
 import io.github.kazemek.jsonapi.core.validation.ValidationRuleCode;
+import io.github.kazemek.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
+import io.github.kazemek.jsonapi.jackson.internal.wire.MemberClassifier;
+import io.github.kazemek.jsonapi.jackson.internal.wire.ValidationPointers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +51,7 @@ final class ResourceWireReader {
     int index = 0;
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
-      pointer.capture(parser);
+      pointer.capture(ReadLocations.token(parser));
       resources.add(readResourceObject(parser, pointer));
       pointer.pop();
       index++;
@@ -71,7 +74,7 @@ final class ResourceWireReader {
     int index = 0;
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
-      pointer.capture(parser);
+      pointer.capture(ReadLocations.token(parser));
       identifiers.add(readResourceIdentifier(parser, pointer));
       pointer.pop();
       index++;
@@ -103,7 +106,7 @@ final class ResourceWireReader {
           }
         });
     return ValidationPointers.construct(
-        pointer,
+        pointer.path(),
         "/attributes",
         () ->
             Attributes.of(
@@ -125,7 +128,7 @@ final class ResourceWireReader {
           }
         });
     return ValidationPointers.construct(
-        pointer,
+        pointer.path(),
         "/relationships",
         () -> Relationships.of(relationships, ValidationPointers.forCore(additional)));
   }
@@ -147,12 +150,14 @@ final class ResourceWireReader {
     if (token == JsonToken.START_OBJECT) {
       ResourceIdentifier identifier = readResourceIdentifier(parser, pointer);
       return ValidationPointers.construct(
-          pointer, "/relationships/data", () -> new RelationshipData.SingleLinkage(identifier));
+          pointer.path(),
+          "/relationships/data",
+          () -> new RelationshipData.SingleLinkage(identifier));
     }
     if (token == JsonToken.START_ARRAY) {
       List<ResourceIdentifier> identifiers = readResourceIdentifiers(parser, pointer);
       return ValidationPointers.construct(
-          pointer,
+          pointer.path(),
           "/relationships/data",
           () -> new RelationshipData.IdentifierCollectionLinkage(identifiers));
     }
@@ -205,7 +210,7 @@ final class ResourceWireReader {
       Links resourceLinks = links;
       Meta resourceMeta = meta;
       return ValidationPointers.construct(
-          pointer,
+          pointer.path(),
           "/data",
           () ->
               new ResourceObject(
@@ -256,7 +261,7 @@ final class ResourceWireReader {
       String identifierLid = lid;
       Meta identifierMeta = meta;
       return ValidationPointers.construct(
-          pointer,
+          pointer.path(),
           "/data",
           () ->
               new ResourceIdentifier(
@@ -299,7 +304,7 @@ final class ResourceWireReader {
       Links relationshipLinks = links;
       Meta relationshipMeta = meta;
       return ValidationPointers.construct(
-          pointer,
+          pointer.path(),
           "/relationships",
           () ->
               new Relationship(

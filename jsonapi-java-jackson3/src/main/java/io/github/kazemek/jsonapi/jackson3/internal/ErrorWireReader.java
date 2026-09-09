@@ -5,6 +5,8 @@ import io.github.kazemek.jsonapi.core.model.ErrorSource;
 import io.github.kazemek.jsonapi.core.model.JsonApiMembers;
 import io.github.kazemek.jsonapi.core.model.Links;
 import io.github.kazemek.jsonapi.core.model.Meta;
+import io.github.kazemek.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
+import io.github.kazemek.jsonapi.jackson.internal.wire.ValidationPointers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +40,7 @@ final class ErrorWireReader {
     int index = 0;
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
-      pointer.capture(parser);
+      pointer.capture(ReadLocations.token(parser));
       errors.add(readErrorObject(parser, pointer));
       pointer.pop();
       index++;
@@ -101,7 +103,7 @@ final class ErrorWireReader {
       ErrorSource errorSource = source;
       Meta errorMeta = meta;
       return ValidationPointers.construct(
-          pointer,
+          pointer.path(),
           "/errors",
           () ->
               new ErrorObject(
@@ -144,7 +146,7 @@ final class ErrorWireReader {
       String sourceParameter = parameter;
       String sourceHeader = header;
       return ValidationPointers.construct(
-          pointer,
+          pointer.path(),
           "/errors/source",
           () ->
               new ErrorSource(

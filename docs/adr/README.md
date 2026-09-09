@@ -25,3 +25,4 @@ lives in [`docs/architecture.md`](../architecture.md). Stable product direction 
 17. [ADR-017: Opt-in RelationshipLinkage for Resource Identifier Meta](017-resource-identifier-meta-mapping.md)
 18. [ADR-018: Ordinary Domain Relationships Remain Linkage-Oriented](018-relationship-data-presence-in-domain-mapping.md)
 19. [ADR-019: Major-Neutral Level-1 Application API Contract](019-level-one-application-api-contract.md)
+20. [ADR-020: Jackson-Neutral Implementation Helpers](020-jackson-neutral-implementation-helpers.md)

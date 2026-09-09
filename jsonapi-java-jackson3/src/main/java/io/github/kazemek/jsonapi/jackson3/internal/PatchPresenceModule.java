@@ -1,5 +1,6 @@
 package io.github.kazemek.jsonapi.jackson3.internal;
 
+import io.github.kazemek.jsonapi.jackson.internal.patch.PresenceMarker;
 import io.github.kazemek.jsonapi.jackson.patch.PatchPresence;
 import tools.jackson.databind.module.SimpleModule;
 

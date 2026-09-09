@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import io.github.kazemek.jsonapi.jackson.patch.PatchPresence
+import io.github.kazemek.jsonapi.jackson.internal.patch.PresenceMarker
 import spock.lang.Specification
 
 class PatchPresenceMarkerSpec extends Specification {

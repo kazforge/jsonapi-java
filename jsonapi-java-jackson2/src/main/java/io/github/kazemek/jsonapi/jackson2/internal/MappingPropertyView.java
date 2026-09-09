@@ -2,6 +2,7 @@ package io.github.kazemek.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
+import io.github.kazemek.jsonapi.jackson.internal.mapping.PropertyRole;
 
 /**
  * Direction-neutral view of one JSON:API-mapped Jackson property.

@@ -1,5 +1,6 @@
 package io.github.kazemek.jsonapi.jackson3.internal;
 
+import io.github.kazemek.jsonapi.jackson.internal.mapping.PropertyRole;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.introspect.AnnotatedMember;

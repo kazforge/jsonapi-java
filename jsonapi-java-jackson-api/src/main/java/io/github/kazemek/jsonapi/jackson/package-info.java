@@ -1,6 +1,8 @@
 /**
  * Public Jackson-major-neutral API surface shared by Jackson 2, Jackson 3, and future framework
- * integrations.
+ * integrations. The nested {@code io.github.kazemek.jsonapi.jackson.internal..} namespace is an
+ * unsupported implementation detail shipped in this artifact for adapter cooperation and is not
+ * part of this supported API description.
  *
  * <p>Contracts are grouped into concept-oriented packages:
  *
@@ -25,7 +27,9 @@
  * <p>The API is deliberately Jackson-import-free: no {@code tools.jackson.*} or {@code
  * com.fasterxml.jackson.*} type appears in any production signature. Jackson-bound readers,
  * writers, mapping introspection, serializers, binders, module registration, and mapper factories
- * stay in the major-specific adapter packages; only neutral values cross through this API.
+ * stay in the major-specific adapter packages; only supported neutral values cross through the
+ * public API. The Jackson-free implementation helpers under {@code jackson.internal..} are not
+ * supported API and must not appear in supported public signatures.
  *
  * <p>Nullness: for document/envelope/codec contracts, Java {@code null} means member absence and
  * sealed variants represent explicit JSON {@code null}; for presence-aware PATCH, {@link
