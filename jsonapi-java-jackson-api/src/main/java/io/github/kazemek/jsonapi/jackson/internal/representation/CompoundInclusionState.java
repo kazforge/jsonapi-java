@@ -25,6 +25,8 @@ import org.jspecify.annotations.Nullable;
  */
 public final class CompoundInclusionState {
 
+  private static final String IDENTIFIER_PARAMETER = "identifier";
+
   private final RepresentationPolicy policy;
   private final Set<ResourceIdentity> primaryIdentities = new HashSet<>();
   private final Map<ResourceIdentity, ResourceObject> includedByIdentity = new LinkedHashMap<>();
@@ -43,7 +45,7 @@ public final class CompoundInclusionState {
 
   /** Returns whether an occurrence is one of the primary resources under either identity alias. */
   public boolean matchesPrimary(ResourceIdentifier identifier) {
-    Objects.requireNonNull(identifier, "identifier");
+    Objects.requireNonNull(identifier, IDENTIFIER_PARAMETER);
     for (ResourceIdentity key : identityKeysOf(identifier)) {
       if (primaryIdentities.contains(key)) {
         return true;
@@ -54,14 +56,14 @@ public final class CompoundInclusionState {
 
   /** Returns the preferred id identity, falling back to the local-id identity when needed. */
   public @Nullable ResourceIdentity preferredIdentity(ResourceIdentifier identifier) {
-    Objects.requireNonNull(identifier, "identifier");
+    Objects.requireNonNull(identifier, IDENTIFIER_PARAMETER);
     return preferredIdentityValue(identifier);
   }
 
   /** Records the preferred id-or-lid identity for a fieldset-omitted inbound linkage. */
   @SuppressWarnings("NullableProblems")
   public void addLinkageExemption(ResourceIdentifier identifier) {
-    Objects.requireNonNull(identifier, "identifier");
+    Objects.requireNonNull(identifier, IDENTIFIER_PARAMETER);
     @Nullable ResourceIdentity preferred = preferredIdentityValue(identifier);
     if (preferred != null) {
       linkageExemptions.add(preferred);
