@@ -22,8 +22,8 @@ explains how those pieces fit together.
 
 These are ownership boundaries, not a complete Gradle dependency graph. Jackson 2 and Jackson 3
 implement the validated document codec, advanced domain/PATCH capabilities, and configured Level-1
-runtime over the same `jackson-api` contracts. Typed domain envelopes remain a Jackson 3 advanced
-capability rather than a Level-1 runtime operation.
+runtime over the same `jackson-api` contracts. Typed domain envelopes are advanced capabilities in
+both adapters rather than Level-1 runtime operations.
 
 ```mermaid
 flowchart TB
@@ -32,7 +32,7 @@ flowchart TB
     ANN["jsonapi-java-annotations<br/>mapping role metadata only"]
     COMMON["jsonapi-java-jackson-api<br/>Jackson-major-neutral API surface"]
     J3["jsonapi-java-jackson3<br/>Jackson 3 codec, introspection, and binding"]
-    J2["jsonapi-java-jackson2<br/>Jackson 2 Level-1 runtime, codec, domain mapping, flat binding, and PATCH"]
+    J2["jsonapi-java-jackson2<br/>Jackson 2 Level-1 runtime, codec, domain mapping, flat binding, typed envelope, and PATCH"]
   end
 
   APP["Application: persistence, endpoints, authorization, query"]
@@ -60,8 +60,8 @@ Shared test fixtures live in the Jackson API `java-test-fixtures` source set as 
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable JSON:API document model and aggregate validation. No Jackson. |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free mapping-role metadata. No codecs or converters. |
 | [`jsonapi-java-jackson-api`](../jsonapi-java-jackson-api/README.md) | Public Jackson-major-neutral API surface: document, mapping, PATCH, representation, and diagnostic contracts shared by Jackson majors; the Level-1 application operation contract (`JsonApi` root plus resources, relationships, documents, and patches facets); passive carriers and shared JSON/schema test fixtures. |
-| [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Jackson 3 factories, token-driven codecs, configured-Jackson introspection, and domain/PATCH binding, plus the configured `Jackson3JsonApi` runtime implementing the Level-1 contract (via `JsonApiJackson3.jsonApi`/`builder`). |
-| [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Jackson 2 configured `Jackson2JsonApi` Level-1 runtime plus validated document writer (`JsonApiJackson2.writer` + `JsonApiDocumentWriter`) with provenance-aware `MappedDocument` output forms, the token-driven validated document reader (`JsonApiJackson2.reader` + `JsonApiDocumentReader`), the advanced write-side resource mapper (`JsonApiJackson2.resourceMapper` + `JsonApiResourceMapper` with compound inclusion, sparse fieldsets, and additive decoration), the flat resource-to-DTO binder (`JsonApiJackson2.resourceBinder` + `JsonApiResourceBinder`), and presence-aware PATCH (`JsonApiJackson2.patchCommandReader` + `JsonApiPatchCommandReader`, `JsonApiJackson2.patchDtoReader` + `JsonApiPatchDtoReader`). |
+| [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Jackson 3 factories, token-driven codecs, configured-Jackson introspection, and domain/PATCH binding including the advanced typed domain envelope, plus the configured `Jackson3JsonApi` runtime implementing the Level-1 contract (via `JsonApiJackson3.jsonApi`/`builder`). |
+| [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Jackson 2 configured `Jackson2JsonApi` Level-1 runtime plus validated document writer (`JsonApiJackson2.writer` + `JsonApiDocumentWriter`) with provenance-aware `MappedDocument` output forms, the token-driven validated document reader (`JsonApiJackson2.reader` + `JsonApiDocumentReader`), the advanced write-side resource mapper (`JsonApiJackson2.resourceMapper` + `JsonApiResourceMapper` with compound inclusion, sparse fieldsets, and additive decoration), the flat resource-to-DTO binder (`JsonApiJackson2.resourceBinder` + `JsonApiResourceBinder`), the advanced typed domain envelope (`JsonApiJackson2.domainDocumentReader` + `JsonApiDomainDocumentReader` / `JsonApiDomainDocument`), and presence-aware PATCH (`JsonApiJackson2.patchCommandReader` + `JsonApiPatchCommandReader`, `JsonApiJackson2.patchDtoReader` + `JsonApiPatchDtoReader`). |
 | Application code | Persistence, HTTP, authorization, query execution, and applying PATCH commands. |
 
 [ADR-007](adr/007-module-boundaries.md) records why these modules exist.
@@ -112,10 +112,11 @@ meta-only relationships remain document-level concerns, preserved by the core mo
 codec in both directions. [ADR-018](adr/018-relationship-data-presence-in-domain-mapping.md) owns
 that boundary.
 
-Public Jackson 3 entry points are created from `JsonApiJackson3`. Codec paths are
-`JsonApiDocumentReader` / `JsonApiDocumentWriter`. Mapping paths are `JsonApiResourceMapper`
-(write), `JsonApiResourceBinder` (flat read), `JsonApiDomainDocumentReader` (typed envelope),
-`JsonApiPatchCommandReader`, and `JsonApiPatchDtoReader`. Both adapters also expose the neutral
+Public Jackson 2 and Jackson 3 entry points are created from `JsonApiJackson2` and
+`JsonApiJackson3`. Codec paths are `JsonApiDocumentReader` / `JsonApiDocumentWriter`. Mapping paths
+are `JsonApiResourceMapper` (write), `JsonApiResourceBinder` (flat read),
+`JsonApiDomainDocumentReader` (typed envelope), `JsonApiPatchCommandReader`, and
+`JsonApiPatchDtoReader`. Both adapters also expose the neutral
 Level-1 runtime: `JsonApiJackson3.jsonApi(mapper)` / `builder(mapper)` and
 `JsonApiJackson2.jsonApi(mapper)` / `builder(mapper)` return coordinated four-facet implementations.
 The Jackson 2 capability seams remain available: `JsonApiJackson2.writer(mapper[,
@@ -127,7 +128,10 @@ declares checked `IOException`; Jackson parse failures become payload-safe `MALF
 mapping, compound-inclusion, sparse-fieldset, and decoration semantics as `JsonApiJackson3.resourceMapper`,
 `JsonApiJackson2.resourceBinder(...)` returns its `JsonApiResourceBinder` with the same
 flat-binding semantics as `JsonApiJackson3.resourceBinder` (mapping diagnostics use
-resource-relative `MappingLocation` pointers), and `JsonApiJackson2.patchCommandReader(...)` /
+resource-relative `MappingLocation` pointers), `JsonApiJackson2.domainDocumentReader(...)` returns
+the advanced registry-backed `JsonApiDomainDocumentReader` with independently bound, wire-ordered
+`included` DTOs and the same typed-envelope semantics as Jackson 3, and
+`JsonApiJackson2.patchCommandReader(...)` /
 `patchDtoReader(...)` return their PATCH readers with the same presence-aware semantics as the
 Jackson 3 counterparts (every overload declares checked `IOException`). The Jackson 2 Level-1
 runtime adapts unavoidable checked stream I/O to `UncheckedIOException`; advanced Jackson 2
@@ -149,8 +153,8 @@ or PATCH projection phases manually; advanced capability APIs stay public for ex
 mechanism/control. [ADR-019](adr/019-level-one-application-api-contract.md) freezes the
 full contract, including the configured-Jackson, additive-decoration, id/lid, ADR-018, and
 create-request boundaries. The configured `Jackson3JsonApi` and `Jackson2JsonApi` runtimes implement
-the same neutral Level-1 contract in their respective modules. Typed domain-envelope composition
-remains an advanced Jackson 3 capability and is not inferred by the Level-1 runtime.
+the same neutral Level-1 contract in their respective modules. Typed domain-envelope composition is
+an advanced capability in both adapters and is not inferred by either Level-1 runtime.
 
 Convenience writes infer a root `JavaType` from the concrete runtime class. Directly parameterized
 roots such as `Container<Thing>` use the overloads that accept a complete `JavaType`; that declared

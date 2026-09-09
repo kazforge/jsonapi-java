@@ -2,7 +2,8 @@
  * Jackson 2 codecs for the major-neutral Level-1 JSON:API application contract, plus the advanced
  * capabilities it coordinates: validating and writing JSON:API document envelopes, validated
  * document reading, advanced annotated-domain-to-resource mapping, validated flat resource-to-DTO
- * binding, and presence-aware PATCH binding.
+ * binding, typed domain envelopes for heterogeneous flat DTO binding, and presence-aware PATCH
+ * binding.
  *
  * <p>Java {@code null} on model components means member absence. Explicit JSON {@code null} uses
  * sealed variants such as {@link io.github.kazemek.jsonapi.core.model.DocumentData.NullData}. Use
@@ -38,20 +39,21 @@
  * com.fasterxml.jackson.databind.json.JsonMapper} as the canonical construction input, followed by
  * the capability's policy/context and collaborators: {@code writer(mapper, ValidationContext)},
  * {@code reader(mapper, DocumentReadContext)}, {@code resourceMapper(mapper, identifierConverter,
- * decoratorRegistry)}, {@code resourceBinder(mapper, identifierConverter, linkageMappers)}, and
- * {@code patchCommandReader/patchDtoReader(mapper, validationContext, identifierConverter,
- * linkageMappers)} with meaningful default conveniences. {@code JsonMapper.Builder} overloads are
- * intentionally not part of the public contract. The writer derives an isolated codec mapper via
- * {@code rebuild()}; the reader uses the supplied mapper directly for token-driven parsing; the
- * resource mapper, the resource binder, and both PATCH readers each derive an isolated mapping
- * mapper via {@code rebuild()} with only mapping-required internal module support, including a
- * caller-preserving JDK 8 {@code Optional} fallback (serialization support on the mapping path,
- * deserialization support on the binding and PATCH paths). No construction path mutates the
- * caller's mapper. Jackson 2's checked {@code JsonProcessingException} mechanics propagate from
- * emission methods as-is, and every reader overload declares checked {@code IOException} while
- * Jackson parse failures surface as payload-safe {@link
- * io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiDocumentReadException} values; core
- * validation failures stay unchecked {@link
+ * decoratorRegistry)}, {@code resourceBinder(mapper, identifierConverter, linkageMappers)}, {@code
+ * domainDocumentReader(mapper, DocumentReadContext, ResourceTypeRegistry, identifierConverter,
+ * linkageMappers)}, and {@code patchCommandReader/patchDtoReader(mapper, validationContext,
+ * identifierConverter, linkageMappers)} with meaningful default conveniences. {@code
+ * JsonMapper.Builder} overloads are intentionally not part of the public contract. The writer
+ * derives an isolated codec mapper via {@code rebuild()}; the reader uses the supplied mapper
+ * directly for token-driven parsing; the resource mapper, the resource binder, and both PATCH
+ * readers each derive an isolated mapping mapper via {@code rebuild()} with only mapping-required
+ * internal module support, including a caller-preserving JDK 8 {@code Optional} fallback
+ * (serialization support on the mapping path, deserialization support on the binding and PATCH
+ * paths). No construction path mutates the caller's mapper. Jackson 2's checked {@code
+ * JsonProcessingException} mechanics propagate from emission methods as-is, and every reader
+ * overload declares checked {@code IOException} while Jackson parse failures surface as
+ * payload-safe {@link io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiDocumentReadException}
+ * values; core validation failures stay unchecked {@link
  * io.github.kazemek.jsonapi.core.validation.JsonApiValidationException} on writes and become {@code
  * JsonApiDocumentReadException} with rule codes on reads; mapping and binding failures throw {@link
  * io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException} with {@link
@@ -62,13 +64,23 @@
  * linkage exemptions before validating, so callers never translate mapping provenance into
  * validation policy themselves.
  *
+ * <p>Use {@link JsonApiJackson2#domainDocumentReader} for the advanced heterogeneous path. It
+ * consumes the Jackson-neutral {@link
+ * io.github.kazemek.jsonapi.jackson.mapping.ResourceTypeRegistry} explicitly, decodes and validates
+ * through {@link JsonApiDocumentReader}, binds primary and {@code included} resources
+ * independently, and preserves document-level members. The resulting {@link JsonApiDomainDocument}
+ * keeps {@code included} DTOs ordered and identity-indexed without injecting them into linkage
+ * relationships; identifier primary data remains core identifier data. Its {@code metaAs} methods
+ * use the reader-derived configured mapper. This registry-backed path is advanced and does not
+ * alter the registry-free, homogeneous Level-1 resource reads.
+ *
  * <p>Codec and mapping policy, diagnostics, contexts, representation selection/policy, decoration
  * registries, provenance values, presence-aware update commands, and the opt-in identifier-meta
  * wrapper are Jackson-major-neutral contracts in {@link io.github.kazemek.jsonapi.jackson}; this
  * package holds the Jackson 2-bound Level-1 runtime, writer, reader, resource mapper, resource
- * binder, PATCH readers, and their implementations. Level-1 adapts unavoidable Jackson 2 checked
- * stream I/O to {@link java.io.UncheckedIOException}; existing document-read, validation, and
- * mapping exception families remain distinct.
+ * binder, typed domain envelope, PATCH readers, and their implementations. Level-1 adapts
+ * unavoidable Jackson 2 checked stream I/O to {@link java.io.UncheckedIOException}; existing
+ * document-read, validation, and mapping exception families remain distinct.
  */
 @NullMarked
 package io.github.kazemek.jsonapi.jackson2;
