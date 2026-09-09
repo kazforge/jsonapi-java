@@ -4,6 +4,7 @@ import io.github.kazemek.jsonapi.core.model.RelationshipData;
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingLocation;
+import io.github.kazemek.jsonapi.jackson.internal.patch.PresenceMarker;
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter;
 import io.github.kazemek.jsonapi.jackson.patch.PatchCommand;
 import io.github.kazemek.jsonapi.jackson.patch.PatchPresence;

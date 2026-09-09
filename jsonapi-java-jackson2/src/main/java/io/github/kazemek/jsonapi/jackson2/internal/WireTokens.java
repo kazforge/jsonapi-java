@@ -7,6 +7,7 @@ import io.github.kazemek.jsonapi.core.model.Relationship;
 import io.github.kazemek.jsonapi.jackson.diagnostic.CodecFailureCategory;
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiDocumentReadException;
 import io.github.kazemek.jsonapi.jackson.diagnostic.SourceLocation;
+import io.github.kazemek.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +29,7 @@ final class WireTokens {
     int index = 0;
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
-      pointer.capture(parser);
+      pointer.capture(ReadLocations.token(parser));
       values.add(readRequiredString(parser, pointer));
       pointer.pop();
       index++;
@@ -75,7 +76,7 @@ final class WireTokens {
     int index = 0;
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
-      pointer.capture(parser);
+      pointer.capture(ReadLocations.token(parser));
       values.add(readOpenValue(parser, pointer));
       pointer.pop();
       index++;

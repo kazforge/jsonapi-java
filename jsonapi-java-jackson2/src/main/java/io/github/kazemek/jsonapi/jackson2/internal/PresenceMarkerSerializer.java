@@ -3,6 +3,7 @@ package io.github.kazemek.jsonapi.jackson2.internal;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import io.github.kazemek.jsonapi.jackson.internal.patch.PresenceMarker;
 import java.io.IOException;
 
 /**

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.type.LogicalType;
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingLocation;
+import io.github.kazemek.jsonapi.jackson.internal.mapping.IdentifierMetaSupport;
 import io.github.kazemek.jsonapi.jackson.patch.PatchPresence;
 import java.util.List;
 import java.util.Map;

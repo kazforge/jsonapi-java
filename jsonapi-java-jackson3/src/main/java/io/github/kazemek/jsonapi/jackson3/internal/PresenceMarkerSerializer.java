@@ -1,5 +1,6 @@
 package io.github.kazemek.jsonapi.jackson3.internal;
 
+import io.github.kazemek.jsonapi.jackson.internal.patch.PresenceMarker;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.ValueSerializer;

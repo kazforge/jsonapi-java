@@ -16,7 +16,8 @@ objects.
 |------------------------------------------------|-----------------------------------------------------------------------|
 | `io.github.kazemek.jsonapi.jackson3`           | Public Level-1 configured runtime (`Jackson3JsonApi`), writer/reader/mapper/binder/PATCH factories, and validate-then-codec entry points |
 | `io.github.kazemek.jsonapi.jackson3.internal`  | Streaming serializers/decoders, mapping engine, module registration; not public API |
-| `io.github.kazemek.jsonapi.jackson.*`          | Public Jackson-major-neutral API contracts (in `jsonapi-java-jackson-api`): `api`, `document`, `mapping`, `patch`, `representation`, `diagnostic` |
+| `io.github.kazemek.jsonapi.jackson.{api,document,mapping,patch,representation,diagnostic}` | Supported Jackson-major-neutral API contracts in `jsonapi-java-jackson-api` |
+| `io.github.kazemek.jsonapi.jackson.internal..` | Unsupported Jackson-free implementation helpers shared with this adapter; not public API |
 
 Codec and mapping policy, contexts, diagnostics, domain envelope values, and presence-aware update
 commands (`DocumentReadContext`, `RepresentationSelection`, `RepresentationPolicy`, `IncludePath`,
@@ -503,6 +504,7 @@ artifact; both majors share the neutral contracts of
 - [ADR-007 — Module boundaries](../docs/adr/007-module-boundaries.md)
 - [ADR-009 — JSpecify nullness](../docs/adr/009-jspecify-nullness.md)
 - [ADR-010 — Architectural tests](../docs/adr/010-architectural-tests.md)
+- [ADR-020 — Jackson-neutral implementation helpers](../docs/adr/020-jackson-neutral-implementation-helpers.md)
 - [ADR-011 — Flat DTO reads](../docs/adr/011-flat-dto-read-binding.md)
 - [ADR-012 — Resource PATCH binding](../docs/adr/012-resource-patch-binding.md)
 - [ADR-013 — Direct typed PATCH DTO binding](../docs/adr/013-direct-typed-patch-dto-binding.md)

@@ -10,6 +10,7 @@ import io.github.kazemek.jsonapi.core.model.ResourceIdentifier;
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingLocation;
+import io.github.kazemek.jsonapi.jackson.internal.mapping.IdentifierMetaSupport;
 import io.github.kazemek.jsonapi.jackson.mapping.RelationshipLinkage;
 import io.github.kazemek.jsonapi.jackson.patch.PatchPresence;
 import io.github.kazemek.jsonapi.jackson2.RelationshipLinkageMapper;

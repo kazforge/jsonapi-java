@@ -1,4 +1,4 @@
-package io.github.kazemek.jsonapi.jackson3.internal;
+package io.github.kazemek.jsonapi.jackson.internal.representation;
 
 import io.github.kazemek.jsonapi.jackson.representation.RepresentationPolicy;
 import io.github.kazemek.jsonapi.jackson.representation.RepresentationSelection;

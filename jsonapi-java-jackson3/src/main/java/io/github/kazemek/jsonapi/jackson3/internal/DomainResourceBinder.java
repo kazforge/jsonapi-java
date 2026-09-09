@@ -8,6 +8,7 @@ import io.github.kazemek.jsonapi.core.model.ResourceObject;
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingLocation;
+import io.github.kazemek.jsonapi.jackson.internal.mapping.ResourceTypeMatch;
 import io.github.kazemek.jsonapi.jackson.mapping.IdentifierConverter;
 import io.github.kazemek.jsonapi.jackson3.RelationshipLinkageMapper;
 import java.util.LinkedHashMap;

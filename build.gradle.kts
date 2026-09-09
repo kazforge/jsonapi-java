@@ -15,9 +15,9 @@ sonar {
         // Intentional Jackson 2/Jackson 3 parity duplication: these Jackson 2 production files are
         // adapter-local adaptations of their Jackson 3 counterparts (document codec, read-side,
         // typed domain envelope, write-side domain mapping engine, flat DTO resource binding, and
-        // presence-aware PATCH binding), kept adapter-local for Jackson-major isolation per ADR-007. Reassess for
-        // cross-major consolidation only if a Jackson-major-neutral mechanism is ever accepted; do
-        // not exclude whole packages.
+        // presence-aware PATCH binding), kept adapter-local for Jackson-major isolation per ADR-007.
+        // Jackson-major-neutral implementation bookkeeping is shared in jackson-api; do not exclude
+        // whole packages.
         property(
             "sonar.cpd.exclusions",
             """
@@ -45,31 +45,24 @@ sonar {
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/ErrorWireReader.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/FlatConstructionPaths.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/JsonApiWireReader.java,
-            src/main/java/io/github/kazemek/jsonapi/jackson2/internal/JsonPointerAccumulator.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/LinkWireReader.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/MappingDefinitionCache.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/MappingDefinitionResolver.java,
-            src/main/java/io/github/kazemek/jsonapi/jackson2/internal/MemberClassifier.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/MetaBindingModule.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/PatchMemberConverter.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/PatchPresenceDeserializer.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/PatchPresenceModule.java,
-            src/main/java/io/github/kazemek/jsonapi/jackson2/internal/PointerEscapes.java,
-            src/main/java/io/github/kazemek/jsonapi/jackson2/internal/PresenceMarker.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/PresenceMarkerSerializer.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/PropertyScopedValueConverter.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/RawValueBeanPropertyWriter.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/RawValuePropertyModule.java,
-            src/main/java/io/github/kazemek/jsonapi/jackson2/internal/ReadLocationIndex.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/ReadLocations.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/ReadMappingProperty.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/ReadResourceMapping.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/RelationshipLinkageSupport.java,
-            src/main/java/io/github/kazemek/jsonapi/jackson2/internal/ResourceTypeMatch.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/ResourceWireReader.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/ResolvedTypeSupport.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/StructuredValueBinder.java,
-            src/main/java/io/github/kazemek/jsonapi/jackson2/internal/ValidationPointers.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/WireObjectMembers.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/WireTokens.java,
             src/main/java/io/github/kazemek/jsonapi/jackson2/internal/WholeMetaTarget.java,

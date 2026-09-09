@@ -48,17 +48,28 @@ class Jackson3DependencyRulesSpec extends Specification {
   def "jackson3 exposes no duplicate public common contract types"() {
     given:
     def commonContractNames = commonClasses.findAll { JavaClass candidate ->
-      (candidate.packageName == "io.github.kazemek.jsonapi.jackson" ||
-          candidate.packageName.startsWith("io.github.kazemek.jsonapi.jackson.")) &&
-          candidate.modifiers.contains(JavaModifier.PUBLIC) && candidate.topLevelClass
+      isSupportedCommonType(candidate)
     }.collect { JavaClass candidate -> candidate.simpleName }.toSet()
     def jackson3TypeNames = jackson3Classes.findAll { JavaClass candidate ->
-      candidate.packageName.startsWith("io.github.kazemek.jsonapi.jackson3") &&
-          candidate.modifiers.contains(JavaModifier.PUBLIC) && candidate.topLevelClass
+      isSupportedTopLevelAdapterType(candidate)
     }.collect { JavaClass candidate -> candidate.simpleName }.toSet()
 
     expect:
     commonContractNames.intersect(jackson3TypeNames).isEmpty()
+  }
+
+  def "jackson3 supported public signatures do not expose shared internal types"() {
+    given:
+    def violations = jackson3Classes.findAll { JavaClass candidate ->
+      isSupportedAdapterType(candidate)
+    }.collectMany { JavaClass candidate ->
+      exposedTypes(candidate)
+          .findAll { JavaClass dependency -> isSharedInternalType(dependency) }
+          .collect { JavaClass dependency -> "${candidate.fullName} -> ${dependency.fullName}" }
+    }
+
+    expect:
+    assert violations.isEmpty(), violations.join(System.lineSeparator())
   }
 
   def "shared test fixtures depend only on allowed application-shaped packages"() {
@@ -77,5 +88,60 @@ class Jackson3DependencyRulesSpec extends Specification {
         "io.github.kazemek.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)
+  }
+
+  private static boolean isSupportedCommonType(JavaClass candidate) {
+    candidate.topLevelClass &&
+        candidate.modifiers.contains(JavaModifier.PUBLIC) &&
+        (candidate.packageName == "io.github.kazemek.jsonapi.jackson" ||
+        (candidate.packageName.startsWith("io.github.kazemek.jsonapi.jackson.") &&
+        !isInternalPackage(candidate.packageName)))
+  }
+
+  private static boolean isSupportedAdapterType(JavaClass candidate) {
+    candidate.modifiers.contains(JavaModifier.PUBLIC) &&
+        (candidate.packageName == "io.github.kazemek.jsonapi.jackson3" ||
+        (candidate.packageName.startsWith("io.github.kazemek.jsonapi.jackson3.") &&
+        !isAdapterInternalPackage(candidate.packageName)))
+  }
+
+  private static boolean isSupportedTopLevelAdapterType(JavaClass candidate) {
+    candidate.topLevelClass && isSupportedAdapterType(candidate)
+  }
+
+  private static boolean isInternalPackage(String packageName) {
+    packageName == "io.github.kazemek.jsonapi.jackson.internal" ||
+        packageName.startsWith("io.github.kazemek.jsonapi.jackson.internal.")
+  }
+
+  private static boolean isAdapterInternalPackage(String packageName) {
+    packageName == "io.github.kazemek.jsonapi.jackson3.internal" ||
+        packageName.startsWith("io.github.kazemek.jsonapi.jackson3.internal.")
+  }
+
+  private static boolean isSharedInternalType(JavaClass candidate) {
+    isInternalPackage(candidate.packageName)
+  }
+
+  private static Set<JavaClass> exposedTypes(JavaClass candidate) {
+    def types = new LinkedHashSet<JavaClass>()
+    candidate.interfaces.each { type -> types.addAll(type.allInvolvedRawTypes) }
+    candidate.superclass.ifPresent { type -> types.addAll(type.allInvolvedRawTypes) }
+    candidate.typeParameters.each { type -> types.addAll(type.allInvolvedRawTypes) }
+    candidate.constructors.findAll { isExposedMember(it) }.each { member ->
+      types.addAll(member.allInvolvedRawTypes)
+    }
+    candidate.methods.findAll { isExposedMember(it) }.each { member ->
+      types.addAll(member.allInvolvedRawTypes)
+    }
+    candidate.fields.findAll { isExposedMember(it) }.each { member ->
+      types.addAll(member.allInvolvedRawTypes)
+    }
+    types
+  }
+
+  private static boolean isExposedMember(member) {
+    member.modifiers.contains(JavaModifier.PUBLIC) ||
+        member.modifiers.contains(JavaModifier.PROTECTED)
   }
 }

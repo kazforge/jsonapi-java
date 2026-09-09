@@ -3,6 +3,7 @@ package io.github.kazemek.jsonapi.jackson3.internal
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingLocation
+import io.github.kazemek.jsonapi.jackson.internal.patch.PresenceMarker
 import io.github.kazemek.jsonapi.jackson.patch.PatchPresence
 import io.github.kazemek.jsonapi.jackson.patch.StructuredMember
 import io.github.kazemek.jsonapi.jackson.patch.StructuredMemberState

@@ -17,6 +17,7 @@ import io.github.kazemek.jsonapi.core.validation.MemberNames;
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic;
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingLocation;
+import io.github.kazemek.jsonapi.jackson.internal.mapping.PropertyRole;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;

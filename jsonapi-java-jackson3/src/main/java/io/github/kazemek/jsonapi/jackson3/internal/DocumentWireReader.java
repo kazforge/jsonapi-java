@@ -12,6 +12,9 @@ import io.github.kazemek.jsonapi.core.model.ResourceObject;
 import io.github.kazemek.jsonapi.jackson.diagnostic.CodecFailureCategory;
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiDocumentReadException;
 import io.github.kazemek.jsonapi.jackson.document.PrimaryDataKind;
+import io.github.kazemek.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
+import io.github.kazemek.jsonapi.jackson.internal.wire.ReadLocationIndex;
+import io.github.kazemek.jsonapi.jackson.internal.wire.ValidationPointers;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,13 +72,13 @@ final class DocumentWireReader {
         case RESOURCE -> {
           ResourceObject resource = ResourceWireReader.readResourceObject(parser, pointer);
           yield ValidationPointers.construct(
-              pointer, PATH_DATA, () -> new DocumentData.SingleResource(resource));
+              pointer.path(), PATH_DATA, () -> new DocumentData.SingleResource(resource));
         }
         case RESOURCE_IDENTIFIER -> {
           ResourceIdentifier identifier =
               ResourceWireReader.readResourceIdentifier(parser, pointer);
           yield ValidationPointers.construct(
-              pointer, PATH_DATA, () -> new DocumentData.SingleIdentifier(identifier));
+              pointer.path(), PATH_DATA, () -> new DocumentData.SingleIdentifier(identifier));
         }
       };
     }
@@ -84,13 +87,13 @@ final class DocumentWireReader {
         case RESOURCE -> {
           List<ResourceObject> resources = ResourceWireReader.readResourceObjects(parser, pointer);
           yield ValidationPointers.construct(
-              pointer, PATH_DATA, () -> new DocumentData.ResourceCollection(resources));
+              pointer.path(), PATH_DATA, () -> new DocumentData.ResourceCollection(resources));
         }
         case RESOURCE_IDENTIFIER -> {
           List<ResourceIdentifier> identifiers =
               ResourceWireReader.readResourceIdentifiers(parser, pointer);
           yield ValidationPointers.construct(
-              pointer, PATH_DATA, () -> new DocumentData.IdentifierCollection(identifiers));
+              pointer.path(), PATH_DATA, () -> new DocumentData.IdentifierCollection(identifiers));
         }
       };
     }
@@ -105,7 +108,7 @@ final class DocumentWireReader {
         pointer,
         name -> WireTokens.putOpen(members, name, WireTokens.readOpenValue(parser, pointer)));
     return ValidationPointers.construct(
-        pointer, "/meta", () -> Meta.of(ValidationPointers.forCore(members)));
+        pointer.path(), "/meta", () -> Meta.of(ValidationPointers.forCore(members)));
   }
 
   static JsonApiObject readJsonApiObject(JsonParser parser, JsonPointerAccumulator pointer) {
@@ -160,7 +163,7 @@ final class DocumentWireReader {
       Links documentLinks = links;
       List<ResourceObject> documentIncluded = included;
       return ValidationPointers.construct(
-          pointer,
+          pointer.path(),
           "",
           () ->
               new JsonApiDocument(
@@ -203,7 +206,7 @@ final class DocumentWireReader {
       List<String> jsonApiProfile = profile;
       Meta jsonApiMeta = meta;
       return ValidationPointers.construct(
-          pointer,
+          pointer.path(),
           "/jsonapi",
           () ->
               new JsonApiObject(

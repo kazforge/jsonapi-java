@@ -13,6 +13,7 @@ integrations.
 | `io.github.kazemek.jsonapi.jackson.representation` | Representation shaping and inclusion/fieldset contracts           |
 | `io.github.kazemek.jsonapi.jackson.diagnostic`  | Stable mapping/codec diagnostics and failure locations               |
 | `io.github.kazemek.jsonapi.jackson.api`         | Level-1 application operation contract: `JsonApi` root plus resources, relationships, documents, and patches facets with option/result values |
+| `io.github.kazemek.jsonapi.jackson.internal..`  | Unsupported Jackson-free implementation helpers shared by the adapters; not a supported API |
 
 Conceptual layout:
 
@@ -35,6 +36,9 @@ io.github.kazemek.jsonapi.jackson.representation
 
 io.github.kazemek.jsonapi.jackson.diagnostic
     diagnostics
+
+io.github.kazemek.jsonapi.jackson.internal..
+    unsupported adapter-cooperation helpers
 ```
 
 ## Level-1 application contract
@@ -140,7 +144,11 @@ specifications; this module does not provide shared test orchestration or scenar
 This module does not share Jackson-bound readers, writers, mapping introspection, serializers,
 binders, module registration, or mapper factories; there is no runtime major detection and no
 lowest-common-denominator Jackson abstraction. Jackson 2 and Jackson 3 remain separately compiled
-artifacts; see [ADR-007](../docs/adr/007-module-boundaries.md).
+artifacts; see [ADR-007](../docs/adr/007-module-boundaries.md). It does contain a small
+`io.github.kazemek.jsonapi.jackson.internal..` namespace of Jackson-free implementation helpers
+used by both adapters. Those Java-public types are unsupported adapter-cooperation details and must
+not appear in supported public signatures; [ADR-020](../docs/adr/020-jackson-neutral-implementation-helpers.md)
+defines that boundary.
 
 ## Further reading
 
@@ -154,6 +162,7 @@ artifacts; see [ADR-007](../docs/adr/007-module-boundaries.md).
 - [ADR-016 — Mapper-instance construction for Jackson adapters](../docs/adr/016-jackson-adapter-construction.md)
 - [ADR-017 — Opt-in RelationshipLinkage for resource identifier meta](../docs/adr/017-resource-identifier-meta-mapping.md)
 - [ADR-019 — Major-neutral Level-1 application API contract](../docs/adr/019-level-one-application-api-contract.md)
+- [ADR-020 — Jackson-neutral implementation helpers](../docs/adr/020-jackson-neutral-implementation-helpers.md)
 - [Root agent workflow](../AGENTS.md)
 
 ## For contributors / agents
@@ -167,11 +176,12 @@ artifacts; see [ADR-007](../docs/adr/007-module-boundaries.md).
   derived from those declarations, so `find` can only return the DTO at the position that declared
   the identity: inconsistent states are unrepresentable. Duplicate identities across positions and
   length mismatches are rejected. Do not re-introduce a raw two-collection constructor.
-- **Move policy:** Neutral contracts live here, not in the adapters. When a type can be expressed
-  without Jackson imports, move it here rather than duplicating it per major; when it exposes
-  Jackson APIs it must stay in the adapter. Adapter architecture tests derive their duplicate-name
-  guard from this public package boundary, so newly moved public contracts are protected without a
-  second type-name inventory.
+- **Move policy:** Supported neutral contracts live here, not in the adapters. Jackson-free
+  implementation helpers that are required by both adapters may live under the unsupported
+  `jackson.internal..` namespace; they are Java-public only for adapter cooperation and are not
+  supported application API. When a type exposes Jackson APIs it must stay in the adapter. Adapter
+  architecture tests derive their duplicate-name guard from the supported package boundary, so
+  newly moved public contracts are protected without a second type-name inventory.
 - **Nullness:** Each concept package is `@NullMarked` (JSpecify only). Document/envelope/codec
   contracts: Java `null` means member absence; explicit JSON `null` stays a sealed variant
   (`DomainData.NullData`, etc.). Presence-aware PATCH: `PatchChange` entries in `changes()` are

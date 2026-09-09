@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
+import io.github.kazemek.jsonapi.jackson.internal.patch.PresenceMarker;
 import io.github.kazemek.jsonapi.jackson.patch.PatchPresence;
 import java.io.IOException;
 import org.jspecify.annotations.Nullable;

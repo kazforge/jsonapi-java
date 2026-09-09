@@ -18,7 +18,8 @@ presence-aware PATCH binding.
 |------------------------------------------------|-----------------------------------------------------------------------|
 | `io.github.kazemek.jsonapi.jackson2`           | Public Level-1 configured runtime (`Jackson2JsonApi`), codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, token-driven `JsonApiDocumentReader`, `JsonApiResourceMapper` for domain-to-resource mapping, `JsonApiResourceBinder` for validated flat resource-to-DTO binding, `JsonApiDomainDocumentReader` / `JsonApiDomainDocument` for advanced typed envelopes, and `JsonApiPatchCommandReader` / `JsonApiPatchDtoReader` for presence-aware PATCH |
 | `io.github.kazemek.jsonapi.jackson2.internal`  | Streaming document serializer, wire emission, token-driven wire decoding, the mapping engine, PATCH binding, and module registration; not public API |
-| `io.github.kazemek.jsonapi.jackson.*`          | Public Jackson-major-neutral API contracts (in `jsonapi-java-jackson-api`): `api`, `document`, `mapping`, `patch`, `representation`, `diagnostic` |
+| `io.github.kazemek.jsonapi.jackson.{api,document,mapping,patch,representation,diagnostic}` | Supported Jackson-major-neutral API contracts in `jsonapi-java-jackson-api` |
+| `io.github.kazemek.jsonapi.jackson.internal..` | Unsupported Jackson-free implementation helpers shared with this adapter; not public API |
 
 Validation policy, read policy, mapping policy, contexts, provenance values, diagnostics
 (`ValidationContext`, `DocumentReadContext`, `RepresentationSelection`, `RepresentationPolicy`,
@@ -408,6 +409,7 @@ contracts of [jsonapi-java-jackson-api](../jsonapi-java-jackson-api/README.md) p
 - [ADR-016 — Mapper-instance construction for Jackson adapters](../docs/adr/016-jackson-adapter-construction.md)
 - [ADR-017 — Opt-in RelationshipLinkage for resource identifier meta](../docs/adr/017-resource-identifier-meta-mapping.md)
 - [ADR-010 — Architectural tests](../docs/adr/010-architectural-tests.md)
+- [ADR-020 — Jackson-neutral implementation helpers](../docs/adr/020-jackson-neutral-implementation-helpers.md)
 - [Canonical fixtures](../jsonapi-java-jackson-api/src/testFixtures/resources/jsonapi/corpus/1.1/README.md)
 - [Jackson API module](../jsonapi-java-jackson-api/README.md)
 - [Jackson 3 module](../jsonapi-java-jackson3/README.md)

@@ -2,6 +2,7 @@ package io.github.kazemek.jsonapi.jackson3.internal;
 
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument;
 import io.github.kazemek.jsonapi.jackson.document.PrimaryDataKind;
+import io.github.kazemek.jsonapi.jackson.internal.wire.ReadLocationIndex;
 import tools.jackson.core.JsonParser;
 
 /**

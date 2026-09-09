@@ -3,6 +3,7 @@ package io.github.kazemek.jsonapi.jackson2.internal;
 import com.fasterxml.jackson.core.JsonParser;
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument;
 import io.github.kazemek.jsonapi.jackson.document.PrimaryDataKind;
+import io.github.kazemek.jsonapi.jackson.internal.wire.ReadLocationIndex;
 import java.io.IOException;
 
 /**

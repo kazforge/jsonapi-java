@@ -6,6 +6,9 @@ import io.github.kazemek.jsonapi.core.model.Links;
 import io.github.kazemek.jsonapi.core.model.Meta;
 import io.github.kazemek.jsonapi.core.validation.JsonApiValidationException;
 import io.github.kazemek.jsonapi.core.validation.ValidationRuleCode;
+import io.github.kazemek.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
+import io.github.kazemek.jsonapi.jackson.internal.wire.MemberClassifier;
+import io.github.kazemek.jsonapi.jackson.internal.wire.ValidationPointers;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +47,7 @@ final class LinkWireReader {
           }
         });
     return ValidationPointers.construct(
-        pointer, PATH_LINKS, () -> Links.of(links, ValidationPointers.forCore(additional)));
+        pointer.path(), PATH_LINKS, () -> Links.of(links, ValidationPointers.forCore(additional)));
   }
 
   static @Nullable Link readLink(JsonParser parser, JsonPointerAccumulator pointer) {
@@ -54,7 +57,8 @@ final class LinkWireReader {
     }
     if (token == JsonToken.VALUE_STRING) {
       String href = parser.getString();
-      return ValidationPointers.construct(pointer, PATH_LINKS, () -> new Link.StringLink(href));
+      return ValidationPointers.construct(
+          pointer.path(), PATH_LINKS, () -> new Link.StringLink(href));
     }
     if (token == JsonToken.START_OBJECT) {
       return readObjectLink(parser, pointer);
@@ -125,7 +129,7 @@ final class LinkWireReader {
       List<String> linkHreflang = hreflang;
       Meta linkMeta = meta;
       return ValidationPointers.construct(
-          pointer,
+          pointer.path(),
           PATH_LINKS,
           () ->
               new Link.ObjectLink(
