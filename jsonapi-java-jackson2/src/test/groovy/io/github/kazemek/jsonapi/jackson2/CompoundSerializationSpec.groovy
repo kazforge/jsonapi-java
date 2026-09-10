@@ -53,6 +53,19 @@ class CompoundSerializationSpec extends Specification {
     !document.hasIncludedMember()
   }
 
+  def "explicit empty include request writes an empty included member"() {
+    given:
+    def selection = RepresentationSelection.builder().includeRequested().build()
+    def policy = includePolicy(IncludePolicy.allowAll())
+
+    when:
+    def document = mapper.toDocument(article(), null, selection, policy)
+
+    then:
+    document.hasIncludedMember()
+    document.included() == []
+  }
+
   @Unroll
   def "writes compound document #id"() {
     given:

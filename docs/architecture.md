@@ -31,6 +31,7 @@ flowchart TB
     CORE["jsonapi-java-core<br/>JSON:API document model and validation"]
     ANN["jsonapi-java-annotations<br/>mapping role metadata only"]
     COMMON["jsonapi-java-jackson-api<br/>Jackson-major-neutral API surface"]
+    QUERY["jsonapi-java-query<br/>neutral query-parameter parser"]
     J3["jsonapi-java-jackson3<br/>Jackson 3 codec, introspection, and binding"]
     J2["jsonapi-java-jackson2<br/>Jackson 2 Level-1 runtime, codec, domain mapping, flat binding, typed envelope, and PATCH"]
   end
@@ -44,7 +45,9 @@ flowchart TB
   J2 --> CORE
   J2 --> ANN
   COMMON --> CORE
+  QUERY --> COMMON
   APP --> J3
+  APP --> QUERY
   APP -.-> COMMON
 ```
 
@@ -60,9 +63,10 @@ Shared test fixtures live in the Jackson API `java-test-fixtures` source set as 
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable JSON:API document model and aggregate validation. No Jackson. |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free mapping-role metadata. No codecs or converters. |
 | [`jsonapi-java-jackson-api`](../jsonapi-java-jackson-api/README.md) | Public Jackson-major-neutral API surface: document, mapping, PATCH, representation, and diagnostic contracts shared by Jackson majors; the Level-1 application operation contract (`JsonApi` root plus resources, relationships, documents, and patches facets); unsupported Jackson-free implementation helpers used by both adapters; passive carriers and shared JSON/schema test fixtures. |
+| [`jsonapi-java-query`](../jsonapi-java-query/README.md) | Framework- and Jackson-major-neutral query parser. It owns syntax diagnostics and immutable parsed selection values while preserving page, filter, and unknown inputs; application code owns query policy and execution. |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Jackson 3 factories, token-driven codecs, configured-Jackson introspection, and domain/PATCH binding including the advanced typed domain envelope, plus the configured `Jackson3JsonApi` runtime implementing the Level-1 contract (via `JsonApiJackson3.jsonApi`/`builder`). |
 | [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Jackson 2 configured `Jackson2JsonApi` Level-1 runtime plus validated document writer (`JsonApiJackson2.writer` + `JsonApiDocumentWriter`) with provenance-aware `MappedDocument` output forms, the token-driven validated document reader (`JsonApiJackson2.reader` + `JsonApiDocumentReader`), the advanced write-side resource mapper (`JsonApiJackson2.resourceMapper` + `JsonApiResourceMapper` with compound inclusion, sparse fieldsets, and additive decoration), the flat resource-to-DTO binder (`JsonApiJackson2.resourceBinder` + `JsonApiResourceBinder`), the advanced typed domain envelope (`JsonApiJackson2.domainDocumentReader` + `JsonApiDomainDocumentReader` / `JsonApiDomainDocument`), and presence-aware PATCH (`JsonApiJackson2.patchCommandReader` + `JsonApiPatchCommandReader`, `JsonApiJackson2.patchDtoReader` + `JsonApiPatchDtoReader`). |
-| Application code | Persistence, HTTP, authorization, query execution, and applying PATCH commands. |
+| Application code | Persistence, HTTP, authorization, query policy/execution, and applying PATCH commands. |
 
 [ADR-007](adr/007-module-boundaries.md) records why these modules exist.
 [ADR-010](adr/010-architectural-tests.md) enforces the production dependency allowlists.
@@ -266,8 +270,9 @@ Mapping locations follow one coordinate contract:
 Sparse fieldsets are mapping provenance, not a caller-owned validation switch.
 
 `RepresentationSelection` is per-operation input containing only requested include paths and sparse
-fieldsets. `RepresentationPolicy` is application/configuration input containing include and field
-permissions plus traversal/resource limits; it is not complete authorization. Jackson adapters
+fieldsets plus whether `include` was explicitly supplied. `RepresentationPolicy` is
+application/configuration input containing include and field permissions plus traversal/resource
+limits; it is not complete authorization. Jackson adapters
 compose those values once into their internal effective representation. `MappedDocument` is the
 distinct result/provenance value produced by one mapping operation. Applications may inspect a
 selection when planning persistence projections, but this library defines and executes no projection
@@ -357,6 +362,7 @@ These names are adjacent and easy to conflate. They are not synonyms.
 - [jsonapi-java-core](../jsonapi-java-core/README.md)
 - [jsonapi-java-annotations](../jsonapi-java-annotations/README.md)
 - [jsonapi-java-jackson-api](../jsonapi-java-jackson-api/README.md)
+- [jsonapi-java-query](../jsonapi-java-query/README.md)
 - [jsonapi-java-jackson3](../jsonapi-java-jackson3/README.md)
 - [ADR index](adr/README.md)
 - [Conformance](conformance.md)

@@ -18,11 +18,13 @@ presence-aware PATCH binding through `JsonApiJackson2.patchCommandReader` / `pat
 the same PATCH semantics as Jackson 3, and the configured `Jackson2JsonApi` Level-1 runtime.
 `jsonapi-java-jackson-api` owns
 Jackson-major-neutral policy, diagnostics, contexts, envelope values, and presence-aware update
-contracts. How those modules fit together is in [`docs/architecture.md`](architecture.md). Writer output is cross-checked against pinned JSON:API 1.1 draft schemas as supplemental
+contracts. `jsonapi-java-query` owns framework- and Jackson-major-neutral parsing of standardized
+query selection while preserving opaque page/filter/unprocessed inputs. How those modules fit
+together is in [`docs/architecture.md`](architecture.md). Writer output is cross-checked against pinned JSON:API 1.1 draft schemas as supplemental
 evidence only. The version-neutral document corpus, closed negative corpus, and dual-success
 ambiguous primary-data cases in the Jackson API test-fixtures corpus (`jsonapi/corpus/1.1/`) are
 shared wire resources for every Jackson major. Capability, schema, and context selections belong
-to each adapter's local specifications. Query parsing and Spring adapters remain deferred.
+to each adapter's local specifications. Spring adapters remain deferred.
 
 ## Document structure (supported)
 
@@ -185,11 +187,15 @@ review.
 | Configured representation, decoration, linkage, and identifier collaborators | supported | Application-lifetime builder settings are applied without mutating the caller mapper; request-scoped selection and envelope remain per operation |
 | Jackson 2 stream I/O at the Level-1 boundary | supported | Unavoidable checked I/O is exposed as `UncheckedIOException`; existing read, validation, and mapping families remain distinct |
 
-## Query parameters (delegated)
+## Query parameters (supported)
 
-| Rule                                                  | Status    |
-|-------------------------------------------------------|-----------|
-| `filter`, `sort`, `page`, `fields`, `include` parsing | delegated |
+| Rule                                                | Status    | Notes |
+|-----------------------------------------------------|-----------|-------|
+| `filter`, `page`, and unknown parameter preservation | supported | Ordered opaque maps retain parameter and repeated-value order; filter/page semantics remain application-owned |
+| `include` parsing                                   | supported | Relationship paths, explicit empty requests, member-name syntax, and optional exact allow-lists |
+| `fields[TYPE]` parsing                              | supported | Sparse fieldset syntax, explicit empty fieldsets, member-name validation, and optional exact allow-lists |
+| `sort` parsing                                      | supported | Ordered ascending/descending fields, exact token preservation, and optional exact allow-lists |
+| Raw query decoding                                  | supported | Optional leading `?`, literal `&`/first `=`, UTF-8 form decoding, and stable malformed-encoding diagnostics |
 
 ## HTTP / endpoints (out of scope)
 

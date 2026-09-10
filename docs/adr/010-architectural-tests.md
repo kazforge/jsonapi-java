@@ -2,7 +2,7 @@
 
 **Status:** Accepted  
 **Date:** 2026-07-29  
-**Amended:** 2026-07-30 (jackson3 allowlist and `core.internal` ban); 2026-08-10 (jackson-common allowlist and the jackson3 common-contract dependency); 2026-08-11 (test-fixtures allowlist for the shared domain-write fixtures); 2026-08-12 (replaces Groovy codec fixtures with Java and JSON-P); 2026-08-31 (renames `jsonapi-java-jackson-common` to `jsonapi-java-jackson-api` and reorganizes API contracts into concept packages); 2026-09-02 (moves passive shared fixtures to the Jackson API test-fixtures source set and adds the neutral loader exception)
+**Amended:** 2026-07-30 (jackson3 allowlist and `core.internal` ban); 2026-08-10 (jackson-common allowlist and the jackson3 common-contract dependency); 2026-08-11 (test-fixtures allowlist for the shared domain-write fixtures); 2026-08-12 (replaces Groovy codec fixtures with Java and JSON-P); 2026-08-31 (renames `jsonapi-java-jackson-common` to `jsonapi-java-jackson-api` and reorganizes API contracts into concept packages); 2026-09-02 (moves passive shared fixtures to the Jackson API test-fixtures source set and adds the neutral loader exception); 2026-09-10 (registers the neutral query-parser allowlist)
 
 ## Context
 
@@ -40,9 +40,14 @@ JSpecify (`org.jspecify.annotations`) is an intentional compile-only exception (
   - `io.github.kazemek.jsonapi.jackson2..` → JDK, JSpecify, core public packages, annotations,
     module-owned types, and `com.fasterxml.jackson..`; never Jackson 3 or another module's
     internals. Must not depend on `core.internal`.
-- Query and Spring modules record their exact framework package allowlists when those modules
-  are registered. Spring may use public core, annotation, Jackson 3, and query contracts; no lower
-  layer may acquire Spring types.
+- Query allowlist:
+  - `io.github.kazemek.jsonapi.query..` → JDK, JSpecify, other query types,
+    `io.github.kazemek.jsonapi.core.validation.MemberNames`, and
+    `io.github.kazemek.jsonapi.jackson.representation..`. It has no Jackson-major or framework
+    dependency and does not depend on core internals.
+- Spring modules record their exact framework package allowlists when those modules are registered.
+  Spring may use public core, annotation, Jackson 3, and query contracts; no lower layer may
+  acquire Spring types.
 - Gradle continues to own artifact selection and publication; ArchUnit owns package/type coupling that Gradle cannot express.
 - Changing an allowlist requires updating this ADR.
 - Sibling modules must not depend on `io.github.kazemek.jsonapi.core.internal..`. That ban is

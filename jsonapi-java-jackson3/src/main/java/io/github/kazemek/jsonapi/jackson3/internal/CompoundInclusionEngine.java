@@ -44,9 +44,10 @@ public final class CompoundInclusionEngine {
   /**
    * Collects included resources for the given primary domain snapshot and context.
    *
-   * @return included list {@code null} when no inclusion was requested (empty path list), plus the
-   *     identities of included resources whose inbound linkage was removed by an applied fieldset
-   *     while inclusion still traversed the linking relationship
+   * @return included list {@code null} when inclusion was not requested, an empty list for an
+   *     explicit empty include request, plus the identities of included resources whose inbound
+   *     linkage was removed by an applied fieldset while inclusion still traversed the linking
+   *     relationship
    */
   public IncludedResourcesResult collectIncluded(
       List<?> primarySnapshot,
@@ -64,9 +65,10 @@ public final class CompoundInclusionEngine {
    * is traversed without a wire-identity visit key instead of failing. Related and included
    * resources still require identity wherever linkage semantics need it.
    *
-   * @return included list {@code null} when no inclusion was requested (empty path list), plus the
-   *     identities of included resources whose inbound linkage was removed by an applied fieldset
-   *     while inclusion still traversed the linking relationship
+   * @return included list {@code null} when inclusion was not requested, an empty list for an
+   *     explicit empty include request, plus the identities of included resources whose inbound
+   *     linkage was removed by an applied fieldset while inclusion still traversed the linking
+   *     relationship
    */
   public IncludedResourcesResult collectIncluded(
       List<?> primarySnapshot,
@@ -87,7 +89,8 @@ public final class CompoundInclusionEngine {
 
     List<IncludePath> paths = representation.selection().includePaths();
     if (paths.isEmpty()) {
-      return new IncludedResourcesResult(null, Set.of());
+      return new IncludedResourcesResult(
+          representation.selection().includeRequested() ? List.of() : null, Set.of());
     }
 
     List<JavaType> validationTypes =
