@@ -22,9 +22,11 @@ import io.github.kazemek.jsonapi.core.model.Relationships
 import io.github.kazemek.jsonapi.core.model.ResourceIdentifier
 import io.github.kazemek.jsonapi.core.model.ResourceObject
 import io.github.kazemek.jsonapi.core.validation.DocumentUsage
+import io.github.kazemek.jsonapi.core.validation.EndpointIdentity
 import io.github.kazemek.jsonapi.core.validation.LinksContext
 import io.github.kazemek.jsonapi.core.validation.ValidationContext
 import io.github.kazemek.jsonapi.fixtures.TestFixtureResources
+import io.github.kazemek.jsonapi.fixtures.localid.LocalIdentityArticle
 
 import spock.lang.Shared
 import spock.lang.Specification
@@ -128,6 +130,27 @@ class JsonApiDraftSchemaSpec extends Specification {
     "documents/compound-nested-intermediate.json" | "response"
     "documents/compound-shared-identity.json"     | "response"
     "documents/local-identifier.json"             | "create"
+    "documents/update-resource.json"              | "update"
+    "documents/update-relationship.json"          | "updateRelationship"
+  }
+
+  def "writer-produced resource update matches the corpus and validates against the draft schema"() {
+    given:
+    def json = JsonApiJackson2.jsonApi(mapper).resources().writeUpdateDocument(
+        new LocalIdentityArticle("1", null, "Updated"), new EndpointIdentity("articles", "1"))
+
+    expect:
+    mapper.readTree(json) == mapper.readTree(TestFixtureResources.readCorpusUtf8("documents/update-resource.json"))
+    schemas["update"].validate(json, InputFormat.JSON).isEmpty()
+  }
+
+  def "writer-produced relationship update matches the corpus and validates against the draft schema"() {
+    given:
+    def json = JsonApiJackson2.jsonApi(mapper).relationships().writeToOne(ResourceIdentifier.of("people", "p1"))
+
+    expect:
+    mapper.readTree(json) == mapper.readTree(TestFixtureResources.readCorpusUtf8("documents/update-relationship.json"))
+    schemas["updateRelationship"].validate(json, InputFormat.JSON).isEmpty()
   }
 
   @Unroll
