@@ -108,7 +108,8 @@ or exposes `tools.jackson.*` or `com.fasterxml.jackson.*`; Jackson-bound factori
 writers, binders, and mapping introspection stay in the major-specific adapter packages.
 
 `RepresentationSelection` is per operation: it requests JSON:API wire-name include paths and sparse
-fieldsets only. `RepresentationPolicy` is application/configuration scoped: it determines which
+fieldsets only, while retaining whether `include` was explicitly supplied so absent and explicit
+empty requests remain distinct. `RepresentationPolicy` is application/configuration scoped: it determines which
 requested relationships and fields are permitted and bounds include traversal. Policy is not a
 complete authorization system. Applications may reuse a selection as an input to persistence
 projection planning, but jsonapi-java neither defines nor executes persistence projections.

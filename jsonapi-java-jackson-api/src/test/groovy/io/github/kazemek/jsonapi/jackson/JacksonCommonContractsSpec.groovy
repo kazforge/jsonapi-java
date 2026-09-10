@@ -49,11 +49,25 @@ class JacksonCommonContractsSpec extends Specification {
 
     then:
     selection.includePaths().isEmpty()
+    !selection.includeRequested()
     selection.fieldsets().isEmpty()
     policy.includePolicy() == IncludePolicy.denyAll()
     policy.maxIncludeDepth() == 10
     policy.maxIncludedResources() == 100
     policy.fieldPolicy() == FieldPolicy.allowAll()
+  }
+
+  def "selection preserves absent versus explicit empty include requests"() {
+    given:
+    def explicitEmpty = RepresentationSelection.builder().includeRequested().build()
+    def explicitPath = RepresentationSelection.builder().include("comments").build()
+
+    expect:
+    !RepresentationSelection.none().includeRequested()
+    explicitEmpty.includeRequested()
+    explicitEmpty.includePaths().isEmpty()
+    explicitEmpty != RepresentationSelection.none()
+    explicitPath.includeRequested()
   }
 
   def "negative limits are rejected"() {

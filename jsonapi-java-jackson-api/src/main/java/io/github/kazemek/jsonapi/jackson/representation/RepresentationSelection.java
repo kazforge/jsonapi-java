@@ -10,10 +10,11 @@ import java.util.Objects;
 /**
  * Immutable per-operation selection of include paths and sparse fieldsets.
  *
- * <p>An empty include-path list requests no inclusion ({@code included} is omitted). A non-empty
- * list that resolves to no resources emits {@code included: []}. An absent fieldset type leaves its
- * attributes and relationships unrestricted; a present type with an empty list selects none.
- * Include-path segments and field names are JSON:API external member names resolved by the
+ * <p>An absent include request ({@code include} was not supplied) omits {@code included}. An
+ * explicitly requested empty include emits {@code included: []} when no resources resolve, and a
+ * non-empty include-path list that resolves to no resources does the same. An absent fieldset type
+ * leaves its attributes and relationships unrestricted; a present type with an empty list selects
+ * none. Include-path segments and field names are JSON:API external member names resolved by the
  * configured Jackson mapper, never Java logical property names.
  *
  * <p>This value contains representation-shaping requests only. It does not model filters, sorting,
@@ -22,15 +23,19 @@ import java.util.Objects;
 public final class RepresentationSelection {
 
   private static final RepresentationSelection NONE =
-      new RepresentationSelection(List.of(), Map.of());
+      new RepresentationSelection(List.of(), Map.of(), false);
 
   private final List<IncludePath> includePaths;
   private final Map<String, List<String>> fieldsets;
+  private final boolean includeRequested;
 
   private RepresentationSelection(
-      List<IncludePath> includePaths, Map<String, List<String>> fieldsets) {
+      List<IncludePath> includePaths,
+      Map<String, List<String>> fieldsets,
+      boolean includeRequested) {
     this.includePaths = List.copyOf(includePaths);
     this.fieldsets = copyFieldsets(fieldsets);
+    this.includeRequested = includeRequested;
   }
 
   /** Returns the selection that requests neither inclusion nor sparse fieldsets. */
@@ -48,6 +53,11 @@ public final class RepresentationSelection {
     return includePaths;
   }
 
+  /** Returns whether the request explicitly supplied an {@code include} parameter. */
+  public boolean includeRequested() {
+    return includeRequested;
+  }
+
   /** Sparse field names by JSON:API resource type, including explicitly empty fieldsets. */
   public Map<String, List<String>> fieldsets() {
     return fieldsets;
@@ -57,12 +67,13 @@ public final class RepresentationSelection {
   public boolean equals(Object other) {
     return other instanceof RepresentationSelection selection
         && includePaths.equals(selection.includePaths)
-        && fieldsets.equals(selection.fieldsets);
+        && fieldsets.equals(selection.fieldsets)
+        && includeRequested == selection.includeRequested;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(includePaths, fieldsets);
+    return Objects.hash(includePaths, fieldsets, includeRequested);
   }
 
   private static Map<String, List<String>> copyFieldsets(Map<String, List<String>> fieldsets) {
@@ -84,6 +95,7 @@ public final class RepresentationSelection {
   public static final class Builder {
     private final List<IncludePath> includePaths = new java.util.ArrayList<>();
     private final Map<String, LinkedHashSet<String>> fieldsets = new LinkedHashMap<>();
+    private boolean includeRequested;
 
     private Builder() {}
 
@@ -94,7 +106,14 @@ public final class RepresentationSelection {
 
     /** Adds one already-validated include path. */
     public Builder include(IncludePath path) {
+      includeRequested = true;
       includePaths.add(Objects.requireNonNull(path, "path"));
+      return this;
+    }
+
+    /** Records an explicit include request without adding an include path. */
+    public Builder includeRequested() {
+      includeRequested = true;
       return this;
     }
 
@@ -118,14 +137,14 @@ public final class RepresentationSelection {
 
     /** Builds an immutable representation selection. */
     public RepresentationSelection build() {
-      if (includePaths.isEmpty() && fieldsets.isEmpty()) {
+      if (includePaths.isEmpty() && fieldsets.isEmpty() && !includeRequested) {
         return NONE;
       }
       Map<String, List<String>> copiedFieldsets = new LinkedHashMap<>();
       for (Map.Entry<String, LinkedHashSet<String>> entry : fieldsets.entrySet()) {
         copiedFieldsets.put(entry.getKey(), List.copyOf(entry.getValue()));
       }
-      return new RepresentationSelection(includePaths, copiedFieldsets);
+      return new RepresentationSelection(includePaths, copiedFieldsets, includeRequested);
     }
   }
 }

@@ -4,14 +4,14 @@
 
 A lightweight [JSON:API v1.1](https://jsonapi.org/) document model and validation library for
 **Java 21+**. Opt-in bidirectional flat DTO mapping, typed envelopes, Jackson 2 and Jackson 3
-Level-1 application runtimes, and presence-aware PATCH binding (low-level commands and direct typed
-PATCH DTOs) are available; query parsing and Spring adapters are planned. Compliance is tracked by
+Level-1 application runtimes, presence-aware PATCH binding (low-level commands and direct typed
+PATCH DTOs), and neutral query parsing are available; Spring adapters are planned. Compliance is tracked by
 feature and layer; the library does not claim that an application's endpoint behavior is
 automatically JSON:API compliant.
 
 ## Status
 
-**Pre-alpha.** The Gradle build, CI pipeline, architecture decisions, `jsonapi-java-core` document model and validation, `jsonapi-java-annotations`, Jackson 3 document codec and domain mapping (compound inclusion, sparse fieldsets, flat DTO binding, typed envelopes, presence-aware PATCH binding and direct typed PATCH DTO binding), Jackson 2 document codec and domain mapping (including flat DTO binding, typed envelopes, and presence-aware PATCH), configured Level-1 runtimes for both Jackson majors, and Jackson-major-neutral contracts in `jsonapi-java-jackson-api` are in place. Query parsing and Spring adapters are not started.
+**Pre-alpha.** The Gradle build, CI pipeline, architecture decisions, `jsonapi-java-core` document model and validation, `jsonapi-java-annotations`, Jackson 3 document codec and domain mapping (compound inclusion, sparse fieldsets, flat DTO binding, typed envelopes, presence-aware PATCH binding and direct typed PATCH DTO binding), Jackson 2 document codec and domain mapping (including flat DTO binding, typed envelopes, and presence-aware PATCH), configured Level-1 runtimes for both Jackson majors, Jackson-major-neutral contracts in `jsonapi-java-jackson-api`, and the optional neutral query parser are in place. Spring adapters are not started.
 
 Maven group: `io.github.kazemek`. Java packages: `io.github.kazemek.jsonapi.*`.
 
@@ -38,6 +38,7 @@ executable coverage.
 | `jsonapi-java-jackson3/`       | Jackson 3 Level-1 application runtime, document codec, domain-to-resource mapping, flat DTO reads, typed domain envelopes, and presence-aware PATCH |
 | `jsonapi-java-jackson2/`       | Jackson 2 Level-1 application runtime, document codec, domain-to-resource mapping, flat resource-to-DTO binding, typed domain envelopes, and presence-aware PATCH |
 | `jsonapi-java-jackson-api/`    | Public Jackson-major-neutral API surface: document, mapping, PATCH, representation, and diagnostic contracts; shared passive carriers and JSON/schema test fixtures via `testFixtures` |
+| `jsonapi-java-query/`          | Optional framework- and Jackson-major-neutral query-parameter parser |
 | `build-logic/`                 | Shared Gradle convention plugins                                                                 |
 | `docs/`                        | Vision, architecture overview, conformance, and architecture decision records |
 
@@ -50,7 +51,7 @@ executable coverage.
 | [`jsonapi-java-jackson3`](jsonapi-java-jackson3/README.md)       | Available | Jackson 3 document codec, annotated domain mapping, and presence-aware PATCH binding (commands and direct typed PATCH DTOs) |
 | [`jsonapi-java-jackson-api`](jsonapi-java-jackson-api/README.md)       | Available | Public Jackson-major-neutral API surface shared by Jackson 2, Jackson 3, and future framework integrations |
 | [`jsonapi-java-jackson2`](jsonapi-java-jackson2/README.md)       | Available | Jackson 2 Level-1 application runtime, validated document writer/reader, write-side domain-to-resource mapping, flat resource-to-DTO binding, typed domain envelopes, and presence-aware PATCH binding (commands and direct typed PATCH DTOs) |
-| `jsonapi-java-query`                                             | Planned   | Optional query-parameter parsing                                           |
+| [`jsonapi-java-query`](jsonapi-java-query/README.md)             | Available | Optional framework- and Jackson-major-neutral query-parameter parsing    |
 | `jsonapi-java-spring-webmvc`                                     | Planned   | Spring WebMVC transport and DTO binding over the major-neutral `JsonApi` contract |
 | `jsonapi-java-spring-webflux`                                    | Future evaluation | Separately scoped reactive adapter candidate                               |
 
@@ -65,6 +66,7 @@ not duplicate those module-specific contracts.
 - [Jackson 3 module](jsonapi-java-jackson3/README.md)
 - [Jackson 2 module](jsonapi-java-jackson2/README.md)
 - [Jackson API module](jsonapi-java-jackson-api/README.md)
+- [Query module](jsonapi-java-query/README.md)
 - [Vision](docs/vision.md) — stable product direction and principles
 - [Architecture](docs/architecture.md) — current cross-module mental model and flows
 - [Conformance checklist](docs/conformance.md) — current JSON:API 1.1 feature status
