@@ -146,11 +146,11 @@ forces an intentional re-review.
 
 `JsonApiDraftSchemaSpec` runs fully offline: the draft URI referenced by the request schemas is
 mapped to the vendored response schema, all four schema files are SHA-256-pinned, an explicit local
-table assigns the applicable corpus paths to schema kinds (response or create-resource; update kinds
-are reserved for later usage-specific cases) and validates their resource bytes, and one malformed
-control per schema kind (response, create-resource, update-resource, update-relationship) proves the
-harness rejects invalid documents. The same spec keeps explicit expected failures for the three
-documented draft-schema gaps above, so a schema change forces an intentional review.
+table assigns the applicable corpus paths to their response, create-resource, update-resource, or
+update-relationship schema kinds and validates their resource bytes, and one malformed control per
+schema kind proves the harness rejects invalid documents. The same spec keeps explicit expected
+failures for the three documented draft-schema gaps above, so a schema change forces an intentional
+review.
 
 ## Domain mapping (supported)
 
