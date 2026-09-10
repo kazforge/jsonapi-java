@@ -4,6 +4,7 @@ import io.github.kazemek.jsonapi.core.internal.AdditionalMembers;
 import io.github.kazemek.jsonapi.core.validation.LocalValidation;
 import io.github.kazemek.jsonapi.core.validation.MemberNames;
 import io.github.kazemek.jsonapi.core.validation.ValidationRuleCode;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,6 +73,21 @@ public record JsonApiDocument(
     return new JsonApiDocument(data, null, null, null, null, null, Map.of());
   }
 
+  /**
+   * Creates a document with one error object in its present {@code errors} member.
+   *
+   * <p>Delegates to {@link #withErrors(List)} so error-list validation and snapshotting remain in
+   * one construction path.
+   */
+  public static JsonApiDocument withError(ErrorObject error) {
+    return withErrors(Collections.singletonList(error));
+  }
+
+  /**
+   * Creates a document with a present {@code errors} member, including a valid present-empty array.
+   *
+   * <p>The document constructor validates and snapshots the supplied list.
+   */
   public static JsonApiDocument withErrors(List<ErrorObject> errors) {
     return new JsonApiDocument(null, errors, null, null, null, null, Map.of());
   }

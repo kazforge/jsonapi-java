@@ -28,6 +28,21 @@ class ErrorSourceSpec extends Specification {
     source.additionalMembers().isEmpty()
   }
 
+  def "builder retains pointer, parameter, header, and additional members"() {
+    when:
+    def source = ErrorSource.builder()
+        .pointer("/data")
+        .parameter("include")
+        .header("Authorization")
+        .additionalMember("ext:source", true)
+        .additionalMembers(["@ctx": "x"])
+        .build()
+
+    then:
+    source == new ErrorSource(
+        "/data", "include", "Authorization", ["ext:source": true, "@ctx": "x"])
+  }
+
   def "null pointer remains valid"() {
     when:
     def source = new ErrorSource(null, "include", null, [:])
@@ -74,5 +89,24 @@ class ErrorSourceSpec extends Specification {
       "/a~x",
       "#/data"
     ]
+  }
+
+  def "builder delegates invalid pointer validation"() {
+    when:
+    ErrorSource.builder().pointer("#/data").build()
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.INVALID_JSON_POINTER
+    ex.jsonPointer() == "/errors/source/pointer"
+  }
+
+  def "builder delegates reserved additional member validation"() {
+    when:
+    ErrorSource.builder().parameter("include").additionalMember("parameter", "duplicate").build()
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.RESERVED_FIELD_NAME
   }
 }

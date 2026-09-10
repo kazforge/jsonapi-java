@@ -22,6 +22,25 @@ new JsonApiDocumentValidator().validate(document, ValidationContext.defaults());
 
 Construct model types first (local invariants run in constructors). Call `JsonApiDocumentValidator` with a `ValidationContext` for rules that need the whole document (identity uniqueness, full linkage, extension/profile policy, and similar). For create requests use `DocumentUsage.CREATE_REQUEST`: primary data must be a single resource object whose `id` may be omitted (`id` and `lid` stay independent), and every relationship supplied on that resource must contain `data` (null, single, and collection linkage all remain valid). For update requests use `DocumentUsage.UPDATE_REQUEST`; a `withExpectedEndpointIdentity(EndpointIdentity)` context makes the validator compare the primary resource `type`+`id` against a caller-derived expected endpoint identity. Included resources are exempt from the primary-resource relationship-data rule under both write usages; otherwise existing identity and aggregate rules apply unchanged. HTTP/route derivation and mutation remain application-owned.
 
+### Error document construction
+
+```java
+JsonApiDocument document = JsonApiDocument.withError(
+    ErrorObject.builder()
+        .status("422")
+        .code("invalid")
+        .title("Invalid Attribute")
+        .detail("Title is required")
+        .source(ErrorSource.builder()
+            .pointer("/data/attributes/title")
+            .build())
+        .build());
+```
+
+`ErrorObject.builder()` and `ErrorSource.builder()` produce ordinary immutable core values, so they
+preserve the same validation and wire behavior as direct construction. The builders do not select
+HTTP responses or define application error taxonomies.
+
 ## Non-goals
 
 This module does not provide Jackson codecs, HTTP adapters, query-parameter parsing, or extension-specific semantics. Those belong in later artifacts; see [ADR-007](../docs/adr/007-module-boundaries.md).
