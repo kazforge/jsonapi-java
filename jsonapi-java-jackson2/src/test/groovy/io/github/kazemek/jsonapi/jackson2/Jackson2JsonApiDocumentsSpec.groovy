@@ -1,8 +1,13 @@
 package io.github.kazemek.jsonapi.jackson2
 
 import io.github.kazemek.jsonapi.core.model.DocumentData
+import io.github.kazemek.jsonapi.core.model.ErrorObject
+import io.github.kazemek.jsonapi.core.model.ErrorSource
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument
+import io.github.kazemek.jsonapi.core.model.Link
+import io.github.kazemek.jsonapi.core.model.Links
 import io.github.kazemek.jsonapi.core.model.Meta
+import io.github.kazemek.jsonapi.fixtures.TestFixtureResources
 import io.github.kazemek.jsonapi.fixtures.domainwrite.Article
 import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext
 import io.github.kazemek.jsonapi.jackson.representation.RepresentationPolicy
@@ -15,8 +20,16 @@ import com.fasterxml.jackson.databind.json.JsonMapper
 
 class Jackson2JsonApiDocumentsSpec extends Specification {
 
+  // The passive canonical error fixture intentionally uses this valid HTTP URI.
+  //noinspection HttpUrlsUsage
+  @SuppressWarnings("HttpUrlsUsage")
+  private static final String ERROR_ABOUT_URL = "http://example.com/docs/errors/invalid"
+
   @Shared
-  Jackson2JsonApi jsonApi = JsonApiJackson2.jsonApi(JsonMapper.builder().build())
+  JsonMapper mapper = JsonMapper.builder().build()
+
+  @Shared
+  Jackson2JsonApi jsonApi = JsonApiJackson2.jsonApi(mapper)
 
   def "reads with an explicit context and writes the raw document back"() {
     given:
@@ -64,6 +77,24 @@ class Jackson2JsonApiDocumentsSpec extends Specification {
     actual == document
   }
 
+  def "builder-produced error documents match direct construction through the public runtime"() {
+    given:
+    def built = builderErrorDocument()
+    def direct = directErrorDocument()
+    def expected = TestFixtureResources.readCorpusUtf8("documents/errors-document.json")
+
+    when:
+    def builtJson = jsonApi.documents().write(built)
+    def directJson = jsonApi.documents().write(direct)
+    def roundTrip = jsonApi.documents().read(builtJson, DocumentReadContext.resourceDefaults())
+
+    then:
+    built == direct
+    mapper.readTree(builtJson) == mapper.readTree(directJson)
+    mapper.readTree(builtJson) == mapper.readTree(expected)
+    roundTrip == direct
+  }
+
   def "configured resource version does not affect raw document writes"() {
     given:
     def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
@@ -103,5 +134,33 @@ class Jackson2JsonApiDocumentsSpec extends Specification {
     !mappedOut.closed
     !documentInput.closed
     !mappedInput.closed
+  }
+
+  private static JsonApiDocument builderErrorDocument() {
+    return JsonApiDocument.withError(
+        ErrorObject.builder()
+        .id("1")
+        .links(Links.ofLinks([about: new Link.StringLink(ERROR_ABOUT_URL)]))
+        .status("422")
+        .code("invalid")
+        .title("Invalid Attribute")
+        .detail("Title is required")
+        .source(ErrorSource.builder().pointer("/data/attributes/title").build())
+        .build())
+  }
+
+  private static JsonApiDocument directErrorDocument() {
+    return JsonApiDocument.withErrors([
+      new ErrorObject(
+      "1",
+      Links.ofLinks([about: new Link.StringLink(ERROR_ABOUT_URL)]),
+      "422",
+      "invalid",
+      "Invalid Attribute",
+      "Title is required",
+      new ErrorSource("/data/attributes/title", null, null, Map.of()),
+      null,
+      Map.of())
+    ])
   }
 }

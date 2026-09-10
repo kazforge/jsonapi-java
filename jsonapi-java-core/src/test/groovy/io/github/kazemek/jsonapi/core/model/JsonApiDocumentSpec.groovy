@@ -11,7 +11,12 @@ class JsonApiDocumentSpec extends Specification {
     given:
     def dataDocument = JsonApiDocument.withData(
         new DocumentData.SingleResource(ResourceObject.of("articles", "1")))
-    def errorsDocument = JsonApiDocument.withErrors([ErrorObject.ofTitle("fail")])
+    def error = ErrorObject.ofTitle("fail")
+    def singleErrorDocument = JsonApiDocument.withError(error)
+    def errorsDocument = JsonApiDocument.withErrors([
+      error,
+      ErrorObject.ofTitle("other")
+    ])
     def metaDocument = JsonApiDocument.withMeta(Meta.of([count: 1]))
     def includedDocument = new JsonApiDocument(
         dataDocument.data(), null, null, null, null,
@@ -23,7 +28,13 @@ class JsonApiDocumentSpec extends Specification {
     dataDocument.hasDataMember()
     !dataDocument.hasErrorsMember()
     !dataDocument.hasIncludedMember()
+    singleErrorDocument.hasErrorsMember()
+    singleErrorDocument.errors() == [error]
     errorsDocument.hasErrorsMember()
+    errorsDocument.errors() == [
+      error,
+      ErrorObject.ofTitle("other")
+    ]
     !errorsDocument.hasDataMember()
     metaDocument.meta().members().count == 1
     includedDocument.hasIncludedMember()
@@ -175,6 +186,16 @@ class JsonApiDocumentSpec extends Specification {
     def ex2 = thrown(JsonApiValidationException)
     ex2.ruleCode() == ValidationRuleCode.NULL_COLLECTION_ELEMENT
     ex2.jsonPointer() == "/included/0"
+  }
+
+  def "single-error convenience retains null error diagnostics"() {
+    when:
+    JsonApiDocument.withError(null)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.NULL_COLLECTION_ELEMENT
+    ex.jsonPointer() == "/errors/0"
   }
 
   def "error source preserves additional members"() {
