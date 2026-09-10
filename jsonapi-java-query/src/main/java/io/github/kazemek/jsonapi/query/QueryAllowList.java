@@ -55,18 +55,6 @@ public record QueryAllowList(
     return new QueryAllowList(Set.of(), Set.of(), Map.of());
   }
 
-  public Set<String> includePaths() {
-    return includePaths;
-  }
-
-  public Set<String> sortFields() {
-    return sortFields;
-  }
-
-  public Map<String, Set<String>> fieldsByResourceType() {
-    return fieldsByResourceType;
-  }
-
   /** Alias emphasizing that these are allowed include paths. */
   public Set<String> allowedIncludePaths() {
     return includePaths;
