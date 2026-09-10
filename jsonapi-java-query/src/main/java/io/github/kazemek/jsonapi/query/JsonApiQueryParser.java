@@ -29,13 +29,13 @@ public final class JsonApiQueryParser {
   private static final String FILTER = "filter";
 
   /** Parses a decoded parameter multimap without an allow-list. */
-  public JsonApiQuery parse(@Nullable Map<String, List<String>> parameters) {
+  public JsonApiQuery parse(@Nullable Map<String, ? extends List<String>> parameters) {
     return parseDecoded(parameters);
   }
 
   /** Parses a decoded parameter multimap against an exact selection allow-list. */
   public JsonApiQuery parse(
-      @Nullable Map<String, List<String>> parameters, QueryAllowList allowList) {
+      @Nullable Map<String, ? extends List<String>> parameters, QueryAllowList allowList) {
     return parseDecoded(parameters, allowList);
   }
 
@@ -50,13 +50,13 @@ public final class JsonApiQueryParser {
   }
 
   /** Parses a decoded parameter multimap without an allow-list. */
-  public JsonApiQuery parseDecoded(@Nullable Map<String, List<String>> parameters) {
+  public JsonApiQuery parseDecoded(@Nullable Map<String, ? extends List<String>> parameters) {
     return parseDecodedInternal(parameters, null);
   }
 
   /** Parses a decoded parameter multimap against an exact selection allow-list. */
   public JsonApiQuery parseDecoded(
-      @Nullable Map<String, List<String>> parameters, QueryAllowList allowList) {
+      @Nullable Map<String, ? extends List<String>> parameters, QueryAllowList allowList) {
     Objects.requireNonNull(allowList, "allowList");
     return parseDecodedInternal(parameters, allowList);
   }
@@ -125,7 +125,8 @@ public final class JsonApiQueryParser {
   }
 
   private static JsonApiQuery parseDecodedInternal(
-      @Nullable Map<String, List<String>> parameters, @Nullable QueryAllowList allowList) {
+      @Nullable Map<String, ? extends List<String>> parameters,
+      @Nullable QueryAllowList allowList) {
     if (parameters == null) {
       throw invalidShape(null, "Decoded query parameter map must not be null");
     }
@@ -291,7 +292,7 @@ public final class JsonApiQueryParser {
     for (String token : tokens) {
       boolean descending = token.startsWith("-");
       String field = descending ? token.substring(1) : token;
-      if (field.isEmpty() || !MemberNames.isValid(field)) {
+      if (!isValidSortField(field)) {
         throw queryFailure(
             QueryDiagnostic.INVALID_SORT_SYNTAX,
             SORT,
@@ -309,6 +310,18 @@ public final class JsonApiQueryParser {
       }
     }
     sortFields.addAll(parsed);
+  }
+
+  private static boolean isValidSortField(String field) {
+    if (field.isEmpty()) {
+      return false;
+    }
+    for (String segment : field.split("\\.", -1)) {
+      if (!MemberNames.isValid(segment) || isWhitespaceOnly(segment)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static @Nullable FieldsetName fieldsetName(String name) {

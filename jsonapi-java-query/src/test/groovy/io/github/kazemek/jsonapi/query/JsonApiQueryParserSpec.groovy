@@ -1,6 +1,7 @@
 package io.github.kazemek.jsonapi.query
 
 import io.github.kazemek.jsonapi.jackson.representation.IncludePath
+import groovy.transform.CompileStatic
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -53,6 +54,14 @@ class JsonApiQueryParserSpec extends Specification {
     [SortField.ascending("title")]
     parser.parse("sort=title", QueryAllowList.of(["x"] as Set, ["title"] as Set, [:])).sortFields() ==
     [SortField.ascending("title")]
+  }
+
+  def "decoded seam accepts concrete list subtype values"() {
+    given:
+    def query = parseConcreteListSubtype(parser)
+
+    expect:
+    query.sortFields() == [SortField.ascending("title")]
   }
 
   def "raw and decoded seams agree for repeats, missing equals, extra equals, and delimiters"() {
@@ -146,6 +155,8 @@ class JsonApiQueryParserSpec extends Specification {
     "include"        | ["comments..author"]   | QueryDiagnostic.INVALID_INCLUDE_SYNTAX
     "fields[articles]" | ["title,,body"]       | QueryDiagnostic.INVALID_FIELDSET_SYNTAX
     "sort"           | ["title,,created"]     | QueryDiagnostic.INVALID_SORT_SYNTAX
+    "sort"           | ["author..name"]       | QueryDiagnostic.INVALID_SORT_SYNTAX
+    "sort"           | ["-"]                  | QueryDiagnostic.INVALID_SORT_SYNTAX
     "sort"           | ["--created"]          | QueryDiagnostic.INVALID_SORT_SYNTAX
   }
 
@@ -204,6 +215,20 @@ class JsonApiQueryParserSpec extends Specification {
     def sortException = thrown(JsonApiQueryException)
     sortException.diagnostic() == QueryDiagnostic.DISALLOWED_SORT_FIELD
     sortException.parameterName() == "sort"
+  }
+
+  def "dotted sort fields preserve direction and match the full allow-list token"() {
+    given:
+    def allowList = QueryAllowList.of(
+        [] as Set,
+        ["author.name", "created.at"] as Set,
+        [:])
+
+    expect:
+    parser.parseDecoded([sort: ["author.name,-created.at"]], allowList).sortFields() == [
+      new SortField("author.name", SortDirection.ASCENDING),
+      new SortField("created.at", SortDirection.DESCENDING)
+    ]
   }
 
   @Unroll
@@ -408,5 +433,14 @@ class JsonApiQueryParserSpec extends Specification {
       new SortField("title body", SortDirection.ASCENDING),
       new SortField("created-at", SortDirection.DESCENDING)
     ]
+  }
+
+  @CompileStatic
+  private static JsonApiQuery parseConcreteListSubtype(JsonApiQueryParser parser) {
+    Map<String, ArrayList<String>> parameters = new LinkedHashMap<>()
+    def values = new ArrayList<String>()
+    values.add("title")
+    parameters.put("sort", values)
+    return parser.parseDecoded(parameters)
   }
 }
