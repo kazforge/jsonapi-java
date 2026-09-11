@@ -40,7 +40,7 @@ class JsonApiWireWriterSpec extends Specification {
     def objectLink = new Link.ObjectLink(
         'https://example.test/people/p1',
         'related',
-        'https://example.test/schema',
+        new Link.StringLink('https://example.test/schema'),
         'Author',
         'application/json',
         ['en', 'fr'],
@@ -133,6 +133,51 @@ class JsonApiWireWriterSpec extends Specification {
     tree.get('jsonapi').get('profile').get(0).asText() == 'https://example.test/profile'
     tree.get('included').size() == 1
     tree.get('@document-note').get(1).isNull()
+  }
+
+  def "writes string and recursive object describedby links while omitting an absent value"() {
+    given:
+    def stringDescription = new Link.ObjectLink(
+        'https://example.test/articles/1',
+        null,
+        new Link.StringLink('https://example.test/schemas/article'),
+        null,
+        null,
+        null,
+        null,
+        Map.of())
+    def nestedDescription = new Link.ObjectLink(
+        'https://example.test/schemas/article',
+        null,
+        new Link.StringLink('https://example.test/schemas/article-v1'),
+        null,
+        'application/schema+json',
+        null,
+        Meta.of([revision: 2]),
+        Map.of())
+    def objectDescription = new Link.ObjectLink(
+        'https://example.test/articles/2', null, nestedDescription, null, null, null, null, Map.of())
+    def absentDescription = Link.ObjectLink.ofHref('https://example.test/articles/3')
+
+    when:
+    def stringTree = readTree(writeDirect { JsonGenerator generator ->
+      JsonApiWireWriter.writeObjectLink(stringDescription, generator)
+    })
+    def objectTree = readTree(writeDirect { JsonGenerator generator ->
+      JsonApiWireWriter.writeObjectLink(objectDescription, generator)
+    })
+    def absentTree = readTree(writeDirect { JsonGenerator generator ->
+      JsonApiWireWriter.writeObjectLink(absentDescription, generator)
+    })
+
+    then:
+    stringTree.get('describedby').asText() == 'https://example.test/schemas/article'
+    objectTree.get('describedby').get('href').asText() == 'https://example.test/schemas/article'
+    objectTree.get('describedby').get('describedby').asText() ==
+        'https://example.test/schemas/article-v1'
+    objectTree.get('describedby').get('type').asText() == 'application/schema+json'
+    objectTree.get('describedby').get('meta').get('revision').asInt() == 2
+    !absentTree.has('describedby')
   }
 
   def "writes every error member and error source member"() {

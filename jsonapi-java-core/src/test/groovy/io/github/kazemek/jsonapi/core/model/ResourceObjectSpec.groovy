@@ -134,4 +134,34 @@ class ResourceObjectSpec extends Specification {
     def ex = thrown(JsonApiValidationException)
     ex.ruleCode() == ValidationRuleCode.INVALID_MEMBER_NAME
   }
+
+  def "non-at pass-through fields share the resource field namespace"() {
+    when:
+    new ResourceObject("articles", "1", null, attributes, relationships, null, null, [:])
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.MEMBER_NAME_COLLISION
+    ex.jsonPointer() == "/data/relationships/" + name
+
+    where:
+    name         | attributes                                              | relationships
+    "author"     | Attributes.ofAttributes([author: "semantic"])          | Relationships.ofRelationships([author: Relationship.metaOnly(Meta.of([count: 1]))])
+    "author"     | Attributes.ofAttributes([author: "semantic"])          | Relationships.of([:], [author: "pass-through"])
+    "author"     | Attributes.of([:], [author: "pass-through"])           | Relationships.ofRelationships([author: Relationship.metaOnly(Meta.of([count: 1]))])
+    "author"     | Attributes.of([:], [author: "attribute-pass-through"]) | Relationships.of([:], [author: "relationship-pass-through"])
+    "ext:author" | Attributes.of([:], ["ext:author": "attribute"])       | Relationships.of([:], ["ext:author": "relationship"])
+  }
+
+  def "at pass-through fields are outside the resource field namespace"() {
+    when:
+    new ResourceObject(
+        "articles", "1", null,
+        Attributes.of([:], ["@context": "attribute-context"]),
+        Relationships.of([:], ["@context": "relationship-context"]),
+        null, null, [:])
+
+    then:
+    noExceptionThrown()
+  }
 }

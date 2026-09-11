@@ -6,7 +6,11 @@ import java.io.InputStream
 import java.lang.reflect.Modifier
 import java.nio.charset.StandardCharsets
 
+import com.fasterxml.jackson.core.JsonLocation
 import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.JsonToken
+import com.fasterxml.jackson.core.util.JsonParserDelegate
 import com.fasterxml.jackson.databind.json.JsonMapper
 
 import io.github.kazemek.jsonapi.core.model.Attributes
@@ -496,6 +500,41 @@ class DocumentReaderSpec extends Specification {
     'garbage after the document' | '{"meta":{}} not-json'
   }
 
+  @Unroll
+  def "locationless malformed parser failure #position falls back to the parser cursor"() {
+    given:
+    def delegate = mapper.createParser('{"meta":{}}')
+    if (insideDocument) {
+      delegate.nextToken()
+    }
+    def parser = new MissingLocationParser(delegate)
+    def expectedLocation = parser.currentLocation()
+
+    when:
+    JsonApiJackson2.reader(mapper, resourceContext).readValue(parser)
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.category() == CodecFailureCategory.MALFORMED_JSON
+    ex.jsonPointer() == ''
+    ex.ruleCode() == null
+    ex.sourceLocation().isKnown()
+    ex.sourceLocation().lineNumber() == expectedLocation.lineNr
+    ex.sourceLocation().columnNumber() == expectedLocation.columnNr
+    ex.sourceLocation().charOffset() == expectedLocation.charOffset
+    ex.sourceLocation().byteOffset() == expectedLocation.byteOffset
+    ex.message == 'Malformed JSON'
+    ex.cause == null
+
+    cleanup:
+    parser?.close()
+
+    where:
+    position               | insideDocument
+    'before document read' | false
+    'inside document read' | true
+  }
+
   def "pass-through members inside attributes, relationships, and relationship objects decode into additional members"() {
     given:
     def context = DocumentReadContext.of(extContext(), PrimaryDataKind.RESOURCE)
@@ -578,9 +617,55 @@ class DocumentReaderSpec extends Specification {
     then:
     document.links() == Links.of(
         ['self': new Link.ObjectLink(
-          'https://example.com/', null, 'https://example.com/d', null, null, List.of('en'), null,
+          'https://example.com/', null, new Link.StringLink('https://example.com/d'), null, null,
+          List.of('en'), null,
           Map.of())] as Map,
         ['@trace': 't'] as Map)
+  }
+
+  def "object link describedby decodes string and recursive object link forms while preserving omission"() {
+    given:
+    def reader = JsonApiJackson2.reader(
+        mapper, DocumentReadContext.of(extContext(), PrimaryDataKind.RESOURCE))
+    def json = '''
+      {
+        "meta": {},
+        "links": {
+          "ext:string-description": {
+            "href": "https://example.com/articles/1",
+            "describedby": "https://example.com/schemas/article"
+          },
+          "ext:object-description": {
+            "href": "https://example.com/articles/2",
+            "describedby": {
+              "href": "https://example.com/schemas/article",
+              "describedby": "https://example.com/schemas/article-v1",
+              "type": "application/schema+json",
+              "meta": {"revision": 2}
+            }
+          },
+          "ext:no-description": {"href": "https://example.com/articles/3"}
+        }
+      }
+      '''
+
+    when:
+    def document = reader.readValue(json)
+    def links = document.links().links()
+
+    then:
+    ((Link.ObjectLink) links.get('ext:string-description')).describedby() ==
+        new Link.StringLink('https://example.com/schemas/article')
+    ((Link.ObjectLink) links.get('ext:object-description')).describedby() == new Link.ObjectLink(
+        'https://example.com/schemas/article',
+        null,
+        new Link.StringLink('https://example.com/schemas/article-v1'),
+        null,
+        'application/schema+json',
+        null,
+        Meta.of(['revision': 2]),
+        Map.of())
+    ((Link.ObjectLink) links.get('ext:no-description')).describedby() == null
   }
 
   def "document-level construction failure reports the root pointer"() {
@@ -1048,6 +1133,27 @@ class DocumentReaderSpec extends Specification {
     @Override
     int read() throws IOException {
       throw failure
+    }
+  }
+
+  private static final class MissingLocationParser extends JsonParserDelegate {
+
+    MissingLocationParser(JsonParser delegate) {
+      super(delegate)
+    }
+
+    @Override
+    JsonToken nextToken() throws IOException {
+      throw new MissingLocationException()
+    }
+  }
+
+  private static final class MissingLocationException extends JsonProcessingException {
+
+    private static final long serialVersionUID = 1L
+
+    MissingLocationException() {
+      super('synthetic parser failure', JsonLocation.NA)
     }
   }
 }

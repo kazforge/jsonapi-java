@@ -39,9 +39,14 @@ class CompoundSerializationSpec extends Specification {
   JsonApiResourceMapper mapper = JsonApiJackson2.resourceMapper(JsonMapper.builder().build())
 
   def "context-free mapping and an include policy alone omit included"() {
+    given:
+    def wireMapper = JsonMapper.builder().build()
+    def writer = JsonApiJackson2.writer(wireMapper)
+
     expect:
     mapper.toDocument(article()).included() == null
     !mapper.toDocument(article()).hasIncludedMember()
+    !wireMapper.readTree(writer.writeValueAsString(mapper.toDocument(article()))).has('included')
 
     and:
     def document = mapper.toDocument(
@@ -57,13 +62,18 @@ class CompoundSerializationSpec extends Specification {
     given:
     def selection = RepresentationSelection.builder().includeRequested().build()
     def policy = includePolicy(IncludePolicy.allowAll())
+    def wireMapper = JsonMapper.builder().build()
+    def writer = JsonApiJackson2.writer(wireMapper)
 
     when:
     def document = mapper.toDocument(article(), null, selection, policy)
+    def tree = wireMapper.readTree(writer.writeValueAsString(document))
 
     then:
     document.hasIncludedMember()
     document.included() == []
+    tree.get('included').isArray()
+    tree.get('included').isEmpty()
   }
 
   @Unroll

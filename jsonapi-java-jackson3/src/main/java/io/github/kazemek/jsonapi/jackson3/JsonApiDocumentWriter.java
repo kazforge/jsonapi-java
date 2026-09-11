@@ -7,6 +7,7 @@ import io.github.kazemek.jsonapi.core.validation.ValidationContext;
 import io.github.kazemek.jsonapi.jackson.mapping.MappedDocument;
 import java.io.FilterOutputStream;
 import java.io.FilterWriter;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.HashSet;
@@ -27,6 +28,9 @@ import tools.jackson.databind.json.JsonMapper;
  * translate mapping provenance into validation policy themselves. Every other bound setting is
  * preserved; an empty exemption set validates exactly like plain document writing. All output forms
  * share one composition path.
+ *
+ * <p>Caller-provided {@link OutputStream} and {@link Writer} sinks remain caller-owned and are
+ * never closed. The caller owns the buffering and flushing lifecycle of layers it supplies.
  */
 public final class JsonApiDocumentWriter {
 
@@ -66,7 +70,8 @@ public final class JsonApiDocumentWriter {
 
   /**
    * Validates {@code document} against the bound context, then writes it to {@code out}. The stream
-   * is not closed; only the generator created for this call is closed.
+   * remains caller-owned and is not closed; the caller owns its buffering and flushing lifecycle.
+   * Only the generator created for this call is closed.
    */
   public void writeValue(OutputStream out, JsonApiDocument document) {
     Objects.requireNonNull(out, "out");
@@ -77,7 +82,8 @@ public final class JsonApiDocumentWriter {
 
   /**
    * Validates {@code document} against the bound context, then writes it to {@code out}. The writer
-   * is not closed; only the generator created for this call is closed.
+   * remains caller-owned and is not closed; the caller owns its buffering and flushing lifecycle.
+   * Only the generator created for this call is closed.
    */
   public void writeValue(Writer out, JsonApiDocument document) {
     Objects.requireNonNull(out, "out");
@@ -86,6 +92,10 @@ public final class JsonApiDocumentWriter {
     mapper.writeValue(nonClosing(out), document);
   }
 
+  /**
+   * Validates {@code document} against the bound context, then writes it through {@code generator}.
+   * The caller owns the generator and closes it.
+   */
   public void writeValue(JsonGenerator generator, JsonApiDocument document) {
     Objects.requireNonNull(generator, "generator");
     Objects.requireNonNull(document, DOCUMENT_PARAM);
@@ -111,8 +121,9 @@ public final class JsonApiDocumentWriter {
 
   /**
    * Validates {@code mapped.document()} against the bound context composed with {@code mapped}'s
-   * sparse-fieldset linkage exemptions, then writes it to {@code out}. The stream is not closed;
-   * only the generator created for this call is closed.
+   * sparse-fieldset linkage exemptions, then writes it to {@code out}. The stream is not closed; it
+   * remains caller-owned, including its buffering and flushing lifecycle. Only the generator
+   * created for this call is closed.
    */
   public void writeValue(OutputStream out, MappedDocument mapped) {
     Objects.requireNonNull(out, "out");
@@ -121,8 +132,9 @@ public final class JsonApiDocumentWriter {
 
   /**
    * Validates {@code mapped.document()} against the bound context composed with {@code mapped}'s
-   * sparse-fieldset linkage exemptions, then writes it to {@code out}. The writer is not closed;
-   * only the generator created for this call is closed.
+   * sparse-fieldset linkage exemptions, then writes it to {@code out}. The writer is not closed; it
+   * remains caller-owned, including its buffering and flushing lifecycle. Only the generator
+   * created for this call is closed.
    */
   public void writeValue(Writer out, MappedDocument mapped) {
     Objects.requireNonNull(out, "out");
@@ -131,7 +143,8 @@ public final class JsonApiDocumentWriter {
 
   /**
    * Validates {@code mapped.document()} against the bound context composed with {@code mapped}'s
-   * sparse-fieldset linkage exemptions, then writes it through {@code generator}.
+   * sparse-fieldset linkage exemptions, then writes it through {@code generator}. The caller owns
+   * the generator and closes it.
    */
   public void writeValue(JsonGenerator generator, MappedDocument mapped) {
     Objects.requireNonNull(generator, "generator");
@@ -164,6 +177,11 @@ public final class JsonApiDocumentWriter {
    */
   private static OutputStream nonClosing(OutputStream delegate) {
     return new FilterOutputStream(delegate) {
+      @Override
+      public void write(byte[] source, int offset, int length) throws IOException {
+        out.write(source, offset, length);
+      }
+
       @Override
       public void close() {
         // Caller owns the underlying stream.

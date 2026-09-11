@@ -260,7 +260,7 @@ class JsonApiDocumentValidatorSpec extends Specification {
     noExceptionThrown()
   }
 
-  def "relationship pagination requires cardinality hint"() {
+  def "relationship pagination with absent linkage is allowed without cardinality hint"() {
     given:
     def article = new ResourceObject(
         "articles", "1", null, null,
@@ -277,11 +277,10 @@ class JsonApiDocumentValidatorSpec extends Specification {
     validator.validate(doc, ValidationContext.defaults())
 
     then:
-    def ex = thrown(JsonApiValidationException)
-    ex.ruleCode() == ValidationRuleCode.RELATIONSHIP_PAGINATION_REQUIRES_HINT
+    noExceptionThrown()
   }
 
-  def "relationship pagination passes with hint"() {
+  def "relationship pagination with absent linkage passes with TO_MANY hint"() {
     given:
     def article = new ResourceObject(
         "articles", "1", null, null,
@@ -312,7 +311,7 @@ class JsonApiDocumentValidatorSpec extends Specification {
     noExceptionThrown()
   }
 
-  def "explicit to-one pagination hint rejects pagination"() {
+  def "TO_ONE pagination hint rejects absent linkage"() {
     given:
     def article = new ResourceObject(
         "articles", "1", null, null,
@@ -342,6 +341,7 @@ class JsonApiDocumentValidatorSpec extends Specification {
     then:
     def ex = thrown(JsonApiValidationException)
     ex.ruleCode() == ValidationRuleCode.PAGINATION_REQUIRES_COLLECTION
+    ex.jsonPointer() == "/data/relationships/comments/links/first"
   }
 
   def "same relationship name with TO_MANY hint allows pagination"() {
@@ -743,6 +743,29 @@ class JsonApiDocumentValidatorSpec extends Specification {
     noExceptionThrown()
   }
 
+  def "disallowed extension member on recursive describedby object link is rejected"() {
+    given:
+    def describedby = new Link.ObjectLink(
+        "https://example.com/articles/schema", null, null, null, null, null, null,
+        ["ext:flag": true])
+    def doc = new JsonApiDocument(
+        new DocumentData.SingleResource(ResourceObject.of("articles", "1")),
+        null, null, null,
+        Links.ofLinks([
+          self: new Link.ObjectLink(
+          "https://example.com/articles/1", null, describedby, null, null, null, null, [:])
+        ]),
+        null, [:])
+
+    when:
+    validator.validate(doc, ValidationContext.defaults())
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.DISALLOWED_ADDITIONAL_MEMBER
+    ex.jsonPointer() == "/links/self/describedby/ext:flag"
+  }
+
   def "profile-permitted links-only relationship is accepted"() {
     given:
     def article = new ResourceObject(
@@ -866,6 +889,29 @@ class JsonApiDocumentValidatorSpec extends Specification {
 
     then:
     noExceptionThrown()
+  }
+
+  def "null relationship pagination is rejected"() {
+    given:
+    def article = new ResourceObject(
+        "articles", "1", null, null,
+        Relationships.ofRelationships([
+          author: new Relationship(
+          RelationshipData.NullLinkage.INSTANCE,
+          Links.ofLinks([first: new Link.StringLink("https://example.com/a?page=1")]),
+          null,
+          [:])
+        ]),
+        null, null, [:])
+    def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
+
+    when:
+    validator.validate(doc, ValidationContext.defaults())
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.PAGINATION_REQUIRES_COLLECTION
+    ex.jsonPointer() == "/data/relationships/author/links/first"
   }
 
   def "to-many linkage validates each identifier with indexed pointer"() {

@@ -21,6 +21,7 @@ import io.github.kazemek.jsonapi.core.validation.LinksContext
 import io.github.kazemek.jsonapi.core.validation.ValidationContext
 import io.github.kazemek.jsonapi.core.validation.ValidationRuleCode
 import io.github.kazemek.jsonapi.fixtures.TestFixtureResources
+import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext
 import io.github.kazemek.jsonapi.jackson.mapping.MappedDocument
 
 import spock.lang.Shared
@@ -245,6 +246,47 @@ class DocumentWriterContractSpec extends Specification {
     then:
     json.contains('"hreflang":["en"]')
     !json.contains('"hreflang":"en"')
+  }
+
+  def "round trips recursively nested object link describedby through the public codec"() {
+    given:
+    def describedby = new Link.ObjectLink(
+        'https://example.com/schemas/article',
+        null,
+        new Link.StringLink('https://example.com/schemas/article-v1'),
+        null,
+        'application/schema+json',
+        null,
+        Meta.of(['revision': 2]),
+        Map.of())
+    def document = new JsonApiDocument(
+        null,
+        null,
+        Meta.of(['count': 1]),
+        null,
+        Links.ofLinks([
+          self: new Link.ObjectLink(
+          'https://example.com/articles/1', null, describedby, null, null, null, null, Map.of())
+        ]),
+        null,
+        Map.of())
+    def writer = JsonApiJackson2.writer(mapper, ValidationContext.defaults())
+    def reader = JsonApiJackson2.reader(mapper, DocumentReadContext.resourceDefaults())
+
+    when:
+    def json = writer.writeValueAsString(document)
+    def roundTrip = reader.readValue(json)
+    def tree = mapper.readTree(json)
+
+    then:
+    tree.get('links').get('self').get('describedby').get('href').asText() ==
+        'https://example.com/schemas/article'
+    tree.get('links').get('self').get('describedby').get('describedby').asText() ==
+        'https://example.com/schemas/article-v1'
+    tree.get('links').get('self').get('describedby').get('type').asText() ==
+        'application/schema+json'
+    tree.get('links').get('self').get('describedby').get('meta').get('revision').asInt() == 2
+    roundTrip == document
   }
 
   private static ValidationContext extContext() {

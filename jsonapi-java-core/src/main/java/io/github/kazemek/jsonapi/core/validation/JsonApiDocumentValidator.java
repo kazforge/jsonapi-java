@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -794,13 +793,7 @@ public final class JsonApiDocumentValidator {
     }
     validateAdditionalMembers(links.additionalMembers(), path, context);
     for (Map.Entry<String, @Nullable Link> entry : links.links().entrySet()) {
-      if (entry.getValue() instanceof Link.ObjectLink objectLink) {
-        String linkPath = JsonPointers.child(path, entry.getKey());
-        validateAdditionalMembers(objectLink.additionalMembers(), linkPath, context);
-        if (objectLink.meta() != null) {
-          validateMeta(objectLink.meta(), linkPath + PATH_META, context);
-        }
-      }
+      validateLinkValue(entry.getValue(), JsonPointers.child(path, entry.getKey()), context);
       validateLinkEntry(
           entry.getKey(),
           path,
@@ -809,6 +802,20 @@ public final class JsonApiDocumentValidator {
           relationshipName,
           primaryData,
           relationshipData);
+    }
+  }
+
+  private void validateLinkValue(@Nullable Link link, String path, ValidationContext context) {
+    if (!(link instanceof Link.ObjectLink objectLink)) {
+      return;
+    }
+    validateAdditionalMembers(objectLink.additionalMembers(), path, context);
+    if (objectLink.meta() != null) {
+      validateMeta(objectLink.meta(), path + PATH_META, context);
+    }
+    if (objectLink.describedby() != null) {
+      validateLinkValue(
+          objectLink.describedby(), JsonPointers.child(path, JsonApiMembers.DESCRIBEDBY), context);
     }
   }
 
@@ -881,17 +888,9 @@ public final class JsonApiDocumentValidator {
       }
       return;
     }
-    Optional<RelationshipCardinality> hint =
-        resourceType == null
-            ? Optional.empty()
-            : context.relationshipPaginationHint(resourceType, relationshipName);
-    if (hint.isEmpty()) {
-      throw new JsonApiValidationException(
-          ValidationRuleCode.RELATIONSHIP_PAGINATION_REQUIRES_HINT,
-          JsonPointers.child(path, name),
-          "Relationship pagination link requires cardinality hint: " + relationshipName);
-    }
-    if (hint.get() == RelationshipCardinality.TO_ONE) {
+    if (resourceType != null
+        && context.relationshipPaginationHint(resourceType, relationshipName).orElse(null)
+            == RelationshipCardinality.TO_ONE) {
       throw paginationRequiresCollection(path, name, relationshipName);
     }
   }

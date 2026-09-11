@@ -38,20 +38,30 @@ class LinkSpec extends Specification {
     !differentAdditional.isEmpty()
   }
 
-  def "object link factory and describedby validation are covered"() {
+  def "object link factory preserves an omitted describedby link"() {
     when:
     def link = Link.ObjectLink.ofHref("https://example.com")
 
     then:
     link.href() == "https://example.com"
+    link.describedby() == null
+  }
+
+  def "object link describedby accepts string and object links recursively"() {
+    given:
+    def stringDescription = new Link.StringLink("https://example.com/schema")
+    def objectDescription = new Link.ObjectLink(
+        "https://example.com/description", null, stringDescription, null, null, null, null, [:])
 
     when:
-    new Link.ObjectLink("https://example.com", null, "bad href", null, null, null, null, [:])
+    def link = new Link.ObjectLink(
+        "https://example.com/resource", null, objectDescription, null, null, null, null, [:])
 
     then:
-    def ex = thrown(JsonApiValidationException)
-    ex.ruleCode() == ValidationRuleCode.INVALID_URI_REFERENCE
+    link.describedby() == objectDescription
+    ((Link.ObjectLink) link.describedby()).describedby() == stringDescription
   }
+
   def "hreflang canonical list representation accepts single language"() {
     when:
     def link = Link.ObjectLink.withHreflang("http://example.com", "en")

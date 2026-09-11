@@ -222,7 +222,8 @@ final class JsonApiWireWriter {
       gen.writeStringProperty(JsonApiMembers.REL, link.rel());
     }
     if (link.describedby() != null) {
-      gen.writeStringProperty(JsonApiMembers.DESCRIBEDBY, link.describedby());
+      gen.writeName(JsonApiMembers.DESCRIBEDBY);
+      writeLink(link.describedby(), gen);
     }
     if (link.title() != null) {
       gen.writeStringProperty(JsonApiMembers.TITLE, link.title());

@@ -1,7 +1,11 @@
 package io.github.kazemek.jsonapi.jackson3
 
+import java.io.IOException
+import java.io.OutputStream
+import java.io.Writer
 import java.nio.charset.StandardCharsets
 
+import tools.jackson.core.JacksonException
 import tools.jackson.databind.json.JsonMapper
 
 import io.github.kazemek.jsonapi.core.model.Attributes
@@ -197,6 +201,42 @@ class DocumentWriterSinkSpec extends Specification {
     mapper.readTree(charsOut.toString()) == expected
   }
 
+  def "non-closing OutputStream delegates bulk writes to the caller sink"() {
+    given:
+    def mapper = JsonMapper.builder().build()
+    def writer = JsonApiJackson3.writer(mapper, ValidationContext.defaults())
+    def out = new BulkOnlyOutputStream()
+
+    when:
+    writer.writeValue(out, JsonApiDocument.withMeta(Meta.of([count: 2])))
+
+    then:
+    out.bulkWriteCount() > 0
+    mapper.readTree(out.bytes()) == mapper.readTree('{"meta":{"count":2}}')
+  }
+
+  def "writer leaves caller-owned sinks open when emission fails"() {
+    given:
+    def writer = JsonApiJackson3.writer(JsonMapper.builder().build(), ValidationContext.defaults())
+    def document = JsonApiDocument.withMeta(Meta.of([count: 1]))
+    def stream = new FailingCloseTrackingOutputStream()
+    def chars = new FailingCloseTrackingWriter()
+
+    when:
+    writer.writeValue(stream, document)
+
+    then:
+    thrown(JacksonException)
+    !stream.closed
+
+    when:
+    writer.writeValue(chars, document)
+
+    then:
+    thrown(JacksonException)
+    !chars.closed
+  }
+
   def "writer leaves a caller-created JsonGenerator open for the caller to close"() {
     given:
     def mapper = JsonMapper.builder().build()
@@ -226,5 +266,65 @@ class DocumentWriterSinkSpec extends Specification {
     then:
     mapper.readTree(sink.toByteArray()) == mapper.readTree(
         '{"data":{"type":"articles","id":"1","attributes":{"title":"JSON:API paints my bikeshed!"}}}')
+  }
+
+  private static final class BulkOnlyOutputStream extends OutputStream {
+    private final ByteArrayOutputStream delegate = new ByteArrayOutputStream()
+    private int bulkWriteCount
+
+    @Override
+    void write(int value) {
+      throw new AssertionError('Expected bulk write delegation')
+    }
+
+    @Override
+    void write(byte[] source, int offset, int length) {
+      bulkWriteCount++
+      delegate.write(source, offset, length)
+    }
+
+    int bulkWriteCount() {
+      return bulkWriteCount
+    }
+
+    byte[] bytes() {
+      return delegate.toByteArray()
+    }
+  }
+
+  private static final class FailingCloseTrackingOutputStream extends OutputStream {
+    boolean closed
+
+    @Override
+    void write(int value) throws IOException {
+      throw new IOException('synthetic output failure')
+    }
+
+    @Override
+    void write(byte[] source, int offset, int length) throws IOException {
+      throw new IOException('synthetic output failure')
+    }
+
+    @Override
+    void close() {
+      closed = true
+    }
+  }
+
+  private static final class FailingCloseTrackingWriter extends Writer {
+    boolean closed
+
+    @Override
+    void write(char[] source, int offset, int length) throws IOException {
+      throw new IOException('synthetic writer failure')
+    }
+
+    @Override
+    void flush() {}
+
+    @Override
+    void close() {
+      closed = true
+    }
   }
 }
