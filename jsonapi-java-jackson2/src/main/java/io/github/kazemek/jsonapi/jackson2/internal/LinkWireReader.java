@@ -91,7 +91,7 @@ final class LinkWireReader {
   private static final class ObjectLinkDraft {
     private @Nullable String href;
     private @Nullable String rel;
-    private @Nullable String describedby;
+    private @Nullable Link describedby;
     private @Nullable String title;
     private @Nullable String type;
     private @Nullable List<String> hreflang;
@@ -103,8 +103,7 @@ final class LinkWireReader {
       switch (name) {
         case JsonApiMembers.HREF -> href = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.REL -> rel = WireTokens.readRequiredString(parser, pointer);
-        case JsonApiMembers.DESCRIBEDBY ->
-            describedby = WireTokens.readRequiredString(parser, pointer);
+        case JsonApiMembers.DESCRIBEDBY -> describedby = readLink(parser, pointer);
         case JsonApiMembers.TITLE -> title = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.TYPE -> type = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.HREFLANG -> hreflang = readHreflang(parser, pointer);
@@ -128,7 +127,7 @@ final class LinkWireReader {
       }
       String linkHref = href;
       String linkRel = rel;
-      String linkDescribedby = describedby;
+      Link linkDescribedby = describedby;
       String linkTitle = title;
       String linkType = type;
       List<String> linkHreflang = hreflang;

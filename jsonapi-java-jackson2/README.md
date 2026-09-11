@@ -112,8 +112,10 @@ writer.writeValue(generator, document);
 ```
 
 Sinks are caller-owned: an `OutputStream` or `Writer` passed to `writeValue` is not closed — only
-the generator created for the call is closed — and output is fully visible without an explicit
-flush. A caller-created `JsonGenerator` stays open for the caller to close.
+the generator created for the call is closed — and the output already emitted is visible without an
+explicit flush. A caller-created `JsonGenerator` stays open for the caller to close. The caller owns
+the buffering and flushing lifecycle of every layer it supplies, so a caller-provided
+`BufferedOutputStream` or `BufferedWriter` must be flushed by the caller.
 
 Sparse-fieldset provenance composes into the bound validation policy: writing a `MappedDocument`
 composes the mapping's linkage-exemption identities into the bound context before validation, and

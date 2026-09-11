@@ -14,8 +14,11 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Carries document usage (for example create, update, or response), allowed extension namespaces
  * and profile URIs/member names, sparse-fieldset linkage exemptions, the current links context,
- * occurrence-keyed relationship pagination hints for link-only relationships, and an optional
- * expected endpoint identity compared against {@link DocumentUsage#UPDATE_REQUEST} documents.
+ * optional occurrence-keyed relationship pagination cardinality hints, and an optional expected
+ * endpoint identity compared against {@link DocumentUsage#UPDATE_REQUEST} documents. Relationship
+ * pagination is allowed with absent or collection linkage; explicit null and single linkage are
+ * rejected, and a {@link RelationshipCardinality#TO_ONE} hint rejects pagination when linkage is
+ * absent.
  *
  * <p>Sparse-fieldset linkage exemptions name included resources whose inbound linkage was removed
  * by an applied sparse fieldset, so full-linkage validation treats those resources as reachable

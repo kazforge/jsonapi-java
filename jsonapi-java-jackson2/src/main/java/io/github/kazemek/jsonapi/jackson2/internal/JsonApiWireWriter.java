@@ -219,7 +219,11 @@ final class JsonApiWireWriter {
     gen.writeStartObject();
     writeStringMember(gen, JsonApiMembers.HREF, link.href());
     writeOptionalStringMember(gen, JsonApiMembers.REL, link.rel());
-    writeOptionalStringMember(gen, JsonApiMembers.DESCRIBEDBY, link.describedby());
+    Link describedby = link.describedby();
+    if (describedby != null) {
+      gen.writeFieldName(JsonApiMembers.DESCRIBEDBY);
+      writeLink(describedby, gen);
+    }
     writeOptionalStringMember(gen, JsonApiMembers.TITLE, link.title());
     writeOptionalStringMember(gen, JsonApiMembers.TYPE, link.type());
     if (link.hreflang() != null) {

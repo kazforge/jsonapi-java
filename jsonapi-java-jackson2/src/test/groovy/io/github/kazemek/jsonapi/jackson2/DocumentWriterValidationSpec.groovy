@@ -2,8 +2,12 @@ package io.github.kazemek.jsonapi.jackson2
 
 import com.fasterxml.jackson.databind.json.JsonMapper
 
+import io.github.kazemek.jsonapi.core.model.Attributes
 import io.github.kazemek.jsonapi.core.model.DocumentData
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument
+import io.github.kazemek.jsonapi.core.model.Relationship
+import io.github.kazemek.jsonapi.core.model.RelationshipData
+import io.github.kazemek.jsonapi.core.model.Relationships
 import io.github.kazemek.jsonapi.core.model.ResourceObject
 import io.github.kazemek.jsonapi.core.validation.JsonApiValidationException
 import io.github.kazemek.jsonapi.core.validation.ValidationRuleCode
@@ -81,6 +85,29 @@ class DocumentWriterValidationSpec extends Specification {
     def ex = thrown(JsonApiValidationException)
     ex.ruleCode() == ValidationRuleCode.DUPLICATE_RESOURCE_IDENTITY
     sink.size() == 0
+  }
+
+  def "field-namespace collisions fail before any writer output"() {
+    given:
+    def writer = JsonApiJackson2.writer(JsonMapper.builder().build())
+
+    when: 'a resource whose non-@ pass-through attribute collides with a relationship is written'
+    writer.writeValueAsString(collidingDocument())
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.MEMBER_NAME_COLLISION
+    ex.jsonPointer() == "/data/relationships/author"
+  }
+
+  private static JsonApiDocument collidingDocument() {
+    def attributes = Attributes.of([:], [author: "pass-through-attribute"])
+    def relationships = Relationships.ofRelationships([
+      author: Relationship.withData(RelationshipData.NullLinkage.INSTANCE)
+    ])
+    def resource = new ResourceObject(
+        "articles", "1", null, attributes, relationships, null, null, [:])
+    return JsonApiDocument.withData(new DocumentData.SingleResource(resource))
   }
 
   private static JsonApiDocument invalidDocument() {

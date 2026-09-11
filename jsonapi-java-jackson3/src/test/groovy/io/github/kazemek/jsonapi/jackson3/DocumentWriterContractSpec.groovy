@@ -5,6 +5,8 @@ import tools.jackson.databind.json.JsonMapper
 import io.github.kazemek.jsonapi.core.model.Attributes
 import io.github.kazemek.jsonapi.core.model.DocumentData
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument
+import io.github.kazemek.jsonapi.core.model.Link
+import io.github.kazemek.jsonapi.core.model.Links
 import io.github.kazemek.jsonapi.core.model.Meta
 import io.github.kazemek.jsonapi.core.model.Relationship
 import io.github.kazemek.jsonapi.core.model.RelationshipData
@@ -270,6 +272,42 @@ class DocumentWriterContractSpec extends Specification {
     expect:
     json.contains('"hreflang":["en"]')
     !json.contains('"hreflang":"en"')
+  }
+
+  def "reader and writer round-trip recursive describedby links"() {
+    given:
+    def baseSchema = new Link.StringLink('https://example.test/schemas/base')
+    def describedby = new Link.ObjectLink(
+        'https://example.test/schemas/article',
+        null,
+        baseSchema,
+        null,
+        'application/schema+json',
+        null,
+        Meta.of([revision: 1]),
+        Map.of())
+    def self = new Link.ObjectLink(
+        'https://example.test/articles/1', null, describedby, null, null, null, null, Map.of())
+    def document = new JsonApiDocument(
+        null, null, Meta.of([count: 1]), null, Links.ofLinks([self: self]), null, Map.of())
+    def reader = JsonApiJackson3.reader(mapper, DocumentReadContext.resourceDefaults())
+    def writer = JsonApiJackson3.writer(mapper, ValidationContext.defaults())
+
+    when:
+    def json = writer.writeValueAsString(document)
+    def tree = mapper.readTree(json)
+    def roundTrip = reader.readValue(json)
+
+    then:
+    tree.get('links').get('self').get('href').asString() == 'https://example.test/articles/1'
+    tree.get('links').get('self').get('describedby').get('href').asString() ==
+        'https://example.test/schemas/article'
+    tree.get('links').get('self').get('describedby').get('describedby').asString() ==
+        'https://example.test/schemas/base'
+    tree.get('links').get('self').get('describedby').get('type').asString() ==
+        'application/schema+json'
+    tree.get('links').get('self').get('describedby').get('meta').get('revision').asInt() == 1
+    roundTrip == document
   }
 
   private static ValidationContext extContext() {

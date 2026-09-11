@@ -31,6 +31,9 @@ import java.util.Set;
  * translate mapping provenance into validation policy themselves. Every other bound setting is
  * preserved; an empty exemption set validates exactly like plain document writing. All output forms
  * share one composition path.
+ *
+ * <p>Caller-provided {@link OutputStream} and {@link Writer} sinks remain caller-owned and are
+ * never closed. The caller owns the buffering and flushing lifecycle of layers it supplies.
  */
 public final class JsonApiDocumentWriter {
 
@@ -80,7 +83,8 @@ public final class JsonApiDocumentWriter {
 
   /**
    * Validates {@code document} against the bound context, then writes it to {@code out}. The stream
-   * is not closed; only the generator created for this call is closed.
+   * remains caller-owned and is not closed; the caller owns its buffering and flushing lifecycle.
+   * Only the generator created for this call is closed.
    *
    * @throws IOException if emission fails through Jackson 2's checked exception mechanics
    */
@@ -93,7 +97,8 @@ public final class JsonApiDocumentWriter {
 
   /**
    * Validates {@code document} against the bound context, then writes it to {@code out}. The writer
-   * is not closed; only the generator created for this call is closed.
+   * remains caller-owned and is not closed; the caller owns its buffering and flushing lifecycle.
+   * Only the generator created for this call is closed.
    *
    * @throws IOException if emission fails through Jackson 2's checked exception mechanics
    */
@@ -139,8 +144,9 @@ public final class JsonApiDocumentWriter {
 
   /**
    * Validates {@code mapped.document()} against the bound context composed with {@code mapped}'s
-   * sparse-fieldset linkage exemptions, then writes it to {@code out}. The stream is not closed;
-   * only the generator created for this call is closed.
+   * sparse-fieldset linkage exemptions, then writes it to {@code out}. The stream is not closed; it
+   * remains caller-owned, including its buffering and flushing lifecycle. Only the generator
+   * created for this call is closed.
    *
    * @throws IOException if emission fails through Jackson 2's checked exception mechanics
    */
@@ -151,8 +157,9 @@ public final class JsonApiDocumentWriter {
 
   /**
    * Validates {@code mapped.document()} against the bound context composed with {@code mapped}'s
-   * sparse-fieldset linkage exemptions, then writes it to {@code out}. The writer is not closed;
-   * only the generator created for this call is closed.
+   * sparse-fieldset linkage exemptions, then writes it to {@code out}. The writer is not closed; it
+   * remains caller-owned, including its buffering and flushing lifecycle. Only the generator
+   * created for this call is closed.
    *
    * @throws IOException if emission fails through Jackson 2's checked exception mechanics
    */

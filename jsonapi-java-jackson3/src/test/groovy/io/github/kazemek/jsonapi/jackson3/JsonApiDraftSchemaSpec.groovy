@@ -131,6 +131,24 @@ class JsonApiDraftSchemaSpec extends Specification {
     "documents/update-relationship.json"          | "updateRelationship"
   }
 
+  def "writer-produced resource response validates against the draft response schema"() {
+    given:
+    def json = JsonApiJackson3.jsonApi(mapper).resources().writeOne(
+        new LocalIdentityArticle("1", null, "Title"))
+
+    expect:
+    schemas["response"].validate(mapper.readTree(json)).isEmpty()
+  }
+
+  def "writer-produced create document validates against the draft create schema"() {
+    given:
+    def json = JsonApiJackson3.jsonApi(mapper).resources().writeCreateDocument(
+        new LocalIdentityArticle(null, "temp-1", "Draft"))
+
+    expect:
+    schemas["create"].validate(mapper.readTree(json)).isEmpty()
+  }
+
   def "writer-produced resource update matches the corpus and validates against the draft schema"() {
     given:
     def json = JsonApiJackson3.jsonApi(mapper).resources().writeUpdateDocument(

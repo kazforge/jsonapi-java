@@ -32,4 +32,11 @@ public final class ReadLocations {
             location.getByteOffset());
     return source.isKnown() ? source : SourceLocation.UNKNOWN;
   }
+
+  /** Prefers an exception location and falls back to the parser cursor when it is usable. */
+  public static SourceLocation fromOrCurrent(
+      @Nullable JsonLocation exceptionLocation, JsonParser parser) {
+    SourceLocation exceptionSource = from(exceptionLocation);
+    return exceptionSource.isKnown() ? exceptionSource : current(parser);
+  }
 }

@@ -14,8 +14,11 @@ import org.jspecify.annotations.Nullable;
  *
  * @apiNote {@link StringLink} is the string form (URI reference). {@link ObjectLink} requires
  *     {@code href} and may carry {@code rel}, {@code describedby}, {@code title}, {@code type},
- *     {@code hreflang}, {@code meta}, and additional members. {@code hreflang} is modeled as a
- *     list; codec emission of single vs array forms is deferred to the Jackson module.
+ *     {@code hreflang}, {@code meta}, and additional members. JSON:API permits a link to be an
+ *     explicit {@code null}; that state shares this model's {@code null} absence representation, so
+ *     an omitted or explicitly-null {@code describedby} is {@code null}. When present it is another
+ *     {@link Link} in string or object form. {@code hreflang} is modeled as a list; codec emission
+ *     of single vs array forms is deferred to the Jackson module.
  */
 public sealed interface Link permits Link.StringLink, Link.ObjectLink {
 
@@ -28,7 +31,7 @@ public sealed interface Link permits Link.StringLink, Link.ObjectLink {
   record ObjectLink(
       String href,
       @Nullable String rel,
-      @Nullable String describedby,
+      @Nullable Link describedby,
       @Nullable String title,
       @Nullable String type,
       @Nullable List<String> hreflang,
@@ -53,12 +56,6 @@ public sealed interface Link permits Link.StringLink, Link.ObjectLink {
             ValidationRuleCode.INVALID_LINK_RELATION,
             path() + "/rel",
             "Invalid link relation: " + rel);
-      }
-      if (describedby != null && !SyntaxValidators.isValidUriReference(describedby)) {
-        LocalValidation.fail(
-            ValidationRuleCode.INVALID_URI_REFERENCE,
-            path() + "/describedby",
-            "Invalid describedby URI: " + describedby);
       }
       if (type != null && !SyntaxValidators.isValidMediaType(type)) {
         LocalValidation.fail(

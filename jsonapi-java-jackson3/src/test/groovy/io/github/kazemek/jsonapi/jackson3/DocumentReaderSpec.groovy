@@ -2,6 +2,11 @@ package io.github.kazemek.jsonapi.jackson3
 
 import java.nio.charset.StandardCharsets
 
+import tools.jackson.core.JacksonException
+import tools.jackson.core.JsonParser
+import tools.jackson.core.JsonToken
+import tools.jackson.core.TokenStreamLocation
+import tools.jackson.core.util.JsonParserDelegate
 import tools.jackson.databind.json.JsonMapper
 
 import io.github.kazemek.jsonapi.core.model.Attributes
@@ -117,6 +122,89 @@ class DocumentReaderSpec extends Specification {
     meta.get('nullMeta') == null
   }
 
+  def "object link describedby decodes string, recursive object, and explicit-null forms while preserving omission"() {
+    given:
+    def reader = JsonApiJackson3.reader(
+        mapper, DocumentReadContext.of(extContext(), PrimaryDataKind.RESOURCE))
+    def json = '''
+      {
+        "meta": {},
+        "links": {
+          "ext:string-description": {
+            "href": "https://example.test/articles/1",
+            "describedby": "https://example.test/schemas/article"
+          },
+          "ext:object-description": {
+            "href": "https://example.test/articles/2",
+            "describedby": {
+              "href": "https://example.test/schemas/article",
+              "describedby": "https://example.test/schemas/article-v1",
+              "type": "application/schema+json",
+              "meta": {"revision": 2}
+            }
+          },
+          "ext:null-description": {
+            "href": "https://example.test/articles/3",
+            "describedby": null
+          },
+          "ext:no-description": {"href": "https://example.test/articles/4"}
+        }
+      }
+      '''
+
+    when:
+    def document = reader.readValue(json)
+    def links = document.links().links()
+
+    then:
+    ((Link.ObjectLink) links.get('ext:string-description')).describedby() ==
+        new Link.StringLink('https://example.test/schemas/article')
+    ((Link.ObjectLink) links.get('ext:object-description')).describedby() == new Link.ObjectLink(
+        'https://example.test/schemas/article',
+        null,
+        new Link.StringLink('https://example.test/schemas/article-v1'),
+        null,
+        'application/schema+json',
+        null,
+        Meta.of([revision: 2]),
+        Map.of())
+    ((Link.ObjectLink) links.get('ext:null-description')).describedby() == null
+    ((Link.ObjectLink) links.get('ext:no-description')).describedby() == null
+  }
+
+  def "pass-through members inside attributes, relationships, and relationship objects decode into additional members"() {
+    given:
+    def json = '''
+      {
+        "data": {
+          "type": "articles",
+          "id": "1",
+          "attributes": {"title": "Hello", "ext:note": 1, "@flag": true},
+          "relationships": {
+            "author": {
+              "data": {"type": "people", "id": "9"},
+              "ext:rel": "r"
+            },
+            "ext:peer": {"a": 1}
+          }
+        }
+      }
+      '''
+    def context = DocumentReadContext.of(extContext(), PrimaryDataKind.RESOURCE)
+
+    when:
+    def document = JsonApiJackson3.reader(mapper, context).readValue(json)
+    def resource = (document.data() as DocumentData.SingleResource).resource()
+
+    then:
+    resource.attributes().attributes() == [title: 'Hello']
+    resource.attributes().additionalMembers() == ['ext:note': 1, '@flag': true]
+    def author = resource.relationships().relationships().get('author')
+    author.data() == new RelationshipData.SingleLinkage(ResourceIdentifier.of('people', '9'))
+    author.additionalMembers() == ['ext:rel': 'r']
+    resource.relationships().additionalMembers() == ['ext:peer': [a: 1]]
+  }
+
   def "all read sources decode one representative document equivalently"() {
     given:
     def json = readCorpusText('documents/single-resource.json')
@@ -140,6 +228,41 @@ class DocumentReaderSpec extends Specification {
 
     cleanup:
     parser?.close()
+  }
+
+  @Unroll
+  def "locationless malformed parser failure #position falls back to the parser cursor"() {
+    given:
+    def delegate = mapper.createParser('{"meta":{}}')
+    if (insideDocument) {
+      delegate.nextToken()
+    }
+    def parser = new MissingLocationParser(delegate)
+    def expectedLocation = parser.currentLocation()
+
+    when:
+    JsonApiJackson3.reader(mapper, resourceContext).readValue(parser)
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.category() == CodecFailureCategory.MALFORMED_JSON
+    ex.jsonPointer() == ''
+    ex.ruleCode() == null
+    ex.sourceLocation().isKnown()
+    ex.sourceLocation().lineNumber() == expectedLocation.getLineNr()
+    ex.sourceLocation().columnNumber() == expectedLocation.getColumnNr()
+    ex.sourceLocation().charOffset() == expectedLocation.getCharOffset()
+    ex.sourceLocation().byteOffset() == expectedLocation.getByteOffset()
+    ex.message == 'Malformed JSON'
+    ex.cause == null
+
+    cleanup:
+    parser?.close()
+
+    where:
+    position               | insideDocument
+    'before document read' | false
+    'inside document read' | true
   }
 
   def "ambiguous case #description decodes under both PrimaryDataKind values"() {
@@ -770,6 +893,25 @@ class DocumentReaderSpec extends Specification {
 
     boolean isClosed() {
       return closed
+    }
+  }
+
+  private static final class MissingLocationParser extends JsonParserDelegate {
+
+    MissingLocationParser(JsonParser delegate) {
+      super(delegate)
+    }
+
+    @Override
+    JsonToken nextToken() {
+      throw new MissingLocationException()
+    }
+  }
+
+  private static final class MissingLocationException extends JacksonException {
+
+    MissingLocationException() {
+      super('synthetic parser failure', TokenStreamLocation.NA, null)
     }
   }
 }

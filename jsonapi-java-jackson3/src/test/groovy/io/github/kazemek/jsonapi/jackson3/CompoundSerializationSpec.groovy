@@ -1,5 +1,6 @@
 package io.github.kazemek.jsonapi.jackson3
 
+import io.github.kazemek.jsonapi.core.model.DocumentData
 import io.github.kazemek.jsonapi.core.model.JsonApiDocument
 import io.github.kazemek.jsonapi.jackson.diagnostic.JsonApiMappingException
 import io.github.kazemek.jsonapi.jackson.diagnostic.MappingDiagnostic
@@ -39,31 +40,61 @@ class CompoundSerializationSpec extends Specification {
   JsonApiResourceMapper mapper = JsonApiJackson3.resourceMapper(JsonMapper.builder().build())
 
   def "context-free mapping and an include policy alone omit included"() {
-    expect:
-    mapper.toDocument(article()).included() == null
-    !mapper.toDocument(article()).hasIncludedMember()
-
-    and:
-    def document = mapper.toDocument(
+    given:
+    def wireMapper = JsonMapper.builder().build()
+    def writer = JsonApiJackson3.writer(wireMapper)
+    def contextFree = mapper.toDocument(article())
+    def policyOnly = mapper.toDocument(
         article(),
         null,
         RepresentationSelection.none(),
         includePolicy(IncludePolicy.allowAll()))
-    document.included() == null
-    !document.hasIncludedMember()
+
+    expect:
+    contextFree.included() == null
+    !contextFree.hasIncludedMember()
+    !wireMapper.readTree(writer.writeValueAsString(contextFree)).has('included')
+
+    and:
+    policyOnly.included() == null
+    !policyOnly.hasIncludedMember()
   }
 
   def "explicit empty include request writes an empty included member"() {
     given:
     def selection = RepresentationSelection.builder().includeRequested().build()
     def policy = includePolicy(IncludePolicy.allowAll())
+    def wireMapper = JsonMapper.builder().build()
+    def writer = JsonApiJackson3.writer(wireMapper)
 
     when:
     def document = mapper.toDocument(article(), null, selection, policy)
+    def tree = wireMapper.readTree(writer.writeValueAsString(document))
 
     then:
     document.hasIncludedMember()
     document.included() == []
+    tree.get('included').isArray()
+    tree.get('included').isEmpty()
+  }
+
+  def "compound inclusion uses the configured external relationship name"() {
+    given:
+    def article = new DecorationFixtures.RenamedRelationshipArticle(
+        '1', 'Title', [
+          new DecorationFixtures.Comment('c1', 'First!', null)
+        ], null)
+    def selection = RepresentationSelection.builder().include(IncludePath.of('article-comments')).build()
+    def policy = includePolicy(
+        IncludePolicy.allowing(Set.of(RelationshipAllowance.of('articles', 'article-comments'))))
+
+    when:
+    def document = mapper.toDocument(article, null, selection, policy)
+    def primary = (document.data() as DocumentData.SingleResource).resource()
+
+    then:
+    primary.relationships().relationships().containsKey('article-comments')
+    assertIncluded(document, [['comments', 'c1']])
   }
 
   @Unroll

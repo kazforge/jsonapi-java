@@ -1,6 +1,6 @@
 package io.github.kazemek.jsonapi.core.validation;
 
-/** Explicit cardinality for link-only relationship pagination hints. */
+/** Optional cardinality hint for relationship pagination when linkage is absent. */
 public enum RelationshipCardinality {
   TO_ONE,
   TO_MANY

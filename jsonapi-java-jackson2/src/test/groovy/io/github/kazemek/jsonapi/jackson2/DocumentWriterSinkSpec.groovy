@@ -1,5 +1,8 @@
 package io.github.kazemek.jsonapi.jackson2
 
+import java.io.IOException
+import java.io.OutputStream
+import java.io.Writer
 import java.nio.charset.StandardCharsets
 
 import com.fasterxml.jackson.databind.json.JsonMapper
@@ -226,5 +229,67 @@ class DocumentWriterSinkSpec extends Specification {
     then:
     mapper.readTree(sink.toByteArray()) == mapper.readTree(
         '{"data":{"type":"articles","id":"1","attributes":{"title":"JSON:API paints my bikeshed!"}}}')
+  }
+
+  def "writer leaves caller-owned sinks open when emission fails"() {
+    given:
+    def writer = JsonApiJackson2.writer(JsonMapper.builder().build(), ValidationContext.defaults())
+    def document = JsonApiDocument.withMeta(Meta.of([count: 2]))
+    def stream = new FailingCloseTrackingOutputStream()
+    def chars = new FailingCloseTrackingWriter()
+
+    when:
+    writer.writeValue(stream, document)
+
+    then:
+    thrown(IOException)
+    !stream.closed
+
+    when:
+    writer.writeValue(chars, document)
+
+    then:
+    thrown(IOException)
+    !chars.closed
+  }
+
+  private static final class FailingCloseTrackingOutputStream extends OutputStream {
+
+    boolean closed
+
+    @Override
+    void write(int value) throws IOException {
+      throw new IOException('sink failure')
+    }
+
+    @Override
+    void write(byte[] values, int offset, int length) throws IOException {
+      throw new IOException('sink failure')
+    }
+
+    @Override
+    void close() {
+      closed = true
+    }
+  }
+
+  private static final class FailingCloseTrackingWriter extends Writer {
+
+    boolean closed
+
+    @Override
+    void write(char[] values, int offset, int length) throws IOException {
+      throw new IOException('sink failure')
+    }
+
+    @Override
+    void flush() {
+      // No buffered state: this double fails on write before any flush path is exercised.
+    }
+
+    @Override
+    void close() {
+      closed = true
+    }
   }
 }

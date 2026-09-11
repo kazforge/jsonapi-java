@@ -1,6 +1,7 @@
 package io.github.kazemek.jsonapi.core.model;
 
 import io.github.kazemek.jsonapi.core.internal.AdditionalMembers;
+import io.github.kazemek.jsonapi.core.internal.JsonPointers;
 import io.github.kazemek.jsonapi.core.validation.LocalValidation;
 import io.github.kazemek.jsonapi.core.validation.MemberNames;
 import io.github.kazemek.jsonapi.core.validation.ValidationRuleCode;
@@ -9,7 +10,13 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/** A JSON:API resource object. */
+/**
+ * A JSON:API resource object.
+ *
+ * <p>Attributes and relationships share one field namespace. Semantic members and non-{@code @}
+ * pass-through members cannot use the same name; {@code @}-prefixed pass-through members remain
+ * outside that namespace. Extension and profile authorization remains aggregate-validator policy.
+ */
 public record ResourceObject(
     String type,
     @Nullable String id,
@@ -68,6 +75,9 @@ public record ResourceObject(
     return null;
   }
 
+  // NullAway misreads ResourceIdentifier's type-use @Nullable on class-path inputs during
+  // incremental compiles; the component types are identical and the conversion is safe.
+  @SuppressWarnings("NullAway")
   public ResourceIdentifier toIdentifier() {
     return new ResourceIdentifier(type, id, lid, meta, additionalMembers);
   }
@@ -85,12 +95,23 @@ public record ResourceObject(
       return;
     }
     for (String name : attributes.attributes().keySet()) {
-      if (relationships.relationships().containsKey(name)) {
-        LocalValidation.fail(
-            ValidationRuleCode.MEMBER_NAME_COLLISION,
-            "/data",
-            "Attribute and relationship name collision: " + name);
-      }
+      validateAttributeFieldName(name, relationships);
+    }
+    for (String name : attributes.additionalMembers().keySet()) {
+      validateAttributeFieldName(name, relationships);
+    }
+  }
+
+  private static void validateAttributeFieldName(String name, Relationships relationships) {
+    if (MemberNames.isAtMember(name)) {
+      return;
+    }
+    if (relationships.relationships().containsKey(name)
+        || relationships.additionalMembers().containsKey(name)) {
+      LocalValidation.fail(
+          ValidationRuleCode.MEMBER_NAME_COLLISION,
+          JsonPointers.child("/data/relationships", name),
+          "Attribute and relationship name collision: " + name);
     }
   }
 }

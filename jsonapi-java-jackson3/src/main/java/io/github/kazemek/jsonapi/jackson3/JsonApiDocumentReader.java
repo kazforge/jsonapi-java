@@ -101,7 +101,7 @@ public final class JsonApiDocumentReader {
     } catch (JsonApiValidationException ex) {
       throw wrapValidation(CodecFailureCategory.LOCAL_VALIDATION, ex, locations, parser);
     } catch (JacksonException ex) {
-      throw wrapJackson(ex);
+      throw wrapJackson(ex, parser);
     }
     try {
       validator.validate(document, context.validationContext());
@@ -109,7 +109,11 @@ public final class JsonApiDocumentReader {
       throw wrapValidation(CodecFailureCategory.AGGREGATE_VALIDATION, ex, locations, parser);
     }
     if (requireEof) {
-      requireEndOfInput(parser);
+      try {
+        requireEndOfInput(parser);
+      } catch (JacksonException ex) {
+        throw wrapJackson(ex, parser);
+      }
     }
     return document;
   }
@@ -163,6 +167,14 @@ public final class JsonApiDocumentReader {
         CodecFailureCategory.MALFORMED_JSON,
         "",
         ReadLocations.from(ex.getLocation()),
+        "Malformed JSON");
+  }
+
+  private static JsonApiDocumentReadException wrapJackson(JacksonException ex, JsonParser parser) {
+    return new JsonApiDocumentReadException(
+        CodecFailureCategory.MALFORMED_JSON,
+        "",
+        ReadLocations.fromOrCurrent(ex.getLocation(), parser),
         "Malformed JSON");
   }
 

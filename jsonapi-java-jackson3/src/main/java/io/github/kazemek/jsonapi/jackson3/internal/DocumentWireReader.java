@@ -56,7 +56,7 @@ final class DocumentWireReader {
       throw new JsonApiDocumentReadException(
           CodecFailureCategory.MALFORMED_JSON,
           pointer.path(),
-          ReadLocations.from(ex.getLocation()),
+          ReadLocations.fromOrCurrent(ex.getLocation(), parser),
           "Malformed JSON");
     }
   }
