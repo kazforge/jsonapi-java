@@ -68,16 +68,6 @@ final class LinkWireReader {
     throw WireTokens.unexpectedToken(token, "null, string, or object for link", pointer, parser);
   }
 
-  private static Link readRequiredLink(JsonParser parser, JsonPointerAccumulator pointer)
-      throws IOException {
-    Link link = readLink(parser, pointer);
-    if (link == null) {
-      throw WireTokens.unexpectedToken(
-          parser.currentToken(), "string or object for describedby", pointer, parser);
-    }
-    return link;
-  }
-
   static Link.ObjectLink readObjectLink(JsonParser parser, JsonPointerAccumulator pointer)
       throws IOException {
     ObjectLinkDraft draft = new ObjectLinkDraft();
@@ -126,6 +116,17 @@ final class LinkWireReader {
           WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
         }
       }
+    }
+
+    /** Reads a present nested link for {@code describedby}; explicit null is rejected. */
+    private static Link readRequiredLink(JsonParser parser, JsonPointerAccumulator pointer)
+        throws IOException {
+      Link link = readLink(parser, pointer);
+      if (link == null) {
+        throw WireTokens.unexpectedToken(
+            parser.currentToken(), "string or object for describedby", pointer, parser);
+      }
+      return link;
     }
 
     Link.ObjectLink build(JsonPointerAccumulator pointer) {

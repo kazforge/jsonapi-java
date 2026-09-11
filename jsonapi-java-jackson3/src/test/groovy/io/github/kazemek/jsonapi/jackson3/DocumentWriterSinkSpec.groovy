@@ -320,7 +320,9 @@ class DocumentWriterSinkSpec extends Specification {
     }
 
     @Override
-    void flush() {}
+    void flush() {
+      // No buffered state: this double fails on write before any flush path is exercised.
+    }
 
     @Override
     void close() {
