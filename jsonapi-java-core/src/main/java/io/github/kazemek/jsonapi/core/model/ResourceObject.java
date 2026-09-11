@@ -75,6 +75,9 @@ public record ResourceObject(
     return null;
   }
 
+  // NullAway misreads ResourceIdentifier's type-use @Nullable on class-path inputs during
+  // incremental compiles; the component types are identical and the conversion is safe.
+  @SuppressWarnings("NullAway")
   public ResourceIdentifier toIdentifier() {
     return new ResourceIdentifier(type, id, lid, meta, additionalMembers);
   }
