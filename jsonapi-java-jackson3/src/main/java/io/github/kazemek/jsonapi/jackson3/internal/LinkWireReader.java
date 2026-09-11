@@ -98,7 +98,7 @@ final class LinkWireReader {
       switch (name) {
         case JsonApiMembers.HREF -> href = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.REL -> rel = WireTokens.readRequiredString(parser, pointer);
-        case JsonApiMembers.DESCRIBEDBY -> describedby = readRequiredLink(parser, pointer);
+        case JsonApiMembers.DESCRIBEDBY -> describedby = readLink(parser, pointer);
         case JsonApiMembers.TITLE -> title = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.TYPE -> type = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.HREFLANG -> hreflang = readHreflang(parser, pointer);
@@ -111,16 +111,6 @@ final class LinkWireReader {
           WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
         }
       }
-    }
-
-    /** Reads a present nested link for {@code describedby}; explicit null is rejected. */
-    private static Link readRequiredLink(JsonParser parser, JsonPointerAccumulator pointer) {
-      return switch (readLink(parser, pointer)) {
-        case null ->
-            throw WireTokens.unexpectedToken(
-                parser.currentToken(), "string or object for describedby", pointer, parser);
-        case Link link -> link;
-      };
     }
 
     Link.ObjectLink build(JsonPointerAccumulator pointer) {

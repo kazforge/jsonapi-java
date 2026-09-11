@@ -14,10 +14,11 @@ import org.jspecify.annotations.Nullable;
  *
  * @apiNote {@link StringLink} is the string form (URI reference). {@link ObjectLink} requires
  *     {@code href} and may carry {@code rel}, {@code describedby}, {@code title}, {@code type},
- *     {@code hreflang}, {@code meta}, and additional members. Its omitted {@code describedby}
- *     member is {@code null}; when present it is another {@link Link}, allowing string and object
- *     forms recursively. {@code hreflang} is modeled as a list; codec emission of single vs array
- *     forms is deferred to the Jackson module.
+ *     {@code hreflang}, {@code meta}, and additional members. JSON:API permits a link to be an
+ *     explicit {@code null}; that state shares this model's {@code null} absence representation, so
+ *     an omitted or explicitly-null {@code describedby} is {@code null}. When present it is another
+ *     {@link Link} in string or object form. {@code hreflang} is modeled as a list; codec emission
+ *     of single vs array forms is deferred to the Jackson module.
  */
 public sealed interface Link permits Link.StringLink, Link.ObjectLink {
 

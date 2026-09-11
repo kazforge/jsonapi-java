@@ -623,7 +623,7 @@ class DocumentReaderSpec extends Specification {
         ['@trace': 't'] as Map)
   }
 
-  def "object link describedby decodes string and recursive object link forms while preserving omission"() {
+  def "object link describedby decodes string, recursive object, and explicit-null forms while preserving omission"() {
     given:
     def reader = JsonApiJackson2.reader(
         mapper, DocumentReadContext.of(extContext(), PrimaryDataKind.RESOURCE))
@@ -644,7 +644,11 @@ class DocumentReaderSpec extends Specification {
               "meta": {"revision": 2}
             }
           },
-          "ext:no-description": {"href": "https://example.com/articles/3"}
+          "ext:null-description": {
+            "href": "https://example.com/articles/3",
+            "describedby": null
+          },
+          "ext:no-description": {"href": "https://example.com/articles/4"}
         }
       }
       '''
@@ -665,6 +669,7 @@ class DocumentReaderSpec extends Specification {
         null,
         Meta.of(['revision': 2]),
         Map.of())
+    ((Link.ObjectLink) links.get('ext:null-description')).describedby() == null
     ((Link.ObjectLink) links.get('ext:no-description')).describedby() == null
   }
 
