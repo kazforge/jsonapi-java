@@ -358,9 +358,6 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
     def plainKey = ResourceTypeRegistry.builder()
         .register("direct-articles", DirectlyTypedArticle)
         .build()
-    def overrideBase = JsonMapper.builder()
-        .addMixIn(DirectlyTypedArticle, OverridingTypeMixin)
-        .build()
     def overrideKey = ResourceTypeRegistry.builder()
         .register("override-articles", DirectlyTypedArticle)
         .build()
@@ -427,7 +424,6 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
 
   def "domain reader rejects a registry key that disagrees with its configured metadata"() {
     given:
-    def plainMapper = JsonMapper.builder().build()
     def overrideMapper = JsonMapper.builder()
         .addMixIn(DirectlyTypedArticle, OverridingTypeMixin)
         .build()
@@ -451,9 +447,6 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
   def "domain reader rejects the reverse configured disagreement eagerly"() {
     given:
     def plainMapper = JsonMapper.builder().build()
-    def overrideMapper = JsonMapper.builder()
-        .addMixIn(DirectlyTypedArticle, OverridingTypeMixin)
-        .build()
     def registry = ResourceTypeRegistry.builder()
         .register("override-articles", DirectlyTypedArticle)
         .build()
@@ -471,7 +464,6 @@ class ConfiguredResourceMetadataAuthoritySpec extends Specification {
 
   def "domain reader accepts distinct equivalent mappers and still binds"() {
     given:
-    def registryMapper = JsonMapper.builder().build()
     def readerMapper = JsonMapper.builder().build()
     def registry = ResourceTypeRegistry.builder()
         .register("direct-flat-articles", MixinFlatArticleWithDirectType)

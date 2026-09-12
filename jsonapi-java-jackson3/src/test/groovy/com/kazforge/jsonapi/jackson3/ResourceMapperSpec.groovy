@@ -245,18 +245,6 @@ class ResourceMapperSpec extends Specification {
         Map.of())
   }
 
-  private static ResourceObject articleWithSetResource() {
-    return new ResourceObject(
-        ARTICLES,
-        "1",
-        null,
-        Attributes.ofAttributes(singleAttribute(TITLE, "T")),
-        Relationships.ofRelationships(Map.of(TAGS, relationship(tagsLinkage()))),
-        null,
-        null,
-        Map.of())
-  }
-
   private static Map<String, Relationship> articleRelationships(
       RelationshipData authorLinkage, RelationshipData commentsLinkage) {
     Map<String, Relationship> relationships = new LinkedHashMap<>()
@@ -281,14 +269,6 @@ class ResourceMapperSpec extends Specification {
     List<ResourceIdentifier> identifiers = new ArrayList<>(comments.size())
     for (Comment comment : comments) {
       identifiers.add(new ResourceIdentifier(COMMENTS, comment.id(), null, null, Map.of()))
-    }
-    return new RelationshipData.IdentifierCollectionLinkage(identifiers)
-  }
-
-  private static RelationshipData tagsLinkage() {
-    List<ResourceIdentifier> identifiers = new ArrayList<>(TAGS_SET.size())
-    for (Tag tag : TAGS_SET) {
-      identifiers.add(new ResourceIdentifier(TAGS, tag.name(), null, null, Map.of()))
     }
     return new RelationshipData.IdentifierCollectionLinkage(identifiers)
   }
