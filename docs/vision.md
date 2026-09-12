@@ -90,8 +90,8 @@ The base model preserves valid extension members and `@` members. It does not im
 ## Modules
 
 Optional adapters are separate artifacts ([ADR-007](adr/007-module-boundaries.md)). Maven group is
-`io.github.kazemek`; Java packages live under `io.github.kazemek.jsonapi` (see
-[ADR-008](adr/008-public-namespace.md)).
+`com.kazforge`; Java packages live under `com.kazforge.jsonapi` (see
+[ADR-021](adr/021-kazforge-namespace.md)).
 
 Current inventory and capability live in the [root README](../README.md) and each module README.
 Planned modules appear in that registry; they have no usable entry points until implemented.

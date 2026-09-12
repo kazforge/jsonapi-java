@@ -7,49 +7,49 @@ integrations.
 
 | Package                                         | Role                                                                 |
 |-------------------------------------------------|----------------------------------------------------------------------|
-| `io.github.kazemek.jsonapi.jackson.document`    | Major-neutral JSON:API document read/write contract values           |
-| `io.github.kazemek.jsonapi.jackson.mapping`     | Application/domain mapping contracts                                 |
-| `io.github.kazemek.jsonapi.jackson.patch`       | Major-neutral PATCH state and change contracts                       |
-| `io.github.kazemek.jsonapi.jackson.representation` | Representation shaping and inclusion/fieldset contracts           |
-| `io.github.kazemek.jsonapi.jackson.diagnostic`  | Stable mapping/codec diagnostics and failure locations               |
-| `io.github.kazemek.jsonapi.jackson.api`         | Level-1 application operation contract: `JsonApi` root plus resources, relationships, documents, and patches facets with option/result values |
-| `io.github.kazemek.jsonapi.jackson.internal..`  | Unsupported Jackson-free implementation helpers shared by the adapters; not a supported API |
+| `com.kazforge.jsonapi.jackson.document`    | Major-neutral JSON:API document read/write contract values           |
+| `com.kazforge.jsonapi.jackson.mapping`     | Application/domain mapping contracts                                 |
+| `com.kazforge.jsonapi.jackson.patch`       | Major-neutral PATCH state and change contracts                       |
+| `com.kazforge.jsonapi.jackson.representation` | Representation shaping and inclusion/fieldset contracts           |
+| `com.kazforge.jsonapi.jackson.diagnostic`  | Stable mapping/codec diagnostics and failure locations               |
+| `com.kazforge.jsonapi.jackson.api`         | Level-1 application operation contract: `JsonApi` root plus resources, relationships, documents, and patches facets with option/result values |
+| `com.kazforge.jsonapi.jackson.internal..`  | Unsupported Jackson-free implementation helpers shared by the adapters; not a supported API |
 
 Conceptual layout:
 
 ```text
-io.github.kazemek.jsonapi.jackson.api
+com.kazforge.jsonapi.jackson.api
     Level-1 application operations (JsonApi root plus
     resources/relationships/documents/patches facets)
 
-io.github.kazemek.jsonapi.jackson.document
+com.kazforge.jsonapi.jackson.document
     document contracts
 
-io.github.kazemek.jsonapi.jackson.mapping
+com.kazforge.jsonapi.jackson.mapping
     domain/mapping contracts
 
-io.github.kazemek.jsonapi.jackson.patch
+com.kazforge.jsonapi.jackson.patch
     PATCH contracts
 
-io.github.kazemek.jsonapi.jackson.representation
+com.kazforge.jsonapi.jackson.representation
     representation shaping
 
-io.github.kazemek.jsonapi.jackson.diagnostic
+com.kazforge.jsonapi.jackson.diagnostic
     diagnostics
 
-io.github.kazemek.jsonapi.jackson.internal..
+com.kazforge.jsonapi.jackson.internal..
     unsupported adapter-cooperation helpers
 ```
 
 ## Level-1 application contract
 
 Ordinary application code uses the neutral operation contract in
-`io.github.kazemek.jsonapi.jackson.api` rather than coordinating capability phases
+`com.kazforge.jsonapi.jackson.api` rather than coordinating capability phases
 directly:
 
 ```java
-import io.github.kazemek.jsonapi.jackson.api.JsonApi;
-import io.github.kazemek.jsonapi.jackson.api.ResourceWriteOptions;
+import com.kazforge.jsonapi.jackson.api.JsonApi;
+import com.kazforge.jsonapi.jackson.api.ResourceWriteOptions;
 
 JsonApi api = /* major-specific implementation, supplied separately, e.g. Jackson 2 or 3 */;
 ArticleDto article = api.resources().readOne(json, ArticleDto.class);
@@ -73,13 +73,13 @@ This module has no standalone entry points. Consumers use it through a Jackson a
 
 ```java
 // Jackson 2 and Jackson 3 consume the same neutral contracts:
-import io.github.kazemek.jsonapi.jackson.document.DocumentReadContext;
-import io.github.kazemek.jsonapi.jackson.representation.IncludePath;
-import io.github.kazemek.jsonapi.jackson.representation.IncludePolicy;
-import io.github.kazemek.jsonapi.jackson.representation.RepresentationPolicy;
-import io.github.kazemek.jsonapi.jackson.representation.RepresentationSelection;
-import io.github.kazemek.jsonapi.jackson.patch.PatchCommand;
-import io.github.kazemek.jsonapi.jackson.patch.PatchPresence;
+import com.kazforge.jsonapi.jackson.document.DocumentReadContext;
+import com.kazforge.jsonapi.jackson.representation.IncludePath;
+import com.kazforge.jsonapi.jackson.representation.IncludePolicy;
+import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy;
+import com.kazforge.jsonapi.jackson.representation.RepresentationSelection;
+import com.kazforge.jsonapi.jackson.patch.PatchCommand;
+import com.kazforge.jsonapi.jackson.patch.PatchPresence;
 
 DocumentReadContext context = DocumentReadContext.resourceDefaults();
 RepresentationSelection selection =
@@ -136,7 +136,7 @@ path only; Level-1 homogeneous reads remain registry-free.
 
 The `java-test-fixtures` variant contains passive, Jackson-major-neutral DTO carriers and the
 canonical JSON:API corpus and pinned draft-schema resources used by adapter tests. The small
-`io.github.kazemek.jsonapi.fixtures.TestFixtureResources` type only loads those classpath resources.
+`com.kazforge.jsonapi.fixtures.TestFixtureResources` type only loads those classpath resources.
 Behavioral cases, policy tables, diagnostics, and assertions remain owned by each adapter's local
 specifications; this module does not provide shared test orchestration or scenario catalogs.
 
@@ -146,7 +146,7 @@ This module does not share Jackson-bound readers, writers, mapping introspection
 binders, module registration, or mapper factories; there is no runtime major detection and no
 lowest-common-denominator Jackson abstraction. Jackson 2 and Jackson 3 remain separately compiled
 artifacts; see [ADR-007](../docs/adr/007-module-boundaries.md). It does contain a small
-`io.github.kazemek.jsonapi.jackson.internal..` namespace of Jackson-free implementation helpers
+`com.kazforge.jsonapi.jackson.internal..` namespace of Jackson-free implementation helpers
 used by both adapters. Those Java-public types are unsupported adapter-cooperation details and must
 not appear in supported public signatures; [ADR-020](../docs/adr/020-jackson-neutral-implementation-helpers.md)
 defines that boundary.

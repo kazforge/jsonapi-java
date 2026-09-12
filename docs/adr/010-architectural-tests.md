@@ -15,42 +15,42 @@ JSpecify (`org.jspecify.annotations`) is an intentional compile-only exception (
 - Enforce package and type dependency rules with [ArchUnit](https://www.archunit.org/) as a **`testImplementation`** dependency on library modules whose boundaries cannot be expressed by the compiler or Gradle. ArchUnit must never appear on the published runtime classpath.
 - ArchUnit is the project-wide architectural test tool—not core-only. New modules add ArchUnit rules alongside their production packages only when they have a package or type boundary that cannot be enforced by the compiler or Gradle; dependency-free modules without such a boundary do not require ArchUnit. Do not reinvent coupling checks with classpath or source-import scanners.
 - Current allowlists:
-  - `io.github.kazemek.jsonapi.jackson..` (jackson-api) → `java..`, `org.jspecify.annotations..`,
-    `io.github.kazemek.jsonapi.core.model..`, `io.github.kazemek.jsonapi.core.validation..`, and
-    other `io.github.kazemek.jsonapi.jackson..` types. Production sources must not depend on
+  - `com.kazforge.jsonapi.jackson..` (jackson-api) → `java..`, `org.jspecify.annotations..`,
+    `com.kazforge.jsonapi.core.model..`, `com.kazforge.jsonapi.core.validation..`, and
+    other `com.kazforge.jsonapi.jackson..` types. Production sources must not depend on
     `core.internal`, on either Jackson major (`tools.jackson..`, `com.fasterxml.jackson..`), or on
     a major-specific adapter package (`jackson2..`, `jackson3..`).
-  - `io.github.kazemek.jsonapi.jackson3..` → `java..`, `org.jspecify.annotations..`,
-    `io.github.kazemek.jsonapi.core.model..`, `io.github.kazemek.jsonapi.core.validation..`,
-    `io.github.kazemek.jsonapi.annotation..`, `io.github.kazemek.jsonapi.jackson..`,
-    `io.github.kazemek.jsonapi.jackson3..`, and
+  - `com.kazforge.jsonapi.jackson3..` → `java..`, `org.jspecify.annotations..`,
+    `com.kazforge.jsonapi.core.model..`, `com.kazforge.jsonapi.core.validation..`,
+    `com.kazforge.jsonapi.annotation..`, `com.kazforge.jsonapi.jackson..`,
+    `com.kazforge.jsonapi.jackson3..`, and
     `tools.jackson..`. Production sources must not depend on
-    `io.github.kazemek.jsonapi.core.internal..` or `com.fasterxml.jackson..`.
-  - `io.github.kazemek.jsonapi.fixtures..` (passive carriers and the one neutral resource loader in
+    `com.kazforge.jsonapi.core.internal..` or `com.fasterxml.jackson..`.
+  - `com.kazforge.jsonapi.fixtures..` (passive carriers and the one neutral resource loader in
     the Jackson API test-fixtures source set) → `java..`,
-    `org.jspecify.annotations..`, `io.github.kazemek.jsonapi.annotation..`,
-    `io.github.kazemek.jsonapi.core.model..`, `io.github.kazemek.jsonapi.jackson..`, other
-    `io.github.kazemek.jsonapi.fixtures..` types, and `com.fasterxml.jackson.annotation..`. This
+    `org.jspecify.annotations..`, `com.kazforge.jsonapi.annotation..`,
+    `com.kazforge.jsonapi.core.model..`, `com.kazforge.jsonapi.jackson..`, other
+    `com.kazforge.jsonapi.fixtures..` types, and `com.fasterxml.jackson.annotation..`. This
     stricter sub-allowlist is the structural boundary for shared fixtures. `TestFixtureResources`
     is the sole explicitly authorized executable exception: it may provide neutral classpath access
     to the corpus and schemas using only the JDK and JSpecify. Scenario catalogs, descriptors,
     invariant services, and other executable support remain outside this package. The Jackson 3
     architecture suite imports the test-fixtures variant and enforces this allowlist.
 - Major-specific Jackson 2 allowlist (when registered):
-  - `io.github.kazemek.jsonapi.jackson2..` → JDK, JSpecify, core public packages, annotations,
+  - `com.kazforge.jsonapi.jackson2..` → JDK, JSpecify, core public packages, annotations,
     module-owned types, and `com.fasterxml.jackson..`; never Jackson 3 or another module's
     internals. Must not depend on `core.internal`.
 - Query allowlist:
-  - `io.github.kazemek.jsonapi.query..` → JDK, JSpecify, other query types,
-    `io.github.kazemek.jsonapi.core.validation.MemberNames`, and
-    `io.github.kazemek.jsonapi.jackson.representation..`. It has no Jackson-major or framework
+  - `com.kazforge.jsonapi.query..` → JDK, JSpecify, other query types,
+    `com.kazforge.jsonapi.core.validation.MemberNames`, and
+    `com.kazforge.jsonapi.jackson.representation..`. It has no Jackson-major or framework
     dependency and does not depend on core internals.
 - Spring modules record their exact framework package allowlists when those modules are registered.
   Spring may use public core, annotation, Jackson 3, and query contracts; no lower layer may
   acquire Spring types.
 - Gradle continues to own artifact selection and publication; ArchUnit owns package/type coupling that Gradle cannot express.
 - Changing an allowlist requires updating this ADR.
-- Sibling modules must not depend on `io.github.kazemek.jsonapi.core.internal..`. That ban is
+- Sibling modules must not depend on `com.kazforge.jsonapi.core.internal..`. That ban is
   enforced for `jsonapi-java-jackson3` and `jsonapi-java-jackson-api` and must be added when
   further sibling modules register.
 - Major-specific adapters must not re-declare public top-level contracts that live in

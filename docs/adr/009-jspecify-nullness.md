@@ -17,7 +17,7 @@ Competing annotation sets (JSR-305, JetBrains, Checker Framework) fragment tooli
 - Keep sealed wire-null variants (`DocumentData.NullData`, relationship linkage null variants, and similar). Do not represent explicit JSON `null` as a bare `@Nullable` reference where a sealed type already exists.
 - Keep runtime construction checks; annotations document contracts, they do not replace them.
 - Depend on `org.jspecify:jspecify` as **`compileOnly`** in the shared library convention plugin so published core artifacts remain free of third-party runtime dependencies. CLASS-retention metadata stays in bytecode.
-- Enforce nullness on Java `main` sources with Error Prone and NullAway (JSpecify mode) for packages under `io.github.kazemek.jsonapi`. Do not require Groovy/Spock test sources to be annotated.
+- Enforce nullness on Java `main` sources with Error Prone and NullAway (JSpecify mode) for packages under `com.kazforge.jsonapi`. Do not require Groovy/Spock test sources to be annotated.
 - Teach agents via ADR, module README agent notes, `AGENTS.md`, and existing skill checklists. Do not add Cursor rules or a dedicated jspecify skill.
 
 ## Consequences

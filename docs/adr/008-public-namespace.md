@@ -1,7 +1,13 @@
 # ADR-008: Public Namespace and Maven Group
 
-**Status:** Accepted  
+**Status:** Superseded by [ADR-021](021-kazforge-namespace.md)
 **Date:** 2026-07-26
+
+## Supersession
+
+This ADR is superseded by [ADR-021](021-kazforge-namespace.md). Its decision and evidence below
+preserve the former namespace selection as historical migration evidence; they do not define the
+current public packages or Maven coordinates.
 
 ## Context
 

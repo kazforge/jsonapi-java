@@ -16,10 +16,10 @@ presence-aware PATCH binding.
 
 | Package                                        | Role                                                                  |
 |------------------------------------------------|-----------------------------------------------------------------------|
-| `io.github.kazemek.jsonapi.jackson2`           | Public Level-1 configured runtime (`Jackson2JsonApi`), codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, token-driven `JsonApiDocumentReader`, `JsonApiResourceMapper` for domain-to-resource mapping, `JsonApiResourceBinder` for validated flat resource-to-DTO binding, `JsonApiDomainDocumentReader` / `JsonApiDomainDocument` for advanced typed envelopes, and `JsonApiPatchCommandReader` / `JsonApiPatchDtoReader` for presence-aware PATCH |
-| `io.github.kazemek.jsonapi.jackson2.internal`  | Streaming document serializer, wire emission, token-driven wire decoding, the mapping engine, PATCH binding, and module registration; not public API |
-| `io.github.kazemek.jsonapi.jackson.{api,document,mapping,patch,representation,diagnostic}` | Supported Jackson-major-neutral API contracts in `jsonapi-java-jackson-api` |
-| `io.github.kazemek.jsonapi.jackson.internal..` | Unsupported Jackson-free implementation helpers shared with this adapter; not public API |
+| `com.kazforge.jsonapi.jackson2`           | Public Level-1 configured runtime (`Jackson2JsonApi`), codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, token-driven `JsonApiDocumentReader`, `JsonApiResourceMapper` for domain-to-resource mapping, `JsonApiResourceBinder` for validated flat resource-to-DTO binding, `JsonApiDomainDocumentReader` / `JsonApiDomainDocument` for advanced typed envelopes, and `JsonApiPatchCommandReader` / `JsonApiPatchDtoReader` for presence-aware PATCH |
+| `com.kazforge.jsonapi.jackson2.internal`  | Streaming document serializer, wire emission, token-driven wire decoding, the mapping engine, PATCH binding, and module registration; not public API |
+| `com.kazforge.jsonapi.jackson.{api,document,mapping,patch,representation,diagnostic}` | Supported Jackson-major-neutral API contracts in `jsonapi-java-jackson-api` |
+| `com.kazforge.jsonapi.jackson.internal..` | Unsupported Jackson-free implementation helpers shared with this adapter; not public API |
 
 Validation policy, read policy, mapping policy, contexts, provenance values, diagnostics
 (`ValidationContext`, `DocumentReadContext`, `RepresentationSelection`, `RepresentationPolicy`,

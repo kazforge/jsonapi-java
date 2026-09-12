@@ -20,7 +20,7 @@ lowest-common-denominator abstraction.
 
 Keep one implementation of the neutral helper state in the existing
 `jsonapi-java-jackson-api` artifact, under the unsupported namespace
-`io.github.kazemek.jsonapi.jackson.internal..`. Do not create another Gradle module, Maven artifact,
+`com.kazforge.jsonapi.jackson.internal..`. Do not create another Gradle module, Maven artifact,
 public facade, parser abstraction, mapper abstraction, or traversal SPI. The classes are Java-public
 only so the two adapter modules can cooperate across artifact boundaries; they are not supported
 application API and must not occur in supported public signatures.
@@ -49,7 +49,7 @@ and runtime types do not cross into the shared implementation packages.
 ## Supported API boundary
 
 The supported Jackson API packages remain `api`, `document`, `mapping`, `patch`, `representation`,
-and `diagnostic` under `io.github.kazemek.jsonapi.jackson`. The `internal` namespace is excluded
+and `diagnostic` under `com.kazforge.jsonapi.jackson`. The `internal` namespace is excluded
 from that description. Architectural tests enforce both sides of the boundary:
 
 - `jackson-api` remains free of Jackson-major imports and checks supported public constructors,

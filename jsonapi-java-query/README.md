@@ -8,7 +8,7 @@ opaque ordered values, and retains other parameters for application policy.
 
 | Package | Role |
 |---------|------|
-| `io.github.kazemek.jsonapi.query` | Immutable parsed query values, exact allow-lists, and stable query diagnostics |
+| `com.kazforge.jsonapi.query` | Immutable parsed query values, exact allow-lists, and stable query diagnostics |
 
 ## Minimal usage
 

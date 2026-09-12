@@ -14,16 +14,16 @@ objects.
 
 | Package                                        | Role                                                                  |
 |------------------------------------------------|-----------------------------------------------------------------------|
-| `io.github.kazemek.jsonapi.jackson3`           | Public Level-1 configured runtime (`Jackson3JsonApi`), writer/reader/mapper/binder/PATCH factories, and validate-then-codec entry points |
-| `io.github.kazemek.jsonapi.jackson3.internal`  | Streaming serializers/decoders, mapping engine, module registration; not public API |
-| `io.github.kazemek.jsonapi.jackson.{api,document,mapping,patch,representation,diagnostic}` | Supported Jackson-major-neutral API contracts in `jsonapi-java-jackson-api` |
-| `io.github.kazemek.jsonapi.jackson.internal..` | Unsupported Jackson-free implementation helpers shared with this adapter; not public API |
+| `com.kazforge.jsonapi.jackson3`           | Public Level-1 configured runtime (`Jackson3JsonApi`), writer/reader/mapper/binder/PATCH factories, and validate-then-codec entry points |
+| `com.kazforge.jsonapi.jackson3.internal`  | Streaming serializers/decoders, mapping engine, module registration; not public API |
+| `com.kazforge.jsonapi.jackson.{api,document,mapping,patch,representation,diagnostic}` | Supported Jackson-major-neutral API contracts in `jsonapi-java-jackson-api` |
+| `com.kazforge.jsonapi.jackson.internal..` | Unsupported Jackson-free implementation helpers shared with this adapter; not public API |
 
 Codec and mapping policy, contexts, diagnostics, domain envelope values, and presence-aware update
 commands (`DocumentReadContext`, `RepresentationSelection`, `RepresentationPolicy`, `IncludePath`,
 `IncludePolicy`, `FieldPolicy`, `MappedDocument`, `IdentifierConverter`, `DomainData`, `IncludedResources`,
 `PatchCommand`, `PatchChange`, and the failure types) live in the Jackson-major-neutral API
-packages `io.github.kazemek.jsonapi.jackson.api`, `document`, `mapping`, `patch`, `representation`,
+packages `com.kazforge.jsonapi.jackson.api`, `document`, `mapping`, `patch`, `representation`,
 and `diagnostic` and are imported from `jsonapi-java-jackson-api`; this module holds only the
 Jackson 3-bound runtime, factories, readers, writers, and binders.
 

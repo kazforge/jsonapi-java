@@ -13,7 +13,7 @@ automatically JSON:API compliant.
 
 **Pre-alpha.** The Gradle build, CI pipeline, architecture decisions, `jsonapi-java-core` document model and validation, `jsonapi-java-annotations`, Jackson 3 document codec and domain mapping (compound inclusion, sparse fieldsets, flat DTO binding, typed envelopes, presence-aware PATCH binding and direct typed PATCH DTO binding), Jackson 2 document codec and domain mapping (including flat DTO binding, typed envelopes, and presence-aware PATCH), configured Level-1 runtimes for both Jackson majors, Jackson-major-neutral contracts in `jsonapi-java-jackson-api`, and the optional neutral query parser are in place. Spring adapters are not started.
 
-Maven group: `io.github.kazemek`. Java packages: `io.github.kazemek.jsonapi.*`.
+Maven group: `com.kazforge`. Java packages: `com.kazforge.jsonapi.*`.
 
 ## Requirements
 

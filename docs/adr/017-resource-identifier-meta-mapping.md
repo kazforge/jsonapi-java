@@ -36,7 +36,7 @@ Introduce an opt-in, Jackson-major-neutral wrapper:
 public record RelationshipLinkage<T, M>(T target, @Nullable M meta) {}
 ```
 
-in `jsonapi-java-jackson-api` (`io.github.kazemek.jsonapi.jackson.mapping`). The wrapper represents one
+in `jsonapi-java-jackson-api` (`com.kazforge.jsonapi.jackson.mapping`). The wrapper represents one
 relationship linkage occurrence. Applications that do not need identifier meta keep ordinary
 relationship shapes unchanged.
 
