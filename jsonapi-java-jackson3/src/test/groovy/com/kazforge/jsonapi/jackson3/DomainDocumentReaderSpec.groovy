@@ -770,7 +770,6 @@ class DomainDocumentReaderSpec extends Specification {
 
   def "domain reader checks an unused registration eagerly"() {
     given:
-    def base = JsonMapper.builder().build()
     def overrideMapper = JsonMapper.builder()
         .addMixIn(FlatArticle, OverrideArticlesMixin)
         .build()
@@ -794,7 +793,6 @@ class DomainDocumentReaderSpec extends Specification {
 
   def "all domain reader factory forms enforce registry coherence"() {
     given:
-    def base = JsonMapper.builder().build()
     def overrideMapper = JsonMapper.builder()
         .addMixIn(FlatArticle, OverrideArticlesMixin)
         .build()

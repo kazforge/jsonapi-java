@@ -139,7 +139,9 @@ class PropertyScopedValueConverterSpec extends Specification {
 
   static class EmptyNullSerializer extends ValueSerializer<Object> {
     @Override
-    void serialize(Object value, JsonGenerator generator, SerializationContext context) {}
+    void serialize(Object value, JsonGenerator generator, SerializationContext context) {
+      // Intentionally emits nothing: this null serializer models a property that stays omitted.
+    }
   }
 
   static class DecimalSerializer extends ValueSerializer<BigDecimal> {
