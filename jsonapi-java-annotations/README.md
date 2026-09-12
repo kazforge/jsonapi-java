@@ -6,7 +6,7 @@ Runtime-visible, dependency-free annotations that declare JSON:API resource, ide
 
 | Package                                | Role                                                                    |
 |----------------------------------------|-------------------------------------------------------------------------|
-| `io.github.kazemek.jsonapi.annotation` | Public annotation API (`@JsonApiResource`, id, local id, attribute, relationship, meta, relationship meta) |
+| `com.kazforge.jsonapi.annotation` | Public annotation API (`@JsonApiResource`, id, local id, attribute, relationship, meta, relationship meta) |
 
 ## Minimal usage
 
@@ -38,7 +38,7 @@ This module does not provide Jackson codecs, document model types, inclusion/fet
 - [ADR-004 — Jackson introspection](../docs/adr/004-jackson-integration.md)
 - [ADR-005 — Linkage vs inclusion](../docs/adr/005-domain-mapping-and-inclusion.md)
 - [ADR-007 — Module boundaries](../docs/adr/007-module-boundaries.md)
-- [ADR-008 — Public namespace](../docs/adr/008-public-namespace.md)
+- [ADR-021 — KazForge namespace](../docs/adr/021-kazforge-namespace.md)
 - [ADR-009 — JSpecify nullness](../docs/adr/009-jspecify-nullness.md)
 - [ADR-010 — Architectural tests](../docs/adr/010-architectural-tests.md)
 - [ADR-015 — Flat whole-object mapping for resource-side meta](../docs/adr/015-flat-whole-object-meta-mapping.md)

@@ -13,7 +13,7 @@ lives in [`docs/architecture.md`](../architecture.md). Stable product direction 
 5. [ADR-005: Separate Linkage from Inclusion](005-domain-mapping-and-inclusion.md)
 6. [ADR-006: Document-First Deserialization](006-read-boundary.md)
 7. [ADR-007: Optional Adapter Modules](007-module-boundaries.md)
-8. [ADR-008: Public Namespace and Maven Group](008-public-namespace.md)
+8. [ADR-008: Public Namespace and Maven Group](008-public-namespace.md) (superseded by ADR-021)
 9. [ADR-009: JSpecify Nullness](009-jspecify-nullness.md)
 10. [ADR-010: Architectural Tests for Module Boundaries](010-architectural-tests.md)
 11. [ADR-011: Flat DTO Reads Remain Document-First](011-flat-dto-read-binding.md)
@@ -26,3 +26,4 @@ lives in [`docs/architecture.md`](../architecture.md). Stable product direction 
 18. [ADR-018: Ordinary Domain Relationships Remain Linkage-Oriented](018-relationship-data-presence-in-domain-mapping.md)
 19. [ADR-019: Major-Neutral Level-1 Application API Contract](019-level-one-application-api-contract.md)
 20. [ADR-020: Jackson-Neutral Implementation Helpers](020-jackson-neutral-implementation-helpers.md)
+21. [ADR-021: KazForge Namespace and Maven Group](021-kazforge-namespace.md) (supersedes ADR-008)

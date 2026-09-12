@@ -6,9 +6,9 @@ Zero-dependency Java representation of [JSON:API v1.1](https://jsonapi.org/) doc
 
 | Package                                     | Role                                                               |
 |---------------------------------------------|--------------------------------------------------------------------|
-| `io.github.kazemek.jsonapi.core.model`      | Immutable document model (resources, relationships, links, errors) |
-| `io.github.kazemek.jsonapi.core.validation` | Aggregate validator, validation context, stable rule codes         |
-| `io.github.kazemek.jsonapi.core.internal`   | Shared helpers; not a public API surface                           |
+| `com.kazforge.jsonapi.core.model`      | Immutable document model (resources, relationships, links, errors) |
+| `com.kazforge.jsonapi.core.validation` | Aggregate validator, validation context, stable rule codes         |
+| `com.kazforge.jsonapi.core.internal`   | Shared helpers; not a public API surface                           |
 
 ## Minimal usage
 

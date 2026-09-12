@@ -10,7 +10,7 @@
   fixed coverage floor to match current coverage or make CI pass. Address failures with meaningful
   tests unless the user explicitly authorizes a policy change.
 - Run one spec with `./gradlew :<module>:test --tests '<spec FQCN>'`, for example
-  `./gradlew :jsonapi-java-core:test --tests 'io.github.kazemek.jsonapi.core.validation.UpdateRequestValidationSpec'`.
+  `./gradlew :jsonapi-java-core:test --tests 'com.kazforge.jsonapi.core.validation.UpdateRequestValidationSpec'`.
   Ordinary incremental and scoped test execution is the default once task inputs are correct;
   do not use `--rerun-tasks` as routine workflow.
 - `clean` alone does not prove tests re-executed rather than being restored from the build

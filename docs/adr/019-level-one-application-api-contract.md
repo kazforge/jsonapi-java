@@ -56,14 +56,14 @@ parity.
 
 ## Architecture
 
-The contract lives in `io.github.kazemek.jsonapi.jackson.api` and is owned by
+The contract lives in `com.kazforge.jsonapi.jackson.api` and is owned by
 `jsonapi-java-jackson-api`. Jackson 3 (later Jackson 2) implements it in its adapter
 module; Spring eventually depends only on this neutral contract.
 
 ```mermaid
 flowchart TB
   subgraph neutral["jsonapi-java-jackson-api"]
-    API["Level-1 operation contract<br/>io.github.kazemek.jsonapi.jackson.api"]
+    API["Level-1 operation contract<br/>com.kazforge.jsonapi.jackson.api"]
     VALS["Neutral values<br/>document, mapping, patch, representation, diagnostic"]
   end
   J3["Jackson 3 adapter<br/>implements the contract"]

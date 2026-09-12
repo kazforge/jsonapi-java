@@ -17,7 +17,7 @@ Use these module boundaries:
 - `jsonapi-java-jackson-api`: public Jackson-major-neutral API surface for codec and
   domain-mapping policy, diagnostics, contexts, domain envelope values, presence-aware
   update-command values, and the Level-1 application operation contract
-  (`io.github.kazemek.jsonapi.jackson.api`: root `JsonApi` plus resources,
+   (`com.kazforge.jsonapi.jackson.api`: root `JsonApi` plus resources,
   relationships, documents, and patches facets with their option/result values), with no
   runtime dependency on either Jackson major and no Jackson-mechanics abstraction;
   [ADR-019](019-level-one-application-api-contract.md) owns that operation contract;
@@ -34,7 +34,7 @@ Use these module boundaries:
 Spring modules depend on the lower layers they adapt. The first WebMVC adapter targets Jackson 3;
 Jackson 2 remains usable without Spring integration. Lower layers never depend on Spring.
 
-Package and Maven coordinates use the verified namespace in ADR-008 (`io.github.kazemek` / `io.github.kazemek.jsonapi`).
+Package and Maven coordinates use the permanent namespace in ADR-021 (`com.kazforge` / `com.kazforge.jsonapi`).
 
 ## Consequences
 

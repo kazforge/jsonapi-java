@@ -75,7 +75,7 @@ Shared test fixtures live in the Jackson API `java-test-fixtures` source set as 
 
 The `jsonapi-java-jackson-api` artifact also carries a deliberately small,
 Jackson-major-neutral implementation namespace under
-`io.github.kazemek.jsonapi.jackson.internal..`. Its Java-public classes exist only so the Jackson 2
+`com.kazforge.jsonapi.jackson.internal..`. Its Java-public classes exist only so the Jackson 2
 and Jackson 3 adapters can share neutral bookkeeping without introducing another artifact. The
 namespace is unsupported application API and may not appear in supported public signatures.
 
@@ -158,7 +158,7 @@ capability methods retain their checked I/O contracts.
 
 ## Level-1 application contract
 
-The neutral `io.github.kazemek.jsonapi.jackson.api` package is the ordinary application
+The neutral `com.kazforge.jsonapi.jackson.api` package is the ordinary application
 path above those capability seams. The `JsonApi` root exposes four facets — `JsonApiResources`
 (strict homogeneous reads, single/collection writes, create/update authoring),
 `JsonApiRelationships` (to-one/null/to-many linkage documents), `JsonApiDocuments`
