@@ -73,7 +73,10 @@ This module has no standalone entry points. Consumers use it through a Jackson a
 
 ```java
 // Jackson 2 and Jackson 3 consume the same neutral contracts:
+import com.kazforge.jsonapi.core.validation.PrimaryDataContext;
+import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.document.DocumentReadContext;
+import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
 import com.kazforge.jsonapi.jackson.representation.IncludePath;
 import com.kazforge.jsonapi.jackson.representation.IncludePolicy;
 import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy;
@@ -82,6 +85,10 @@ import com.kazforge.jsonapi.jackson.patch.PatchCommand;
 import com.kazforge.jsonapi.jackson.patch.PatchPresence;
 
 DocumentReadContext context = DocumentReadContext.resourceDefaults();
+// Relationship endpoints compose identifier decoding with the relationship endpoint role:
+DocumentReadContext relationship = DocumentReadContext.of(
+    ValidationContext.defaults().withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP),
+    PrimaryDataKind.RESOURCE_IDENTIFIER);
 RepresentationSelection selection =
     RepresentationSelection.builder().include(IncludePath.of("comments.author")).build();
 RepresentationPolicy policy =
@@ -89,6 +96,13 @@ RepresentationPolicy policy =
 PatchCommand<ArticleDto> command = /* from JsonApiJackson3.patchCommandReader(...).readValue(...) */;
 PatchPresence<String> title = /* from an ArticlePatchDto member after patchDtoReader binding */;
 ```
+
+Decoding kind (`PrimaryDataKind`) and endpoint role (`PrimaryDataContext`, carried via
+`ValidationContext`) are independent axes: the former selects resource-object versus identifier
+decoding, the latter declares whether primary data represents ordinary resources or relationship
+linkage. The generic `DocumentReadContext.identifierDefaults()` retains the ordinary resource
+role; the Level-1 relationship operations in both Jackson adapters explicitly compose identifier
+decoding with the relationship role instead.
 
 Types here are values only: policies (`IncludePolicy`, `FieldPolicy`, allowance keys), read/write
 contexts (`DocumentReadContext`, `DocumentEnvelope`,

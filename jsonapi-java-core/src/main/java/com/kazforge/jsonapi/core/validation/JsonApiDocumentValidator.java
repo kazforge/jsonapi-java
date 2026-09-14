@@ -35,6 +35,15 @@ import org.jspecify.annotations.Nullable;
  * extension/profile member policy according to the supplied {@link ValidationContext}. Identity
  * uniqueness is representation-strict and alias-aware for identifier collections after
  * document-wide id↔lid binding.
+ *
+ * <p>Operation ({@link DocumentUsage}), endpoint role ({@link PrimaryDataContext}), resource
+ * occurrence (primary data versus relationship linkage versus included resources), cardinality (the
+ * sealed {@code DocumentData} variant), and link location ({@link LinksContext}) are separate axes.
+ * Create and update primary-data shape rules, primary relationship-data requirements, and update
+ * endpoint-identity comparison apply only to create/update operations on ordinary resource
+ * endpoints with primary-data resource occurrences; relationship endpoints accept linkage primary
+ * data and add no resource-shape rules in this increment. Create identity leniency (an omittable
+ * resource {@code id}) still applies document-wide until the separate identity rule narrows it.
  */
 public final class JsonApiDocumentValidator {
 
@@ -55,7 +64,8 @@ public final class JsonApiDocumentValidator {
       validateLinks(
           document.links(),
           PATH_LINKS,
-          context.withLinksContext(LinksContext.TOP_LEVEL),
+          context,
+          LinksContext.TOP_LEVEL,
           null,
           null,
           document.data(),
@@ -65,17 +75,19 @@ public final class JsonApiDocumentValidator {
       validateErrors(document.errors(), context);
     }
     if (document.data() == null) {
-      if (context.documentUsage() == DocumentUsage.UPDATE_REQUEST) {
-        throw new JsonApiValidationException(
-            ValidationRuleCode.UPDATE_REQUIRES_SINGLE_RESOURCE,
-            PATH_DATA,
-            "Update request requires primary data as a single resource object");
-      }
-      if (context.documentUsage() == DocumentUsage.CREATE_REQUEST) {
-        throw new JsonApiValidationException(
-            ValidationRuleCode.CREATE_REQUIRES_SINGLE_RESOURCE,
-            PATH_DATA,
-            "Create request requires primary data as a single resource object");
+      if (context.primaryDataContext() == PrimaryDataContext.RESOURCE) {
+        if (context.documentUsage() == DocumentUsage.UPDATE_REQUEST) {
+          throw new JsonApiValidationException(
+              ValidationRuleCode.UPDATE_REQUIRES_SINGLE_RESOURCE,
+              PATH_DATA,
+              "Update request requires primary data as a single resource object");
+        }
+        if (context.documentUsage() == DocumentUsage.CREATE_REQUEST) {
+          throw new JsonApiValidationException(
+              ValidationRuleCode.CREATE_REQUIRES_SINGLE_RESOURCE,
+              PATH_DATA,
+              "Create request requires primary data as a single resource object");
+        }
       }
     } else {
       validatePrimaryData(document.data(), context);
@@ -98,14 +110,25 @@ public final class JsonApiDocumentValidator {
     if (data == null) {
       return;
     }
-    if (context.documentUsage() == DocumentUsage.UPDATE_REQUEST
+    if (context.primaryDataContext() == PrimaryDataContext.RELATIONSHIP
+        && (data instanceof DocumentData.SingleResource
+            || data instanceof DocumentData.ResourceCollection)) {
+      throw new JsonApiValidationException(
+          ValidationRuleCode.PRIMARY_DATA_CONTEXT_MISMATCH,
+          PATH_DATA,
+          "Relationship endpoint requires linkage primary data, not resource objects");
+    }
+    boolean resourceEndpoint = context.primaryDataContext() == PrimaryDataContext.RESOURCE;
+    if (resourceEndpoint
+        && context.documentUsage() == DocumentUsage.UPDATE_REQUEST
         && !(data instanceof DocumentData.SingleResource)) {
       throw new JsonApiValidationException(
           ValidationRuleCode.UPDATE_REQUIRES_SINGLE_RESOURCE,
           PATH_DATA,
           "Update request requires primary data as a single resource object");
     }
-    if (context.documentUsage() == DocumentUsage.CREATE_REQUEST
+    if (resourceEndpoint
+        && context.documentUsage() == DocumentUsage.CREATE_REQUEST
         && !(data instanceof DocumentData.SingleResource)) {
       throw new JsonApiValidationException(
           ValidationRuleCode.CREATE_REQUIRES_SINGLE_RESOURCE,
@@ -117,39 +140,51 @@ public final class JsonApiDocumentValidator {
         // Explicit null primary data has no nested members to validate.
       }
       case DocumentData.SingleResource(ResourceObject resource) ->
-          validateResource(resource, PATH_DATA, true, context);
+          validateResource(resource, PATH_DATA, ResourceOccurrence.PRIMARY_DATA, context);
       case DocumentData.ResourceCollection(List<ResourceObject> resources) -> {
         for (int index = 0; index < resources.size(); index++) {
-          validateResource(resources.get(index), PATH_DATA + "/" + index, false, context);
+          validateResource(
+              resources.get(index),
+              PATH_DATA + "/" + index,
+              ResourceOccurrence.PRIMARY_DATA,
+              context);
         }
       }
       case DocumentData.SingleIdentifier(ResourceIdentifier identifier) ->
-          validateIdentifier(identifier, PATH_DATA, context);
+          validateIdentifier(identifier, PATH_DATA, ResourceOccurrence.PRIMARY_DATA, context);
       case DocumentData.IdentifierCollection(List<ResourceIdentifier> identifiers) -> {
         ensureUniqueIdentifierIdentities(identifiers, PATH_DATA);
         for (int index = 0; index < identifiers.size(); index++) {
-          validateIdentifier(identifiers.get(index), PATH_DATA + "/" + index, context);
+          validateIdentifier(
+              identifiers.get(index),
+              PATH_DATA + "/" + index,
+              ResourceOccurrence.PRIMARY_DATA,
+              context);
         }
       }
     }
   }
 
   private void validateResource(
-      ResourceObject resource, String path, boolean primary, ValidationContext context) {
-    validateResourceIdentity(resource, path, context);
-    validateUpdateEndpointIdentity(resource, path, primary, context);
+      ResourceObject resource,
+      String path,
+      ResourceOccurrence occurrence,
+      ValidationContext context) {
+    validateResourceIdentity(resource, path, occurrence, context);
+    validateUpdateEndpointIdentity(resource, path, occurrence, context);
     if (resource.attributes() != null) {
       validateAdditionalMembers(
           resource.attributes().additionalMembers(), path + "/attributes", context);
     }
     if (resource.relationships() != null) {
-      validateResourceRelationships(resource, path, primary, context);
+      validateResourceRelationships(resource, path, occurrence, context);
     }
     if (resource.links() != null) {
       validateLinks(
           resource.links(),
           path + PATH_LINKS,
-          context.withLinksContext(LinksContext.RESOURCE),
+          context,
+          LinksContext.RESOURCE,
           resource.type(),
           null,
           null,
@@ -172,14 +207,18 @@ public final class JsonApiDocumentValidator {
   }
 
   private void validateResourceRelationships(
-      ResourceObject resource, String path, boolean primary, ValidationContext context) {
+      ResourceObject resource,
+      String path,
+      ResourceOccurrence occurrence,
+      ValidationContext context) {
     Relationships relationships = Objects.requireNonNull(resource.relationships());
     validateAdditionalMembers(
         relationships.additionalMembers(), path + PATH_RELATIONSHIPS, context);
     for (Map.Entry<String, Relationship> entry : relationships.relationships().entrySet()) {
       Relationship relationship = entry.getValue();
       if (isWriteRequestRequiringRelationshipData(context)
-          && primary
+          && occurrence == ResourceOccurrence.PRIMARY_DATA
+          && context.primaryDataContext() == PrimaryDataContext.RESOURCE
           && !relationship.hasDataMember()) {
         throw new JsonApiValidationException(
             ValidationRuleCode.RELATIONSHIP_DATA_REQUIRED,
@@ -214,7 +253,8 @@ public final class JsonApiDocumentValidator {
       validateLinks(
           relationship.links(),
           path + PATH_LINKS,
-          context.withLinksContext(LinksContext.RELATIONSHIP),
+          context,
+          LinksContext.RELATIONSHIP,
           resourceType,
           relationshipName,
           null,
@@ -286,11 +326,15 @@ public final class JsonApiDocumentValidator {
         // Explicit null to-one linkage has no identifiers to validate.
       }
       case RelationshipData.SingleLinkage(ResourceIdentifier identifier) ->
-          validateIdentifier(identifier, path, context);
+          validateIdentifier(identifier, path, ResourceOccurrence.RELATIONSHIP_LINKAGE, context);
       case RelationshipData.IdentifierCollectionLinkage(List<ResourceIdentifier> identifiers) -> {
         ensureUniqueIdentifierIdentities(identifiers, path);
         for (int index = 0; index < identifiers.size(); index++) {
-          validateIdentifier(identifiers.get(index), path + "/" + index, context);
+          validateIdentifier(
+              identifiers.get(index),
+              path + "/" + index,
+              ResourceOccurrence.RELATIONSHIP_LINKAGE,
+              context);
         }
       }
     }
@@ -412,7 +456,12 @@ public final class JsonApiDocumentValidator {
   }
 
   private void validateIdentifier(
-      ResourceIdentifier identifier, String path, ValidationContext context) {
+      ResourceIdentifier identifier,
+      String path,
+      ResourceOccurrence occurrence,
+      ValidationContext context) {
+    Objects.requireNonNull(occurrence, "occurrence");
+    // Transitional document-global create leniency, as in validateResourceIdentity.
     if (context.documentUsage() != DocumentUsage.CREATE_REQUEST && !identifier.hasId()) {
       throw new JsonApiValidationException(
           ValidationRuleCode.RESOURCE_ID_REQUIRED,
@@ -426,7 +475,13 @@ public final class JsonApiDocumentValidator {
   }
 
   private void validateResourceIdentity(
-      ResourceObject resource, String path, ValidationContext context) {
+      ResourceObject resource,
+      String path,
+      ResourceOccurrence occurrence,
+      ValidationContext context) {
+    Objects.requireNonNull(occurrence, "occurrence");
+    // Transitional document-global create leniency: the occurrence is the seam for the focused
+    // follow-up identity rule, which narrows id-optional semantics to primary-data new resources.
     if (context.documentUsage() == DocumentUsage.CREATE_REQUEST) {
       return;
     }
@@ -439,8 +494,13 @@ public final class JsonApiDocumentValidator {
   }
 
   private void validateUpdateEndpointIdentity(
-      ResourceObject resource, String path, boolean primary, ValidationContext context) {
-    if (context.documentUsage() != DocumentUsage.UPDATE_REQUEST || !primary) {
+      ResourceObject resource,
+      String path,
+      ResourceOccurrence occurrence,
+      ValidationContext context) {
+    if (context.documentUsage() != DocumentUsage.UPDATE_REQUEST
+        || occurrence != ResourceOccurrence.PRIMARY_DATA
+        || context.primaryDataContext() != PrimaryDataContext.RESOURCE) {
       return;
     }
     EndpointIdentity expected = context.expectedEndpointIdentity();
@@ -464,13 +524,7 @@ public final class JsonApiDocumentValidator {
   private void validateError(ErrorObject error, String path, ValidationContext context) {
     if (error.links() != null) {
       validateLinks(
-          error.links(),
-          path + PATH_LINKS,
-          context.withLinksContext(LinksContext.ERROR),
-          null,
-          null,
-          null,
-          null);
+          error.links(), path + PATH_LINKS, context, LinksContext.ERROR, null, null, null, null);
     }
     if (error.source() != null) {
       validateAdditionalMembers(error.source().additionalMembers(), path + "/source", context);
@@ -538,7 +592,7 @@ public final class JsonApiDocumentValidator {
       for (int index = 0; index < included.size(); index++) {
         ResourceObject resource = included.get(index);
         String path = "/included/" + index;
-        validateResource(resource, path, false, context);
+        validateResource(resource, path, ResourceOccurrence.INCLUDED_RESOURCE, context);
         registerIncludedResource(resource, path, registry);
         registerLinkageFromResource(resource, path, registry);
       }
@@ -784,6 +838,7 @@ public final class JsonApiDocumentValidator {
       @Nullable Links links,
       String path,
       ValidationContext context,
+      LinksContext linksContext,
       @Nullable String resourceType,
       @Nullable String relationshipName,
       @Nullable DocumentData primaryData,
@@ -798,6 +853,7 @@ public final class JsonApiDocumentValidator {
           entry.getKey(),
           path,
           context,
+          linksContext,
           resourceType,
           relationshipName,
           primaryData,
@@ -823,6 +879,7 @@ public final class JsonApiDocumentValidator {
       String name,
       String path,
       ValidationContext context,
+      LinksContext linksContext,
       @Nullable String resourceType,
       @Nullable String relationshipName,
       @Nullable DocumentData primaryData,
@@ -842,29 +899,37 @@ public final class JsonApiDocumentValidator {
             JsonPointers.child(path, name),
             "Invalid link relation name: " + name);
       }
-      if (!isAllowedLinkName(name, context)) {
+      if (!isAllowedLinkName(name, context, linksContext)) {
         throw new JsonApiValidationException(
             ValidationRuleCode.INVALID_LINKS_CONTEXT,
             JsonPointers.child(path, name),
-            "Non-standard link in context " + context.linksContext() + ": " + name);
+            "Non-standard link in context " + linksContext + ": " + name);
       }
     }
     if (!JsonApiMembers.PAGINATION_LINKS.contains(name)) {
       return;
     }
     validatePaginationLink(
-        name, path, context, resourceType, relationshipName, primaryData, relationshipData);
+        name,
+        path,
+        context,
+        linksContext,
+        resourceType,
+        relationshipName,
+        primaryData,
+        relationshipData);
   }
 
   private void validatePaginationLink(
       String name,
       String path,
       ValidationContext context,
+      LinksContext linksContext,
       @Nullable String resourceType,
       @Nullable String relationshipName,
       @Nullable DocumentData primaryData,
       @Nullable RelationshipData relationshipData) {
-    if (context.linksContext() == LinksContext.TOP_LEVEL) {
+    if (linksContext == LinksContext.TOP_LEVEL) {
       if (!isCollectionPrimaryData(primaryData)) {
         throw new JsonApiValidationException(
             ValidationRuleCode.PAGINATION_REQUIRES_COLLECTION,
@@ -873,7 +938,7 @@ public final class JsonApiDocumentValidator {
       }
       return;
     }
-    if (context.linksContext() != LinksContext.RELATIONSHIP || relationshipName == null) {
+    if (linksContext != LinksContext.RELATIONSHIP || relationshipName == null) {
       return;
     }
     if (relationshipData != null) {
@@ -908,8 +973,9 @@ public final class JsonApiDocumentValidator {
         || data instanceof DocumentData.IdentifierCollection;
   }
 
-  private boolean isAllowedLinkName(String name, ValidationContext context) {
-    return Links.standardMembers(context.linksContext()).contains(name)
+  private boolean isAllowedLinkName(
+      String name, ValidationContext context, LinksContext linksContext) {
+    return Links.standardMembers(linksContext).contains(name)
         || context.allowedProfileMemberNames().contains(name);
   }
 

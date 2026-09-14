@@ -12,30 +12,36 @@ import org.jspecify.annotations.Nullable;
 /**
  * Context for aggregate document validation.
  *
- * <p>Carries document usage (for example create, update, or response), allowed extension namespaces
- * and profile URIs/member names, sparse-fieldset linkage exemptions, the current links context,
- * optional occurrence-keyed relationship pagination cardinality hints, and an optional expected
- * endpoint identity compared against {@link DocumentUsage#UPDATE_REQUEST} documents. Relationship
+ * <p>Carries caller-supplied policy: document operation (for example create, update, or response),
+ * primary-data endpoint role (ordinary resource data versus relationship linkage), allowed
+ * extension namespaces and profile URIs/member names, sparse-fieldset linkage exemptions, optional
+ * occurrence-keyed relationship pagination cardinality hints, and an optional expected endpoint
+ * identity compared against the primary resource of {@link DocumentUsage#UPDATE_REQUEST} documents
+ * on the ordinary resource endpoint role (see {@link PrimaryDataContext#RESOURCE}). Relationship
  * pagination is allowed with absent or collection linkage; explicit null and single linkage are
  * rejected, and a {@link RelationshipCardinality#TO_ONE} hint rejects pagination when linkage is
  * absent.
+ *
+ * <p>Link location and resource-occurrence position are validator-owned traversal state, not caller
+ * policy. Callers select only the operation and the endpoint role; the validator derives link
+ * locations and occurrences as it traverses the document.
  *
  * <p>Sparse-fieldset linkage exemptions name included resources whose inbound linkage was removed
  * by an applied sparse fieldset, so full-linkage validation treats those resources as reachable
  * roots while still enforcing full linkage for every other included resource.
  *
- * <p>{@link #defaults()} uses {@link DocumentUsage#RESPONSE_OR_OTHER}, empty policy sets, no
- * sparse-fieldset linkage exemptions, {@link LinksContext#TOP_LEVEL}, no pagination hints, and no
- * expected endpoint identity—suitable for base-spec response documents without extensions or
- * profiles.
+ * <p>{@link #defaults()} uses {@link DocumentUsage#RESPONSE_OR_OTHER}, {@link
+ * PrimaryDataContext#RESOURCE}, empty policy sets, no sparse-fieldset linkage exemptions, no
+ * pagination hints, and no expected endpoint identity—suitable for base-spec response documents
+ * without extensions or profiles.
  */
 public record ValidationContext(
     DocumentUsage documentUsage,
+    PrimaryDataContext primaryDataContext,
     Set<String> allowedExtensionNamespaces,
     Set<String> allowedProfileUris,
     Set<String> allowedProfileMemberNames,
     Set<ResourceIdentity> sparseFieldsetLinkageExemptions,
-    LinksContext linksContext,
     Map<RelationshipPaginationKey, RelationshipCardinality> relationshipPaginationHints,
     @Nullable EndpointIdentity expectedEndpointIdentity) {
 
@@ -45,7 +51,8 @@ public record ValidationContext(
   public ValidationContext {
     LocalValidation.requireNonNull(
         documentUsage, "/documentUsage", "documentUsage must not be null");
-    LocalValidation.requireNonNull(linksContext, "/linksContext", "linksContext must not be null");
+    LocalValidation.requireNonNull(
+        primaryDataContext, "/primaryDataContext", "primaryDataContext must not be null");
     allowedExtensionNamespaces =
         copyRequiredStringSet(
             allowedExtensionNamespaces,
@@ -68,11 +75,11 @@ public record ValidationContext(
   public static ValidationContext defaults() {
     return new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null);
   }
@@ -80,23 +87,27 @@ public record ValidationContext(
   public ValidationContext withDocumentUsage(DocumentUsage usage) {
     return new ValidationContext(
         usage,
+        primaryDataContext,
         allowedExtensionNamespaces,
         allowedProfileUris,
         allowedProfileMemberNames,
         sparseFieldsetLinkageExemptions,
-        linksContext,
         relationshipPaginationHints,
         expectedEndpointIdentity);
   }
 
-  public ValidationContext withLinksContext(LinksContext context) {
+  /**
+   * Returns a context selecting what primary data represents at the endpoint being validated
+   * (ordinary resource data versus relationship linkage) while preserving every other setting.
+   */
+  public ValidationContext withPrimaryDataContext(PrimaryDataContext context) {
     return new ValidationContext(
         documentUsage,
+        context,
         allowedExtensionNamespaces,
         allowedProfileUris,
         allowedProfileMemberNames,
         sparseFieldsetLinkageExemptions,
-        context,
         relationshipPaginationHints,
         expectedEndpointIdentity);
   }
@@ -108,24 +119,27 @@ public record ValidationContext(
   public ValidationContext withSparseFieldsetLinkageExemptions(Set<ResourceIdentity> exemptions) {
     return new ValidationContext(
         documentUsage,
+        primaryDataContext,
         allowedExtensionNamespaces,
         allowedProfileUris,
         allowedProfileMemberNames,
         exemptions,
-        linksContext,
         relationshipPaginationHints,
         expectedEndpointIdentity);
   }
 
-  /** Returns a context whose expected endpoint identity is compared for update documents. */
+  /**
+   * Returns a context whose expected endpoint identity is compared against the primary resource of
+   * update documents on the ordinary resource endpoint role.
+   */
   public ValidationContext withExpectedEndpointIdentity(@Nullable EndpointIdentity identity) {
     return new ValidationContext(
         documentUsage,
+        primaryDataContext,
         allowedExtensionNamespaces,
         allowedProfileUris,
         allowedProfileMemberNames,
         sparseFieldsetLinkageExemptions,
-        linksContext,
         relationshipPaginationHints,
         identity);
   }

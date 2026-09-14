@@ -16,7 +16,7 @@ import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.core.validation.DocumentUsage
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException
-import com.kazforge.jsonapi.core.validation.LinksContext
+import com.kazforge.jsonapi.core.validation.PrimaryDataContext
 import com.kazforge.jsonapi.core.validation.ValidationContext
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import com.kazforge.jsonapi.jackson.document.DocumentEnvelope
@@ -104,11 +104,11 @@ class DocumentWriterContractSpec extends Specification {
         RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll()))
     def base = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of("myext"),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -313,11 +313,11 @@ class DocumentWriterContractSpec extends Specification {
   private static ValidationContext extContext() {
     return new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of('ext'),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
   }
@@ -325,11 +325,11 @@ class DocumentWriterContractSpec extends Specification {
   private static ValidationContext createContext() {
     return new ValidationContext(
         DocumentUsage.CREATE_REQUEST,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
   }

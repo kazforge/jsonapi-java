@@ -17,54 +17,67 @@ import org.jspecify.annotations.Nullable;
 /**
  * Jackson 2 Level-1 relationship-linkage documents in both directions.
  *
- * <p>Reads require identifier primary data and never coerce across to-one and to-many shapes.
- * Writes emit minimal linkage documents without requiring domain DTO registration. Checked Jackson
- * 2 I/O is exposed as {@link java.io.UncheckedIOException} at this Level-1 boundary.
+ * <p>Reads require identifier primary data and never coerce across to-one and to-many shapes. The
+ * bound reader explicitly composes identifier decoding with the relationship endpoint role, while
+ * the bound writer validates linkage documents under that same role. Writes emit minimal linkage
+ * documents without requiring domain DTO registration. Checked Jackson 2 I/O is exposed as {@link
+ * java.io.UncheckedIOException} at this Level-1 boundary.
  */
 final class Jackson2JsonApiRelationships implements JsonApiRelationships {
 
-  private final JsonApiDocumentReader identifierReader;
-  private final JsonApiDocumentWriter responseWriter;
+  private final JsonApiDocumentReader relationshipReader;
+  private final JsonApiDocumentWriter relationshipWriter;
 
   Jackson2JsonApiRelationships(
-      JsonApiDocumentReader identifierReader, JsonApiDocumentWriter responseWriter) {
-    this.identifierReader = Objects.requireNonNull(identifierReader, "identifierReader");
-    this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter");
+      JsonApiDocumentReader relationshipReader, JsonApiDocumentWriter relationshipWriter) {
+    this.relationshipReader = Objects.requireNonNull(relationshipReader, "relationshipReader");
+    this.relationshipWriter = Objects.requireNonNull(relationshipWriter, "relationshipWriter");
+  }
+
+  /** Document reader bound to this facet, for structural assertions in its own package. */
+  JsonApiDocumentReader reader() {
+    return relationshipReader;
+  }
+
+  /** Document writer bound to this facet, for structural assertions in its own package. */
+  JsonApiDocumentWriter writer() {
+    return relationshipWriter;
   }
 
   @Override
   public @Nullable ResourceIdentifier readToOne(String json) {
     Objects.requireNonNull(json, "json");
-    return requireToOne(Jackson2Io.call(() -> identifierReader.readValue(json)));
+    return requireToOne(Jackson2Io.call(() -> relationshipReader.readValue(json)));
   }
 
   @Override
   public @Nullable ResourceIdentifier readToOne(InputStream json) {
     Objects.requireNonNull(json, "json");
-    return requireToOne(Jackson2Io.call(() -> identifierReader.readValue(json)));
+    return requireToOne(Jackson2Io.call(() -> relationshipReader.readValue(json)));
   }
 
   @Override
   public List<ResourceIdentifier> readToMany(String json) {
     Objects.requireNonNull(json, "json");
-    return requireToMany(Jackson2Io.call(() -> identifierReader.readValue(json)));
+    return requireToMany(Jackson2Io.call(() -> relationshipReader.readValue(json)));
   }
 
   @Override
   public List<ResourceIdentifier> readToMany(InputStream json) {
     Objects.requireNonNull(json, "json");
-    return requireToMany(Jackson2Io.call(() -> identifierReader.readValue(json)));
+    return requireToMany(Jackson2Io.call(() -> relationshipReader.readValue(json)));
   }
 
   @Override
   public String writeToOne(@Nullable ResourceIdentifier identifier) {
-    return Jackson2Io.call(() -> responseWriter.writeValueAsString(linkageDocument(identifier)));
+    return Jackson2Io.call(
+        () -> relationshipWriter.writeValueAsString(linkageDocument(identifier)));
   }
 
   @Override
   public void writeToOne(@Nullable ResourceIdentifier identifier, OutputStream out) {
     Objects.requireNonNull(out, "out");
-    Jackson2Io.run(() -> responseWriter.writeValue(out, linkageDocument(identifier)));
+    Jackson2Io.run(() -> relationshipWriter.writeValue(out, linkageDocument(identifier)));
   }
 
   @Override
@@ -73,7 +86,8 @@ final class Jackson2JsonApiRelationships implements JsonApiRelationships {
     Objects.requireNonNull(identifiers, "identifiers");
     return Jackson2Io.call(
         () ->
-            responseWriter.writeValueAsString(linkageCollectionDocument(List.copyOf(identifiers))));
+            relationshipWriter.writeValueAsString(
+                linkageCollectionDocument(List.copyOf(identifiers))));
   }
 
   @Override
@@ -82,7 +96,9 @@ final class Jackson2JsonApiRelationships implements JsonApiRelationships {
     Objects.requireNonNull(identifiers, "identifiers");
     Objects.requireNonNull(out, "out");
     Jackson2Io.run(
-        () -> responseWriter.writeValue(out, linkageCollectionDocument(List.copyOf(identifiers))));
+        () ->
+            relationshipWriter.writeValue(
+                out, linkageCollectionDocument(List.copyOf(identifiers))));
   }
 
   private static @Nullable ResourceIdentifier requireToOne(JsonApiDocument document) {

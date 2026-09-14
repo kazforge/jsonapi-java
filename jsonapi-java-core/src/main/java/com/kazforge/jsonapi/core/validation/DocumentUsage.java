@@ -1,16 +1,24 @@
 package com.kazforge.jsonapi.core.validation;
 
-/** Declares how a document is used for context-sensitive validation. */
+/** Declares the document operation for context-sensitive validation. */
 public enum DocumentUsage {
   /**
-   * Base-spec create-resource request: primary data must be a single resource object whose {@code
-   * id} may be omitted, and every relationship supplied on that resource must contain {@code data}.
-   * Included resources are exempt from the primary relationship-data rule; otherwise existing rules
-   * apply unchanged. Core itself is not HTTP-method-aware; a future server layer selects this usage
-   * from its own operation context.
+   * Base-spec create-resource operation: the validator applies single-resource primary-data shape
+   * and primary relationship-data requirements only when composed with an ordinary resource
+   * endpoint role (see {@link PrimaryDataContext#RESOURCE}) and a primary-data resource occurrence.
+   * Under the relationship endpoint role the operation adds no resource-shape rules. Create
+   * identity leniency (an omittable resource {@code id}) still applies document-wide until the
+   * separate identity rule narrows it. Core itself is not HTTP-method-aware; a future server layer
+   * selects this usage from its own operation context.
    */
   CREATE_REQUEST,
-  /** Base-spec update request: single-resource primary data with required {@code id}. */
+  /**
+   * Base-spec update operation: the validator applies single-resource primary-data shape, primary
+   * relationship-data requirements, and expected endpoint-identity comparison only when composed
+   * with an ordinary resource endpoint role (see {@link PrimaryDataContext#RESOURCE}) and a
+   * primary-data resource occurrence. Under the relationship endpoint role the operation adds no
+   * resource-shape rules.
+   */
   UPDATE_REQUEST,
   /** Response or any other document use. */
   RESPONSE_OR_OTHER

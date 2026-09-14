@@ -25,8 +25,10 @@ class CreateRequestValidationSpec extends Specification {
     given:
     def context = new ValidationContext(
         DocumentUsage.CREATE_REQUEST,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"), Set.of(), Set.of(),
-        Set.of(), LinksContext.TOP_LEVEL, Map.of(), null)
+        Set.of(),
+        Map.of(), null)
 
     when:
     validator.validate(doc, context)
@@ -159,8 +161,10 @@ class CreateRequestValidationSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
     def context = new ValidationContext(
         DocumentUsage.CREATE_REQUEST,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"), Set.of(), Set.of(),
-        Set.of(), LinksContext.TOP_LEVEL, Map.of(), null)
+        Set.of(),
+        Map.of(), null)
 
     when:
     validator.validate(doc, context)
@@ -270,5 +274,45 @@ class CreateRequestValidationSpec extends Specification {
         Links.ofLinks([self: new Link.StringLink("http://example.com/authors/2")]),
         Meta.of([count: 1]),
         [:])
+  }
+
+  def "create operation accepts linkage primary data under relationship role"(DocumentData data) {
+    given:
+    def doc = JsonApiDocument.withData(data)
+    def context = ValidationContext.defaults()
+        .withDocumentUsage(DocumentUsage.CREATE_REQUEST)
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+
+    where:
+    data << [
+      new DocumentData.SingleIdentifier(ResourceIdentifier.of("articles", "1")),
+      new DocumentData.IdentifierCollection([
+        ResourceIdentifier.of("articles", "1")
+      ]),
+      DocumentData.NullData.INSTANCE
+    ]
+  }
+
+  def "create operation under relationship role rejects resource objects with context mismatch"() {
+    given:
+    def doc = JsonApiDocument.withData(
+        new DocumentData.SingleResource(ResourceObject.ofType("articles")))
+    def context = ValidationContext.defaults()
+        .withDocumentUsage(DocumentUsage.CREATE_REQUEST)
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.PRIMARY_DATA_CONTEXT_MISMATCH
+    ex.jsonPointer() == "/data"
   }
 }

@@ -2,6 +2,7 @@ package com.kazforge.jsonapi.jackson3;
 
 import com.kazforge.jsonapi.core.model.JsonApiObject;
 import com.kazforge.jsonapi.core.validation.DocumentUsage;
+import com.kazforge.jsonapi.core.validation.PrimaryDataContext;
 import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.api.JsonApi;
 import com.kazforge.jsonapi.jackson.api.JsonApiDocuments;
@@ -9,6 +10,7 @@ import com.kazforge.jsonapi.jackson.api.JsonApiPatches;
 import com.kazforge.jsonapi.jackson.api.JsonApiRelationships;
 import com.kazforge.jsonapi.jackson.api.JsonApiResources;
 import com.kazforge.jsonapi.jackson.document.DocumentReadContext;
+import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.jackson.mapping.ResourceDecoratorRegistry;
 import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy;
@@ -35,7 +37,9 @@ import tools.jackson.databind.json.JsonMapper;
  * <p>Request-scoped values (representation selection, document envelope, and expected update
  * identity) stay method arguments. An absent per-write {@code jsonapi} member may inherit the
  * configured application-lifetime default on {@link JsonApiResources} writes, while an explicit
- * value always wins completely. Raw document and minimal linkage writes remain explicit.
+ * value always wins completely. Raw document and minimal linkage writes remain explicit. The
+ * relationship facet explicitly composes identifier decoding with the relationship endpoint role;
+ * the ordinary response writer stays on the resource endpoint role for resources and raw documents.
  */
 public final class Jackson3JsonApi implements JsonApi {
 
@@ -60,10 +64,19 @@ public final class Jackson3JsonApi implements JsonApi {
         JsonApiJackson3.resourceBinder(baseMapper, identifierConverter, linkageMappers);
     JsonApiDocumentReader resourceReader =
         new JsonApiDocumentReader(baseMapper, DocumentReadContext.resourceDefaults());
-    JsonApiDocumentReader identifierReader =
-        new JsonApiDocumentReader(baseMapper, DocumentReadContext.identifierDefaults());
+    JsonApiDocumentReader relationshipReader =
+        new JsonApiDocumentReader(
+            baseMapper,
+            DocumentReadContext.of(
+                ValidationContext.defaults()
+                    .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP),
+                PrimaryDataKind.RESOURCE_IDENTIFIER));
     JsonApiDocumentWriter responseWriter =
         new JsonApiDocumentWriter(documentMapper, ValidationContext.defaults());
+    JsonApiDocumentWriter relationshipWriter =
+        new JsonApiDocumentWriter(
+            documentMapper,
+            ValidationContext.defaults().withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP));
     JsonApiDocumentWriter createWriter =
         new JsonApiDocumentWriter(
             documentMapper,
@@ -84,7 +97,7 @@ public final class Jackson3JsonApi implements JsonApi {
             resourceReader,
             responseWriter,
             createWriter);
-    this.relationships = new Jackson3JsonApiRelationships(identifierReader, responseWriter);
+    this.relationships = new Jackson3JsonApiRelationships(relationshipReader, relationshipWriter);
     this.documents = new Jackson3JsonApiDocuments(baseMapper, responseWriter);
     this.patches = new Jackson3JsonApiPatches(baseMapper, patchCommandReader, patchDtoReader);
   }
