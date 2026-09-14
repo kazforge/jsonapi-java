@@ -181,11 +181,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
         ["myext:version": "1.0"])
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of("myext"),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -221,11 +221,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
         ["ext:document-member": 1])
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -294,11 +294,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(
         RelationshipPaginationKey.of("articles", "comments"),
         RelationshipCardinality.TO_MANY),
@@ -325,11 +325,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(
         RelationshipPaginationKey.of("articles", "comments"),
         RelationshipCardinality.TO_ONE),
@@ -358,11 +358,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(
         RelationshipPaginationKey.of("articles", "comments"),
         RelationshipCardinality.TO_MANY),
@@ -389,11 +389,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(person))
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(
         RelationshipPaginationKey.of("people", "comments"),
         RelationshipCardinality.TO_ONE),
@@ -451,11 +451,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
         [custom: "value"])
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of("custom"),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -570,11 +570,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     def doc = JsonApiDocument.withErrors([error])
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -595,11 +595,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
         null, null, [:])
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of("https://example.com/profiles/b"),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -624,11 +624,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
         [:])
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(uri),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -728,11 +728,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
         null, [:])
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -779,11 +779,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of("canonical"),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -1100,11 +1100,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -1145,11 +1145,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of("canonical"),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -1251,11 +1251,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -1276,11 +1276,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     namespaces.add("myext")
     def context = new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         namespaces,
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         hints,
         null)
     def article = new ResourceObject(
@@ -1316,11 +1316,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     when:
     new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         hints,
         null)
 
@@ -1338,11 +1338,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     when:
     new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         hints,
         null)
 
@@ -1356,11 +1356,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     when:
     new ValidationContext(
         null,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -1374,11 +1374,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     when:
     new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         null,
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -1396,11 +1396,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     when:
     new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         namespaces,
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         Map.of(),
         null)
 
@@ -1414,11 +1414,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     when:
     new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
         Set.of(),
         Set.of(),
         Set.of(),
         Set.of(),
-        LinksContext.TOP_LEVEL,
         null,
         null)
 
@@ -1697,5 +1697,220 @@ class JsonApiDocumentValidatorSpec extends Specification {
 
     then:
     noExceptionThrown()
+  }
+
+  def "relationship endpoint accepts '#name' linkage primary data"(String name, DocumentData data) {
+    given:
+    def doc = JsonApiDocument.withData(data)
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+
+    where:
+    name                      | data
+    "explicit null linkage"   | DocumentData.NullData.INSTANCE
+    "single identifier"       | new DocumentData.SingleIdentifier(ResourceIdentifier.of("articles", "1"))
+    "identifier collection"   | new DocumentData.IdentifierCollection([
+      ResourceIdentifier.of("articles", "1"),
+      ResourceIdentifier.of("articles", "2")
+    ])
+    "empty identifier collection" | new DocumentData.IdentifierCollection([])
+  }
+
+  def "relationship endpoint rejects '#name' resource-object primary data"(String name, DocumentData data) {
+    given:
+    def doc = JsonApiDocument.withData(data)
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.PRIMARY_DATA_CONTEXT_MISMATCH
+    ex.jsonPointer() == "/data"
+
+    where:
+    name                    | data
+    "single resource"       | new DocumentData.SingleResource(ResourceObject.of("articles", "1"))
+    "resource collection"   | new DocumentData.ResourceCollection([
+      ResourceObject.of("articles", "1")
+    ])
+  }
+
+  def "relationship endpoint reports context mismatch before resource-shape rules"(
+      DocumentUsage usage) {
+    given:
+    def doc = JsonApiDocument.withData(
+        new DocumentData.ResourceCollection([
+          ResourceObject.of("articles", "1")
+        ]))
+    def context = ValidationContext.defaults()
+        .withDocumentUsage(usage)
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.PRIMARY_DATA_CONTEXT_MISMATCH
+    ex.jsonPointer() == "/data"
+
+    where:
+    usage << [
+      DocumentUsage.CREATE_REQUEST,
+      DocumentUsage.UPDATE_REQUEST
+    ]
+  }
+
+  def "create and update operations accept linkage primary data under relationship role"(
+      DocumentUsage usage, DocumentData data) {
+    given:
+    def doc = JsonApiDocument.withData(data)
+    def context = ValidationContext.defaults()
+        .withDocumentUsage(usage)
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+
+    where:
+    usage | data
+    DocumentUsage.CREATE_REQUEST | new DocumentData.SingleIdentifier(ResourceIdentifier.of("articles", "1"))
+    DocumentUsage.UPDATE_REQUEST | new DocumentData.SingleIdentifier(ResourceIdentifier.of("articles", "1"))
+    DocumentUsage.CREATE_REQUEST | new DocumentData.IdentifierCollection([
+      ResourceIdentifier.of("articles", "1")
+    ])
+    DocumentUsage.UPDATE_REQUEST | new DocumentData.IdentifierCollection([
+      ResourceIdentifier.of("articles", "1")
+    ])
+    DocumentUsage.CREATE_REQUEST | DocumentData.NullData.INSTANCE
+    DocumentUsage.UPDATE_REQUEST | DocumentData.NullData.INSTANCE
+  }
+
+  def "relationship role leaves absent data to top-level invariants for write operations"(
+      DocumentUsage usage) {
+    given:
+    def doc = JsonApiDocument.withMeta(Meta.empty())
+    def context = ValidationContext.defaults()
+        .withDocumentUsage(usage)
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+
+    where:
+    usage << [
+      DocumentUsage.CREATE_REQUEST,
+      DocumentUsage.UPDATE_REQUEST
+    ]
+  }
+
+  def "update endpoint identity does not apply to relationship linkage"() {
+    given:
+    def doc = JsonApiDocument.withData(
+        new DocumentData.SingleIdentifier(ResourceIdentifier.of("articles", "1")))
+    def context = ValidationContext.defaults()
+        .withDocumentUsage(DocumentUsage.UPDATE_REQUEST)
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+        .withExpectedEndpointIdentity(new EndpointIdentity("comments", "99"))
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+  }
+
+  def "validation defaults select resource endpoint role"() {
+    expect:
+    ValidationContext.defaults().primaryDataContext() == PrimaryDataContext.RESOURCE
+  }
+
+  def "validation context derivations preserve every policy field"() {
+    given:
+    def exemptions = Set.of(ResourceIdentity.ofId("comments", "99"))
+    def hints = Map.of(
+        RelationshipPaginationKey.of("articles", "comments"),
+        RelationshipCardinality.TO_ONE)
+    def identity = new EndpointIdentity("articles", "1")
+    def base = new ValidationContext(
+        DocumentUsage.CREATE_REQUEST,
+        PrimaryDataContext.RELATIONSHIP,
+        Set.of("ext"),
+        Set.of("https://example.com/profiles/a"),
+        Set.of("custom"),
+        exemptions,
+        hints,
+        identity)
+
+    expect:
+    base.withDocumentUsage(DocumentUsage.UPDATE_REQUEST) == new ValidationContext(
+        DocumentUsage.UPDATE_REQUEST,
+        PrimaryDataContext.RELATIONSHIP,
+        Set.of("ext"),
+        Set.of("https://example.com/profiles/a"),
+        Set.of("custom"),
+        exemptions,
+        hints,
+        identity)
+    base.withPrimaryDataContext(PrimaryDataContext.RESOURCE) == new ValidationContext(
+        DocumentUsage.CREATE_REQUEST,
+        PrimaryDataContext.RESOURCE,
+        Set.of("ext"),
+        Set.of("https://example.com/profiles/a"),
+        Set.of("custom"),
+        exemptions,
+        hints,
+        identity)
+    base.withSparseFieldsetLinkageExemptions(Set.of()) == new ValidationContext(
+        DocumentUsage.CREATE_REQUEST,
+        PrimaryDataContext.RELATIONSHIP,
+        Set.of("ext"),
+        Set.of("https://example.com/profiles/a"),
+        Set.of("custom"),
+        Set.of(),
+        hints,
+        identity)
+    base.withExpectedEndpointIdentity(null) == new ValidationContext(
+        DocumentUsage.CREATE_REQUEST,
+        PrimaryDataContext.RELATIONSHIP,
+        Set.of("ext"),
+        Set.of("https://example.com/profiles/a"),
+        Set.of("custom"),
+        exemptions,
+        hints,
+        null)
+  }
+
+  def "validation context rejects null primaryDataContext"() {
+    when:
+    new ValidationContext(
+        DocumentUsage.RESPONSE_OR_OTHER,
+        null,
+        Set.of(),
+        Set.of(),
+        Set.of(),
+        Set.of(),
+        Map.of(),
+        null)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.NULL_REQUIRED_VALUE
+    ex.jsonPointer() == "/primaryDataContext"
   }
 }

@@ -27,8 +27,9 @@ class UpdateRequestValidationSpec extends Specification {
     given:
     def context = new ValidationContext(
         DocumentUsage.UPDATE_REQUEST,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"), Set.of(), Set.of(),
-        Set.of(), LinksContext.TOP_LEVEL, Map.of(), null)
+        Set.of(), Map.of(), null)
 
     when:
     validator.validate(doc, context)
@@ -192,8 +193,9 @@ class UpdateRequestValidationSpec extends Specification {
     def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
     def context = new ValidationContext(
         DocumentUsage.UPDATE_REQUEST,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"), Set.of(), Set.of(),
-        Set.of(), LinksContext.TOP_LEVEL, Map.of(), null)
+        Set.of(), Map.of(), null)
 
     when:
     validator.validate(doc, context)
@@ -285,7 +287,7 @@ class UpdateRequestValidationSpec extends Specification {
 
     expect:
     base.withDocumentUsage(DocumentUsage.UPDATE_REQUEST).expectedEndpointIdentity() == identity
-    base.withLinksContext(LinksContext.RESOURCE).expectedEndpointIdentity() == identity
+    base.withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP).expectedEndpointIdentity() == identity
     base.withSparseFieldsetLinkageExemptions(
         Set.of(ResourceIdentity.ofId("comments", "99"))).expectedEndpointIdentity() == identity
   }
@@ -355,8 +357,9 @@ class UpdateRequestValidationSpec extends Specification {
         ["ext:doc": 1])
     def context = new ValidationContext(
         DocumentUsage.UPDATE_REQUEST,
+        PrimaryDataContext.RESOURCE,
         Set.of("ext"), Set.of(), Set.of(),
-        Set.of(), LinksContext.TOP_LEVEL, Map.of(), null)
+        Set.of(), Map.of(), null)
 
     when:
     validator.validate(doc, context)
@@ -419,6 +422,45 @@ class UpdateRequestValidationSpec extends Specification {
     def doc = JsonApiDocument.withData(
         new DocumentData.SingleResource(ResourceObject.ofType("articles")))
     def context = ValidationContext.defaults().withDocumentUsage(DocumentUsage.CREATE_REQUEST)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+  }
+
+  def "update operation accepts linkage primary data under relationship role"(DocumentData data) {
+    given:
+    def doc = JsonApiDocument.withData(data)
+    def context = ValidationContext.defaults()
+        .withDocumentUsage(DocumentUsage.UPDATE_REQUEST)
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+
+    where:
+    data << [
+      new DocumentData.SingleIdentifier(ResourceIdentifier.of("articles", "1")),
+      new DocumentData.IdentifierCollection([
+        ResourceIdentifier.of("articles", "1")
+      ]),
+      DocumentData.NullData.INSTANCE
+    ]
+  }
+
+  def "update endpoint identity does not apply under relationship role"() {
+    given:
+    def doc = JsonApiDocument.withData(
+        new DocumentData.SingleIdentifier(ResourceIdentifier.of("articles", "1")))
+    def context = ValidationContext.defaults()
+        .withDocumentUsage(DocumentUsage.UPDATE_REQUEST)
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+        .withExpectedEndpointIdentity(new EndpointIdentity("comments", "99"))
 
     when:
     validator.validate(doc, context)

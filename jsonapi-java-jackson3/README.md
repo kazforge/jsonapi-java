@@ -71,7 +71,8 @@ Only coherent application-lifetime configuration belongs on the builder; represe
 document envelope, and expected update identity stay per-operation arguments. The builder selects
 the same documented defaults as the capability factories when a setting is omitted, and there is
 no base validation-context setting: response, create, update, and linkage operations each select
-their usage internally.
+their usage and endpoint role internally; linkage operations explicitly compose identifier decoding
+with the relationship endpoint role.
 
 `jsonApiVersion("1.1")` is optional. When configured, ordinary `resources()` writes inherit that
 value as the top-level `jsonapi.version` whenever the per-write envelope does not supply a

@@ -172,7 +172,14 @@ or PATCH projection phases manually; advanced capability APIs stay public for ex
 mechanism/control. [ADR-019](adr/019-level-one-application-api-contract.md) freezes the
 full contract, including the configured-Jackson, additive-decoration, id/lid, ADR-018, and
 create-request boundaries. The configured `Jackson3JsonApi` and `Jackson2JsonApi` runtimes implement
-the same neutral Level-1 contract in their respective modules. Typed domain-envelope composition is
+the same neutral Level-1 contract in their respective modules. Their relationship facets explicitly
+compose identifier decoding (`PrimaryDataKind.RESOURCE_IDENTIFIER`) with the relationship endpoint
+role (`PrimaryDataContext.RELATIONSHIP`); the generic identifier-decoding default remains an
+ordinary resource context. The full operation/endpoint/occurrence contract lives in
+[`jsonapi-java-core`](../jsonapi-java-core/README.md) and the
+[`jsonapi-java-jackson-api`](../jsonapi-java-jackson-api/README.md) usage above; adapter wiring is
+described in the [Jackson 3](../jsonapi-java-jackson3/README.md) and
+[Jackson 2](../jsonapi-java-jackson2/README.md) module READMEs. Typed domain-envelope composition is
 an advanced capability in both adapters and is not inferred by either Level-1 runtime.
 
 Convenience writes infer a root `JavaType` from the concrete runtime class. Directly parameterized
@@ -189,7 +196,7 @@ JSON:API representation and configured Jackson are both authoritative, in differ
 | Concern | Authority |
 |---------|-----------|
 | Document envelope, member presence, sealed explicit-null vs Java absence, identifier wire strings, relationship linkage, `PatchPresence` state | JSON:API / this library |
-| Aggregate document rules (identity uniqueness, full linkage, update-request shape, endpoint identity) | `jsonapi-java-core` validation |
+| Aggregate document rules (identity uniqueness, full linkage, update-request shape, endpoint identity, endpoint role, resource occurrence) | `jsonapi-java-core` validation |
 | JSON:API property roles (identifier, local identifier, attribute, relationship, resource meta, relationship meta) | JSON:API annotations. `@JsonApiId` maps only `id` and `@JsonApiLocalId` maps only `lid`; neither identity role falls back to the other. Unannotated Jackson-visible properties do not participate, except the conventional identifier whose configured Jackson external name is `id`. |
 | `@JsonApiResource(type)` | Explicit JSON:API semantic data (the resource `type` member), not a Jackson property name. Class-level mix-ins still supply or override the annotation through configured Jackson introspection. |
 | Property discovery, visibility, mix-ins, creators, serializers/deserializers, and external JSON:API member names | Configured Jackson |

@@ -1,8 +1,11 @@
 package com.kazforge.jsonapi.jackson2
 
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
+import com.kazforge.jsonapi.core.validation.PrimaryDataContext
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.jackson.document.DocumentReadContext
+import com.kazforge.jsonapi.jackson.document.PrimaryDataKind
 import com.kazforge.jsonapi.jackson2.CloseTrackingFixtures.TrackingInputStream
 import com.kazforge.jsonapi.jackson2.CloseTrackingFixtures.TrackingOutputStream
 import spock.lang.Shared
@@ -143,5 +146,18 @@ class Jackson2JsonApiRelationshipsSpec extends Specification {
     def ex = thrown(JsonApiMappingException)
     ex.diagnostic() == MappingDiagnostic.RESOURCE_TYPE_MISMATCH
     ex.propertyPath() == "/data"
+  }
+
+  def "relationship facet binds identifier decoding with the relationship endpoint role"() {
+    given:
+    def facet = (Jackson2JsonApiRelationships) jsonApi.relationships()
+
+    expect:
+    facet.reader().context().primaryDataKind() == PrimaryDataKind.RESOURCE_IDENTIFIER
+    facet.reader().context().validationContext().primaryDataContext() ==
+        PrimaryDataContext.RELATIONSHIP
+    facet.writer().context().primaryDataContext() == PrimaryDataContext.RELATIONSHIP
+    DocumentReadContext.identifierDefaults().validationContext().primaryDataContext() ==
+        PrimaryDataContext.RESOURCE
   }
 }
