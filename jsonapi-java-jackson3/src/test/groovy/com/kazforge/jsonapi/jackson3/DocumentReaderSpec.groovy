@@ -358,6 +358,22 @@ class DocumentReaderSpec extends Specification {
     ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
   }
 
+  def "create request rejects lid-only included resources"() {
+    given:
+    def json = readCorpusText('negative/create-included-without-identity.json')
+    def reader = JsonApiJackson3.reader(mapper, DocumentReadContext.of(
+        createContext(), PrimaryDataKind.RESOURCE))
+
+    when:
+    reader.readValue(json)
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.category() == CodecFailureCategory.AGGREGATE_VALIDATION
+    ex.jsonPointer() == '/included/0/id'
+    ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
+  }
+
   def "relationship endpoint rejects resource-object primary data"() {
     given:
     def json = readCorpusText('negative/relationship-resource-object.json')

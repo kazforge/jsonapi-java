@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "articles",
+    "lid": "article-lid",
+    "relationships": {
+      "author": {
+        "data": {
+          "type": "people",
+          "id": "2"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "people",
+      "lid": "author-lid"
+    }
+  ]
+}
