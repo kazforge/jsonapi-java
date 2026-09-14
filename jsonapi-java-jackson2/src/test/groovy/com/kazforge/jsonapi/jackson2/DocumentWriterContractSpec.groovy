@@ -218,18 +218,17 @@ class DocumentWriterContractSpec extends Specification {
 
   def "emits array-form hreflang"() {
     given:
-    def related = new Link.ObjectLink(
-        "https://example.com/articles/1/related",
-        "related",
+    def self = new Link.ObjectLink(
+        "https://example.com/articles/1",
+        "self",
         null,
-        "Related",
+        "Self",
         "application/vnd.api+json",
         ["en"],
         null,
         Map.of())
     def topLinks = new LinkedHashMap<String, Link>()
-    topLinks.put("self", new Link.StringLink("https://example.com/articles/1"))
-    topLinks.put("related", related)
+    topLinks.put("self", self)
     def document = new JsonApiDocument(
         new DocumentData.SingleResource(ResourceObject.of("articles", "1")),
         null,

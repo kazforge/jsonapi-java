@@ -94,7 +94,7 @@ class JsonApiWireWriterSpec extends Specification {
         Meta.of([jsonapiNote: 'jsonapi']),
         ['@jsonapi-note': 'jsonapi']),
         Links.of(
-        [self: new Link.StringLink('/articles'), related: null] as Map<String, Link>,
+        [self: new Link.StringLink('/articles'), describedby: null] as Map<String, Link>,
         ['@document-link-note': 'document-link']),
         [
           ResourceObject.of('people', 'p1')
@@ -126,7 +126,7 @@ class JsonApiWireWriterSpec extends Specification {
     tree.get('data').get('relationships').get('author').get('links').get('self').get('href').asText() == objectLink.href()
     tree.get('data').get('relationships').get('author').get('meta').get('relationshipNote').asText() == 'relationship'
     tree.get('data').get('links').get('self').get('hreflang').size() == 2
-    tree.get('links').get('related').isNull()
+    tree.get('links').get('describedby').isNull()
     tree.get('data').get('meta').get('resourceNote').asText() == 'resource'
     tree.get('jsonapi').get('version').asText() == '1.1'
     tree.get('jsonapi').get('ext').get(0).asText() == 'https://example.test/ext'

@@ -188,7 +188,7 @@ class JsonApiDraftSchemaSpec extends Specification {
     where:
     description | document | context | schemaKind | expected
     "canonical array-form hreflang" | stringAndObjectLinksDocument() | ValidationContext.defaults() | "response" | [
-      [keyword: "type", path: "/links/related/hreflang"]
+      [keyword: "type", path: "/links/self/hreflang"]
     ]
     "top-level extension member" | extensionAndAtMembersDocument() | extContext() | "response" | [
       [keyword: "unevaluatedProperties", path: ""]
@@ -264,18 +264,18 @@ class JsonApiDraftSchemaSpec extends Specification {
     def article = new ResourceObject(
         "articles", "1", null, null, null, Links.ofLinks(resourceLinks), null, Map.of())
 
-    def related = new Link.ObjectLink(
-        "https://example.com/articles/1/related",
-        "related",
+    def self = new Link.ObjectLink(
+        selfHref,
+        "self",
         null,
-        "Related",
+        "Self",
         "application/vnd.api+json",
         ["en"],
         Meta.of(["count": 1]),
         Map.of())
     def topLinks = new LinkedHashMap<String, Link>()
-    topLinks.put("self", new Link.StringLink(selfHref))
-    topLinks.put("related", related)
+    topLinks.put("self", self)
+    topLinks.put("first", new Link.StringLink(selfHref))
     topLinks.put("next", null)
 
     return new JsonApiDocument(

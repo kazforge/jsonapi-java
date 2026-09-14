@@ -824,21 +824,21 @@ class DocumentReaderSpec extends Specification {
     resourceLinks.put('self', new Link.StringLink(selfHref))
     def article = resourceWithLinks('articles', '1', Links.ofLinks(resourceLinks))
 
-    Map<String, Object> relatedMeta = new LinkedHashMap<>()
-    relatedMeta.put('count', 1)
-    def related = new Link.ObjectLink(
-        'http://example.com/articles/1/related',
-        'related',
+    Map<String, Object> selfMeta = new LinkedHashMap<>()
+    selfMeta.put('count', 1)
+    def self = new Link.ObjectLink(
+        selfHref,
+        'self',
         null,
-        'Related',
+        'Self',
         'application/vnd.api+json',
         List.of('en'),
-        Meta.of(relatedMeta),
+        Meta.of(selfMeta),
         Map.of())
 
     Map<String, Link> topLinkEntries = new LinkedHashMap<>()
-    topLinkEntries.put('self', new Link.StringLink(selfHref))
-    topLinkEntries.put('related', related)
+    topLinkEntries.put('self', self)
+    topLinkEntries.put('first', new Link.StringLink(selfHref))
     topLinkEntries.put('next', null)
 
     return new JsonApiDocument(

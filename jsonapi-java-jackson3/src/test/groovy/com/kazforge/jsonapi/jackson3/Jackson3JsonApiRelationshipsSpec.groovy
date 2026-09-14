@@ -2,6 +2,10 @@ package com.kazforge.jsonapi.jackson3
 
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.validation.PrimaryDataContext
+import com.kazforge.jsonapi.core.validation.ValidationRuleCode
+import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
+import com.kazforge.jsonapi.jackson.diagnostic.CodecFailureCategory
+import com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.jackson.document.DocumentReadContext
@@ -146,6 +150,42 @@ class Jackson3JsonApiRelationshipsSpec extends Specification {
     def ex = thrown(JsonApiMappingException)
     ex.diagnostic() == MappingDiagnostic.RESOURCE_TYPE_MISMATCH
     ex.propertyPath() == "/data"
+  }
+
+  def "resource reads reject top-level related"() {
+    given:
+    def json = '{"data":{"type":"articles","id":"1"},' +
+        '"links":{"related":"https://example.com/articles/1/related"}}'
+
+    when:
+    jsonApi.resources().readOne(json, FlatArticle)
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.category() == CodecFailureCategory.AGGREGATE_VALIDATION
+    ex.ruleCode() == ValidationRuleCode.INVALID_LINKS_CONTEXT
+    ex.jsonPointer() == "/links/related"
+  }
+
+  def "to-one relationship reads accept top-level related"() {
+    given:
+    def json = '{"data":{"type":"people","id":"9"},' +
+        '"links":{"related":"https://example.com/articles/1/related"}}'
+
+    expect:
+    jsonApi.relationships().readToOne(json) == ResourceIdentifier.of("people", "9")
+  }
+
+  def "to-many relationship reads accept top-level related"() {
+    given:
+    def json = '{"data":[{"type":"people","id":"9"},{"type":"people","id":"10"}],' +
+        '"links":{"related":"https://example.com/articles/1/related"}}'
+
+    expect:
+    jsonApi.relationships().readToMany(json) == [
+      ResourceIdentifier.of("people", "9"),
+      ResourceIdentifier.of("people", "10")
+    ]
   }
 
   def "relationship facet binds identifier decoding with the relationship endpoint role"() {
