@@ -5,7 +5,10 @@ import com.kazforge.jsonapi.core.model.ErrorSource;
 import com.kazforge.jsonapi.core.model.JsonApiMembers;
 import com.kazforge.jsonapi.core.model.Links;
 import com.kazforge.jsonapi.core.model.Meta;
+import com.kazforge.jsonapi.core.validation.LinksContext;
+import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
+import com.kazforge.jsonapi.jackson.internal.wire.MemberClassifier;
 import com.kazforge.jsonapi.jackson.internal.wire.ValidationPointers;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,35 +37,49 @@ final class ErrorWireReader {
 
   private ErrorWireReader() {}
 
-  static List<ErrorObject> readErrorObjects(JsonParser parser, JsonPointerAccumulator pointer) {
+  static List<ErrorObject> readErrorObjects(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer) {
     WireTokens.expectToken(parser, JsonToken.START_ARRAY, pointer);
     List<ErrorObject> errors = new ArrayList<>();
     int index = 0;
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
       pointer.capture(ReadLocations.token(parser));
-      errors.add(readErrorObject(parser, pointer));
+      errors.add(readErrorObject(parser, validationContext, pointer));
       pointer.pop();
       index++;
     }
     return List.copyOf(errors);
   }
 
-  static ErrorObject readErrorObject(JsonParser parser, JsonPointerAccumulator pointer) {
-    ErrorDraft draft = new ErrorDraft();
+  static ErrorObject readErrorObject(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer) {
+    ErrorDraft draft = new ErrorDraft(validationContext);
     WireObjectMembers.forEachMember(
-        parser, pointer, name -> draft.readMember(name, parser, pointer));
+        parser,
+        pointer,
+        name ->
+            ERROR_MEMBERS.contains(name)
+                || MemberClassifier.isRetainedStructuralMember(name, validationContext),
+        name -> draft.readMember(name, parser, pointer));
     return draft.build(pointer);
   }
 
-  static ErrorSource readErrorSource(JsonParser parser, JsonPointerAccumulator pointer) {
-    ErrorSourceDraft draft = new ErrorSourceDraft();
+  static ErrorSource readErrorSource(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer) {
+    ErrorSourceDraft draft = new ErrorSourceDraft(validationContext);
     WireObjectMembers.forEachMember(
-        parser, pointer, name -> draft.readMember(name, parser, pointer));
+        parser,
+        pointer,
+        name ->
+            ERROR_SOURCE_MEMBERS.contains(name)
+                || MemberClassifier.isRetainedStructuralMember(name, validationContext),
+        name -> draft.readMember(name, parser, pointer));
     return draft.build(pointer);
   }
 
   private static final class ErrorDraft {
+    private final ValidationContext validationContext;
     private @Nullable String id;
     private @Nullable Links links;
     private @Nullable String status;
@@ -73,22 +90,32 @@ final class ErrorWireReader {
     private @Nullable Meta meta;
     private final Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
 
+    ErrorDraft(ValidationContext validationContext) {
+      this.validationContext = validationContext;
+    }
+
     void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer) {
       switch (name) {
         case JsonApiMembers.ID -> id = WireTokens.readRequiredString(parser, pointer);
-        case JsonApiMembers.LINKS -> links = LinkWireReader.readLinks(parser, pointer);
+        case JsonApiMembers.LINKS ->
+            links =
+                LinkWireReader.readLinks(parser, validationContext, LinksContext.ERROR, pointer);
         case JsonApiMembers.STATUS -> status = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.CODE -> code = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.TITLE -> title = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.DETAIL -> detail = WireTokens.readRequiredString(parser, pointer);
-        case JsonApiMembers.SOURCE -> source = readErrorSource(parser, pointer);
+        case JsonApiMembers.SOURCE -> source = readErrorSource(parser, validationContext, pointer);
         case JsonApiMembers.META -> meta = DocumentWireReader.readMeta(parser, pointer);
         default -> {
           if (ERROR_MEMBERS.contains(name)) {
             throw WireTokens.unexpected(
                 "Unexpected error member handling for: " + name, pointer, parser);
           }
-          WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          if (MemberClassifier.isRetainedStructuralMember(name, validationContext)) {
+            WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          } else {
+            WireTokens.skipValue(parser);
+          }
         }
       }
     }
@@ -120,10 +147,15 @@ final class ErrorWireReader {
   }
 
   private static final class ErrorSourceDraft {
+    private final ValidationContext validationContext;
     private @Nullable String pointerValue;
     private @Nullable String parameter;
     private @Nullable String header;
     private final Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
+
+    ErrorSourceDraft(ValidationContext validationContext) {
+      this.validationContext = validationContext;
+    }
 
     void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer) {
       switch (name) {
@@ -136,7 +168,11 @@ final class ErrorWireReader {
             throw WireTokens.unexpected(
                 "Unexpected error source member handling for: " + name, pointer, parser);
           }
-          WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          if (MemberClassifier.isRetainedStructuralMember(name, validationContext)) {
+            WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          } else {
+            WireTokens.skipValue(parser);
+          }
         }
       }
     }

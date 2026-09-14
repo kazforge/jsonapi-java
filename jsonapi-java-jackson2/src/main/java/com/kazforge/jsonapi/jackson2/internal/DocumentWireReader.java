@@ -12,10 +12,13 @@ import com.kazforge.jsonapi.core.model.Links;
 import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
+import com.kazforge.jsonapi.core.validation.LinksContext;
+import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.diagnostic.CodecFailureCategory;
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException;
 import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
 import com.kazforge.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
+import com.kazforge.jsonapi.jackson.internal.wire.MemberClassifier;
 import com.kazforge.jsonapi.jackson.internal.wire.ReadLocationIndex;
 import com.kazforge.jsonapi.jackson.internal.wire.ValidationPointers;
 import java.io.IOException;
@@ -45,13 +48,21 @@ final class DocumentWireReader {
   private DocumentWireReader() {}
 
   static JsonApiDocument readDocument(
-      JsonParser parser, PrimaryDataKind primaryDataKind, ReadLocationIndex locations)
+      JsonParser parser,
+      PrimaryDataKind primaryDataKind,
+      ValidationContext validationContext,
+      ReadLocationIndex locations)
       throws IOException {
     JsonPointerAccumulator pointer = new JsonPointerAccumulator(locations);
     try {
-      DocumentDraft draft = new DocumentDraft(primaryDataKind);
+      DocumentDraft draft = new DocumentDraft(primaryDataKind, validationContext);
       WireObjectMembers.forEachMember(
-          parser, pointer, name -> draft.readMember(name, parser, pointer));
+          parser,
+          pointer,
+          name ->
+              DOCUMENT_MEMBERS.contains(name)
+                  || MemberClassifier.isRetainedStructuralMember(name, validationContext),
+          name -> draft.readMember(name, parser, pointer));
       return draft.build(pointer);
     } catch (JsonProcessingException ex) {
       // Do not attach the raw cause: Jackson messages may include source details.
@@ -64,7 +75,11 @@ final class DocumentWireReader {
   }
 
   static DocumentData readDocumentData(
-      JsonParser parser, PrimaryDataKind kind, JsonPointerAccumulator pointer) throws IOException {
+      JsonParser parser,
+      PrimaryDataKind kind,
+      ValidationContext validationContext,
+      JsonPointerAccumulator pointer)
+      throws IOException {
     JsonToken token = parser.currentToken();
     if (token == JsonToken.VALUE_NULL) {
       return DocumentData.NullData.INSTANCE;
@@ -72,13 +87,14 @@ final class DocumentWireReader {
     if (token == JsonToken.START_OBJECT) {
       return switch (kind) {
         case RESOURCE -> {
-          ResourceObject resource = ResourceWireReader.readResourceObject(parser, pointer);
+          ResourceObject resource =
+              ResourceWireReader.readResourceObject(parser, validationContext, pointer);
           yield ValidationPointers.construct(
               pointer.path(), PATH_DATA, () -> new DocumentData.SingleResource(resource));
         }
         case RESOURCE_IDENTIFIER -> {
           ResourceIdentifier identifier =
-              ResourceWireReader.readResourceIdentifier(parser, pointer);
+              ResourceWireReader.readResourceIdentifier(parser, validationContext, pointer);
           yield ValidationPointers.construct(
               pointer.path(), PATH_DATA, () -> new DocumentData.SingleIdentifier(identifier));
         }
@@ -87,13 +103,14 @@ final class DocumentWireReader {
     if (token == JsonToken.START_ARRAY) {
       return switch (kind) {
         case RESOURCE -> {
-          List<ResourceObject> resources = ResourceWireReader.readResourceObjects(parser, pointer);
+          List<ResourceObject> resources =
+              ResourceWireReader.readResourceObjects(parser, validationContext, pointer);
           yield ValidationPointers.construct(
               pointer.path(), PATH_DATA, () -> new DocumentData.ResourceCollection(resources));
         }
         case RESOURCE_IDENTIFIER -> {
           List<ResourceIdentifier> identifiers =
-              ResourceWireReader.readResourceIdentifiers(parser, pointer);
+              ResourceWireReader.readResourceIdentifiers(parser, validationContext, pointer);
           yield ValidationPointers.construct(
               pointer.path(), PATH_DATA, () -> new DocumentData.IdentifierCollection(identifiers));
         }
@@ -113,16 +130,23 @@ final class DocumentWireReader {
         pointer.path(), "/meta", () -> Meta.of(ValidationPointers.forCore(members)));
   }
 
-  static JsonApiObject readJsonApiObject(JsonParser parser, JsonPointerAccumulator pointer)
+  static JsonApiObject readJsonApiObject(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
       throws IOException {
-    JsonApiObjectDraft draft = new JsonApiObjectDraft();
+    JsonApiObjectDraft draft = new JsonApiObjectDraft(validationContext);
     WireObjectMembers.forEachMember(
-        parser, pointer, name -> draft.readMember(name, parser, pointer));
+        parser,
+        pointer,
+        name ->
+            JSONAPI_MEMBERS.contains(name)
+                || MemberClassifier.isRetainedStructuralMember(name, validationContext),
+        name -> draft.readMember(name, parser, pointer));
     return draft.build(pointer);
   }
 
   private static final class DocumentDraft {
     private final PrimaryDataKind primaryDataKind;
+    private final ValidationContext validationContext;
     private boolean dataPresent;
     private @Nullable DocumentData data;
     private @Nullable List<ErrorObject> errors;
@@ -132,8 +156,9 @@ final class DocumentWireReader {
     private @Nullable List<ResourceObject> included;
     private final Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
 
-    DocumentDraft(PrimaryDataKind primaryDataKind) {
+    DocumentDraft(PrimaryDataKind primaryDataKind, ValidationContext validationContext) {
       this.primaryDataKind = primaryDataKind;
+      this.validationContext = validationContext;
     }
 
     void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer)
@@ -141,20 +166,29 @@ final class DocumentWireReader {
       switch (name) {
         case JsonApiMembers.DATA -> {
           dataPresent = true;
-          data = readDocumentData(parser, primaryDataKind, pointer);
+          data = readDocumentData(parser, primaryDataKind, validationContext, pointer);
         }
-        case JsonApiMembers.ERRORS -> errors = ErrorWireReader.readErrorObjects(parser, pointer);
+        case JsonApiMembers.ERRORS ->
+            errors = ErrorWireReader.readErrorObjects(parser, validationContext, pointer);
         case JsonApiMembers.META -> meta = readMeta(parser, pointer);
-        case JsonApiMembers.JSONAPI -> jsonapi = readJsonApiObject(parser, pointer);
-        case JsonApiMembers.LINKS -> links = LinkWireReader.readLinks(parser, pointer);
+        case JsonApiMembers.JSONAPI ->
+            jsonapi = readJsonApiObject(parser, validationContext, pointer);
+        case JsonApiMembers.LINKS ->
+            links =
+                LinkWireReader.readLinks(
+                    parser, validationContext, LinksContext.TOP_LEVEL, pointer);
         case JsonApiMembers.INCLUDED ->
-            included = ResourceWireReader.readResourceObjects(parser, pointer);
+            included = ResourceWireReader.readResourceObjects(parser, validationContext, pointer);
         default -> {
           if (DOCUMENT_MEMBERS.contains(name)) {
             throw WireTokens.unexpected(
                 "Unexpected document member handling for: " + name, pointer, parser);
           }
-          WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          if (MemberClassifier.isRetainedStructuralMember(name, validationContext)) {
+            WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          } else {
+            WireTokens.skipValue(parser);
+          }
         }
       }
     }
@@ -182,11 +216,16 @@ final class DocumentWireReader {
   }
 
   private static final class JsonApiObjectDraft {
+    private final ValidationContext validationContext;
     private @Nullable String version;
     private @Nullable List<String> ext;
     private @Nullable List<String> profile;
     private @Nullable Meta meta;
     private final Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
+
+    JsonApiObjectDraft(ValidationContext validationContext) {
+      this.validationContext = validationContext;
+    }
 
     void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer)
         throws IOException {
@@ -200,7 +239,11 @@ final class DocumentWireReader {
             throw WireTokens.unexpected(
                 "Unexpected jsonapi member handling for: " + name, pointer, parser);
           }
-          WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          if (MemberClassifier.isRetainedStructuralMember(name, validationContext)) {
+            WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          } else {
+            WireTokens.skipValue(parser);
+          }
         }
       }
     }

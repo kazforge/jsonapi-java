@@ -97,6 +97,10 @@ final class WireTokens {
     return parser.getString();
   }
 
+  static void skipValue(JsonParser parser) {
+    parser.skipChildren();
+  }
+
   static void expectToken(JsonParser parser, JsonToken expected, JsonPointerAccumulator pointer) {
     if (parser.currentToken() != expected) {
       throw unexpectedToken(parser.currentToken(), expected.name(), pointer, parser);

@@ -7,6 +7,8 @@ import com.kazforge.jsonapi.core.model.Link;
 import com.kazforge.jsonapi.core.model.Links;
 import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException;
+import com.kazforge.jsonapi.core.validation.LinksContext;
+import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode;
 import com.kazforge.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
 import com.kazforge.jsonapi.jackson.internal.wire.MemberClassifier;
@@ -34,24 +36,34 @@ final class LinkWireReader {
 
   private LinkWireReader() {}
 
-  static Links readLinks(JsonParser parser, JsonPointerAccumulator pointer) throws IOException {
+  static Links readLinks(
+      JsonParser parser,
+      ValidationContext validationContext,
+      LinksContext linksContext,
+      JsonPointerAccumulator pointer)
+      throws IOException {
     Map<String, @Nullable Link> links = WireTokens.newNullableLinkMap();
     Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
     WireObjectMembers.forEachMember(
         parser,
         pointer,
+        name -> MemberClassifier.isRecognizedLinkMember(name, validationContext, linksContext),
         name -> {
           if (MemberClassifier.isPassThroughLinkMember(name)) {
             WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          } else if (MemberClassifier.isRecognizedLinkMember(
+              name, validationContext, linksContext)) {
+            WireTokens.putLink(links, name, readLink(parser, validationContext, pointer));
           } else {
-            WireTokens.putLink(links, name, readLink(parser, pointer));
+            WireTokens.skipValue(parser);
           }
         });
     return ValidationPointers.construct(
         pointer.path(), PATH_LINKS, () -> Links.of(links, ValidationPointers.forCore(additional)));
   }
 
-  static @Nullable Link readLink(JsonParser parser, JsonPointerAccumulator pointer)
+  static @Nullable Link readLink(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
       throws IOException {
     JsonToken token = parser.currentToken();
     if (token == JsonToken.VALUE_NULL) {
@@ -63,16 +75,22 @@ final class LinkWireReader {
           pointer.path(), PATH_LINKS, () -> new Link.StringLink(href));
     }
     if (token == JsonToken.START_OBJECT) {
-      return readObjectLink(parser, pointer);
+      return readObjectLink(parser, validationContext, pointer);
     }
     throw WireTokens.unexpectedToken(token, "null, string, or object for link", pointer, parser);
   }
 
-  static Link.ObjectLink readObjectLink(JsonParser parser, JsonPointerAccumulator pointer)
+  static Link.ObjectLink readObjectLink(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
       throws IOException {
-    ObjectLinkDraft draft = new ObjectLinkDraft();
+    ObjectLinkDraft draft = new ObjectLinkDraft(validationContext);
     WireObjectMembers.forEachMember(
-        parser, pointer, name -> draft.readMember(name, parser, pointer));
+        parser,
+        pointer,
+        name ->
+            LINK_OBJECT_MEMBERS.contains(name)
+                || MemberClassifier.isRetainedStructuralMember(name, validationContext),
+        name -> draft.readMember(name, parser, pointer));
     return draft.build(pointer);
   }
 
@@ -89,6 +107,7 @@ final class LinkWireReader {
   }
 
   private static final class ObjectLinkDraft {
+    private final ValidationContext validationContext;
     private @Nullable String href;
     private @Nullable String rel;
     private @Nullable Link describedby;
@@ -98,12 +117,17 @@ final class LinkWireReader {
     private @Nullable Meta meta;
     private final Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
 
+    ObjectLinkDraft(ValidationContext validationContext) {
+      this.validationContext = validationContext;
+    }
+
     void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer)
         throws IOException {
       switch (name) {
         case JsonApiMembers.HREF -> href = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.REL -> rel = WireTokens.readRequiredString(parser, pointer);
-        case JsonApiMembers.DESCRIBEDBY -> describedby = readLink(parser, pointer);
+        case JsonApiMembers.DESCRIBEDBY ->
+            describedby = readLink(parser, validationContext, pointer);
         case JsonApiMembers.TITLE -> title = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.TYPE -> type = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.HREFLANG -> hreflang = readHreflang(parser, pointer);
@@ -113,7 +137,11 @@ final class LinkWireReader {
             throw WireTokens.unexpected(
                 "Unexpected link object member handling for: " + name, pointer, parser);
           }
-          WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          if (MemberClassifier.isRetainedStructuralMember(name, validationContext)) {
+            WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          } else {
+            WireTokens.skipValue(parser);
+          }
         }
       }
     }
