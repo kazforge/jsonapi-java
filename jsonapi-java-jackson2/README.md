@@ -100,6 +100,10 @@ JsonApiDocumentReader reader =
 JsonApiDocument roundTrip = reader.readValue(json);
 ```
 
+Readers discard unknown structural members using the bound validation policy, while still decoding
+and validating recognized standard, extension, allowed-profile, and `@` members; aggregate
+validation of directly constructed models and all writer paths remains strict.
+
 The writer validates a `JsonApiDocument` against its bound `ValidationContext` before any
 generator output starts, so validation failure cannot leave a partially written document. It
 offers five output forms for plain documents and the same five for `MappedDocument` values:
@@ -377,8 +381,11 @@ locations match Jackson 3 exactly.
 - Open values (attributes, meta, additional members, link values) accept strings, booleans,
   numbers, lists, maps, and `null`; anything else fails with `IllegalArgumentException`.
 - The reader decodes token-driven wire JSON through public core constructors under an explicit
-  `DocumentReadContext` (aggregate `ValidationContext` plus explicit `PrimaryDataKind`), then runs
-  aggregate validation before returning. Ambiguous `{"type","id"}` and `[]` primary data never
+  `DocumentReadContext` (aggregate `ValidationContext` plus explicit `PrimaryDataKind`), discarding
+  unknown structural members using the bound validation policy while still decoding and validating
+  recognized standard, extension, allowed-profile, and `@` members, then runs
+  aggregate validation before returning. Aggregate validation of directly constructed models and
+  all writer paths remains strict. Ambiguous `{"type","id"}` and `[]` primary data never
   guess: the bound `PrimaryDataKind` selects resource versus identifier decoding. Whole-input
   overloads (`String`, `byte[]`, `InputStream`) require end-of-input after the document, while the
   caller-parser overload consumes exactly one root value so sequential documents may follow.
@@ -421,7 +428,10 @@ contracts of [jsonapi-java-jackson-api](../jsonapi-java-jackson-api/README.md) p
 ## For contributors / agents
 
 - **Validate then write / read then validate:** `JsonApiDocumentWriter` and
-  `JsonApiDocumentReader` are the sole public codec paths. Failures preserve stable diagnostics
+  `JsonApiDocumentReader` are the sole public codec paths. Readers discard unknown structural
+  members using the bound validation policy while still decoding and validating recognized
+  standard, extension, allowed-profile, and `@` members; aggregate validation of directly
+  constructed models and all writer paths remains strict. Failures preserve stable diagnostics
   (`ValidationRuleCode` + JSON Pointer-like path; reads also carry `CodecFailureCategory` and safe
   source location). Emission failures propagate Jackson 2 checked `IOException` mechanics rather
   than a new exception family, and every reader overload declares `IOException` while Jackson parse

@@ -6,6 +6,8 @@ import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException
+import com.kazforge.jsonapi.core.validation.LinksContext
+import com.kazforge.jsonapi.core.validation.ValidationContext
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.jackson.diagnostic.SourceLocation
@@ -42,6 +44,54 @@ class JacksonInternalHelpersSpec extends Specification {
     !MemberClassifier.isPassThroughAttributeOrRelationship('peer')
     MemberClassifier.isPassThroughLinkMember('@extension')
     !MemberClassifier.isPassThroughLinkMember('ext:peer')
+  }
+
+  def "retained structural members keep extension, profile, and at channels"() {
+    given:
+    def defaults = ValidationContext.defaults()
+    def profile = new ValidationContext(
+        defaults.documentUsage(),
+        defaults.primaryDataContext(),
+        defaults.allowedExtensionNamespaces(),
+        defaults.allowedProfileUris(),
+        Set.of('custom') as Set,
+        defaults.sparseFieldsetLinkageExemptions(),
+        defaults.relationshipPaginationHints(),
+        defaults.expectedEndpointIdentity())
+
+    expect:
+    MemberClassifier.isRetainedStructuralMember('@note', defaults)
+    MemberClassifier.isRetainedStructuralMember('ext:note', defaults)
+    !MemberClassifier.isRetainedStructuralMember('bogus', defaults)
+    !MemberClassifier.isRetainedStructuralMember('https://example.com/rel', defaults)
+    !MemberClassifier.isRetainedStructuralMember('custom', defaults)
+    MemberClassifier.isRetainedStructuralMember('custom', profile)
+  }
+
+  def "recognized link members respect context, extension, profile, and at channels"() {
+    given:
+    def defaults = ValidationContext.defaults()
+    def profile = new ValidationContext(
+        defaults.documentUsage(),
+        defaults.primaryDataContext(),
+        defaults.allowedExtensionNamespaces(),
+        defaults.allowedProfileUris(),
+        Set.of('custom') as Set,
+        defaults.sparseFieldsetLinkageExemptions(),
+        defaults.relationshipPaginationHints(),
+        defaults.expectedEndpointIdentity())
+
+    expect:
+    MemberClassifier.isRecognizedLinkMember('@note', defaults, LinksContext.TOP_LEVEL)
+    MemberClassifier.isRecognizedLinkMember('ext:custom', defaults, LinksContext.TOP_LEVEL)
+    MemberClassifier.isRecognizedLinkMember('self', defaults, LinksContext.TOP_LEVEL)
+    !MemberClassifier.isRecognizedLinkMember('bogus', defaults, LinksContext.TOP_LEVEL)
+    !MemberClassifier.isRecognizedLinkMember('https://example.com/rel', defaults, LinksContext.TOP_LEVEL)
+    !MemberClassifier.isRecognizedLinkMember('custom', defaults, LinksContext.TOP_LEVEL)
+    MemberClassifier.isRecognizedLinkMember('custom', profile, LinksContext.TOP_LEVEL)
+    !MemberClassifier.isRecognizedLinkMember('about', defaults, LinksContext.TOP_LEVEL)
+    MemberClassifier.isRecognizedLinkMember('about', defaults, LinksContext.ERROR)
+    !MemberClassifier.isRecognizedLinkMember('self', defaults, LinksContext.ERROR)
   }
 
   def "pointer escaping is reversible for RFC 6901 segments"() {

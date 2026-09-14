@@ -23,8 +23,11 @@ import tools.jackson.databind.json.JsonMapper;
  * DocumentReadContext}.
  *
  * <p>Decoding is token-driven through public core constructors, then aggregate validation runs
- * before any document is returned. Convenience overloads close only parsers they create;
- * caller-owned {@link InputStream} and {@link JsonParser} instances remain open.
+ * before any document is returned. Unknown structural members are discarded on read using the bound
+ * validation policy, while recognized standard, extension, allowed-profile, and {@code @} members
+ * still decode and validate; aggregate validation of directly constructed models and all writer
+ * paths remains strict. Convenience overloads close only parsers they create; caller-owned {@link
+ * InputStream} and {@link JsonParser} instances remain open.
  */
 public final class JsonApiDocumentReader {
 
@@ -97,7 +100,9 @@ public final class JsonApiDocumentReader {
     JsonApiDocument document;
     try {
       ensureCurrentToken(parser);
-      document = JsonApiWireReader.readDocument(parser, context.primaryDataKind(), locations);
+      document =
+          JsonApiWireReader.readDocument(
+              parser, context.primaryDataKind(), context.validationContext(), locations);
     } catch (JsonApiValidationException ex) {
       throw wrapValidation(CodecFailureCategory.LOCAL_VALIDATION, ex, locations, parser);
     } catch (JacksonException ex) {

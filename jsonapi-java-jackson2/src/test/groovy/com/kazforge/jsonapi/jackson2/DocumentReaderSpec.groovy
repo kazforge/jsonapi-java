@@ -203,9 +203,7 @@ class DocumentReaderSpec extends Specification {
     'Relationship identifier without type reports a nested pointer'                   | 'negative/relationship-identifier-missing-type.json'    | CodecFailureCategory.LOCAL_VALIDATION    | '/data/relationships/author/data/type' | ValidationRuleCode.MISSING_RESOURCE_TYPE
     'Reserved member name inside attributes'                                          | 'negative/reserved-attribute.json'                      | CodecFailureCategory.LOCAL_VALIDATION    | '/data/attributes/type'              | ValidationRuleCode.RESERVED_FIELD_NAME
     'Object-form link without href'                                                   | 'negative/missing-link-href.json'                       | CodecFailureCategory.LOCAL_VALIDATION    | '/data/links/self/href'              | ValidationRuleCode.NULL_REQUIRED_VALUE
-    'Dynamic link relation escapes pointer segments'                                  | 'negative/invalid-dynamic-link-relation.json'           | CodecFailureCategory.LOCAL_VALIDATION    | '/links/foo~0bar~1baz'               | ValidationRuleCode.INVALID_LINK_RELATION
     'Dynamic attribute name escapes pointer segments'                                 | 'negative/invalid-dynamic-attribute-name.json'          | CodecFailureCategory.LOCAL_VALIDATION    | '/data/attributes/foo~0bar~1baz'     | ValidationRuleCode.INVALID_MEMBER_NAME
-    'Aggregate link-context failure escapes pointer segments'                         | 'negative/aggregate-uri-link-relation.json'             | CodecFailureCategory.AGGREGATE_VALIDATION | '/links/http:~1~1example.com~1rel'  | ValidationRuleCode.INVALID_LINKS_CONTEXT
     'Aggregate failure locates the offending resource'                                | 'negative/aggregate-validation-resource-location.json'  | CodecFailureCategory.AGGREGATE_VALIDATION | '/data/1'                           | ValidationRuleCode.DUPLICATE_RESOURCE_IDENTITY
     'Unrelated lid-only linkage requires id (defaults context)'                 | 'negative/unrelated-lid-linkage.json'                   | CodecFailureCategory.AGGREGATE_VALIDATION | '/data/relationships/author/data/id' | ValidationRuleCode.RESOURCE_ID_REQUIRED
     'Valid extension document fails under a context without the extension namespace'  | 'documents/extension-and-at-members.json'               | CodecFailureCategory.AGGREGATE_VALIDATION | '/ext:request-id'                   | ValidationRuleCode.DISALLOWED_ADDITIONAL_MEMBER
@@ -399,6 +397,240 @@ class DocumentReaderSpec extends Specification {
     document.links().links().get('ext:custom') instanceof Link.StringLink
     ((Link.StringLink) document.links().links().get('ext:custom')).href() == 'https://example.com/ext'
     !document.links().additionalMembers().containsKey('ext:custom')
+  }
+
+  def "unknown structural members are discarded on read"() {
+    given:
+    def reader = JsonApiJackson2.reader(mapper, resourceContext)
+
+    when:
+    def document = reader.readValue('''
+      {
+        "data": {
+          "type": "articles",
+          "id": "1",
+          "bogus-resource": {"nested": [1, 2]},
+          "attributes": {"title": "Hello"},
+          "relationships": {
+            "author": {
+              "data": {"type": "people", "id": "9"},
+              "bogus-rel": [1, 2, 3],
+              "links": {
+                "self": "https://example.test/self",
+                "bogus-link": "https://example.test/ignored",
+                "bogus-obj": {"a": 1}
+              }
+            }
+          },
+          "links": {
+            "self": "https://example.test/articles/1",
+            "bogus": "https://example.test/bogus"
+          }
+        },
+        "bogus-doc": 1,
+        "bogus-arr": [1, 2],
+        "bogus-obj": {"a": {"b": [1]}},
+        "links": {
+          "self": "https://example.test/top",
+          "bogus-top": {"href": "https://example.test/x"}
+        },
+        "meta": {}
+      }
+      ''')
+    def resource = (document.data() as DocumentData.SingleResource).resource()
+    def author = resource.relationships().relationships().get('author')
+
+    then:
+    document.additionalMembers().isEmpty()
+    resource.additionalMembers().isEmpty()
+    author.additionalMembers().isEmpty()
+    author.links().links().keySet() == ['self'] as Set
+    resource.links().links().keySet() == ['self'] as Set
+    document.links().links().keySet() == ['self'] as Set
+  }
+
+  def "unknown members in identifiers, jsonapi, errors, and sources are discarded"() {
+    given:
+    def identifierReader = JsonApiJackson2.reader(
+        mapper, DocumentReadContext.of(ValidationContext.defaults(), PrimaryDataKind.RESOURCE_IDENTIFIER))
+
+    when:
+    def identifierDocument = identifierReader.readValue('''
+      {
+        "data": {"type": "articles", "id": "1", "bogus": {"a": [1]}},
+        "jsonapi": {"version": "1.1", "bogus-jsonapi": [1, 2]},
+        "meta": {}
+      }
+      ''')
+    def identifier = (identifierDocument.data() as DocumentData.SingleIdentifier).identifier()
+
+    then:
+    identifier.additionalMembers().isEmpty()
+    identifierDocument.jsonapi().additionalMembers().isEmpty()
+    identifierDocument.additionalMembers().isEmpty()
+
+    when:
+    def errorDocument = JsonApiJackson2.reader(mapper, resourceContext).readValue('''
+      {
+        "errors": [
+          {
+            "code": "bad",
+            "bogus-err": 1,
+            "bogus-arr": [1],
+            "bogus-obj": {"a": 1},
+            "source": {"pointer": "/data", "bogus-src": [1]},
+            "links": {
+              "about": "https://example.test/about",
+              "bogus-link": "https://example.test/x"
+            }
+          }
+        ],
+        "jsonapi": {"version": "1.1", "bogus-jsonapi": 1},
+        "bogus-doc": {"a": 1},
+        "meta": {}
+      }
+      ''')
+    def error = errorDocument.errors().get(0)
+
+    then:
+    error.additionalMembers().isEmpty()
+    error.source().additionalMembers().isEmpty()
+    error.links().links().keySet() == ['about'] as Set
+    errorDocument.jsonapi().additionalMembers().isEmpty()
+    errorDocument.additionalMembers().isEmpty()
+  }
+
+  def "unknown members in link objects are discarded on read"() {
+    given:
+    def reader = JsonApiJackson2.reader(mapper, resourceContext)
+
+    when:
+    def document = reader.readValue('''
+      {
+        "links": {
+          "self": {
+            "href": "https://example.test/x",
+            "bogus-linkobj": 1,
+            "bogus-arr": [],
+            "bogus-obj": {"a": 1}
+          }
+        },
+        "meta": {}
+      }
+      ''')
+    def self = (Link.ObjectLink) document.links().links().get('self')
+
+    then:
+    self.additionalMembers().isEmpty()
+    self.href() == 'https://example.test/x'
+  }
+
+  def "recognized malformed link value still fails with safe diagnostics"() {
+    given:
+    def reader = JsonApiJackson2.reader(mapper, resourceContext)
+    def json = '{"links":{"self":123},"meta":{}}'
+
+    when:
+    reader.readValue(json)
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.category() == CodecFailureCategory.UNEXPECTED_TOKEN
+    ex.jsonPointer() == '/links/self'
+    ex.ruleCode() == null
+    ex.sourceLocation().isKnown()
+    ex.cause == null
+    !ex.message.contains('123')
+  }
+
+  def "extension, profile, and at members remain on read"() {
+    given:
+    def defaults = ValidationContext.defaults()
+    def validation = new ValidationContext(
+        defaults.documentUsage(),
+        defaults.primaryDataContext(),
+        Set.of('ext') as Set,
+        defaults.allowedProfileUris(),
+        Set.of('custom') as Set,
+        defaults.sparseFieldsetLinkageExemptions(),
+        defaults.relationshipPaginationHints(),
+        defaults.expectedEndpointIdentity())
+    def reader = JsonApiJackson2.reader(
+        mapper, DocumentReadContext.of(validation, PrimaryDataKind.RESOURCE))
+
+    when:
+    def document = reader.readValue('''
+      {
+        "data": {
+          "type": "articles",
+          "id": "1",
+          "custom": "profile-resource",
+          "ext:version": 1,
+          "@flag": true,
+          "relationships": {
+            "author": {
+              "data": {"type": "people", "id": "9"},
+              "custom": "profile-relationship"
+            }
+          },
+          "links": {
+            "self": "https://example.test/articles/1",
+            "ext:custom": "https://example.test/ext",
+            "custom": "https://example.test/profile"
+          }
+        },
+        "custom": "profile-doc",
+        "ext:request-id": "abc-123",
+        "@note": "at-doc",
+        "links": {
+          "self": "https://example.test/top",
+          "ext:top": "https://example.test/ext-top",
+          "custom": "https://example.test/profile-top"
+        },
+        "meta": {}
+      }
+      ''')
+    def resource = (document.data() as DocumentData.SingleResource).resource()
+    def author = resource.relationships().relationships().get('author')
+
+    then:
+    document.additionalMembers() == ['custom': 'profile-doc', 'ext:request-id': 'abc-123', '@note': 'at-doc']
+    resource.additionalMembers() == ['custom': 'profile-resource', 'ext:version': 1, '@flag': true]
+    author.additionalMembers() == ['custom': 'profile-relationship']
+    document.links().links().keySet() == ['self', 'ext:top', 'custom'] as Set
+    resource.links().links().keySet() == [
+      'self',
+      'ext:custom',
+      'custom'
+    ] as Set
+  }
+
+  def "duplicate unknown members are tolerated on read"() {
+    given:
+    def reader = JsonApiJackson2.reader(mapper, resourceContext)
+
+    when:
+    def document = reader.readValue('{"meta":{},"bogus":1,"bogus":2}')
+
+    then:
+    document.additionalMembers().isEmpty()
+    document.meta() != null
+  }
+
+  def "duplicate retained members remain rejected on read"() {
+    given:
+    def reader = JsonApiJackson2.reader(
+        mapper, DocumentReadContext.of(extContext(), PrimaryDataKind.RESOURCE))
+
+    when:
+    reader.readValue('{"meta":{},"ext:dup":1,"ext:dup":2}')
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.category() == CodecFailureCategory.DUPLICATE_MEMBER
+    ex.jsonPointer() == '/ext:dup'
+    ex.sourceLocation().isKnown()
+    ex.cause == null
   }
 
   def "bound context is exposed"() {

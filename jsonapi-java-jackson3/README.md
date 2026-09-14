@@ -96,6 +96,10 @@ JsonApiDocumentReader reader =
 JsonApiDocument roundTrip = reader.readValue(json);
 ```
 
+Readers discard unknown structural members using the bound validation policy, while still decoding
+and validating recognized standard, extension, allowed-profile, and `@` members; aggregate
+validation of directly constructed models and all writer paths remains strict.
+
 ## Construction policy
 
 The canonical construction seam for every Jackson 3 capability starts with a fully configured
@@ -478,8 +482,10 @@ ordinary type/module conversion fallback.
 `patchDtoReader`
 derive isolated mappers via `rebuild()`; `reader` uses the supplied mapper directly for token-driven
 decoding, and `domainDocumentReader` uses it for decoding while deriving its binder mapper. No
-construction path mutates the caller's mapper. Writers validate before emission. Readers decode
-through public core constructors, then run aggregate validation. Mappers and binders introspect
+construction path mutates the caller's mapper. Writers run aggregate validation of directly
+constructed models before emission. Readers discard
+unknown structural members using the bound validation policy, decode recognized members through
+public core constructors, then run aggregate validation. Mappers and binders introspect
 types for resource metadata. Derived mapping and PATCH binder mappers register the internal
 `MetaBindingModule` so built-in `ResourceIdentifier` values can round-trip identifier meta; the
 PATCH DTO binder additionally registers the internal `PatchPresence` module. None of those paths
@@ -527,7 +533,10 @@ artifact; both majors share the neutral contracts of
   with `RESOURCE_TYPE_MISMATCH` at `/data`. Never add facade-level naming, relationship-presence,
   or exception types.
 - **Validate then write / read then validate:** `JsonApiDocumentWriter` and `JsonApiDocumentReader`
-  are the sole public codec paths. Failures preserve stable diagnostics (`ValidationRuleCode` +
+  are the sole public codec paths. Readers discard unknown structural members using the bound
+  validation policy while still decoding and validating recognized standard, extension,
+  allowed-profile, and `@` members; aggregate validation of directly constructed models and all
+  writer paths remains strict. Failures preserve stable diagnostics (`ValidationRuleCode` +
   JSON Pointer-like path; reads also carry `CodecFailureCategory` and safe source location). Do not
   expose the codec mapper publicly.
 - **Map then write:** `JsonApiResourceMapper` produces core model objects; feed them to a writer

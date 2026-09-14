@@ -12,6 +12,8 @@ import com.kazforge.jsonapi.core.model.Relationships;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException;
+import com.kazforge.jsonapi.core.validation.LinksContext;
+import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode;
 import com.kazforge.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
 import com.kazforge.jsonapi.jackson.internal.wire.MemberClassifier;
@@ -44,7 +46,8 @@ final class ResourceWireReader {
 
   private ResourceWireReader() {}
 
-  static List<ResourceObject> readResourceObjects(JsonParser parser, JsonPointerAccumulator pointer)
+  static List<ResourceObject> readResourceObjects(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
       throws IOException {
     WireTokens.expectToken(parser, JsonToken.START_ARRAY, pointer);
     List<ResourceObject> resources = new ArrayList<>();
@@ -52,30 +55,37 @@ final class ResourceWireReader {
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
       pointer.capture(ReadLocations.token(parser));
-      resources.add(readResourceObject(parser, pointer));
+      resources.add(readResourceObject(parser, validationContext, pointer));
       pointer.pop();
       index++;
     }
     return List.copyOf(resources);
   }
 
-  static ResourceObject readResourceObject(JsonParser parser, JsonPointerAccumulator pointer)
+  static ResourceObject readResourceObject(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
       throws IOException {
-    ResourceDraft draft = new ResourceDraft();
+    ResourceDraft draft = new ResourceDraft(validationContext);
     WireObjectMembers.forEachMember(
-        parser, pointer, name -> draft.readMember(name, parser, pointer));
+        parser,
+        pointer,
+        name ->
+            RESOURCE_MEMBERS.contains(name)
+                || MemberClassifier.isRetainedStructuralMember(name, validationContext),
+        name -> draft.readMember(name, parser, pointer));
     return draft.build(pointer);
   }
 
   static List<ResourceIdentifier> readResourceIdentifiers(
-      JsonParser parser, JsonPointerAccumulator pointer) throws IOException {
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
+      throws IOException {
     WireTokens.expectToken(parser, JsonToken.START_ARRAY, pointer);
     List<ResourceIdentifier> identifiers = new ArrayList<>();
     int index = 0;
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
       pointer.capture(ReadLocations.token(parser));
-      identifiers.add(readResourceIdentifier(parser, pointer));
+      identifiers.add(readResourceIdentifier(parser, validationContext, pointer));
       pointer.pop();
       index++;
     }
@@ -83,10 +93,16 @@ final class ResourceWireReader {
   }
 
   static ResourceIdentifier readResourceIdentifier(
-      JsonParser parser, JsonPointerAccumulator pointer) throws IOException {
-    IdentifierDraft draft = new IdentifierDraft();
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
+      throws IOException {
+    IdentifierDraft draft = new IdentifierDraft(validationContext);
     WireObjectMembers.forEachMember(
-        parser, pointer, name -> draft.readMember(name, parser, pointer));
+        parser,
+        pointer,
+        name ->
+            IDENTIFIER_MEMBERS.contains(name)
+                || MemberClassifier.isRetainedStructuralMember(name, validationContext),
+        name -> draft.readMember(name, parser, pointer));
     return draft.build(pointer);
   }
 
@@ -113,7 +129,8 @@ final class ResourceWireReader {
                 ValidationPointers.forCore(attributes), ValidationPointers.forCore(additional)));
   }
 
-  static Relationships readRelationships(JsonParser parser, JsonPointerAccumulator pointer)
+  static Relationships readRelationships(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
       throws IOException {
     Map<String, @Nullable Relationship> relationships = WireTokens.newNullableRelationshipMap();
     Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
@@ -124,7 +141,8 @@ final class ResourceWireReader {
           if (MemberClassifier.isPassThroughAttributeOrRelationship(name)) {
             WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
           } else {
-            WireTokens.putRelationship(relationships, name, readRelationship(parser, pointer));
+            WireTokens.putRelationship(
+                relationships, name, readRelationship(parser, validationContext, pointer));
           }
         });
     return ValidationPointers.construct(
@@ -133,29 +151,37 @@ final class ResourceWireReader {
         () -> Relationships.of(relationships, ValidationPointers.forCore(additional)));
   }
 
-  static Relationship readRelationship(JsonParser parser, JsonPointerAccumulator pointer)
+  static Relationship readRelationship(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
       throws IOException {
-    RelationshipDraft draft = new RelationshipDraft();
+    RelationshipDraft draft = new RelationshipDraft(validationContext);
     WireObjectMembers.forEachMember(
-        parser, pointer, name -> draft.readMember(name, parser, pointer));
+        parser,
+        pointer,
+        name ->
+            RELATIONSHIP_MEMBERS.contains(name)
+                || MemberClassifier.isRetainedStructuralMember(name, validationContext),
+        name -> draft.readMember(name, parser, pointer));
     return draft.build(pointer);
   }
 
-  static RelationshipData readRelationshipData(JsonParser parser, JsonPointerAccumulator pointer)
+  static RelationshipData readRelationshipData(
+      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer)
       throws IOException {
     JsonToken token = parser.currentToken();
     if (token == JsonToken.VALUE_NULL) {
       return RelationshipData.NullLinkage.INSTANCE;
     }
     if (token == JsonToken.START_OBJECT) {
-      ResourceIdentifier identifier = readResourceIdentifier(parser, pointer);
+      ResourceIdentifier identifier = readResourceIdentifier(parser, validationContext, pointer);
       return ValidationPointers.construct(
           pointer.path(),
           "/relationships/data",
           () -> new RelationshipData.SingleLinkage(identifier));
     }
     if (token == JsonToken.START_ARRAY) {
-      List<ResourceIdentifier> identifiers = readResourceIdentifiers(parser, pointer);
+      List<ResourceIdentifier> identifiers =
+          readResourceIdentifiers(parser, validationContext, pointer);
       return ValidationPointers.construct(
           pointer.path(),
           "/relationships/data",
@@ -166,6 +192,7 @@ final class ResourceWireReader {
   }
 
   private static final class ResourceDraft {
+    private final ValidationContext validationContext;
     private @Nullable String type;
     private @Nullable String id;
     private @Nullable String lid;
@@ -175,6 +202,10 @@ final class ResourceWireReader {
     private @Nullable Meta meta;
     private final Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
 
+    ResourceDraft(ValidationContext validationContext) {
+      this.validationContext = validationContext;
+    }
+
     void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer)
         throws IOException {
       switch (name) {
@@ -182,15 +213,22 @@ final class ResourceWireReader {
         case JsonApiMembers.ID -> id = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.LID -> lid = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.ATTRIBUTES -> attributes = readAttributes(parser, pointer);
-        case JsonApiMembers.RELATIONSHIPS -> relationships = readRelationships(parser, pointer);
-        case JsonApiMembers.LINKS -> links = LinkWireReader.readLinks(parser, pointer);
+        case JsonApiMembers.RELATIONSHIPS ->
+            relationships = readRelationships(parser, validationContext, pointer);
+        case JsonApiMembers.LINKS ->
+            links =
+                LinkWireReader.readLinks(parser, validationContext, LinksContext.RESOURCE, pointer);
         case JsonApiMembers.META -> meta = DocumentWireReader.readMeta(parser, pointer);
         default -> {
           if (RESOURCE_MEMBERS.contains(name)) {
             throw WireTokens.unexpected(
                 "Unexpected resource member handling for: " + name, pointer, parser);
           }
-          WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          if (MemberClassifier.isRetainedStructuralMember(name, validationContext)) {
+            WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          } else {
+            WireTokens.skipValue(parser);
+          }
         }
       }
     }
@@ -226,11 +264,16 @@ final class ResourceWireReader {
   }
 
   private static final class IdentifierDraft {
+    private final ValidationContext validationContext;
     private @Nullable String type;
     private @Nullable String id;
     private @Nullable String lid;
     private @Nullable Meta meta;
     private final Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
+
+    IdentifierDraft(ValidationContext validationContext) {
+      this.validationContext = validationContext;
+    }
 
     void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer)
         throws IOException {
@@ -244,7 +287,11 @@ final class ResourceWireReader {
             throw WireTokens.unexpected(
                 "Unexpected resource identifier member handling for: " + name, pointer, parser);
           }
-          WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          if (MemberClassifier.isRetainedStructuralMember(name, validationContext)) {
+            WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          } else {
+            WireTokens.skipValue(parser);
+          }
         }
       }
     }
@@ -274,27 +321,39 @@ final class ResourceWireReader {
   }
 
   private static final class RelationshipDraft {
+    private final ValidationContext validationContext;
     private boolean dataPresent;
     private @Nullable RelationshipData data;
     private @Nullable Links links;
     private @Nullable Meta meta;
     private final Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
 
+    RelationshipDraft(ValidationContext validationContext) {
+      this.validationContext = validationContext;
+    }
+
     void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer)
         throws IOException {
       switch (name) {
         case JsonApiMembers.DATA -> {
           dataPresent = true;
-          data = readRelationshipData(parser, pointer);
+          data = readRelationshipData(parser, validationContext, pointer);
         }
-        case JsonApiMembers.LINKS -> links = LinkWireReader.readLinks(parser, pointer);
+        case JsonApiMembers.LINKS ->
+            links =
+                LinkWireReader.readLinks(
+                    parser, validationContext, LinksContext.RELATIONSHIP, pointer);
         case JsonApiMembers.META -> meta = DocumentWireReader.readMeta(parser, pointer);
         default -> {
           if (RELATIONSHIP_MEMBERS.contains(name)) {
             throw WireTokens.unexpected(
                 "Unexpected relationship member handling for: " + name, pointer, parser);
           }
-          WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          if (MemberClassifier.isRetainedStructuralMember(name, validationContext)) {
+            WireTokens.putOpen(additional, name, WireTokens.readOpenValue(parser, pointer));
+          } else {
+            WireTokens.skipValue(parser);
+          }
         }
       }
     }
