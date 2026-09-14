@@ -126,6 +126,22 @@ class DocumentReaderSpec extends Specification {
     meta.get('nullMeta') == null
   }
 
+  def "collection pagination link is retained on read"() {
+    given:
+    def reader = JsonApiJackson2.reader(mapper, resourceContext)
+
+    when:
+    def document = reader.readValue(readCorpusText('documents/resource-collection-with-pagination.json'))
+
+    then:
+    def collection = (document.data() as DocumentData.ResourceCollection).resources()
+    collection.size() == 2
+    collection[0].id() == '1'
+    collection[1].id() == '2'
+    ((Link.StringLink) document.links().links().get('next')).href() ==
+        'https://example.com/articles?page=2'
+  }
+
   def "all read sources decode one representative document equivalently"() {
     given:
     def json = readCorpusText('documents/single-resource.json')
@@ -206,6 +222,9 @@ class DocumentReaderSpec extends Specification {
     'Dynamic attribute name escapes pointer segments'                                 | 'negative/invalid-dynamic-attribute-name.json'          | CodecFailureCategory.LOCAL_VALIDATION    | '/data/attributes/foo~0bar~1baz'     | ValidationRuleCode.INVALID_MEMBER_NAME
     'Aggregate failure locates the offending resource'                                | 'negative/aggregate-validation-resource-location.json'  | CodecFailureCategory.AGGREGATE_VALIDATION | '/data/1'                           | ValidationRuleCode.DUPLICATE_RESOURCE_IDENTITY
     'Unrelated lid-only linkage requires id (defaults context)'                 | 'negative/unrelated-lid-linkage.json'                   | CodecFailureCategory.AGGREGATE_VALIDATION | '/data/relationships/author/data/id' | ValidationRuleCode.RESOURCE_ID_REQUIRED
+    'Top-level related is rejected for ordinary resource primary data'          | 'negative/resource-with-related-link.json'              | CodecFailureCategory.AGGREGATE_VALIDATION | '/links/related'                    | ValidationRuleCode.INVALID_LINKS_CONTEXT
+    'Top-level pagination requires collection primary data'                     | 'negative/resource-with-pagination.json'                | CodecFailureCategory.AGGREGATE_VALIDATION | '/links/next'                       | ValidationRuleCode.PAGINATION_REQUIRES_COLLECTION
+    'Unlinked included resource violates full linkage'                          | 'negative/unlinked-included.json'                       | CodecFailureCategory.AGGREGATE_VALIDATION | '/included'                         | ValidationRuleCode.FULL_LINKAGE_VIOLATION
     'Valid extension document fails under a context without the extension namespace'  | 'documents/extension-and-at-members.json'               | CodecFailureCategory.AGGREGATE_VALIDATION | '/ext:request-id'                   | ValidationRuleCode.DISALLOWED_ADDITIONAL_MEMBER
   }
 
@@ -223,6 +242,22 @@ class DocumentReaderSpec extends Specification {
     ex.category() == CodecFailureCategory.AGGREGATE_VALIDATION
     ex.jsonPointer() == '/data/relationships/author/data/id'
     ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
+  }
+
+  def "relationship endpoint rejects resource-object primary data"() {
+    given:
+    def json = readCorpusText('negative/relationship-resource-object.json')
+    def reader = JsonApiJackson2.reader(mapper, DocumentReadContext.of(
+        relationshipContext(), PrimaryDataKind.RESOURCE))
+
+    when:
+    reader.readValue(json)
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.category() == CodecFailureCategory.AGGREGATE_VALIDATION
+    ex.jsonPointer() == '/data'
+    ex.ruleCode() == ValidationRuleCode.PRIMARY_DATA_CONTEXT_MISMATCH
   }
 
   @Unroll
@@ -404,39 +439,7 @@ class DocumentReaderSpec extends Specification {
     def reader = JsonApiJackson2.reader(mapper, resourceContext)
 
     when:
-    def document = reader.readValue('''
-      {
-        "data": {
-          "type": "articles",
-          "id": "1",
-          "bogus-resource": {"nested": [1, 2]},
-          "attributes": {"title": "Hello"},
-          "relationships": {
-            "author": {
-              "data": {"type": "people", "id": "9"},
-              "bogus-rel": [1, 2, 3],
-              "links": {
-                "self": "https://example.test/self",
-                "bogus-link": "https://example.test/ignored",
-                "bogus-obj": {"a": 1}
-              }
-            }
-          },
-          "links": {
-            "self": "https://example.test/articles/1",
-            "bogus": "https://example.test/bogus"
-          }
-        },
-        "bogus-doc": 1,
-        "bogus-arr": [1, 2],
-        "bogus-obj": {"a": {"b": [1]}},
-        "links": {
-          "self": "https://example.test/top",
-          "bogus-top": {"href": "https://example.test/x"}
-        },
-        "meta": {}
-      }
-      ''')
+    def document = reader.readValue(readCorpusText('documents/unknown-members-tolerant.json'))
     def resource = (document.data() as DocumentData.SingleResource).resource()
     def author = resource.relationships().relationships().get('author')
 
@@ -1351,6 +1354,18 @@ class DocumentReaderSpec extends Specification {
     return new ValidationContext(
         DocumentUsage.CREATE_REQUEST,
         PrimaryDataContext.RESOURCE,
+        Set.of(),
+        Set.of(),
+        Set.of(),
+        Set.of(),
+        Map.of(),
+        null)
+  }
+
+  private static ValidationContext relationshipContext() {
+    return new ValidationContext(
+        DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RELATIONSHIP,
         Set.of(),
         Set.of(),
         Set.of(),

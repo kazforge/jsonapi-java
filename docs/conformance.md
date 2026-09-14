@@ -23,7 +23,9 @@ query selection while preserving opaque page/filter/unprocessed inputs. How thos
 together is in [`docs/architecture.md`](architecture.md). Writer output is cross-checked against pinned JSON:API 1.1 draft schemas as supplemental
 evidence only. The version-neutral document corpus, closed negative corpus, and dual-success
 ambiguous primary-data cases in the Jackson API test-fixtures corpus (`jsonapi/corpus/1.1/`) are
-shared wire resources for every Jackson major. Capability, schema, and context selections belong
+the normative shared wire-input inventory for every Jackson major. Both adapters consume the same
+unknown-member, create-identity, endpoint-role, linkage, pagination, and compound wire inputs.
+Capability, schema, and context selections belong
 to each adapter's local specifications. Spring adapters remain deferred.
 
 ## Document structure (supported)

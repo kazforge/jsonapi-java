@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "bogus-resource": {
+      "nested": [1, 2]
+    },
+    "attributes": {
+      "title": "Hello"
+    },
+    "relationships": {
+      "author": {
+        "data": {
+          "type": "people",
+          "id": "9"
+        },
+        "bogus-rel": [1, 2, 3],
+        "links": {
+          "self": "https://example.test/self",
+          "bogus-link": "https://example.test/ignored",
+          "bogus-obj": {
+            "a": 1
+          }
+        }
+      }
+    },
+    "links": {
+      "self": "https://example.test/articles/1",
+      "bogus": "https://example.test/bogus"
+    }
+  },
+  "bogus-doc": 1,
+  "bogus-arr": [1, 2],
+  "bogus-obj": {
+    "a": {
+      "b": [1]
+    }
+  },
+  "links": {
+    "self": "https://example.test/top",
+    "bogus-top": {
+      "href": "https://example.test/x"
+    }
+  },
+  "meta": {}
+}

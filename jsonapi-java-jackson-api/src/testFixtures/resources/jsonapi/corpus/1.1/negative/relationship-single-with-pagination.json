@@ -1,0 +1,9 @@
+{
+  "data": {
+    "type": "people",
+    "id": "9"
+  },
+  "links": {
+    "next": "https://example.com/articles/1/relationships/author?page=2"
+  }
+}

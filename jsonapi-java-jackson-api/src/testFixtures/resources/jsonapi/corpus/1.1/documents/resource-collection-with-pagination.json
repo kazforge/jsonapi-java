@@ -1,0 +1,21 @@
+{
+  "data": [
+    {
+      "type": "articles",
+      "id": "1",
+      "attributes": {
+        "title": "First"
+      }
+    },
+    {
+      "type": "articles",
+      "id": "2",
+      "attributes": {
+        "title": "Second"
+      }
+    }
+  ],
+  "links": {
+    "next": "https://example.com/articles?page=2"
+  }
+}

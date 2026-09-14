@@ -22,6 +22,7 @@ import com.kazforge.jsonapi.core.validation.ValidationContext
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.jackson.document.DocumentReadContext
+import com.kazforge.jsonapi.jackson.document.PrimaryDataKind
 import com.kazforge.jsonapi.jackson.mapping.MappedDocument
 
 import spock.lang.Shared
@@ -205,6 +206,52 @@ class DocumentWriterContractSpec extends Specification {
     noExceptionThrown()
   }
 
+  def "roundtrips fixture #path through reader and writer"() {
+    given:
+    def json = readCorpusText(path)
+    def readContext = DocumentReadContext.of(
+        context, primaryDataKind ?: PrimaryDataKind.RESOURCE)
+    def reader = JsonApiJackson2.reader(mapper, readContext)
+    def writer = JsonApiJackson2.writer(mapper, context)
+
+    when:
+    def document = reader.readValue(json)
+    def actual = writer.writeValueAsString(document)
+
+    then:
+    mapper.readTree(actual) == mapper.readTree(json)
+
+    where:
+    path                                               | context                     | primaryDataKind
+    'documents/single-resource.json'                   | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/resource-collection.json'               | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/resource-collection-with-pagination.json' | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/ambiguous-empty-array-primary-data.json' | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/single-identifier.json'                 | ValidationContext.defaults() | PrimaryDataKind.RESOURCE_IDENTIFIER
+    'documents/identifier-collection.json'             | ValidationContext.defaults() | PrimaryDataKind.RESOURCE_IDENTIFIER
+    'documents/null-data.json'                         | ValidationContext.defaults() | null
+    'documents/meta-only.json'                         | ValidationContext.defaults() | null
+    'documents/empty-identifier-collection.json'      | ValidationContext.defaults() | PrimaryDataKind.RESOURCE_IDENTIFIER
+    'documents/empty-wrappers.json'                    | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/empty-errors.json'                      | ValidationContext.defaults() | null
+    'documents/empty-included.json'                    | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/open-values.json'                       | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/relationship-null-linkage.json'         | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/relationship-empty-to-many.json'        | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/relationship-link-only.json'            | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/relationship-meta-only.json'            | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/string-and-object-links.json'           | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/errors-document.json'                   | ValidationContext.defaults() | null
+    'documents/jsonapi-object.json'                    | extContext()                | PrimaryDataKind.RESOURCE
+    'documents/compound-document.json'                 | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/compound-nested-intermediate.json'      | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/compound-shared-identity.json'          | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/compound-linked-article.json'           | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/local-identifier.json'                  | createContext()             | PrimaryDataKind.RESOURCE
+    'documents/extension-and-at-members.json'          | extContext()                | PrimaryDataKind.RESOURCE
+    'documents/member-order.json'                      | extContext()                | PrimaryDataKind.RESOURCE
+  }
+
   def "emits exact member order for the constructed member-order corpus shape"() {
     given:
     def context = extContext()
@@ -298,6 +345,22 @@ class DocumentWriterContractSpec extends Specification {
         Set.of(),
         Map.of(),
         null)
+  }
+
+  private static ValidationContext createContext() {
+    return new ValidationContext(
+        DocumentUsage.CREATE_REQUEST,
+        PrimaryDataContext.RESOURCE,
+        Set.of(),
+        Set.of(),
+        Set.of(),
+        Set.of(),
+        Map.of(),
+        null)
+  }
+
+  private static String readCorpusText(String relativePath) {
+    return TestFixtureResources.readCorpusUtf8(relativePath)
   }
 
   private static JsonApiDocument memberOrderDocument() {

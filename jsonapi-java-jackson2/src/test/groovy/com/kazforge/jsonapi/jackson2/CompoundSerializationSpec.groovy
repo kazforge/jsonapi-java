@@ -9,6 +9,7 @@ import com.kazforge.jsonapi.jackson.representation.IncludePolicy
 import com.kazforge.jsonapi.jackson.representation.RelationshipAllowance
 import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy
 import com.kazforge.jsonapi.jackson.representation.RepresentationSelection
+import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.fixtures.compoundwrite.AccessCountingArticle
 import com.kazforge.jsonapi.fixtures.compoundwrite.BaseComment
 import com.kazforge.jsonapi.fixtures.compoundwrite.ConflictArticle
@@ -198,6 +199,23 @@ class CompoundSerializationSpec extends Specification {
     counting.commentsReads == baseline.commentsReads
     counting.authorReads == 2
     counting.commentsReads == 1
+  }
+
+  def "linked article inclusion matches the shared compound golden"() {
+    given:
+    def selection = selectionFor(["related"])
+    def policy = includePolicy(IncludePolicy.allowAll())
+    def wireMapper = JsonMapper.builder().build()
+    def writer = JsonApiJackson2.writer(wireMapper)
+
+    when:
+    def document = mapper.toDocument(
+        new LinkedArticle("1", new LinkedArticle("2", null)), null, selection, policy)
+    def json = writer.writeValueAsString(document)
+
+    then:
+    wireMapper.readTree(json) ==
+        wireMapper.readTree(TestFixtureResources.readCorpusUtf8("documents/compound-linked-article.json"))
   }
 
   def "heterogeneous primary collections validate every runtime resource type"() {

@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "relationships": {
+      "related": {
+        "data": {
+          "type": "articles",
+          "id": "2"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "articles",
+      "id": "2",
+      "relationships": {
+        "related": {
+          "data": null
+        }
+      }
+    }
+  ]
+}

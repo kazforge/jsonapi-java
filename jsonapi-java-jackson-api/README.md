@@ -149,10 +149,15 @@ path only; Level-1 homogeneous reads remain registry-free.
 ## Test Fixtures
 
 The `java-test-fixtures` variant contains passive, Jackson-major-neutral DTO carriers and the
-canonical JSON:API corpus and pinned draft-schema resources used by adapter tests. The small
+canonical JSON:API corpus and pinned draft-schema resources used by adapter tests. The corpus is the
+normative shared wire-input inventory for behavior that must match across Jackson majors. The small
 `com.kazforge.jsonapi.fixtures.TestFixtureResources` type only loads those classpath resources.
 Behavioral cases, policy tables, diagnostics, and assertions remain owned by each adapter's local
 specifications; this module does not provide shared test orchestration or scenario catalogs.
+
+For a future cross-major semantic regression, add or extend one neutral corpus case where the wire
+scenario is major-independent, consume it from both adapter suites, and keep major-specific mechanic
+proofs local.
 
 ## Non-goals
 

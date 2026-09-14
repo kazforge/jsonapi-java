@@ -8,6 +8,7 @@ import com.kazforge.jsonapi.jackson.diagnostic.CodecFailureCategory
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.jackson.document.DocumentReadContext
 import com.kazforge.jsonapi.jackson.document.PrimaryDataKind
 import com.kazforge.jsonapi.jackson3.CloseTrackingFixtures.TrackingInputStream
@@ -154,8 +155,7 @@ class Jackson3JsonApiRelationshipsSpec extends Specification {
 
   def "resource reads reject top-level related"() {
     given:
-    def json = '{"data":{"type":"articles","id":"1"},' +
-        '"links":{"related":"https://example.com/articles/1/related"}}'
+    def json = TestFixtureResources.readCorpusUtf8('negative/resource-with-related-link.json')
 
     when:
     jsonApi.resources().readOne(json, FlatArticle)
@@ -167,10 +167,17 @@ class Jackson3JsonApiRelationshipsSpec extends Specification {
     ex.jsonPointer() == "/links/related"
   }
 
+  def "explicit null relationship reads accept top-level related"() {
+    given:
+    def json = TestFixtureResources.readCorpusUtf8('documents/relationship-null-with-related.json')
+
+    expect:
+    jsonApi.relationships().readToOne(json) == null
+  }
+
   def "to-one relationship reads accept top-level related"() {
     given:
-    def json = '{"data":{"type":"people","id":"9"},' +
-        '"links":{"related":"https://example.com/articles/1/related"}}'
+    def json = TestFixtureResources.readCorpusUtf8('documents/relationship-single-with-related.json')
 
     expect:
     jsonApi.relationships().readToOne(json) == ResourceIdentifier.of("people", "9")
@@ -178,14 +185,38 @@ class Jackson3JsonApiRelationshipsSpec extends Specification {
 
   def "to-many relationship reads accept top-level related"() {
     given:
-    def json = '{"data":[{"type":"people","id":"9"},{"type":"people","id":"10"}],' +
-        '"links":{"related":"https://example.com/articles/1/related"}}'
+    def json = TestFixtureResources.readCorpusUtf8('documents/relationship-collection-with-related.json')
 
     expect:
     jsonApi.relationships().readToMany(json) == [
       ResourceIdentifier.of("people", "9"),
       ResourceIdentifier.of("people", "10")
     ]
+  }
+
+  def "to-many relationship reads accept collection pagination"() {
+    given:
+    def json = TestFixtureResources.readCorpusUtf8('documents/relationship-collection-with-pagination.json')
+
+    expect:
+    jsonApi.relationships().readToMany(json) == [
+      ResourceIdentifier.of("people", "9"),
+      ResourceIdentifier.of("people", "10")
+    ]
+  }
+
+  def "relationship reads reject single-linkage pagination"() {
+    given:
+    def json = TestFixtureResources.readCorpusUtf8('negative/relationship-single-with-pagination.json')
+
+    when:
+    jsonApi.relationships().readToOne(json)
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.category() == CodecFailureCategory.AGGREGATE_VALIDATION
+    ex.ruleCode() == ValidationRuleCode.PAGINATION_REQUIRES_COLLECTION
+    ex.jsonPointer() == "/links/next"
   }
 
   def "relationship facet binds identifier decoding with the relationship endpoint role"() {

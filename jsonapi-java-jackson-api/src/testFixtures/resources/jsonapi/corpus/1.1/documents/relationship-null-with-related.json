@@ -1,0 +1,9 @@
+{
+  "data": null,
+  "links": {
+    "related": "https://example.com/articles/1/related"
+  },
+  "meta": {
+    "reason": "empty"
+  }
+}

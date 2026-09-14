@@ -1,0 +1,9 @@
+{
+  "data": {
+    "type": "articles",
+    "id": "1"
+  },
+  "links": {
+    "related": "https://example.com/articles/1/related"
+  }
+}
