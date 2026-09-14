@@ -407,12 +407,12 @@ class JsonApiDocumentValidatorSpec extends Specification {
     ex.ruleCode() == ValidationRuleCode.PAGINATION_REQUIRES_COLLECTION
   }
 
-  def "duplicate lid identities across primary and included are rejected"() {
+  def "duplicate lid-bound identities across primary and included are rejected"() {
     given:
     def primary = new ResourceObject(
-        "articles", null, "a1", null, null, null, null, [:])
-    def included1 = new ResourceObject("articles", null, "a1", Attributes.ofAttributes([t: 1]), null, null, null, [:])
-    def included2 = new ResourceObject("articles", null, "a1", Attributes.ofAttributes([t: 2]), null, null, null, [:])
+        "articles", "1", "a1", null, null, null, null, [:])
+    def included1 = new ResourceObject("articles", "1", "a1", Attributes.ofAttributes([t: 1]), null, null, null, [:])
+    def included2 = new ResourceObject("articles", "1", "a1", Attributes.ofAttributes([t: 2]), null, null, null, [:])
     def doc = new JsonApiDocument(
         new DocumentData.SingleResource(primary),
         null, null, null, null,
@@ -646,7 +646,8 @@ class JsonApiDocumentValidatorSpec extends Specification {
         "articles", "1", null, null,
         Relationships.ofRelationships([
           comments: Relationship.withData(
-          new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("comments", "c-local")))
+          new RelationshipData.SingleLinkage(
+          new ResourceIdentifier("comments", "5", "c-local", null, [:])))
         ]),
         null, null, [:])
     def doc = new JsonApiDocument(
@@ -663,11 +664,11 @@ class JsonApiDocumentValidatorSpec extends Specification {
     noExceptionThrown()
   }
 
-  def "pre-bound lid alias resolves transitive full linkage for lid-only included resource"() {
+  def "pre-bound lid alias resolves transitive full linkage for included resource with id and lid"() {
     given:
     def comment = ResourceObject.of("comments", "5")
     def person = new ResourceObject(
-        "people", null, "local", null,
+        "people", "9", "local", null,
         Relationships.ofRelationships([
           comments: Relationship.withData(
           new RelationshipData.SingleLinkage(ResourceIdentifier.of("comments", "5")))
@@ -866,8 +867,8 @@ class JsonApiDocumentValidatorSpec extends Specification {
 
     then:
     def ex = thrown(JsonApiValidationException)
-    ex.ruleCode() == ValidationRuleCode.INCLUDED_RESOURCE_IDENTITY_REQUIRED
-    ex.jsonPointer() == "/included/0"
+    ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
+    ex.jsonPointer() == "/included/0/id"
   }
 
   def "collection relationship pagination is allowed without hint"() {
@@ -1160,12 +1161,12 @@ class JsonApiDocumentValidatorSpec extends Specification {
     noExceptionThrown()
   }
 
-  def "binding then lid-only included resource with different attributes is rejected"() {
+  def "binding then conflicting included resource with different attributes is rejected"() {
     given:
     def primary = new ResourceObject(
         "people", "9", "local", Attributes.ofAttributes([name: "primary"]), null, null, null, [:])
     def included = new ResourceObject(
-        "people", null, "local", Attributes.ofAttributes([name: "other"]), null, null, null, [:])
+        "people", "9", "local", Attributes.ofAttributes([name: "other"]), null, null, null, [:])
     def doc = new JsonApiDocument(
         new DocumentData.SingleResource(primary),
         null, null, null, null,
@@ -1551,21 +1552,16 @@ class JsonApiDocumentValidatorSpec extends Specification {
 
   def "cross-alias duplicate relationship identifier collection is rejected after binding"() {
     given:
-    def comment = new ResourceObject("comments", "5", "c-local", null, null, null, null, [:])
-    def article = new ResourceObject(
-        "articles", "1", null, null,
+    def primary = new ResourceObject(
+        "comments", "5", "c-local", null,
         Relationships.ofRelationships([
-          comments: Relationship.withData(new RelationshipData.IdentifierCollectionLinkage([
+          related: Relationship.withData(new RelationshipData.IdentifierCollectionLinkage([
             ResourceIdentifier.of("comments", "5"),
             ResourceIdentifier.withLid("comments", "c-local")
           ]))
         ]),
         null, null, [:])
-    def doc = new JsonApiDocument(
-        new DocumentData.SingleResource(article),
-        null, null, null, null,
-        [comment],
-        [:])
+    def doc = JsonApiDocument.withData(new DocumentData.SingleResource(primary))
     def context = ValidationContext.defaults().withDocumentUsage(DocumentUsage.CREATE_REQUEST)
 
     when:
@@ -1574,7 +1570,7 @@ class JsonApiDocumentValidatorSpec extends Specification {
     then:
     def ex = thrown(JsonApiValidationException)
     ex.ruleCode() == ValidationRuleCode.DUPLICATE_RESOURCE_IDENTITY
-    ex.jsonPointer() == "/data/relationships/comments/data/1"
+    ex.jsonPointer() == "/data/relationships/related/data/1"
   }
 
   def "cross-alias duplicate relationship collection is rejected when included is absent"() {

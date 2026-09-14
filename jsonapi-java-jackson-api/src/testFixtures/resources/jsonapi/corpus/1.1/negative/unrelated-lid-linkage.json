@@ -1,12 +1,12 @@
 {
   "data": {
     "type": "articles",
-    "lid": "temp-1",
+    "id": "1",
     "relationships": {
       "author": {
         "data": {
-          "type": "articles",
-          "lid": "temp-1"
+          "type": "people",
+          "lid": "temp-author"
         }
       }
     }

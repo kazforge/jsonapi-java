@@ -79,7 +79,7 @@ class DocumentReaderSpec extends Specification {
     'Compound document with included resources'                     | 'documents/compound-document.json'                    | ValidationContext.defaults() | PrimaryDataKind.RESOURCE            | compoundDocument()
     'Compound document with nested comments.author intermediates'   | 'documents/compound-nested-intermediate.json'         | ValidationContext.defaults() | PrimaryDataKind.RESOURCE            | compoundNestedIntermediateDocument()
     'Compound collection sharing one included author identity'      | 'documents/compound-shared-identity.json'             | ValidationContext.defaults() | PrimaryDataKind.RESOURCE            | compoundSharedIdentityDocument()
-    'Resource and linkage with lid'                                 | 'documents/local-identifier.json'                     | createContext()              | PrimaryDataKind.RESOURCE            | localIdentifierDocument()
+    'Resource and self-reference linkage with lid'                  | 'documents/local-identifier.json'                     | createContext()              | PrimaryDataKind.RESOURCE            | localIdentifierDocument()
     'Extension and @ members on document and resource'              | 'documents/extension-and-at-members.json'             | extContext()                 | PrimaryDataKind.RESOURCE            | extensionAndAtMembersDocument()
     'Canonical standard member order then additional members'       | 'documents/member-order.json'                         | extContext()                 | PrimaryDataKind.RESOURCE            | memberOrderDocument()
   }
@@ -321,7 +321,24 @@ class DocumentReaderSpec extends Specification {
     'Dynamic attribute name escapes pointer segments'                                 | 'negative/invalid-dynamic-attribute-name.json'          | CodecFailureCategory.LOCAL_VALIDATION    | '/data/attributes/foo~0bar~1baz'     | ValidationRuleCode.INVALID_MEMBER_NAME
     'Aggregate link-context failure escapes pointer segments'                         | 'negative/aggregate-uri-link-relation.json'             | CodecFailureCategory.AGGREGATE_VALIDATION | '/links/http:~1~1example.com~1rel'  | ValidationRuleCode.INVALID_LINKS_CONTEXT
     'Aggregate failure locates the offending resource; Jackson 3 also asserts line 4' | 'negative/aggregate-validation-resource-location.json'  | CodecFailureCategory.AGGREGATE_VALIDATION | '/data/1'                           | ValidationRuleCode.DUPLICATE_RESOURCE_IDENTITY
+    'Unrelated lid-only linkage requires id (defaults context)'                 | 'negative/unrelated-lid-linkage.json'                   | CodecFailureCategory.AGGREGATE_VALIDATION | '/data/relationships/author/data/id' | ValidationRuleCode.RESOURCE_ID_REQUIRED
     'Valid extension document fails under a context without the extension namespace'  | 'documents/extension-and-at-members.json'               | CodecFailureCategory.AGGREGATE_VALIDATION | '/ext:request-id'                   | ValidationRuleCode.DISALLOWED_ADDITIONAL_MEMBER
+  }
+
+  def "unrelated lid-only linkage fails in create-request context"() {
+    given:
+    def json = readCorpusText('negative/unrelated-lid-linkage.json')
+    def reader = JsonApiJackson3.reader(mapper, DocumentReadContext.of(
+        createContext(), PrimaryDataKind.RESOURCE))
+
+    when:
+    reader.readValue(json)
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.category() == CodecFailureCategory.AGGREGATE_VALIDATION
+    ex.jsonPointer() == '/data/relationships/author/data/id'
+    ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
   }
 
   @Unroll
@@ -730,7 +747,7 @@ class DocumentReaderSpec extends Specification {
     relationships.put(
         'author',
         new Relationship(
-        new RelationshipData.SingleLinkage(ResourceIdentifier.withLid('people', 'temp-author')),
+        new RelationshipData.SingleLinkage(ResourceIdentifier.withLid('articles', 'temp-1')),
         null,
         null,
         Map.of()))

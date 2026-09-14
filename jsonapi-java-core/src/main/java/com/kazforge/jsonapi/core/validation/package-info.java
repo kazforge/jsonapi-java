@@ -24,8 +24,10 @@
  * supplied by the primary resource while accepting null, single, and collection linkage. Included
  * resources and relationship linkage are exempt from the primary relationship-data rule under both
  * write usages; otherwise existing identity and aggregate rules apply unchanged. Create identity
- * leniency (an omittable resource {@code id}, with {@code id} and {@code lid} kept independent)
- * still applies document-wide until the separate identity rule narrows it. The relationship
+ * leniency (an omittable resource {@code id} on the primary create resource, with {@code id} and
+ * {@code lid} kept independent) applies only to that primary resource occurrence; a {@code
+ * lid}-only relationship identifier is accepted only as a self-reference to the same primary
+ * resource, while unrelated linkage and included resources require {@code id}. The relationship
  * endpoint role accepts linkage primary data and rejects resource objects with {@code
  * PRIMARY_DATA_CONTEXT_MISMATCH}.
  *

@@ -113,8 +113,6 @@ class CreateRequestValidationSpec extends Specification {
     "null linkage"                   | Relationship.withData(RelationshipData.NullLinkage.INSTANCE)
     "single linkage"                 | Relationship.withData(
         new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "2")))
-    "single lid linkage"             | Relationship.withData(
-        new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("people", "people-lid")))
     "empty collection"               | Relationship.withData(
         new RelationshipData.IdentifierCollectionLinkage([]))
     "non-empty collection"           | Relationship.withData(
@@ -122,11 +120,6 @@ class CreateRequestValidationSpec extends Specification {
         [
           ResourceIdentifier.of("tags", "1"),
           ResourceIdentifier.of("tags", "2")
-        ]))
-    "lid collection"                 | Relationship.withData(
-        new RelationshipData.IdentifierCollectionLinkage(
-        [
-          ResourceIdentifier.withLid("tags", "tag-lid")
         ]))
     "single linkage plus links"      | new Relationship(
         new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "2")),
@@ -147,10 +140,80 @@ class CreateRequestValidationSpec extends Specification {
         [:])
   }
 
+  def "create request accepts lid-only self-reference to the primary create resource"(String linkage, Relationship relationship) {
+    given:
+    def article = new ResourceObject(
+        "articles", null, "article-lid", null,
+        Relationships.ofRelationships([origin: relationship]),
+        null, null, [:])
+    def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
+
+    when:
+    validator.validate(doc, createContext())
+
+    then:
+    noExceptionThrown()
+
+    where:
+    linkage                          | relationship
+    "single self-reference"          | Relationship.withData(
+        new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("articles", "article-lid")))
+    "collection self-reference"      | Relationship.withData(
+        new RelationshipData.IdentifierCollectionLinkage(
+        [
+          ResourceIdentifier.withLid("articles", "article-lid")
+        ]))
+  }
+
+  def "create request rejects unrelated lid-only relationship linkage"(String linkage, Relationship relationship, String pointer) {
+    given:
+    def article = new ResourceObject(
+        "articles", null, "article-lid", null,
+        Relationships.ofRelationships([author: relationship]),
+        null, null, [:])
+    def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
+
+    when:
+    validator.validate(doc, createContext())
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
+    ex.jsonPointer() == pointer
+
+    where:
+    linkage                                | relationship                                                                 | pointer
+    "single lid linkage, other type"       | Relationship.withData(new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("people", "people-lid"))) | "/data/relationships/author/data/id"
+    "single lid linkage, other lid"        | Relationship.withData(new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("articles", "other-lid"))) | "/data/relationships/author/data/id"
+    "lid collection, unrelated"            | Relationship.withData(new RelationshipData.IdentifierCollectionLinkage([
+      ResourceIdentifier.withLid("tags", "tag-lid")
+    ])) | "/data/relationships/author/data/0/id"
+  }
+
+  def "create request rejects lid-only linkage when the primary carries no lid"() {
+    given:
+    def article = new ResourceObject(
+        "articles", null, null, null,
+        Relationships.ofRelationships([
+          author: Relationship.withData(
+          new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("articles", "orphan-lid")))
+        ]),
+        null, null, [:])
+    def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
+
+    when:
+    validator.validate(doc, createContext())
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
+    ex.jsonPointer() == "/data/relationships/author/data/id"
+  }
+
   def "create request accepts relationship with data plus links, meta, and allowed extension member"() {
     given:
     def relationship = new Relationship(
-        new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("people", "people-lid")),
+        new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "2")),
         Links.ofLinks([self: new Link.StringLink("http://example.com/authors/2")]),
         Meta.of([count: 1]),
         ["ext:x": 1])
@@ -202,17 +265,17 @@ class CreateRequestValidationSpec extends Specification {
     "extension-only"             | new Relationship(null, null, null, ["ext:x": 1])
   }
 
-  def "create request accepts compound document without applying create rules to included resources"() {
+  def "create request accepts compound document without applying primary relationship rules to included resources"() {
     given:
     def article = new ResourceObject(
         "articles", null, "article-lid", null,
         Relationships.ofRelationships([
           author: Relationship.withData(
-          new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("people", "author-lid")))
+          new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "2")))
         ]),
         null, null, [:])
     def author = new ResourceObject(
-        "people", null, "author-lid", null,
+        "people", "2", null, null,
         Relationships.ofRelationships([
           avatar: Relationship.linkOnly(
           Links.ofLinks([self: new Link.StringLink("http://example.com/avatars/2")]))
@@ -229,6 +292,58 @@ class CreateRequestValidationSpec extends Specification {
 
     then:
     noExceptionThrown()
+  }
+
+  def "create request rejects lid-only included resources"() {
+    given:
+    def article = new ResourceObject(
+        "articles", null, "article-lid", null,
+        Relationships.ofRelationships([
+          author: Relationship.withData(
+          new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "2")))
+        ]),
+        null, null, [:])
+    def author = new ResourceObject(
+        "people", null, "author-lid", null, null, null, null, [:])
+    def doc = new JsonApiDocument(
+        new DocumentData.SingleResource(article),
+        null, null, null, null,
+        [author],
+        [:])
+
+    when:
+    validator.validate(doc, createContext())
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
+    ex.jsonPointer() == "/included/0/id"
+  }
+
+  def "lid-only linkage remains rejected outside create-request contexts"() {
+    given:
+    def article = new ResourceObject(
+        "articles", "1", null, null,
+        Relationships.ofRelationships([
+          author: Relationship.withData(
+          new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("people", "people-lid")))
+        ]),
+        null, null, [:])
+    def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
+    ex.jsonPointer() == "/data/relationships/author/data/id"
+
+    where:
+    context << [
+      ValidationContext.defaults(),
+      ValidationContext.defaults().withDocumentUsage(DocumentUsage.UPDATE_REQUEST)
+    ]
   }
 
   def "create request still enforces full linkage for included resources"() {
