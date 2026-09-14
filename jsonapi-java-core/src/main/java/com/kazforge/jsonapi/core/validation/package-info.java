@@ -26,9 +26,10 @@
  * write usages; otherwise existing identity and aggregate rules apply unchanged. Create identity
  * leniency (an omittable resource {@code id} on the primary create resource, with {@code id} and
  * {@code lid} kept independent) applies only to that primary resource occurrence; a {@code
- * lid}-only relationship identifier is accepted only as a self-reference to the same primary
- * resource, while unrelated linkage and included resources require {@code id}. The relationship
- * endpoint role accepts linkage primary data and rejects resource objects with {@code
+ * lid}-only relationship identifier hosted by the primary resource is accepted only as a
+ * self-reference to the same primary resource, while unrelated linkage, linkage hosted by included
+ * resources, and included resources themselves require {@code id}. The relationship endpoint role
+ * accepts linkage primary data and rejects resource objects with {@code
  * PRIMARY_DATA_CONTEXT_MISMATCH}.
  *
  * <p>Failures carry a stable {@link com.kazforge.jsonapi.core.validation.ValidationRuleCode} and a

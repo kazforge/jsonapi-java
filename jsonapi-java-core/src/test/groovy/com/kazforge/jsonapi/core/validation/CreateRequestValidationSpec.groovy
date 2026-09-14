@@ -210,6 +210,39 @@ class CreateRequestValidationSpec extends Specification {
     ex.jsonPointer() == "/data/relationships/author/data/id"
   }
 
+  def "create request rejects matching self-reference linkage hosted by an included resource"() {
+    given:
+    def article = new ResourceObject(
+        "articles", null, "article-lid", null,
+        Relationships.ofRelationships([
+          origin: Relationship.withData(
+          new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("articles", "article-lid"))),
+          author: Relationship.withData(
+          new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "2")))
+        ]),
+        null, null, [:])
+    def author = new ResourceObject(
+        "people", "2", null, null,
+        Relationships.ofRelationships([
+          mentor: Relationship.withData(
+          new RelationshipData.SingleLinkage(ResourceIdentifier.withLid("articles", "article-lid")))
+        ]),
+        null, null, [:])
+    def doc = new JsonApiDocument(
+        new DocumentData.SingleResource(article),
+        null, null, null, null,
+        [author],
+        [:])
+
+    when:
+    validator.validate(doc, createContext())
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.RESOURCE_ID_REQUIRED
+    ex.jsonPointer() == "/included/0/relationships/mentor/data/id"
+  }
+
   def "create request accepts relationship with data plus links, meta, and allowed extension member"() {
     given:
     def relationship = new Relationship(
