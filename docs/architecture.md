@@ -333,9 +333,12 @@ Mapper *use* vs *derivation* is capability-specific:
 ## Test fixtures
 
 Shared test fixtures contain passive DTOs and canonical JSON/schema resources, plus the neutral
-`TestFixtureResources` classpath loader. Behavioral assertions belong in each adapter's own tests.
+`TestFixtureResources` classpath loader. The corpus is the normative shared wire-input inventory for
+behavior that must match across Jackson majors. Behavioral assertions belong in each adapter's own tests.
 
-Do not introduce shared test orchestration, scenario registries, or assertion frameworks.
+Do not introduce shared test orchestration, scenario registries, or assertion frameworks. For a future
+cross-major semantic regression, add one neutral corpus case, consume it from both adapter suites, and
+keep major-specific mechanic proofs local.
 
 ```mermaid
 flowchart LR

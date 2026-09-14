@@ -1,0 +1,15 @@
+{
+  "data": [
+    {
+      "type": "people",
+      "id": "9"
+    },
+    {
+      "type": "people",
+      "id": "10"
+    }
+  ],
+  "links": {
+    "related": "https://example.com/articles/1/related"
+  }
+}

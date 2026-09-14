@@ -1,0 +1,9 @@
+{
+  "data": {
+    "type": "articles",
+    "id": "1"
+  },
+  "links": {
+    "next": "https://example.com/articles?page=2"
+  }
+}

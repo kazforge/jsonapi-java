@@ -1,7 +1,8 @@
 # JSON:API 1.1 document fixtures
 
 Version-neutral JSON:API documents used by adapter tests. Jackson 2 and Jackson 3 tests share this
-corpus; do not fork major-specific copies. The files ship as classpath resources under
+corpus as the normative shared wire-input inventory for semantics that must match across Jackson
+majors; do not fork major-specific copies. The files ship as classpath resources under
 `jsonapi/corpus/1.1/` and are loaded with the small resource helper in the test-fixture source set.
 
 ## Layout
@@ -18,6 +19,25 @@ The corpus is passive and holds no manifest or registry files. Adapter tests nam
 they need directly and own diagnostics, locations, policies, decoded values, and other behavioral
 expectations in their own specs. Resource filenames are the stable fixture identifiers, including
 the named documents under `envelope-binding/` and `patch/`.
+
+## Normative coverage
+
+The corpus names representative wire inputs where cross-major drift would be costly. Filenames are
+stable fixture identifiers; adapter specs own contexts, decoded values, diagnostics, and assertions.
+
+| Group | Representative resources |
+|-------|--------------------------|
+| Unknown-member tolerance | `documents/unknown-members-tolerant.json` |
+| Create identity | `documents/local-identifier.json`, `negative/unrelated-lid-linkage.json`, `negative/create-included-without-identity.json` |
+| Endpoint role and linkage | `documents/relationship-null-with-related.json`, `documents/relationship-single-with-related.json`, `documents/relationship-collection-with-related.json`, `documents/relationship-collection-with-pagination.json`, `documents/resource-collection-with-pagination.json`, `negative/resource-with-related-link.json`, `negative/relationship-resource-object.json`, `negative/relationship-single-with-pagination.json` |
+| Shape, identity, linkage, links | `documents/single-resource.json`, `documents/resource-collection.json`, `documents/single-identifier.json`, `documents/identifier-collection.json`, `documents/null-data.json`, `documents/meta-only.json`, `documents/empty-*.json`, `documents/relationship-*.json`, `documents/string-and-object-links.json`, `documents/errors-document.json`, `documents/jsonapi-object.json`, `documents/open-values.json`, `documents/extension-and-at-members.json`, `documents/member-order.json` |
+| Compound linkage | `documents/compound-document.json`, `documents/compound-nested-intermediate.json`, `documents/compound-shared-identity.json`, `documents/compound-linked-article.json`, `documents/empty-included.json`, `negative/unlinked-included.json`, `negative/resource-with-pagination.json` |
+
+## Regression rule
+
+For a future bug whose observable behavior must match across Jackson 2 and Jackson 3, add or extend
+one neutral corpus case where the wire scenario is major-independent, consume it from both adapter
+suites, and keep any major-specific mechanic proof local.
 
 ## Usage
 

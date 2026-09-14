@@ -222,6 +222,7 @@ class DocumentWriterContractSpec extends Specification {
     path                                               | context                     | primaryDataKind
     'documents/single-resource.json'                   | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
     'documents/resource-collection.json'               | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/resource-collection-with-pagination.json' | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
     'documents/ambiguous-empty-array-primary-data.json' | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
     'documents/single-identifier.json'                 | ValidationContext.defaults() | PrimaryDataKind.RESOURCE_IDENTIFIER
     'documents/identifier-collection.json'             | ValidationContext.defaults() | PrimaryDataKind.RESOURCE_IDENTIFIER
@@ -242,6 +243,7 @@ class DocumentWriterContractSpec extends Specification {
     'documents/compound-document.json'                 | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
     'documents/compound-nested-intermediate.json'      | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
     'documents/compound-shared-identity.json'          | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
+    'documents/compound-linked-article.json'           | ValidationContext.defaults() | PrimaryDataKind.RESOURCE
     'documents/local-identifier.json'                  | createContext()             | PrimaryDataKind.RESOURCE
     'documents/extension-and-at-members.json'          | extContext()                | PrimaryDataKind.RESOURCE
     'documents/member-order.json'                      | extContext()                | PrimaryDataKind.RESOURCE
