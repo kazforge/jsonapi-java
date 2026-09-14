@@ -1791,6 +1791,46 @@ class JsonApiDocumentValidatorSpec extends Specification {
     noExceptionThrown()
   }
 
+  def "top-level related is rejected for absent primary data under relationship role"() {
+    given:
+    // Absent data is no primary data at all, so there is nothing that could represent
+    // a relationship even on the relationship endpoint role.
+    def doc = new JsonApiDocument(
+        null,
+        null,
+        Meta.empty(),
+        null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.INVALID_LINKS_CONTEXT
+    ex.jsonPointer() == "/links/related"
+  }
+
+  def "top-level related is accepted for explicit null linkage"() {
+    given:
+    def doc = new JsonApiDocument(
+        DocumentData.NullData.INSTANCE,
+        null, null, null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+  }
+
   def "nested relationship related is accepted for ordinary resource primary data"() {
     given:
     def article = new ResourceObject(
