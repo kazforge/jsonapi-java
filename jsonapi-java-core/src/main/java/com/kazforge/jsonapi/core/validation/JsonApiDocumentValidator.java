@@ -42,13 +42,18 @@ import org.jspecify.annotations.Nullable;
  * Create and update primary-data shape rules, primary relationship-data requirements, and update
  * endpoint-identity comparison apply only to create/update operations on ordinary resource
  * endpoints with primary-data resource occurrences; relationship endpoints accept linkage primary
- * data and add no resource-shape rules in this increment. Create identity leniency (an omittable
- * resource {@code id} on the primary create resource, with {@code id} and {@code lid} staying
- * independent) applies only to the primary resource object on the ordinary resource endpoint role.
- * A {@code lid}-only relationship identifier hosted by the primary resource is accepted only as a
- * self-reference to that same primary create resource (matching {@code type} and {@code lid});
- * unrelated linkage, linkage hosted by included resources, and included resources themselves
- * require {@code id}.
+ * data and add no resource-shape rules in this increment. A top-level {@code related} link is
+ * accepted only on the relationship endpoint role when primary data is present (explicit null
+ * linkage counts as present); documents without primary data reject it even on that role. Ordinary
+ * resource responses, including related-resource fetches, reject it with {@code
+ * INVALID_LINKS_CONTEXT} at {@code /links/related}, and allowed profile member names do not
+ * override this restriction. Nested relationship {@code related} links remain accepted. Create
+ * identity leniency (an omittable resource {@code id} on the primary create resource, with {@code
+ * id} and {@code lid} staying independent) applies only to the primary resource object on the
+ * ordinary resource endpoint role. A {@code lid}-only relationship identifier hosted by the primary
+ * resource is accepted only as a self-reference to that same primary create resource (matching
+ * {@code type} and {@code lid}); unrelated linkage, linkage hosted by included resources, and
+ * included resources themselves require {@code id}.
  */
 public final class JsonApiDocumentValidator {
 
@@ -980,7 +985,7 @@ public final class JsonApiDocumentValidator {
             JsonPointers.child(path, name),
             "Invalid link relation name: " + name);
       }
-      if (!isAllowedLinkName(name, context, site.linksContext())) {
+      if (!isAllowedLinkName(name, context, site)) {
         throw new JsonApiValidationException(
             ValidationRuleCode.INVALID_LINKS_CONTEXT,
             JsonPointers.child(path, name),
@@ -1042,9 +1047,17 @@ public final class JsonApiDocumentValidator {
         || data instanceof DocumentData.IdentifierCollection;
   }
 
-  private boolean isAllowedLinkName(
-      String name, ValidationContext context, LinksContext linksContext) {
-    return Links.standardMembers(linksContext).contains(name)
+  private boolean isAllowedLinkName(String name, ValidationContext context, LinkSite site) {
+    if (site.linksContext() == LinksContext.TOP_LEVEL && JsonApiMembers.RELATED.equals(name)) {
+      // Top-level related is permitted only when primary data actually represents a
+      // relationship: the relationship endpoint role with a present primary-data member.
+      // Explicit null linkage counts as present; absent data has no primary data to satisfy
+      // the condition, so even the relationship role rejects it. Allowed profile member
+      // names never override this restriction.
+      return context.primaryDataContext() == PrimaryDataContext.RELATIONSHIP
+          && site.primaryData() != null;
+    }
+    return Links.standardMembers(site.linksContext()).contains(name)
         || context.allowedProfileMemberNames().contains(name);
   }
 

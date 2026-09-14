@@ -30,7 +30,11 @@
  * self-reference to the same primary resource, while unrelated linkage, linkage hosted by included
  * resources, and included resources themselves require {@code id}. The relationship endpoint role
  * accepts linkage primary data and rejects resource objects with {@code
- * PRIMARY_DATA_CONTEXT_MISMATCH}.
+ * PRIMARY_DATA_CONTEXT_MISMATCH}. A top-level {@code related} link is accepted only on the
+ * relationship endpoint role when primary data is present (explicit null linkage counts as
+ * present); documents without primary data reject it even on that role. Ordinary resource
+ * responses, including related-resource fetches, reject it with {@code INVALID_LINKS_CONTEXT}, and
+ * allowed profile member names do not override this restriction.
  *
  * <p>Failures carry a stable {@link com.kazforge.jsonapi.core.validation.ValidationRuleCode} and a
  * JSON Pointer-like path. See ADR-003, ADR-009, ADR-012, and {@code docs/conformance.md}.

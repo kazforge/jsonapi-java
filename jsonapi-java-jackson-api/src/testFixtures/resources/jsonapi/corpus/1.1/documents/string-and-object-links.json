@@ -9,17 +9,17 @@
     }
   ],
   "links": {
-    "self": "http://example.com/articles/1",
-    "related": {
-      "href": "http://example.com/articles/1/related",
-      "rel": "related",
-      "title": "Related",
+    "self": {
+      "href": "http://example.com/articles/1",
+      "rel": "self",
+      "title": "Self",
       "type": "application/vnd.api+json",
       "hreflang": ["en"],
       "meta": {
         "count": 1
       }
     },
+    "first": "http://example.com/articles/1",
     "next": null
   }
 }

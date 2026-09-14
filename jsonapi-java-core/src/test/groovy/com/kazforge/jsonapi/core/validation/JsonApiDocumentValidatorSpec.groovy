@@ -1695,6 +1695,226 @@ class JsonApiDocumentValidatorSpec extends Specification {
     noExceptionThrown()
   }
 
+  def "top-level related is rejected for single resource primary data"() {
+    given:
+    def doc = new JsonApiDocument(
+        new DocumentData.SingleResource(ResourceObject.of("articles", "1")),
+        null, null, null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+
+    when:
+    validator.validate(doc, ValidationContext.defaults())
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.INVALID_LINKS_CONTEXT
+    ex.jsonPointer() == "/links/related"
+  }
+
+  def "top-level related is rejected for resource collection primary data"() {
+    given:
+    def doc = new JsonApiDocument(
+        new DocumentData.ResourceCollection([
+          ResourceObject.of("articles", "1")
+        ]),
+        null, null, null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+
+    when:
+    validator.validate(doc, ValidationContext.defaults())
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.INVALID_LINKS_CONTEXT
+    ex.jsonPointer() == "/links/related"
+  }
+
+  def "top-level related remains rejected for related-resource collection responses"() {
+    given:
+    // Fetching related resources through a related-resource URL still uses the ordinary
+    // resource endpoint role; only relationship linkage uses the relationship role.
+    def doc = new JsonApiDocument(
+        new DocumentData.ResourceCollection([
+          ResourceObject.of("articles", "1")
+        ]),
+        null, null, null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RESOURCE)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.INVALID_LINKS_CONTEXT
+    ex.jsonPointer() == "/links/related"
+  }
+
+  def "top-level related is accepted for to-one relationship linkage"() {
+    given:
+    def doc = new JsonApiDocument(
+        new DocumentData.SingleIdentifier(ResourceIdentifier.of("articles", "1")),
+        null, null, null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+  }
+
+  def "top-level related is accepted for to-many relationship linkage"() {
+    given:
+    def doc = new JsonApiDocument(
+        new DocumentData.IdentifierCollection([
+          ResourceIdentifier.of("articles", "1"),
+          ResourceIdentifier.of("articles", "2")
+        ]),
+        null, null, null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+  }
+
+  def "top-level related is rejected for absent primary data under relationship role"() {
+    given:
+    // Absent data is no primary data at all, so there is nothing that could represent
+    // a relationship even on the relationship endpoint role.
+    def doc = new JsonApiDocument(
+        null,
+        null,
+        Meta.empty(),
+        null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.INVALID_LINKS_CONTEXT
+    ex.jsonPointer() == "/links/related"
+  }
+
+  def "top-level related is accepted for explicit null linkage"() {
+    given:
+    def doc = new JsonApiDocument(
+        DocumentData.NullData.INSTANCE,
+        null, null, null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+  }
+
+  def "nested relationship related is accepted for ordinary resource primary data"() {
+    given:
+    def article = new ResourceObject(
+        "articles", "1", null, null,
+        Relationships.ofRelationships([
+          author: Relationship.linkOnly(Links.ofLinks([
+            self   : new Link.StringLink("https://example.com/articles/1/relationships/author"),
+            related: new Link.StringLink("https://example.com/articles/1/author")
+          ]))
+        ]),
+        null, null, [:])
+    def doc = JsonApiDocument.withData(new DocumentData.SingleResource(article))
+
+    when:
+    validator.validate(doc, ValidationContext.defaults())
+
+    then:
+    noExceptionThrown()
+  }
+
+  def "profile member related does not override the top-level restriction"() {
+    given:
+    def doc = new JsonApiDocument(
+        new DocumentData.SingleResource(ResourceObject.of("articles", "1")),
+        null, null, null,
+        Links.ofLinks([related: new Link.StringLink("https://example.com/articles/1/related")]),
+        null, [:])
+    def context = new ValidationContext(
+        DocumentUsage.RESPONSE_OR_OTHER,
+        PrimaryDataContext.RESOURCE,
+        Set.of(),
+        Set.of(),
+        Set.of("related"),
+        Set.of(),
+        Map.of(),
+        null)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.INVALID_LINKS_CONTEXT
+    ex.jsonPointer() == "/links/related"
+  }
+
+  def "relationship-role top-level pagination is allowed for identifier collection"() {
+    given:
+    def doc = new JsonApiDocument(
+        new DocumentData.IdentifierCollection([
+          ResourceIdentifier.of("articles", "1")
+        ]),
+        null, null, null,
+        Links.ofLinks([next: new Link.StringLink("https://example.com/page=2")]),
+        null, [:])
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    noExceptionThrown()
+  }
+
+  def "relationship-role top-level pagination requires collection linkage"() {
+    given:
+    def doc = new JsonApiDocument(
+        new DocumentData.SingleIdentifier(ResourceIdentifier.of("articles", "1")),
+        null, null, null,
+        Links.ofLinks([next: new Link.StringLink("https://example.com/page=2")]),
+        null, [:])
+    def context = ValidationContext.defaults()
+        .withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP)
+
+    when:
+    validator.validate(doc, context)
+
+    then:
+    def ex = thrown(JsonApiValidationException)
+    ex.ruleCode() == ValidationRuleCode.PAGINATION_REQUIRES_COLLECTION
+    ex.jsonPointer() == "/links/next"
+  }
+
   def "relationship endpoint accepts '#name' linkage primary data"(String name, DocumentData data) {
     given:
     def doc = JsonApiDocument.withData(data)
