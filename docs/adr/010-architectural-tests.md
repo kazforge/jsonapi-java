@@ -2,7 +2,7 @@
 
 **Status:** Accepted  
 **Date:** 2026-07-29  
-**Amended:** 2026-07-30 (jackson3 allowlist and `core.internal` ban); 2026-08-10 (jackson-common allowlist and the jackson3 common-contract dependency); 2026-08-11 (test-fixtures allowlist for the shared domain-write fixtures); 2026-08-12 (replaces Groovy codec fixtures with Java and JSON-P); 2026-08-31 (renames `jsonapi-java-jackson-common` to `jsonapi-java-jackson-api` and reorganizes API contracts into concept packages); 2026-09-02 (moves passive shared fixtures to the Jackson API test-fixtures source set and adds the neutral loader exception); 2026-09-10 (registers the neutral query-parser allowlist); 2026-09-15 (adds the core aggregate-validation package to Jackson allowlists)
+**Amended:** 2026-07-30 (jackson3 allowlist and `core.internal` ban); 2026-08-10 (jackson-common allowlist and the jackson3 common-contract dependency); 2026-08-11 (test-fixtures allowlist for the shared domain-write fixtures); 2026-08-12 (replaces Groovy codec fixtures with Java and JSON-P); 2026-08-31 (renames `jsonapi-java-jackson-common` to `jsonapi-java-jackson-api` and reorganizes API contracts into concept packages); 2026-09-02 (moves passive shared fixtures to the Jackson API test-fixtures source set and adds the neutral loader exception); 2026-09-10 (registers the neutral query-parser allowlist); 2026-09-15 (adds the core aggregate-validation package to Jackson allowlists); 2026-09-15 (adds core and adapter package-DAG guards)
 
 ## Context
 
@@ -59,6 +59,26 @@ JSpecify (`org.jspecify.annotations`) is an intentional compile-only exception (
   `jsonapi-java-jackson-api`; each adapter's architecture test derives the forbidden simple names
   from the compiled API package boundary rather than a hand-maintained moved-type list. This
   automatically protects later neutral contracts and is the model for Jackson 2 when registered.
+- Core keeps its intra-module responsibility DAG: `aggregate` may depend on `model`, `internal`,
+  and `validation`; `model` may depend on `internal` and `validation`; `internal` may depend on
+  `validation`. No other cross-responsibility core edge is allowed, so `validation` depends on no
+  higher core responsibility, `internal` does not depend on `model` or `aggregate`, and `model`
+  does not depend on `aggregate`. Core now carries ArchUnit as a `testImplementation` dependency
+  specifically because this intra-module package DAG cannot be expressed by Java compilation or the
+  Gradle module graph; Gradle and the compiler remain the primary module-boundary mechanisms.
+- Each Jackson adapter keeps its own responsibility DAG: the public composition root may depend on
+  `mapping`, exact `internal`, and `internal.codec`, while exact `internal` may depend on
+  `mapping`. No other adapter-local cross-responsibility edge is allowed, so `mapping` does not
+  depend on the root or either internal sibling, `internal.codec` is self-contained apart from
+  core, neutral contracts, and its Jackson major, and the two internal siblings never depend on
+  each other. The exact `internal` selector never uses a recursive `..internal..` match that would
+  also include `internal.codec`. Jackson 2 and Jackson 3 declare these rules independently in
+  their respective specifications without a shared test DSL. Same-package recursion, such as the
+  recursive structured-value PATCH model, stays outside generic cycle prohibitions, and no broad
+  ban on all cycles is introduced.
+- Every responsibility selector in these DAG rules must match at least one production class, so a
+  misspelled or mis-scoped selector cannot pass vacuously. The guards use package predicates, not
+  production-class inventories.
 
 ## Consequences
 
