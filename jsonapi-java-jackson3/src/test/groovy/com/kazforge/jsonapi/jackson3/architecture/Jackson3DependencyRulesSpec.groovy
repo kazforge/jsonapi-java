@@ -1,6 +1,7 @@
 package com.kazforge.jsonapi.jackson3.architecture
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 
 import com.tngtech.archunit.core.domain.JavaClass
 import com.tngtech.archunit.core.domain.JavaClasses
@@ -15,7 +16,7 @@ class Jackson3DependencyRulesSpec extends Specification {
   @Shared
   JavaClasses jackson3Classes = new ClassFileImporter()
   .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-  .importPackages("com.kazforge.jsonapi.jackson3")
+  .importPackages("com.kazforge.jsonapi.jackson3..")
 
   @Shared
   JavaClasses commonClasses = new ClassFileImporter()
@@ -43,6 +44,79 @@ class Jackson3DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.jackson..",
         "com.kazforge.jsonapi.jackson3..",
         "tools.jackson..")
+        .check(jackson3Classes)
+  }
+
+  def "jackson3 responsibility selectors are non-empty and disjoint"() {
+    given:
+    def root = jackson3Classes.findAll { JavaClass candidate ->
+      candidate.packageName == "com.kazforge.jsonapi.jackson3"
+    }
+    def mapping = jackson3Classes.findAll { JavaClass candidate ->
+      candidate.packageName == "com.kazforge.jsonapi.jackson3.mapping" ||
+          candidate.packageName.startsWith("com.kazforge.jsonapi.jackson3.mapping.")
+    }
+    def internal = jackson3Classes.findAll { JavaClass candidate ->
+      candidate.packageName == "com.kazforge.jsonapi.jackson3.internal"
+    }
+    def codec = jackson3Classes.findAll { JavaClass candidate ->
+      candidate.packageName == "com.kazforge.jsonapi.jackson3.internal.codec" ||
+          candidate.packageName.startsWith("com.kazforge.jsonapi.jackson3.internal.codec.")
+    }
+
+    expect:
+    !root.isEmpty()
+    !mapping.isEmpty()
+    !internal.isEmpty()
+    !codec.isEmpty()
+
+    and:
+    root.intersect(mapping).isEmpty()
+    root.intersect(internal).isEmpty()
+    root.intersect(codec).isEmpty()
+    mapping.intersect(internal).isEmpty()
+    mapping.intersect(codec).isEmpty()
+    internal.intersect(codec).isEmpty()
+  }
+
+  def "jackson3 mapping contracts do not depend on composition or internals"() {
+    expect:
+    noClasses()
+        .that()
+        .resideInAPackage("com.kazforge.jsonapi.jackson3.mapping..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage(
+        "com.kazforge.jsonapi.jackson3",
+        "com.kazforge.jsonapi.jackson3.internal",
+        "com.kazforge.jsonapi.jackson3.internal.codec..")
+        .check(jackson3Classes)
+  }
+
+  def "jackson3 codec does not depend on composition, mapping, or exact internal"() {
+    expect:
+    noClasses()
+        .that()
+        .resideInAPackage("com.kazforge.jsonapi.jackson3.internal.codec..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage(
+        "com.kazforge.jsonapi.jackson3",
+        "com.kazforge.jsonapi.jackson3.mapping..",
+        "com.kazforge.jsonapi.jackson3.internal")
+        .check(jackson3Classes)
+  }
+
+  def "jackson3 exact internal does not depend on composition or codec"() {
+    expect:
+    noClasses()
+        .that()
+        .resideInAPackage("com.kazforge.jsonapi.jackson3.internal")
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage(
+        "com.kazforge.jsonapi.jackson3",
+        "com.kazforge.jsonapi.jackson3.internal.codec..")
         .check(jackson3Classes)
   }
 
