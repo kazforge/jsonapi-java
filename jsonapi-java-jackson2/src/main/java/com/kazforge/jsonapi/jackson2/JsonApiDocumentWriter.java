@@ -2,10 +2,10 @@ package com.kazforge.jsonapi.jackson2;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.kazforge.jsonapi.core.aggregate.JsonApiDocumentValidator;
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.ResourceIdentity;
-import com.kazforge.jsonapi.core.validation.JsonApiDocumentValidator;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.mapping.MappedDocument;
 import java.io.FilterOutputStream;
 import java.io.FilterWriter;

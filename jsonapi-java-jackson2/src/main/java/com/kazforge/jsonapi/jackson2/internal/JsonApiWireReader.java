@@ -1,8 +1,8 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
 import com.kazforge.jsonapi.jackson.internal.wire.ReadLocationIndex;
 import java.io.IOException;

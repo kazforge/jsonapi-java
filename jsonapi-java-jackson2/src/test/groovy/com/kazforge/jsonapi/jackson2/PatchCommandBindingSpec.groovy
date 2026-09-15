@@ -15,7 +15,7 @@ import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.core.validation.DocumentUsage
 import com.kazforge.jsonapi.core.validation.EndpointIdentity
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.fixtures.domainpatch.Article
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle

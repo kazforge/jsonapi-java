@@ -31,6 +31,7 @@ class JacksonApiDependencyRulesSpec extends Specification {
         .resideInAnyPackage(
         "java..",
         "org.jspecify.annotations..",
+        "com.kazforge.jsonapi.core.aggregate..",
         "com.kazforge.jsonapi.core.model..",
         "com.kazforge.jsonapi.core.validation..",
         "com.kazforge.jsonapi.jackson..")
@@ -85,6 +86,7 @@ class JacksonApiDependencyRulesSpec extends Specification {
         .resideInAnyPackage(
         "java..",
         "org.jspecify.annotations..",
+        "com.kazforge.jsonapi.core.aggregate..",
         "com.kazforge.jsonapi.core.model..",
         "com.kazforge.jsonapi.core.validation..",
         "com.kazforge.jsonapi.jackson..")

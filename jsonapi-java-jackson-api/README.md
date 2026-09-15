@@ -73,8 +73,8 @@ This module has no standalone entry points. Consumers use it through a Jackson a
 
 ```java
 // Jackson 2 and Jackson 3 consume the same neutral contracts:
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.validation.PrimaryDataContext;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.document.DocumentReadContext;
 import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
 import com.kazforge.jsonapi.jackson.representation.IncludePath;

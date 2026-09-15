@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.core.validation;
+package com.kazforge.jsonapi.core.aggregate;
 
 /**
  * Internal location of a resource object or resource identifier occurrence during aggregate

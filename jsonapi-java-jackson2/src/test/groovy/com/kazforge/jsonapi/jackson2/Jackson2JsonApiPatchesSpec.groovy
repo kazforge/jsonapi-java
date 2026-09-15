@@ -3,7 +3,7 @@ package com.kazforge.jsonapi.jackson2
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.kazforge.jsonapi.core.validation.DocumentUsage
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticlePatch
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
 import com.kazforge.jsonapi.jackson.document.DocumentReadContext

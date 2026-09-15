@@ -1,5 +1,6 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.DocumentData;
 import com.kazforge.jsonapi.core.model.ErrorObject;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
@@ -10,7 +11,6 @@ import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.core.validation.LinksContext;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.diagnostic.CodecFailureCategory;
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException;
 import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;

@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
 import com.kazforge.jsonapi.jackson.internal.wire.ReadLocationIndex;
 import tools.jackson.core.JsonParser;

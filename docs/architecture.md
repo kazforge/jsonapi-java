@@ -71,6 +71,11 @@ Shared test fixtures live in the Jackson API `java-test-fixtures` source set as 
 [ADR-007](adr/007-module-boundaries.md) records why these modules exist.
 [ADR-010](adr/010-architectural-tests.md) enforces the production dependency allowlists.
 
+Within core, `com.kazforge.jsonapi.core.aggregate` owns model-dependent document validation and
+depends downward on the completed model, shared internal helpers, and model-independent validation
+types. The model and internal packages may use `com.kazforge.jsonapi.core.validation` diagnostics and
+grammar/policy values, but those lower packages do not depend back on aggregate validation.
+
 ### Shared implementation helpers
 
 The `jsonapi-java-jackson-api` artifact also carries a deliberately small,

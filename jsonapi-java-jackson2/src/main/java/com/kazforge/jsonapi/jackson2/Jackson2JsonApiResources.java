@@ -2,13 +2,13 @@ package com.kazforge.jsonapi.jackson2;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.DocumentData;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.JsonApiObject;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.core.validation.DocumentUsage;
 import com.kazforge.jsonapi.core.validation.EndpointIdentity;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.api.JsonApiResources;
 import com.kazforge.jsonapi.jackson.api.ResourceCollectionDocument;
 import com.kazforge.jsonapi.jackson.api.ResourceDocument;

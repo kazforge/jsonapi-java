@@ -19,7 +19,7 @@ import com.kazforge.jsonapi.annotation.JsonApiResource
 import com.kazforge.jsonapi.core.model.JsonApiDocument
 import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.validation.DocumentUsage
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticlePatch
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException

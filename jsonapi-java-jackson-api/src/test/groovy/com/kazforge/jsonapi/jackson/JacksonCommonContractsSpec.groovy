@@ -7,7 +7,7 @@ import com.kazforge.jsonapi.core.model.Links
 import com.kazforge.jsonapi.core.model.Meta
 import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import com.kazforge.jsonapi.jackson.diagnostic.CodecFailureCategory
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException

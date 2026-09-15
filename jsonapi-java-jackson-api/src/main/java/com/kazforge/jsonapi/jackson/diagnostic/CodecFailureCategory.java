@@ -15,8 +15,6 @@ public enum CodecFailureCategory {
   /** A public core constructor rejected the value (local validation). */
   LOCAL_VALIDATION,
 
-  /**
-   * {@link com.kazforge.jsonapi.core.validation.JsonApiDocumentValidator} rejected the document.
-   */
+  /** {@link com.kazforge.jsonapi.core.aggregate.JsonApiDocumentValidator} rejected the document. */
   AGGREGATE_VALIDATION
 }

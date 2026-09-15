@@ -15,7 +15,7 @@ import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.jackson.patch.PatchPresence
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import spock.lang.Specification
 import com.fasterxml.jackson.annotation.JsonInclude
 import tools.jackson.core.JsonGenerator
