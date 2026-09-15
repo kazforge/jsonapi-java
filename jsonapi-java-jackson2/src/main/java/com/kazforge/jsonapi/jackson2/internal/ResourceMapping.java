@@ -27,25 +27,23 @@ record ResourceMapping(
    * drift. A null location leaves that identity role out of the map: an unsupplied member never
    * becomes a synthetic construction input.
    */
-  Map<String, StructuredValueBinder.ConstructionStart> constructionStartsByJacksonName(
+  Map<String, MappingConstructionStart> constructionStartsByJacksonName(
       @Nullable MappingLocation idLocation, @Nullable MappingLocation lidLocation) {
-    Map<String, StructuredValueBinder.ConstructionStart> starts = new LinkedHashMap<>();
+    Map<String, MappingConstructionStart> starts = new LinkedHashMap<>();
     if (identifierProperty != null && idLocation != null) {
       starts.put(
           identifierProperty.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
-              idLocation, identifierProperty.accessor().getType()));
+          new MappingConstructionStart(idLocation, identifierProperty.accessor().getType()));
     }
     if (localIdProperty != null && lidLocation != null) {
       starts.put(
           localIdProperty.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
-              lidLocation, localIdProperty.accessor().getType()));
+          new MappingConstructionStart(lidLocation, localIdProperty.accessor().getType()));
     }
     for (MappingProperty property : attributes) {
       starts.put(
           property.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
+          new MappingConstructionStart(
               com.kazforge.jsonapi.jackson.diagnostic.MappingLocation.of(
                   "attributes", property.jsonapiName()),
               property.accessor().getType()));
@@ -53,20 +51,20 @@ record ResourceMapping(
     for (MappingProperty property : relationships) {
       starts.put(
           property.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
-              RelationshipLinkageSupport.relationshipLocation(property),
+          new MappingConstructionStart(
+              RelationshipMetaSupport.relationshipLocation(property),
               property.accessor().getType()));
     }
     if (resourceMeta != null) {
       starts.put(
           resourceMeta.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
+          new MappingConstructionStart(
               RelationshipMetaSupport.resourceMetaLocation(), resourceMeta.accessor().getType()));
     }
     for (MappingProperty property : relationshipMetaProperties) {
       starts.put(
           property.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
+          new MappingConstructionStart(
               RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()),
               property.accessor().getType()));
     }

@@ -1,5 +1,7 @@
 package com.kazforge.jsonapi.jackson3
 
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper
+
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.kazforge.jsonapi.annotation.JsonApiAttribute
 import com.kazforge.jsonapi.annotation.JsonApiId

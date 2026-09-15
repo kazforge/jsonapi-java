@@ -1,5 +1,7 @@
 package com.kazforge.jsonapi.jackson2
 
+import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper
+
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.kazforge.jsonapi.jackson.api.JsonApi
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter

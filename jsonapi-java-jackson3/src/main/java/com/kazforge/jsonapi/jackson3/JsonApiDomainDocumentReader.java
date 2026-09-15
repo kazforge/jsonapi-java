@@ -16,7 +16,7 @@ import com.kazforge.jsonapi.jackson.mapping.IncludedResources;
 import com.kazforge.jsonapi.jackson.mapping.ResourceTypeRegistry;
 import com.kazforge.jsonapi.jackson3.internal.DomainResourceBinder;
 import com.kazforge.jsonapi.jackson3.internal.MappingDefinitionCache;
-import com.kazforge.jsonapi.jackson3.internal.MetaBindingModule;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -72,7 +72,7 @@ public final class JsonApiDomainDocumentReader {
       Map<Class<?>, RelationshipLinkageMapper> linkageMappers) {
     this.documentReader = new JsonApiDocumentReader(base, context);
     this.registry = Objects.requireNonNull(registry, "registry");
-    this.binderMapper = base.rebuild().addModule(new MetaBindingModule()).build();
+    this.binderMapper = JsonApiJackson3Assembly.resourceMappingMapper(base);
     MappingDefinitionCache metadataAuthority = new MappingDefinitionCache(binderMapper);
     requireRegistryCoherence(this.registry, metadataAuthority);
     this.binder =

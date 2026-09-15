@@ -1,7 +1,17 @@
 /**
- * Internal Jackson 2 serializer registration, streaming wire emission, token-driven document
- * decoding, the write-side domain mapping engine, the flat resource-to-DTO binding engine, and the
- * presence-aware PATCH binding engines. Not a public API surface.
+ * Internal Jackson 2 write-side domain mapping engine, flat resource-to-DTO binding engine,
+ * presence-aware PATCH binding engines, and module registration. Not a public API surface.
+ *
+ * <p>Mapping metadata, resource writing/binding, shared conversion/construction support, inclusion
+ * traversal, PATCH binders/converters, and their mapper modules stay together here: they share
+ * package-private records and helpers, and structured binding also serves flat-read failure-path
+ * translation, so a mapping/PATCH split would broaden the internal surface without removing a
+ * class-level cycle. The self-contained document codec lives in the sibling {@code codec}
+ * subpackage; public facade/capability composition depends on both siblings, while the siblings
+ * never depend on each other. Adapter-local {@code JavaType} shape tests, JSON:API-name property
+ * indexing, diagnostic locations, and construction-path starts are owned by mapping metadata so
+ * relationship and conversion support cannot call back into the writer. Relationship linkage
+ * mapping contracts live in the public {@code mapping} subpackage.
  *
  * <p>The mapping engine resolves {@code ResourceMapping} definitions through configured Jackson
  * introspection (mapper-local cache keyed by complete {@code JavaType}), renders local resources

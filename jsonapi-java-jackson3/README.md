@@ -15,7 +15,9 @@ objects.
 | Package                                        | Role                                                                  |
 |------------------------------------------------|-----------------------------------------------------------------------|
 | `com.kazforge.jsonapi.jackson3`           | Public Level-1 configured runtime (`Jackson3JsonApi`), writer/reader/mapper/binder/PATCH factories, and validate-then-codec entry points |
-| `com.kazforge.jsonapi.jackson3.internal`  | Streaming serializers/decoders, mapping engine, module registration; not public API |
+| `com.kazforge.jsonapi.jackson3.mapping`    | Public relationship-linkage mapping contracts (`RelationshipLinkageMapper`); depended on by internals without depending back on the composition root |
+| `com.kazforge.jsonapi.jackson3.internal`  | Mapping engine, PATCH binding, module registration; not public API |
+| `com.kazforge.jsonapi.jackson3.internal.codec` | Self-contained document codec (token-driven wire decoding, wire emission, document module); not public API |
 | `com.kazforge.jsonapi.jackson.{api,document,mapping,patch,representation,diagnostic}` | Supported Jackson-major-neutral API contracts in `jsonapi-java-jackson-api` |
 | `com.kazforge.jsonapi.jackson.internal..` | Unsupported Jackson-free implementation helpers shared with this adapter; not public API |
 

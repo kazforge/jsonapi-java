@@ -12,6 +12,7 @@ import com.kazforge.jsonapi.jackson.patch.PatchCommand;
 import com.kazforge.jsonapi.jackson3.internal.DomainPatchBinder;
 import com.kazforge.jsonapi.jackson3.internal.MappingDefinitionCache;
 import com.kazforge.jsonapi.jackson3.internal.MetaBindingModule;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Objects;

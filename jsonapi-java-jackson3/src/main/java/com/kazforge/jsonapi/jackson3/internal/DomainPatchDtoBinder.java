@@ -12,7 +12,7 @@ import com.kazforge.jsonapi.jackson.internal.mapping.ResourceTypeMatch;
 import com.kazforge.jsonapi.jackson.internal.patch.PresenceMarker;
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.jackson.patch.PatchPresence;
-import com.kazforge.jsonapi.jackson3.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -83,7 +83,7 @@ public final class DomainPatchDtoBinder {
     bindRelationships(resource, mapping, properties, rawType);
     bindResourceMeta(resource, mapping, properties, rawType);
     bindRelationshipMeta(resource, mapping, properties, rawType);
-    Map<String, StructuredValueBinder.ConstructionStart> startsByJacksonName =
+    Map<String, MappingConstructionStart> startsByJacksonName =
         mapping.constructionStartsByJacksonName(ID_LOCATION, null);
     try {
       return BeanConstruction.convertBean(
@@ -93,7 +93,7 @@ public final class DomainPatchDtoBinder {
           rawType,
           (failure, ignored) ->
               structuredBinder.translateConstructionPath(
-                  BeanConstruction.pathNames(failure), startsByJacksonName, false));
+                  BeanConstruction.pathNames(failure), startsByJacksonName));
     } catch (JsonApiMappingException e) {
       if (isIdentifierConstructionFailure(e, mapping.identifierProperty())) {
         Throwable cause = e.getCause() == null ? e : e.getCause();
@@ -240,7 +240,7 @@ public final class DomainPatchDtoBinder {
     Attributes attributes = resource.attributes();
     Map<String, @Nullable Object> supplied = attributes == null ? null : attributes.attributes();
     Map<String, MappingProperty> byJsonapiName =
-        PatchMemberConverter.byJsonapiName(mapping.attributes());
+        RelationshipMetaSupport.byJsonapiName(mapping.attributes());
     MappingLocation attributesLocation = MappingLocation.of(ATTRIBUTES);
     if (supplied != null) {
       for (String name : supplied.keySet()) {
@@ -273,7 +273,7 @@ public final class DomainPatchDtoBinder {
     Map<String, Relationship> supplied =
         relationships == null ? null : relationships.relationships();
     Map<String, MappingProperty> byJsonapiName =
-        PatchMemberConverter.byJsonapiName(mapping.relationships());
+        RelationshipMetaSupport.byJsonapiName(mapping.relationships());
     if (supplied != null) {
       for (String name : supplied.keySet()) {
         if (!byJsonapiName.containsKey(name)) {

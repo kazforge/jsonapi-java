@@ -307,12 +307,6 @@ final class StructuredValueBinder {
   }
 
   /**
-   * Translation start for one top-level synthetic-map key: the member's resource-relative location
-   * prefix plus its declared type for nested walking.
-   */
-  record ConstructionStart(MappingLocation location, JavaType declaredType) {}
-
-  /**
    * Translates a failed bean-construction Jackson path into a resource-relative mapping location.
    * The path's first name selects the member's start through {@code startsByLogicalName} (Jackson
    * logical name to wire prefix); deeper names are walked through resolved presence-aware shape
@@ -327,11 +321,11 @@ final class StructuredValueBinder {
    * per the mapping-location contract, never a Jackson logical property name.
    */
   @Nullable MappingLocation translateConstructionPath(
-      List<String> names, Map<String, ConstructionStart> startsByLogicalName) {
+      List<String> names, Map<String, MappingConstructionStart> startsByLogicalName) {
     if (names.isEmpty()) {
       return null;
     }
-    ConstructionStart start = startsByLogicalName.get(names.getFirst());
+    MappingConstructionStart start = startsByLogicalName.get(names.getFirst());
     if (start == null) {
       return null;
     }

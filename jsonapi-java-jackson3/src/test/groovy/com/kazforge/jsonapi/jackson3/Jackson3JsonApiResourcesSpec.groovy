@@ -1,5 +1,7 @@
 package com.kazforge.jsonapi.jackson3
 
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper
+
 import com.kazforge.jsonapi.core.model.DocumentData
 import com.kazforge.jsonapi.core.model.JsonApiObject
 import com.kazforge.jsonapi.core.model.Link

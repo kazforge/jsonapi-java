@@ -7,9 +7,8 @@ import com.kazforge.jsonapi.jackson.mapping.ResourceDecoratorRegistry;
 import com.kazforge.jsonapi.jackson.mapping.ResourceTypeRegistry;
 import com.kazforge.jsonapi.jackson3.internal.DomainResourceBinder;
 import com.kazforge.jsonapi.jackson3.internal.DomainResourceWriter;
-import com.kazforge.jsonapi.jackson3.internal.JsonApiDocumentModule;
 import com.kazforge.jsonapi.jackson3.internal.MappingDefinitionCache;
-import com.kazforge.jsonapi.jackson3.internal.MetaBindingModule;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.util.Map;
 import java.util.Objects;
 import tools.jackson.databind.json.JsonMapper;
@@ -328,20 +327,16 @@ public final class JsonApiJackson3 {
 
   /**
    * Derives a mapper for resource mapping introspection, attribute conversion, and binder
-   * construction. Registers {@link MetaBindingModule} so built-in {@code ResourceIdentifier} values
-   * can round-trip identifier meta. Does not register the JSON:API document module because the
-   * resource mapper produces core model objects, not serialized output.
+   * construction. Registers {@link com.kazforge.jsonapi.jackson3.internal.MetaBindingModule} so
+   * built-in {@code ResourceIdentifier} values can round-trip identifier meta. Does not register
+   * the JSON:API document module because the resource mapper produces core model objects, not
+   * serialized output.
    */
   private static JsonMapper resourceMappingMapper(JsonMapper base) {
-    return base.rebuild().addModule(new MetaBindingModule()).build();
+    return JsonApiJackson3Assembly.resourceMappingMapper(base);
   }
 
-  /**
-   * Derives a new mapper with JSON:API document serializers registered. Package-private so callers
-   * cannot serialize documents without aggregate validation.
-   */
   static JsonMapper documentMapper(JsonMapper base) {
-    Objects.requireNonNull(base, "base");
-    return base.rebuild().addModule(new JsonApiDocumentModule()).build();
+    return JsonApiJackson3Assembly.documentMapper(base);
   }
 }

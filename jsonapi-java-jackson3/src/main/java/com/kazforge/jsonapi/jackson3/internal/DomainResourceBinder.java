@@ -10,7 +10,7 @@ import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.jackson.internal.mapping.ResourceTypeMatch;
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
-import com.kazforge.jsonapi.jackson3.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -50,7 +50,7 @@ public final class DomainResourceBinder {
   private final MappingDefinitionCache cache;
   private final Map<Class<?>, RelationshipLinkageMapper> linkageMappers;
   private final WholeMetaTarget wholeMetaTarget;
-  private final StructuredValueBinder structuredBinder;
+  private final FlatConstructionPaths constructionPaths;
 
   public DomainResourceBinder(
       JsonMapper mapper,
@@ -62,7 +62,7 @@ public final class DomainResourceBinder {
     this.cache = Objects.requireNonNull(cache, "cache");
     this.linkageMappers = Map.copyOf(Objects.requireNonNull(linkageMappers, "linkageMappers"));
     this.wholeMetaTarget = new WholeMetaTarget(mapper);
-    this.structuredBinder = new StructuredValueBinder(mapper);
+    this.constructionPaths = new FlatConstructionPaths(mapper);
   }
 
   /** Binds one resource object to the given target type. */
@@ -196,7 +196,7 @@ public final class DomainResourceBinder {
         continue;
       }
       requireDeserializable(
-          property, RelationshipLinkageSupport.relationshipLocation(property), rawType);
+          property, RelationshipMetaSupport.relationshipLocation(property), rawType);
       bindRelationship(properties, property, data);
     }
   }
@@ -267,7 +267,7 @@ public final class DomainResourceBinder {
       RelationshipData data) {
     JavaType propertyType = property.type();
     JavaType mappingType =
-        RelationshipLinkageSupport.targetMappingType(propertyType, mapper.getTypeFactory());
+        MappingTypeSupport.targetMappingType(propertyType, mapper.getTypeFactory());
     RelationshipLinkageMapper linkageMapper =
         RelationshipLinkageSupport.selectLinkageMapper(propertyType, property, linkageMappers);
     properties.put(
@@ -300,7 +300,7 @@ public final class DomainResourceBinder {
       ReadResourceMapping mapping,
       @Nullable MappingLocation idLocation,
       @Nullable MappingLocation lidLocation) {
-    Map<String, StructuredValueBinder.ConstructionStart> startsByJacksonName =
+    Map<String, MappingConstructionStart> startsByJacksonName =
         mapping.constructionStartsByJacksonName(idLocation, lidLocation);
     try {
       return BeanConstruction.convertBean(
@@ -309,8 +309,8 @@ public final class DomainResourceBinder {
           targetType,
           rawType,
           (failure, ignored) ->
-              structuredBinder.translateConstructionPath(
-                  BeanConstruction.pathNames(failure), startsByJacksonName, true));
+              constructionPaths.translateConstructionPath(
+                  BeanConstruction.pathNames(failure), startsByJacksonName));
     } catch (JsonApiMappingException e) {
       ReadMappingProperty identifierProperty = mapping.identifierProperty();
       if (identifierProperty != null

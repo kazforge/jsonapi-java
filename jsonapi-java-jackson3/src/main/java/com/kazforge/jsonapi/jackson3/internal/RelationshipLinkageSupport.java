@@ -9,18 +9,13 @@ import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.jackson.internal.mapping.IdentifierMetaSupport;
 import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
-import com.kazforge.jsonapi.jackson3.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.type.TypeFactory;
 
 /**
  * Shared relationship linkage rules for flat DTO binding and presence-aware PATCH: cardinality
@@ -31,86 +26,26 @@ final class RelationshipLinkageSupport {
 
   private RelationshipLinkageSupport() {}
 
-  static boolean isLinkageType(JavaType type) {
-    return type.getRawClass() == RelationshipLinkage.class;
-  }
-
-  /**
-   * Returns the {@link RelationshipLinkage} JavaType of a relationship property, or {@code null}
-   * when the property is an ordinary target. Looks through one {@link Optional} and, for to-many
-   * properties, through the collection/array content type.
-   */
-  static @Nullable JavaType linkageJavaType(JavaType propertyType) {
-    JavaType unwrapped = unwrapTransportWrappers(propertyType);
-    if (isLinkageType(unwrapped)) {
-      return unwrapped;
-    }
-    if (DomainResourceWriter.isToManyType(unwrapped)) {
-      JavaType content = DomainResourceWriter.resolveContentType(unwrapped);
-      if (content != null) {
-        JavaType contentUnwrapped = unwrapOptionalType(content);
-        if (isLinkageType(contentUnwrapped)) {
-          return contentUnwrapped;
-        }
-      }
-    }
-    return null;
-  }
-
-  static JavaType linkageTargetType(JavaType linkageType) {
-    return linkageType.containedType(0);
-  }
-
-  static JavaType linkageMetaType(JavaType linkageType) {
-    return linkageType.containedType(1);
-  }
-
-  /**
-   * The JavaType against which ordinary target conversion runs. For a wrapper property this is
-   * {@code T} (or a collection/array of {@code T}); otherwise the original property type.
-   */
-  static JavaType targetMappingType(JavaType propertyType, TypeFactory typeFactory) {
-    JavaType unwrapped = unwrapTransportWrappers(propertyType);
-    JavaType linkageType = linkageJavaType(unwrapped);
-    if (linkageType == null) {
-      return propertyType;
-    }
-    JavaType target = linkageTargetType(linkageType);
-    if (!DomainResourceWriter.isToManyType(unwrapped)) {
-      return target;
-    }
-    if (unwrapped.isArrayType()) {
-      return typeFactory.constructArrayType(target);
-    }
-    Class<?> raw = unwrapped.getRawClass();
-    if (Set.class.isAssignableFrom(raw)) {
-      @SuppressWarnings({"unchecked", "rawtypes"})
-      Class<? extends Collection> setType = (Class<? extends Collection>) raw;
-      return typeFactory.constructCollectionType(setType, target);
-    }
-    return typeFactory.constructCollectionType(List.class, target);
-  }
-
   private static Class<?> resolveTargetClass(
       JavaType propertyType, boolean toMany, MappingPropertyView property) {
-    JavaType linkageType = linkageJavaType(propertyType);
+    JavaType linkageType = MappingTypeSupport.linkageJavaType(propertyType);
     if (linkageType != null) {
-      return linkageTargetType(linkageType).getRawClass();
+      return MappingTypeSupport.linkageTargetType(linkageType).getRawClass();
     }
     if (toMany) {
-      JavaType contentType = DomainResourceWriter.resolveContentType(propertyType);
+      JavaType contentType = MappingTypeSupport.resolveContentType(propertyType);
       if (contentType == null) {
         throw new JsonApiMappingException(
             MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_TARGET,
             rawTypeOf(property),
-            relationshipLocation(property),
+            RelationshipMetaSupport.relationshipLocation(property),
             "Cannot resolve collection content type for relationship '"
                 + property.logicalName()
                 + "'");
       }
       return contentType.getRawClass();
     }
-    return unwrapOptionalType(propertyType).getRawClass();
+    return MappingTypeSupport.unwrapOptionalType(propertyType).getRawClass();
   }
 
   /**
@@ -122,7 +57,8 @@ final class RelationshipLinkageSupport {
       JavaType propertyType,
       MappingPropertyView property,
       Map<Class<?>, RelationshipLinkageMapper> linkageMappers) {
-    boolean toMany = DomainResourceWriter.isToManyType(unwrapTransportWrappers(propertyType));
+    boolean toMany =
+        MappingTypeSupport.isToManyType(MappingTypeSupport.unwrapTransportWrappers(propertyType));
     Class<?> targetClass = resolveTargetClass(propertyType, toMany, property);
     if (targetClass == ResourceIdentifier.class) {
       return null;
@@ -180,14 +116,16 @@ final class RelationshipLinkageSupport {
       @Nullable RelationshipLinkageMapper linkageMapper,
       JavaType mappingType,
       JsonMapper jacksonMapper) {
-    JavaType linkageType = linkageJavaType(property.type());
+    JavaType linkageType = MappingTypeSupport.linkageJavaType(property.type());
     boolean propertyToMany =
-        DomainResourceWriter.isToManyType(unwrapTransportWrappers(property.type()));
+        MappingTypeSupport.isToManyType(
+            MappingTypeSupport.unwrapTransportWrappers(property.type()));
     if (linkageType != null && propertyToMany) {
       return wrapToManyOccurrences(property, data, linkageMapper, jacksonMapper, linkageType);
     }
-    boolean mappingToMany = DomainResourceWriter.isToManyType(mappingType);
-    JavaType mapperTargetType = mappingToMany ? mappingType : unwrapOptionalType(mappingType);
+    boolean mappingToMany = MappingTypeSupport.isToManyType(mappingType);
+    JavaType mapperTargetType =
+        mappingToMany ? mappingType : MappingTypeSupport.unwrapOptionalType(mappingType);
     Object converted =
         linkageMapper == null
             ? builtInLinkage(property, data, mappingToMany)
@@ -249,7 +187,7 @@ final class RelationshipLinkageSupport {
       throw new JsonApiMappingException(
           MappingDiagnostic.LINKAGE_MAPPING_FAILED,
           rawTypeOf(property),
-          relationshipLocation(property),
+          RelationshipMetaSupport.relationshipLocation(property),
           "Relationship linkage mapper failed for relationship '" + property.logicalName() + "'",
           e);
     }
@@ -267,7 +205,11 @@ final class RelationshipLinkageSupport {
     return new RelationshipLinkage<>(
         converted,
         convertIdentifierMeta(
-            singleIdentifier(data), linkageMetaType(linkageType), jacksonMapper, property, -1));
+            singleIdentifier(data),
+            MappingTypeSupport.linkageMetaType(linkageType),
+            jacksonMapper,
+            property,
+            -1));
   }
 
   private static Object wrapToManyOccurrences(
@@ -285,8 +227,8 @@ final class RelationshipLinkageSupport {
     if (empty) {
       return List.of();
     }
-    JavaType targetType = linkageTargetType(linkageType);
-    JavaType metaType = linkageMetaType(linkageType);
+    JavaType targetType = MappingTypeSupport.linkageTargetType(linkageType);
+    JavaType metaType = MappingTypeSupport.linkageMetaType(linkageType);
     List<Object> wrapped = new ArrayList<>(identifiers.size());
     for (int index = 0; index < identifiers.size(); index++) {
       ResourceIdentifier identifier = identifiers.get(index);
@@ -351,21 +293,6 @@ final class RelationshipLinkageSupport {
     }
   }
 
-  static JavaType unwrapTransportWrappers(JavaType type) {
-    JavaType current = type;
-    if (current.getRawClass() == PatchPresence.class && current.containedTypeCount() == 1) {
-      current = current.containedType(0);
-    }
-    return unwrapOptionalType(current);
-  }
-
-  static JavaType unwrapOptionalType(JavaType type) {
-    if (type.isTypeOrSubTypeOf(Optional.class) && type.containedTypeCount() == 1) {
-      return type.containedType(0);
-    }
-    return type;
-  }
-
   static Class<?> rawTypeOf(MappingPropertyView property) {
     return property.type().getRawClass();
   }
@@ -375,15 +302,11 @@ final class RelationshipLinkageSupport {
     return new JsonApiMappingException(
         MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_TARGET,
         rawTypeOf(property),
-        relationshipLocation(property),
+        RelationshipMetaSupport.relationshipLocation(property),
         "Relationship '"
             + property.logicalName()
             + "' targets unsupported type "
             + targetClass.getName());
-  }
-
-  static MappingLocation relationshipLocation(MappingPropertyView property) {
-    return MappingLocation.of(JsonApiMembers.RELATIONSHIPS, property.jsonapiName(), "data");
   }
 
   private static JsonApiMappingException cardinalityMismatch(
@@ -391,7 +314,7 @@ final class RelationshipLinkageSupport {
     return new JsonApiMappingException(
         MappingDiagnostic.RELATIONSHIP_CARDINALITY_MISMATCH,
         rawTypeOf(property),
-        relationshipLocation(property),
+        RelationshipMetaSupport.relationshipLocation(property),
         "Cardinality mismatch for relationship '" + property.logicalName() + "': " + detail);
   }
 }

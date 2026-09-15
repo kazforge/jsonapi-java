@@ -596,26 +596,6 @@ public final class DomainResourceWriter {
     }
   }
 
-  static boolean isToManyType(JavaType type) {
-    if (type.isArrayType()) {
-      return true;
-    }
-    if (type.isCollectionLikeType()) {
-      return true;
-    }
-    return type.isTypeOrSubTypeOf(Iterable.class);
-  }
-
-  static @Nullable JavaType resolveContentType(JavaType type) {
-    if (type.isArrayType() || type.isCollectionLikeType()) {
-      return type.getContentType();
-    }
-    if (type.containedTypeCount() > 0) {
-      return type.containedType(0);
-    }
-    return null;
-  }
-
   static @Nullable Object unwrapOptional(@Nullable Object value) {
     if (value instanceof Optional<?> optional) {
       return optional.orElse(null);
@@ -721,9 +701,8 @@ public final class DomainResourceWriter {
       Map<String, MappingProperty> relationshipMetaByTarget) {
     Object value = readValue(resource, property, PropertyRole.RELATIONSHIP);
     JavaType propertyType = property.accessor().getType();
-    MappingLocation relationshipLocation =
-        RelationshipLinkageSupport.relationshipLocation(property);
-    boolean toMany = isToManyType(propertyType);
+    MappingLocation relationshipLocation = RelationshipMetaSupport.relationshipLocation(property);
+    boolean toMany = MappingTypeSupport.isToManyType(propertyType);
     RelationshipData linkage =
         toMany
             ? extractToManyLinkage(resource, property, value, propertyType, relationshipLocation)
@@ -919,7 +898,7 @@ public final class DomainResourceWriter {
   private RelationshipData extractToOneLinkage(
       Object resource, MappingProperty property, @Nullable Object value, JavaType propertyType) {
     value = unwrapOptional(value);
-    JavaType linkageType = RelationshipLinkageSupport.linkageJavaType(propertyType);
+    JavaType linkageType = MappingTypeSupport.linkageJavaType(propertyType);
     if (linkageType != null) {
       if (value == null) {
         return RelationshipData.NullLinkage.INSTANCE;
@@ -928,7 +907,7 @@ public final class DomainResourceWriter {
         throw new JsonApiMappingException(
             MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
             value.getClass(),
-            RelationshipLinkageSupport.relationshipLocation(property),
+            RelationshipMetaSupport.relationshipLocation(property),
             "Relationship '"
                 + property.logicalName()
                 + "' requires RelationshipLinkage values, got "
@@ -936,13 +915,10 @@ public final class DomainResourceWriter {
       }
       RelationshipData data =
           extractToOneLinkage(
-              resource,
-              property,
-              target,
-              RelationshipLinkageSupport.linkageTargetType(linkageType));
+              resource, property, target, MappingTypeSupport.linkageTargetType(linkageType));
       return applyWrapperMeta(
           resource,
-          RelationshipLinkageSupport.linkageMetaType(linkageType),
+          MappingTypeSupport.linkageMetaType(linkageType),
           meta,
           data,
           property.jsonapiName(),
@@ -961,7 +937,7 @@ public final class DomainResourceWriter {
   }
 
   private JavaType relationshipTargetType(Object value, JavaType propertyType) {
-    JavaType unwrapped = RelationshipLinkageSupport.unwrapOptionalType(propertyType);
+    JavaType unwrapped = MappingTypeSupport.unwrapOptionalType(propertyType);
     if (unwrapped.getRawClass() == Object.class
         || (unwrapped.getRawClass() == Optional.class && unwrapped.containedTypeCount() == 0)) {
       return inferredType(value);
@@ -978,7 +954,7 @@ public final class DomainResourceWriter {
     if (value == null) {
       return RelationshipData.IdentifierCollectionLinkage.empty();
     }
-    JavaType linkageType = RelationshipLinkageSupport.linkageJavaType(propType);
+    JavaType linkageType = MappingTypeSupport.linkageJavaType(propType);
     if (linkageType != null) {
       List<Object> items = convertToCollection(value, relationshipLocation);
       return toManyWrappedLinkage(resource, property, items, linkageType, relationshipLocation);
@@ -1006,8 +982,8 @@ public final class DomainResourceWriter {
     if (items.isEmpty()) {
       return RelationshipData.IdentifierCollectionLinkage.empty();
     }
-    JavaType targetType = RelationshipLinkageSupport.linkageTargetType(linkageType);
-    JavaType metaType = RelationshipLinkageSupport.linkageMetaType(linkageType);
+    JavaType targetType = MappingTypeSupport.linkageTargetType(linkageType);
+    JavaType metaType = MappingTypeSupport.linkageMetaType(linkageType);
     List<ResourceIdentifier> identifiers = new ArrayList<>();
     int index = 0;
     for (Object item : items) {
@@ -1064,7 +1040,7 @@ public final class DomainResourceWriter {
 
   private RelationshipData toManyLinkageFromDomainObjects(
       List<?> items, JavaType propType, MappingLocation relationshipLocation) {
-    JavaType contentType = resolveContentType(propType);
+    JavaType contentType = MappingTypeSupport.resolveContentType(propType);
     if (contentType == null) {
       throw new JsonApiMappingException(
           MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_COLLECTION_TYPE,

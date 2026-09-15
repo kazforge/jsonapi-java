@@ -4,6 +4,7 @@ import com.kazforge.jsonapi.annotation.JsonApiAttribute;
 import com.kazforge.jsonapi.annotation.JsonApiId;
 import com.kazforge.jsonapi.annotation.JsonApiRelationship;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.util.List;
 import java.util.Optional;
 
