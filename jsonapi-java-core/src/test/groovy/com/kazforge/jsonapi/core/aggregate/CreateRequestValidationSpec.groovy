@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.core.validation
+package com.kazforge.jsonapi.core.aggregate
 
 import com.kazforge.jsonapi.core.model.DocumentData
 import com.kazforge.jsonapi.core.model.ErrorObject
@@ -11,6 +11,10 @@ import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.Relationships
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceObject
+import com.kazforge.jsonapi.core.validation.DocumentUsage
+import com.kazforge.jsonapi.core.validation.JsonApiValidationException
+import com.kazforge.jsonapi.core.validation.PrimaryDataContext
+import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import spock.lang.Specification
 
 class CreateRequestValidationSpec extends Specification {

@@ -1,6 +1,12 @@
-package com.kazforge.jsonapi.core.validation;
+package com.kazforge.jsonapi.core.aggregate;
 
 import com.kazforge.jsonapi.core.model.ResourceIdentity;
+import com.kazforge.jsonapi.core.validation.DocumentUsage;
+import com.kazforge.jsonapi.core.validation.EndpointIdentity;
+import com.kazforge.jsonapi.core.validation.LocalValidation;
+import com.kazforge.jsonapi.core.validation.PrimaryDataContext;
+import com.kazforge.jsonapi.core.validation.RelationshipCardinality;
+import com.kazforge.jsonapi.core.validation.RelationshipPaginationKey;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;

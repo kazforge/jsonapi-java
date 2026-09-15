@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson3
 
 import com.kazforge.jsonapi.core.validation.DocumentUsage
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.jackson.document.DocumentReadContext
 import com.kazforge.jsonapi.jackson.document.PrimaryDataKind
 import com.kazforge.jsonapi.jackson.patch.PatchPresence

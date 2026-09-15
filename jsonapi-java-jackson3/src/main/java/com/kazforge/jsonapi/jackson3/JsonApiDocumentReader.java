@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson3;
 
+import com.kazforge.jsonapi.core.aggregate.JsonApiDocumentValidator;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
-import com.kazforge.jsonapi.core.validation.JsonApiDocumentValidator;
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException;
 import com.kazforge.jsonapi.jackson.diagnostic.CodecFailureCategory;
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException;

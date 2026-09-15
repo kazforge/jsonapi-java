@@ -1,8 +1,8 @@
 package com.kazforge.jsonapi.jackson.mapping;
 
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.ResourceIdentity;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import java.util.Objects;
 import java.util.Set;
 

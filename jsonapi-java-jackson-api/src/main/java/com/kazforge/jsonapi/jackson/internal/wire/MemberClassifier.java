@@ -1,9 +1,9 @@
 package com.kazforge.jsonapi.jackson.internal.wire;
 
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.Links;
 import com.kazforge.jsonapi.core.validation.LinksContext;
 import com.kazforge.jsonapi.core.validation.MemberNames;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 
 /**
  * Structural classification of JSON:API member names without depending on {@code core.internal}.

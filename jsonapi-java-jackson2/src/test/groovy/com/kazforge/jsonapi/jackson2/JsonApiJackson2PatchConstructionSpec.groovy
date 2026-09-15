@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson2
 
 import com.fasterxml.jackson.databind.json.JsonMapper
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter
 import spock.lang.Specification
 

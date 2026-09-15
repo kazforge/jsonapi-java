@@ -2,6 +2,7 @@ package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.Attributes;
 import com.kazforge.jsonapi.core.model.JsonApiMembers;
 import com.kazforge.jsonapi.core.model.Links;
@@ -13,7 +14,6 @@ import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException;
 import com.kazforge.jsonapi.core.validation.LinksContext;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode;
 import com.kazforge.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
 import com.kazforge.jsonapi.jackson.internal.wire.MemberClassifier;

@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  * data}, and at least one of {@code data}, {@code errors}, {@code meta}, or an extension member).
  *
  * <p>Cross-document rules (identity uniqueness, full linkage, extension/profile policy, and
- * similar) require {@link com.kazforge.jsonapi.core.validation.JsonApiDocumentValidator}.
+ * similar) require a separate aggregate-validation pass.
  */
 public record JsonApiDocument(
     @Nullable DocumentData data,

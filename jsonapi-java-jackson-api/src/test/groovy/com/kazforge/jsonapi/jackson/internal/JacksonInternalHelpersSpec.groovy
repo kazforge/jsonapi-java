@@ -7,7 +7,7 @@ import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException
 import com.kazforge.jsonapi.core.validation.LinksContext
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.jackson.diagnostic.SourceLocation

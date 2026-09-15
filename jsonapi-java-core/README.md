@@ -4,11 +4,12 @@ Zero-dependency Java representation of [JSON:API v1.1](https://jsonapi.org/) doc
 
 ## Packages
 
-| Package                                     | Role                                                               |
-|---------------------------------------------|--------------------------------------------------------------------|
-| `com.kazforge.jsonapi.core.model`      | Immutable document model (resources, relationships, links, errors) |
-| `com.kazforge.jsonapi.core.validation` | Aggregate validator, validation context, stable rule codes         |
-| `com.kazforge.jsonapi.core.internal`   | Shared helpers; not a public API surface                           |
+| Package                                    | Role                                                               |
+|--------------------------------------------|--------------------------------------------------------------------|
+| `com.kazforge.jsonapi.core.model`          | Immutable document model (resources, relationships, links, errors) |
+| `com.kazforge.jsonapi.core.validation`     | Validation diagnostics, grammar, and model-independent policy      |
+| `com.kazforge.jsonapi.core.aggregate`      | Aggregate document validator and validation context                |
+| `com.kazforge.jsonapi.core.internal`       | Shared helpers; not a public API surface                           |
 
 ## Minimal usage
 

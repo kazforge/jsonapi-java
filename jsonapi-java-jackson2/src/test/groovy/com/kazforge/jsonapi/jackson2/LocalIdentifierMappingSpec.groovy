@@ -10,7 +10,7 @@ import com.kazforge.jsonapi.core.model.Meta
 import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.validation.DocumentUsage
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter

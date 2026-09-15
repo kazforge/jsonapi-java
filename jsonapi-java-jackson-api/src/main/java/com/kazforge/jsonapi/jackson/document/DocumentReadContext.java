@@ -1,6 +1,6 @@
 package com.kazforge.jsonapi.jackson.document;
 
-import com.kazforge.jsonapi.core.validation.ValidationContext;
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import java.util.Objects;
 
 /**

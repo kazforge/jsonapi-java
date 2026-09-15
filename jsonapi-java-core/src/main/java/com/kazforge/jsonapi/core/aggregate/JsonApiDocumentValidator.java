@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.core.validation;
+package com.kazforge.jsonapi.core.aggregate;
 
 import com.kazforge.jsonapi.core.internal.JsonPointers;
 import com.kazforge.jsonapi.core.internal.SyntaxValidators;
@@ -16,6 +16,14 @@ import com.kazforge.jsonapi.core.model.Relationships;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceIdentity;
 import com.kazforge.jsonapi.core.model.ResourceObject;
+import com.kazforge.jsonapi.core.validation.DocumentUsage;
+import com.kazforge.jsonapi.core.validation.EndpointIdentity;
+import com.kazforge.jsonapi.core.validation.JsonApiValidationException;
+import com.kazforge.jsonapi.core.validation.LinksContext;
+import com.kazforge.jsonapi.core.validation.MemberNames;
+import com.kazforge.jsonapi.core.validation.PrimaryDataContext;
+import com.kazforge.jsonapi.core.validation.RelationshipCardinality;
+import com.kazforge.jsonapi.core.validation.ValidationRuleCode;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;

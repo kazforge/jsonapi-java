@@ -1,9 +1,9 @@
 package com.kazforge.jsonapi.jackson3;
 
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.JsonApiObject;
 import com.kazforge.jsonapi.core.validation.DocumentUsage;
 import com.kazforge.jsonapi.core.validation.PrimaryDataContext;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.api.JsonApi;
 import com.kazforge.jsonapi.jackson.api.JsonApiDocuments;
 import com.kazforge.jsonapi.jackson.api.JsonApiPatches;

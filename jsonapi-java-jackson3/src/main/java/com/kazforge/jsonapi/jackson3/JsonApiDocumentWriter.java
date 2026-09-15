@@ -1,9 +1,9 @@
 package com.kazforge.jsonapi.jackson3;
 
+import com.kazforge.jsonapi.core.aggregate.JsonApiDocumentValidator;
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.ResourceIdentity;
-import com.kazforge.jsonapi.core.validation.JsonApiDocumentValidator;
-import com.kazforge.jsonapi.core.validation.ValidationContext;
 import com.kazforge.jsonapi.jackson.mapping.MappedDocument;
 import java.io.FilterOutputStream;
 import java.io.FilterWriter;

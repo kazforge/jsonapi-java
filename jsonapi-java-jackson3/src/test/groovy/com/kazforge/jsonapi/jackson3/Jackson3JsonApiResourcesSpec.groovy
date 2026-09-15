@@ -10,7 +10,7 @@ import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.validation.DocumentUsage
 import com.kazforge.jsonapi.core.validation.EndpointIdentity
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException
-import com.kazforge.jsonapi.core.validation.ValidationContext
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.jackson.api.ResourceWriteOptions
 import com.kazforge.jsonapi.jackson.diagnostic.CodecFailureCategory
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException
