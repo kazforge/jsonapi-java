@@ -15,6 +15,10 @@ import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.jackson.mapping.ResourceDecoratorRegistry;
 import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy;
+import com.kazforge.jsonapi.jackson2.internal.DomainResourceBinder;
+import com.kazforge.jsonapi.jackson2.internal.DomainResourceWriter;
+import com.kazforge.jsonapi.jackson2.internal.MappingDefinitionCache;
+import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -63,11 +67,24 @@ public final class Jackson2JsonApi implements JsonApi {
     Objects.requireNonNull(linkageMappers, "linkageMappers");
     Objects.requireNonNull(representationPolicy, "representationPolicy");
     Objects.requireNonNull(decorators, "decorators");
-    JsonMapper documentMapper = JsonApiJackson2.documentMapper(baseMapper);
+    JsonMapper documentMapper = JsonApiJackson2Assembly.documentMapper(baseMapper);
+    JsonMapper mappingMapper = JsonApiJackson2Assembly.resourceMappingMapper(baseMapper);
     JsonApiResourceMapper resourceMapper =
-        JsonApiJackson2.resourceMapper(baseMapper, identifierConverter, decorators);
+        new JsonApiResourceMapper(
+            new DomainResourceWriter(
+                mappingMapper,
+                identifierConverter,
+                new MappingDefinitionCache(mappingMapper),
+                decorators));
+    JsonMapper bindingMapper = JsonApiJackson2Assembly.resourceBindingMapper(baseMapper);
     JsonApiResourceBinder resourceBinder =
-        JsonApiJackson2.resourceBinder(baseMapper, identifierConverter, linkageMappers);
+        new JsonApiResourceBinder(
+            bindingMapper,
+            new DomainResourceBinder(
+                bindingMapper,
+                identifierConverter,
+                new MappingDefinitionCache(bindingMapper),
+                linkageMappers));
     JsonApiDocumentReader resourceReader =
         new JsonApiDocumentReader(baseMapper, DocumentReadContext.resourceDefaults());
     JsonApiDocumentReader relationshipReader =
@@ -88,10 +105,10 @@ public final class Jackson2JsonApi implements JsonApi {
             documentMapper,
             ValidationContext.defaults().withDocumentUsage(DocumentUsage.CREATE_REQUEST));
     JsonApiPatchCommandReader patchCommandReader =
-        JsonApiJackson2.patchCommandReader(
+        new JsonApiPatchCommandReader(
             baseMapper, ValidationContext.defaults(), identifierConverter, linkageMappers);
     JsonApiPatchDtoReader patchDtoReader =
-        JsonApiJackson2.patchDtoReader(
+        new JsonApiPatchDtoReader(
             baseMapper, ValidationContext.defaults(), identifierConverter, linkageMappers);
     this.resources =
         new Jackson2JsonApiResources(

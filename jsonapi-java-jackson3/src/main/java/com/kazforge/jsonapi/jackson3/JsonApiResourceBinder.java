@@ -28,7 +28,8 @@ import tools.jackson.databind.json.JsonMapper;
  * ADR-011). Relationship properties receive linkage only — {@link
  * com.kazforge.jsonapi.core.model.ResourceIdentifier} (and {@link java.util.Optional}, {@link
  * java.util.List}, {@link java.util.Set}, or array variants) bind from linkage directly; any other
- * target class requires a registered {@link RelationshipLinkageMapper}. Built-in identifier linkage
+ * target class requires a registered {@link
+ * com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper}. Built-in identifier linkage
  * preserves {@code ResourceIdentifier.meta} (ADR-017) and still drops additional members. Write
  * overlay of application-owned identifier meta uses opt-in {@link
  * com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage}; it is not relationship-level {@code

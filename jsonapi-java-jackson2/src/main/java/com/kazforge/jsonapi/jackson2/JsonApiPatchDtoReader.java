@@ -18,6 +18,7 @@ import com.kazforge.jsonapi.jackson2.internal.DomainPatchDtoBinder;
 import com.kazforge.jsonapi.jackson2.internal.MappingDefinitionCache;
 import com.kazforge.jsonapi.jackson2.internal.MetaBindingModule;
 import com.kazforge.jsonapi.jackson2.internal.PatchPresenceModule;
+import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;

@@ -17,7 +17,9 @@ presence-aware PATCH binding.
 | Package                                        | Role                                                                  |
 |------------------------------------------------|-----------------------------------------------------------------------|
 | `com.kazforge.jsonapi.jackson2`           | Public Level-1 configured runtime (`Jackson2JsonApi`), codec factories (`JsonApiJackson2`), validate-then-emit `JsonApiDocumentWriter`, token-driven `JsonApiDocumentReader`, `JsonApiResourceMapper` for domain-to-resource mapping, `JsonApiResourceBinder` for validated flat resource-to-DTO binding, `JsonApiDomainDocumentReader` / `JsonApiDomainDocument` for advanced typed envelopes, and `JsonApiPatchCommandReader` / `JsonApiPatchDtoReader` for presence-aware PATCH |
-| `com.kazforge.jsonapi.jackson2.internal`  | Streaming document serializer, wire emission, token-driven wire decoding, the mapping engine, PATCH binding, and module registration; not public API |
+| `com.kazforge.jsonapi.jackson2.mapping`    | Public relationship-linkage mapping contracts (`RelationshipLinkageMapper`); depended on by internals without depending back on the composition root |
+| `com.kazforge.jsonapi.jackson2.internal`  | Mapping engine, PATCH binding, and module registration; not public API |
+| `com.kazforge.jsonapi.jackson2.internal.codec` | Self-contained document codec (token-driven wire decoding, wire emission, document module); not public API |
 | `com.kazforge.jsonapi.jackson.{api,document,mapping,patch,representation,diagnostic}` | Supported Jackson-major-neutral API contracts in `jsonapi-java-jackson-api` |
 | `com.kazforge.jsonapi.jackson.internal..` | Unsupported Jackson-free implementation helpers shared with this adapter; not public API |
 

@@ -84,7 +84,7 @@ final class WholeMetaTarget {
   void validateRelationshipLinkageMeta(
       List<? extends MappingPropertyView> relationships, Class<?> rawType) {
     for (MappingPropertyView property : relationships) {
-      JavaType linkageType = RelationshipLinkageSupport.linkageJavaType(property.type());
+      JavaType linkageType = MappingTypeSupport.linkageJavaType(property.type());
       if (linkageType == null) {
         continue;
       }
@@ -92,12 +92,12 @@ final class WholeMetaTarget {
           IdentifierMetaSupport.identifierMetaLocation(property.jsonapiName());
       if (linkageType.containedTypeCount() < 2
           || linkageType.getBindings().isEmpty()
-          || RelationshipLinkageSupport.isLinkageType(
-              RelationshipLinkageSupport.unwrapOptionalType(
-                  RelationshipLinkageSupport.linkageTargetType(linkageType)))) {
+          || MappingTypeSupport.isLinkageType(
+              MappingTypeSupport.unwrapOptionalType(
+                  MappingTypeSupport.linkageTargetType(linkageType)))) {
         throw invalidIdentifierMetaTarget(property, rawType, location);
       }
-      JavaType metaType = RelationshipLinkageSupport.linkageMetaType(linkageType);
+      JavaType metaType = MappingTypeSupport.linkageMetaType(linkageType);
       if (invalidReadWriteTarget(metaType)) {
         throw invalidIdentifierMetaTarget(property, rawType, location);
       }

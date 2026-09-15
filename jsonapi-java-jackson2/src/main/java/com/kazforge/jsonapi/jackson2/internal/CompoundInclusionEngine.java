@@ -191,8 +191,8 @@ public final class CompoundInclusionEngine {
       MappingProperty property, JavaType ownerType, String dottedThrough) {
     JavaType propertyType = property.accessor().getType();
     JavaType relatedType = unwrapOptionalType(propertyType);
-    if (DomainResourceWriter.isToManyType(relatedType)) {
-      JavaType contentType = DomainResourceWriter.resolveContentType(relatedType);
+    if (MappingTypeSupport.isToManyType(relatedType)) {
+      JavaType contentType = MappingTypeSupport.resolveContentType(relatedType);
       if (contentType == null) {
         throw JsonApiMappingException.withoutLocation(
             MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_COLLECTION_TYPE,
@@ -201,11 +201,10 @@ public final class CompoundInclusionEngine {
       }
       relatedType = unwrapOptionalType(contentType);
     }
-    JavaType linkageType = RelationshipLinkageSupport.linkageJavaType(relatedType);
+    JavaType linkageType = MappingTypeSupport.linkageJavaType(relatedType);
     if (linkageType != null) {
       relatedType =
-          RelationshipLinkageSupport.unwrapOptionalType(
-              RelationshipLinkageSupport.linkageTargetType(linkageType));
+          MappingTypeSupport.unwrapOptionalType(MappingTypeSupport.linkageTargetType(linkageType));
     }
     return relatedType;
   }
@@ -396,7 +395,7 @@ public final class CompoundInclusionEngine {
       Object raw = writer.readRelationshipValue(domain, property);
       Object value = DomainResourceWriter.unwrapOptional(raw);
       JavaType propertyType = unwrapOptionalType(property.accessor().getType());
-      if (DomainResourceWriter.isToManyType(propertyType)) {
+      if (MappingTypeSupport.isToManyType(propertyType)) {
         if (value == null) {
           return List.of();
         }

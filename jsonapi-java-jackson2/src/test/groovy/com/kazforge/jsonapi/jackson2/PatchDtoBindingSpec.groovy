@@ -1,5 +1,7 @@
 package com.kazforge.jsonapi.jackson2
 
+import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper
+
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.type.TypeReference

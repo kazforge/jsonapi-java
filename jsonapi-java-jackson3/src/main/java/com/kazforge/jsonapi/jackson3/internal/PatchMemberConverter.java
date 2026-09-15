@@ -8,8 +8,7 @@ import com.kazforge.jsonapi.jackson.internal.patch.PresenceMarker;
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.jackson.patch.PatchCommand;
 import com.kazforge.jsonapi.jackson.patch.PatchPresence;
-import com.kazforge.jsonapi.jackson3.RelationshipLinkageMapper;
-import java.util.LinkedHashMap;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -217,7 +216,7 @@ final class PatchMemberConverter {
   private @Nullable Object convertRelationshipLinkage(
       MappingProperty property, RelationshipData data, JavaType targetType) {
     JavaType mappingType =
-        RelationshipLinkageSupport.targetMappingType(targetType, mapper.getTypeFactory());
+        MappingTypeSupport.targetMappingType(targetType, mapper.getTypeFactory());
     RelationshipLinkageMapper linkageMapper =
         RelationshipLinkageSupport.selectLinkageMapper(targetType, property, linkageMappers);
     return RelationshipLinkageSupport.convertLinkage(
@@ -235,7 +234,7 @@ final class PatchMemberConverter {
       throw new JsonApiMappingException(
           MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_TARGET,
           RelationshipLinkageSupport.rawTypeOf(property),
-          RelationshipLinkageSupport.relationshipLocation(property),
+          RelationshipMetaSupport.relationshipLocation(property),
           "Failed to convert relationship '"
               + property.logicalName()
               + "' to "
@@ -252,7 +251,7 @@ final class PatchMemberConverter {
     if (intermediate == null || targetType.isTypeOrSubTypeOf(Optional.class)) {
       return false;
     }
-    if (DomainResourceWriter.isToManyType(targetType)) {
+    if (MappingTypeSupport.isToManyType(targetType)) {
       if (!(intermediate instanceof List<?> list)) {
         return targetType.getRawClass().isInstance(intermediate)
             && !needsCollectionCoercion(intermediate, targetType);
@@ -263,7 +262,7 @@ final class PatchMemberConverter {
       if (list.isEmpty()) {
         return targetType.getRawClass().isInstance(intermediate);
       }
-      JavaType contentType = DomainResourceWriter.resolveContentType(targetType);
+      JavaType contentType = MappingTypeSupport.resolveContentType(targetType);
       if (contentType == null) {
         return false;
       }
@@ -274,21 +273,13 @@ final class PatchMemberConverter {
   }
 
   private static boolean needsCollectionCoercion(Object intermediate, JavaType targetType) {
-    if (!DomainResourceWriter.isToManyType(targetType)) {
+    if (!MappingTypeSupport.isToManyType(targetType)) {
       return false;
     }
     if (targetType.isArrayType()) {
       return true;
     }
     return targetType.isTypeOrSubTypeOf(Set.class) && !(intermediate instanceof Set);
-  }
-
-  static Map<String, MappingProperty> byJsonapiName(List<MappingProperty> properties) {
-    Map<String, MappingProperty> byName = new LinkedHashMap<>();
-    for (MappingProperty property : properties) {
-      byName.put(property.jsonapiName(), property);
-    }
-    return byName;
   }
 
   /** Unwraps a single exact {@code PatchPresence<T>} wrapper, leaving other types unchanged. */

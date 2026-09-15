@@ -13,7 +13,7 @@ import com.kazforge.jsonapi.jackson.internal.mapping.ResourceTypeMatch;
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.jackson.patch.PatchChange;
 import com.kazforge.jsonapi.jackson.patch.PatchCommand;
-import com.kazforge.jsonapi.jackson3.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -120,7 +120,7 @@ public final class DomainPatchBinder {
       return;
     }
     Map<String, MappingProperty> byJsonapiName =
-        PatchMemberConverter.byJsonapiName(mapping.attributes());
+        RelationshipMetaSupport.byJsonapiName(mapping.attributes());
     for (Map.Entry<String, @Nullable Object> entry : attributes.attributes().entrySet()) {
       MappingProperty property = byJsonapiName.get(entry.getKey());
       if (property == null) {
@@ -225,7 +225,7 @@ public final class DomainPatchBinder {
       return;
     }
     Map<String, MappingProperty> byJsonapiName =
-        PatchMemberConverter.byJsonapiName(mapping.relationships());
+        RelationshipMetaSupport.byJsonapiName(mapping.relationships());
     Map<String, MappingProperty> relationshipMetaByTarget =
         RelationshipMetaSupport.byTarget(mapping.relationshipMetaProperties());
     for (Map.Entry<String, Relationship> entry : relationships.relationships().entrySet()) {

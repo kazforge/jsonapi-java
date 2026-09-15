@@ -308,34 +308,25 @@ final class StructuredValueBinder {
   }
 
   /**
-   * Translation start for one top-level synthetic-map key: the member's resource-relative location
-   * prefix plus its declared type for nested walking.
-   */
-  record ConstructionStart(MappingLocation location, JavaType declaredType) {}
-
-  /**
    * Translates a failed bean-construction Jackson path into a resource-relative mapping location
    * (ADR-014). The path's first name selects the member's start through {@code startsByLogicalName}
-   * (Jackson logical name to wire prefix); deeper names are walked through resolved shape metadata,
-   * each matching member contributing its escaped wire-name segment. Walking stops at the first
-   * name that is not a shape member, so Jackson-internal names below an atomic member are never
-   * leaked into the location. The internal presence-marker {@code value} member between two
-   * presence-aware shape levels is skipped.
+   * (Jackson logical name to wire prefix); deeper names are walked through resolved presence-aware
+   * shape metadata, each matching member contributing its escaped wire-name segment. Walking stops
+   * at the first name that is not a shape member, so Jackson-internal names below an atomic member
+   * are never leaked into the location. The internal presence-marker {@code value} member between
+   * two presence-aware shape levels is skipped.
    *
-   * <p>{@code walkPlainShapes} extends walking beyond presence-aware shapes: the flat DTO binder
-   * uses it to follow ordinary structured attribute types, while the typed PATCH DTO path keeps the
-   * stricter presence-aware-only walk. Returns {@code null} when the path is empty or its first
-   * name matches no mapped member — an absent location per the mapping-location contract, never a
-   * Jackson logical property name.
+   * <p>Only the typed PATCH DTO path walks here, so walking stays within presence-aware shapes;
+   * ordinary flat binding translates through {@code FlatConstructionPaths} instead. Returns {@code
+   * null} when the path is empty or its first name matches no mapped member — an absent location
+   * per the mapping-location contract, never a Jackson logical property name.
    */
   @Nullable MappingLocation translateConstructionPath(
-      List<String> names,
-      Map<String, ConstructionStart> startsByLogicalName,
-      boolean walkPlainShapes) {
+      List<String> names, Map<String, MappingConstructionStart> startsByLogicalName) {
     if (names.isEmpty()) {
       return null;
     }
-    ConstructionStart start = startsByLogicalName.get(names.getFirst());
+    MappingConstructionStart start = startsByLogicalName.get(names.getFirst());
     if (start == null) {
       return null;
     }
@@ -344,7 +335,7 @@ final class StructuredValueBinder {
     boolean walking = true;
     for (int i = 1; i < names.size() && walking; i++) {
       String name = names.get(i);
-      Shape shape = walkShape(current, walkPlainShapes);
+      Shape shape = walkShape(current);
       if (shape == null) {
         walking = false;
       } else {
@@ -360,12 +351,12 @@ final class StructuredValueBinder {
     return pointer;
   }
 
-  private @Nullable Shape walkShape(JavaType type, boolean includePlainShapes) {
+  private @Nullable Shape walkShape(JavaType type) {
     Shape shape = shapeOf(unwrapOptional(unwrapPatchPresence(type)));
     if (shape == null) {
       return null;
     }
-    return includePlainShapes || shape.presenceAware() ? shape : null;
+    return shape.presenceAware() ? shape : null;
   }
 
   private @Nullable Shape computeShape(JavaType type, DeserializationConfig config) {

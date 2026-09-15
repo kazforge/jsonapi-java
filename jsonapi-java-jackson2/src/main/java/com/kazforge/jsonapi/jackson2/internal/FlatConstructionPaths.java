@@ -32,12 +32,6 @@ import org.jspecify.annotations.Nullable;
  */
 final class FlatConstructionPaths {
 
-  /**
-   * Translation start for one top-level synthetic-map key: the member's resource-relative location
-   * prefix plus its declared type for nested walking.
-   */
-  record ConstructionStart(MappingLocation location, JavaType declaredType) {}
-
   private static final Shape NO_SHAPE = new Shape(List.of());
 
   private final JsonMapper mapper;
@@ -53,11 +47,11 @@ final class FlatConstructionPaths {
    * absent location per the mapping-location contract, never a Jackson logical property name.
    */
   @Nullable MappingLocation translateConstructionPath(
-      List<String> names, Map<String, ConstructionStart> startsByJacksonName) {
+      List<String> names, Map<String, MappingConstructionStart> startsByJacksonName) {
     if (names.isEmpty()) {
       return null;
     }
-    ConstructionStart start = startsByJacksonName.get(names.getFirst());
+    MappingConstructionStart start = startsByJacksonName.get(names.getFirst());
     if (start == null) {
       return null;
     }

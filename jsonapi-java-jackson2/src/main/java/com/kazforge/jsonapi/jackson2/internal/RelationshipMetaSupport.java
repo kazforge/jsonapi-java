@@ -23,6 +23,24 @@ final class RelationshipMetaSupport {
     return byName;
   }
 
+  /**
+   * Maps JSON:API member names to write-mapping properties. Owned by mapping metadata so PATCH
+   * binders resolve supplied attributes and relationships without depending on PATCH conversion
+   * support.
+   */
+  static Map<String, MappingProperty> byJsonapiName(List<MappingProperty> properties) {
+    Map<String, MappingProperty> byName = new LinkedHashMap<>();
+    for (MappingProperty property : properties) {
+      byName.put(property.jsonapiName(), property);
+    }
+    return byName;
+  }
+
+  /** Resource-relative diagnostic location for a relationship's linkage member. */
+  static MappingLocation relationshipLocation(MappingPropertyView property) {
+    return MappingLocation.of(JsonApiMembers.RELATIONSHIPS, property.jsonapiName(), "data");
+  }
+
   /** Resource-relative diagnostic location for the resource-side {@code meta} member. */
   static MappingLocation resourceMetaLocation() {
     return MappingLocation.of(JsonApiMembers.META);

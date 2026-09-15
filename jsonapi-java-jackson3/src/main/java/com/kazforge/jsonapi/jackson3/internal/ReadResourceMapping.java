@@ -31,41 +31,41 @@ record ReadResourceMapping(
    * type remains available for serialization-only properties so a missing member never creates a
    * synthetic input value merely by being present in the mapping.
    */
-  Map<String, StructuredValueBinder.ConstructionStart> constructionStartsByJacksonName(
+  Map<String, MappingConstructionStart> constructionStartsByJacksonName(
       @Nullable MappingLocation idLocation, @Nullable MappingLocation lidLocation) {
-    Map<String, StructuredValueBinder.ConstructionStart> starts = new LinkedHashMap<>();
+    Map<String, MappingConstructionStart> starts = new LinkedHashMap<>();
     if (identifierProperty != null && idLocation != null) {
       starts.put(
           identifierProperty.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(idLocation, identifierProperty.type()));
+          new MappingConstructionStart(idLocation, identifierProperty.type()));
     }
     if (localIdProperty != null && lidLocation != null) {
       starts.put(
           localIdProperty.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(lidLocation, localIdProperty.type()));
+          new MappingConstructionStart(lidLocation, localIdProperty.type()));
     }
     for (ReadMappingProperty property : attributes) {
       starts.put(
           property.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
+          new MappingConstructionStart(
               MappingLocation.of("attributes", property.jsonapiName()), property.type()));
     }
     for (ReadMappingProperty property : relationships) {
       starts.put(
           property.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
-              RelationshipLinkageSupport.relationshipLocation(property), property.type()));
+          new MappingConstructionStart(
+              RelationshipMetaSupport.relationshipLocation(property), property.type()));
     }
     if (resourceMeta != null) {
       starts.put(
           resourceMeta.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
+          new MappingConstructionStart(
               RelationshipMetaSupport.resourceMetaLocation(), resourceMeta.type()));
     }
     for (ReadMappingProperty property : relationshipMetaProperties) {
       starts.put(
           property.jacksonName(),
-          new StructuredValueBinder.ConstructionStart(
+          new MappingConstructionStart(
               RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()),
               property.type()));
     }
