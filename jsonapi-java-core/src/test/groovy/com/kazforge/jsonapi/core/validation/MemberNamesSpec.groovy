@@ -36,6 +36,36 @@ class MemberNamesSpec extends Specification {
     null               | false
   }
 
+  def "isValid accepts well-formed non-ASCII member names"() {
+    expect:
+    MemberNames.isValid(name)
+
+    where:
+    name << [
+      "aéb",
+      "a" + new String(Character.toChars(0x1F600)) + "b",
+      new String(Character.toChars(0x1F600)) + "ab",
+      "ab" + new String(Character.toChars(0x1F600)),
+      new String(Character.toChars(0x1F600)),
+    ]
+  }
+
+  def "isValid rejects malformed surrogate sequences"() {
+    expect:
+    !MemberNames.isValid(name)
+
+    where:
+    name << [
+      String.valueOf(Character.MIN_HIGH_SURROGATE),
+      "a" + Character.MIN_HIGH_SURROGATE,
+      "a" + Character.MIN_HIGH_SURROGATE + "b",
+      "a" + Character.MIN_LOW_SURROGATE + "b",
+      String.valueOf(Character.MIN_LOW_SURROGATE) + "a",
+      String.valueOf(Character.MIN_LOW_SURROGATE) + Character.MIN_HIGH_SURROGATE,
+      "a" + String.valueOf(Character.MIN_HIGH_SURROGATE) + new String(Character.toChars(0x1F600)) + "b",
+    ]
+  }
+
   def "isExtensionMember('#name') is #extension"() {
     expect:
     MemberNames.isExtensionMember(name) == extension

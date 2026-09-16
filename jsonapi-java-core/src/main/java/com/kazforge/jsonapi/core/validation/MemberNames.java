@@ -2,7 +2,7 @@ package com.kazforge.jsonapi.core.validation;
 
 import org.jspecify.annotations.Nullable;
 
-/** JSON:API v1.1 member-name grammar validation. */
+/** JSON:API v1.1 member-name grammar validation. Non-ASCII content must be well-formed UTF-16. */
 public final class MemberNames {
 
   private MemberNames() {}
@@ -62,6 +62,9 @@ public final class MemberNames {
     if (length == 0) {
       return false;
     }
+    if (!isWellFormedUtf16(name)) {
+      return false;
+    }
     if (isNotMemberEdge(name.charAt(0)) || isNotMemberEdge(name.charAt(length - 1))) {
       return false;
     }
@@ -76,6 +79,25 @@ public final class MemberNames {
 
   private static boolean isNotMemberEdge(char c) {
     return isNotAlpha(c) && isNotDigit(c) && c <= 0x7F;
+  }
+
+  private static boolean isWellFormedUtf16(String name) {
+    int length = name.length();
+    int index = 0;
+    while (index < length) {
+      char c = name.charAt(index);
+      if (Character.isHighSurrogate(c)) {
+        if (index + 1 >= length || !Character.isLowSurrogate(name.charAt(index + 1))) {
+          return false;
+        }
+        index += 2;
+      } else if (Character.isLowSurrogate(c)) {
+        return false;
+      } else {
+        index++;
+      }
+    }
+    return true;
   }
 
   private static boolean isNotAlpha(char c) {
