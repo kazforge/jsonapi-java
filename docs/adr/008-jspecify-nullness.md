@@ -1,4 +1,4 @@
-# ADR-009: JSpecify Nullness
+# ADR-008: JSpecify Nullness
 
 **Status:** Accepted  
 **Date:** 2026-07-29

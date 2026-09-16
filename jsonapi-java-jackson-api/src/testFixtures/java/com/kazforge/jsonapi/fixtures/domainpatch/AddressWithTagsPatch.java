@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Presence-aware PATCH shape with a container inner member, proving that {@code List}/{@code Set}/
- * array/{@code Map} inner types stay atomic replacement values rather than recursing (ADR-014).
+ * array/{@code Map} inner types stay atomic replacement values rather than recursing (ADR-013).
  */
 public record AddressWithTagsPatch(
     PatchPresence<String> street, PatchPresence<List<String>> tags) {}

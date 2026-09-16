@@ -15,7 +15,7 @@ import tools.jackson.databind.deser.std.StdDeserializer;
  * property-scoped authority: property-level deserializers, setter-level type refinement, null
  * providers, and polymorphic property TypeDeserializers. Owned by {@code
  * PatchStructuredBindingSpec} and the internal {@code StructuredValueBinderSpec} engine tests
- * (ADR-014).
+ * (ADR-013).
  */
 @SuppressWarnings({"unused", "NullAway"})
 public final class StructuredRecursionFixtures {
@@ -43,7 +43,7 @@ public final class StructuredRecursionFixtures {
    * Ordinary non-record structured domain value type with a property-level {@code @JsonDeserialize}
    * on a JavaBean field. Proves the low-level path treats such a member as atomic (rather than
    * traversing it) while still honoring the property-scoped deserializer during nested atomic
-   * conversion (ADR-014).
+   * conversion (ADR-013).
    */
   public static final class AddressWithLoudNote {
 
@@ -78,14 +78,14 @@ public final class StructuredRecursionFixtures {
 
   /**
    * Ordinary traversable structured domain value type used by the low-level custom-deserializer
-   * boundary fixtures (ADR-014).
+   * boundary fixtures (ADR-013).
    */
   public record Details(String name) {}
 
   /**
    * Property-scoped {@code @JsonDeserialize} for {@link Details} that returns a known value
    * regardless of the wire content, proving a customized bean-valued nested member is honored
-   * atomically rather than recursed into a {@code StructuredPatch} on the low-level path (ADR-014).
+   * atomically rather than recursed into a {@code StructuredPatch} on the low-level path (ADR-013).
    */
   public static final class CustomDetailsDeserializer extends StdDeserializer<Details> {
 
@@ -102,7 +102,7 @@ public final class StructuredRecursionFixtures {
   /**
    * Ordinary structured domain value type with a bean-valued {@code details} property whose setter
    * carries a property-scoped {@code @JsonDeserialize}. The surrounding bean recurses while the
-   * customized {@code details} member stays Atomic with the custom deserializer applied (ADR-014).
+   * customized {@code details} member stays Atomic with the custom deserializer applied (ADR-013).
    */
   public static final class OuterWithSetterCustomDetails {
 
@@ -143,14 +143,14 @@ public final class StructuredRecursionFixtures {
   /**
    * Ordinary structured domain value type (record / creator-bound) with a bean-valued {@code
    * details} creator parameter carrying a property-scoped {@code @JsonDeserialize}. The customized
-   * {@code details} member stays Atomic with the custom deserializer applied (ADR-014).
+   * {@code details} member stays Atomic with the custom deserializer applied (ADR-013).
    */
   public record OuterWithCreatorCustomDetails(
       @JsonDeserialize(using = CustomDetailsDeserializer.class) Details details) {}
 
   /**
    * Ordinary traversable structured domain value supertype used by the setter-level
-   * {@code @JsonDeserialize(as = ...)} low-level fixtures (ADR-014). Without the {@code as}
+   * {@code @JsonDeserialize(as = ...)} low-level fixtures (ADR-013). Without the {@code as}
    * refinement this concrete bean would recurse on the low-level path.
    */
   public static class BaseProfile {
@@ -190,7 +190,7 @@ public final class StructuredRecursionFixtures {
 
   /**
    * Concrete subtype of {@link BaseProfile} used as the {@code @JsonDeserialize(as = ...)} target
-   * on the setter of a {@link BaseProfile}-typed member (ADR-014).
+   * on the setter of a {@link BaseProfile}-typed member (ADR-013).
    */
   public static final class ExtendedProfile extends BaseProfile {
 
@@ -231,7 +231,7 @@ public final class StructuredRecursionFixtures {
    * type-refinement customization that must be detected through the resolved property type (a
    * setter {@code AnnotatedMethod.getType()} is {@code void}, which makes refinement checks against
    * it incorrect), keeping the member Atomic with the refined deserializer applied instead of
-   * recursing (ADR-014).
+   * recursing (ADR-013).
    */
   public static final class OuterWithSetterAsProfile {
 
@@ -273,7 +273,7 @@ public final class StructuredRecursionFixtures {
    * Ordinary structured domain value type whose {@code city} setter carries
    * {@code @JsonSetter(nulls = Nulls.AS_EMPTY)}, proving nested explicit null converts through the
    * containing property's null provider ({@code ""}) rather than the root target deserializer's
-   * null value ({@code null}) on the low-level path (ADR-014).
+   * null value ({@code null}) on the low-level path (ADR-013).
    */
   public static final class OuterWithNullEmptyCity {
 
@@ -298,7 +298,7 @@ public final class StructuredRecursionFixtures {
   /**
    * Abstract polymorphic value type used by the low-level atomic-conversion fixture, proving a
    * property-level {@code TypeDeserializer} is preserved through the containing {@code
-   * SettableBeanProperty.deserialize} (ADR-014).
+   * SettableBeanProperty.deserialize} (ADR-013).
    */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kind")
   @JsonSubTypes({@JsonSubTypes.Type(value = EmailContact.class, name = "email")})
@@ -306,7 +306,7 @@ public final class StructuredRecursionFixtures {
 
   /**
    * Concrete {@link Contact} subtype for the polymorphic low-level atomic-conversion fixture
-   * (ADR-014).
+   * (ADR-013).
    */
   public static final class EmailContact extends Contact {
 
@@ -346,7 +346,7 @@ public final class StructuredRecursionFixtures {
   /**
    * Ordinary structured domain value type with a polymorphic {@link Contact} member, proving a
    * property-level {@code TypeDeserializer} path is preserved through the low-level atomic
-   * conversion ({@code SettableBeanProperty.deserialize}) (ADR-014).
+   * conversion ({@code SettableBeanProperty.deserialize}) (ADR-013).
    */
   public static final class OuterWithTypedContact {
 

@@ -13,8 +13,8 @@ Treating graph hydration as the inverse of serialization would hide these unreso
 Initial read support decodes JSON into the document model and validates it. It does not automatically hydrate annotated domain object graphs.
 
 Applications may consume resource objects, identifiers, relationships, and errors directly.
-[ADR-011](011-flat-dto-read-binding.md) adds document-first flat DTO binding and independently
-bound included resources without graph hydration. [ADR-012](012-resource-patch-binding.md) adds
+[ADR-010](010-flat-dto-read-binding.md) adds document-first flat DTO binding and independently
+bound included resources without graph hydration. [ADR-011](011-resource-patch-binding.md) adds
 presence-aware update commands without applying them to domain state.
 
 The codec remains capable of reading request and response document shapes; this decision limits the target Java representation, not JSON:API wire coverage.

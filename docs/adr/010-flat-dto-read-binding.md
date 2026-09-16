@@ -1,4 +1,4 @@
-# ADR-011: Flat DTO Reads Remain Document-First
+# ADR-010: Flat DTO Reads Remain Document-First
 
 **Status:** Accepted  
 **Date:** 2026-07-30  

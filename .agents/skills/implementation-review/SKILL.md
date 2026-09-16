@@ -38,7 +38,7 @@ documentation evidence. Check:
 
 1. Correctness and scope vs the requested outcome; regressions; missing validation/tests;
    Vision/ADR conflicts; accidental out-of-scope work.
-2. Nullness (ADR-009) when implicated.
+2. Nullness (ADR-008) when implicated.
 3. `module-docs` when public module surface changed.
 4. Knowledge sync: Snapshot surfaces updated or justified unchanged; no durable fact only in a
    disposable local plan; one canonical owner per new durable fact.

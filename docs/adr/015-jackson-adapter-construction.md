@@ -1,4 +1,4 @@
-# ADR-016: Mapper-Instance Construction for Jackson Adapters
+# ADR-015: Mapper-Instance Construction for Jackson Adapters
 
 **Status:** Accepted
 **Date:** 2026-08-24

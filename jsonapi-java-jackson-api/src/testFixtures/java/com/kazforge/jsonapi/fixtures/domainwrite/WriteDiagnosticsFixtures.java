@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  * Passive declaration-shape carriers for adapter-local write-diagnostics specifications:
  * deliberately mis-declared resources (missing annotations, duplicate roles, name collisions,
  * invalid or reserved names), throwing accessors, write-only properties, unsupported relationship
- * value shapes, and invalid {@code RelationshipLinkage} declarations (ADR-017). Adapter suites map
+ * value shapes, and invalid {@code RelationshipLinkage} declarations (ADR-016). Adapter suites map
  * instances of these carriers through their own resource writer and assert the semantic diagnostic
  * categories and wire locations.
  */

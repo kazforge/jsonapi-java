@@ -25,7 +25,7 @@
  * PatchMemberConverter}; direct typed DTO atomic values remain JSON-compatible marker values until
  * the contextual {@code PatchPresence} deserializer performs the sole inner-type conversion. The
  * typed DTO path uses the shared converter for identity parsing and relationship linkage. See the
- * module README and ADR-005, ADR-012 through ADR-015, ADR-017, and ADR-018 for the mapping
+ * module README and ADR-005, ADR-011 through ADR-014, ADR-016, and ADR-017 for the mapping
  * contracts.
  */
 @NullMarked

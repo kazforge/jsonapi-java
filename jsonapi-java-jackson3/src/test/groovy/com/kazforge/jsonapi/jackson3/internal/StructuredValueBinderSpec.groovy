@@ -26,7 +26,7 @@ import tools.jackson.databind.json.JsonMapper
 /**
  * Drives the {@link StructuredValueBinder} engine directly from non-attribute starting pointers
  * (e.g. a structured {@code meta} location) with no {@code ResourceMapping} / {@code MappingProperty}
- * / {@code @JsonApiAttribute} / {@code AttributeChange} in scope, proving the ADR-014 reuse
+ * / {@code @JsonApiAttribute} / {@code AttributeChange} in scope, proving the ADR-013 reuse
  * boundary: the engine is location-neutral and outer-state-policy-free.
  */
 class StructuredValueBinderSpec extends Specification {

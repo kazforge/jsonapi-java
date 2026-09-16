@@ -31,7 +31,7 @@ import tools.jackson.databind.json.JsonMapper;
  * com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException} with resource-relative pointers
  * and are never prefixed with {@code /data}. Built-in linkage conversion preserves {@code
  * ResourceIdentifier.meta} through a binder mapper that can round-trip core {@link
- * com.kazforge.jsonapi.core.model.Meta} (ADR-017).
+ * com.kazforge.jsonapi.core.model.Meta} (ADR-016).
  *
  * <p>Close/ownership rules match {@link JsonApiDocumentReader}: convenience overloads close parsers
  * they create; caller-owned streams and parsers stay open. Construct via {@link

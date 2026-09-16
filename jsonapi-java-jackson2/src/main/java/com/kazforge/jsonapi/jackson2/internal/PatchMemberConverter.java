@@ -171,7 +171,7 @@ final class PatchMemberConverter {
   }
 
   /**
-   * Converts one whole-meta value atomically on the low-level path (ADR-015). Reuses the same
+   * Converts one whole-meta value atomically on the low-level path (ADR-014). Reuses the same
    * property-scoped Jackson authority as attribute conversion, but the caller supplies the
    * location-specific meta location so failures never surface an attribute-oriented pointer.
    */

@@ -21,7 +21,7 @@ import org.jspecify.annotations.Nullable;
  * Shared relationship linkage rules for flat DTO binding and the write mapping: cardinality checks,
  * target-class resolution, opt-in {@link RelationshipLinkage} unwrap/wrap, built-in {@link
  * ResourceIdentifier} conversion that preserves identifier meta, and custom linkage mappers
- * (ADR-017, ADR-018).
+ * (ADR-016, ADR-017).
  */
 final class RelationshipLinkageSupport {
 

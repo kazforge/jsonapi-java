@@ -47,7 +47,7 @@ Within core, aggregate validation depends downward on the model, internal helper
 types; the model and internal helpers may depend on validation, but lower responsibilities do not
 depend back on aggregate validation. Each Jackson adapter similarly keeps composition, mapping,
 codec, and internal responsibilities directed. [ADR-007](adr/007-module-boundaries.md) owns the
-module split and [ADR-010](adr/010-architectural-tests.md) owns its executable enforcement.
+module split and [ADR-009](adr/009-architectural-tests.md) owns its executable enforcement.
 
 ## Primary flows
 
@@ -89,7 +89,7 @@ writer composes into validation. Callers do not translate mapping state into val
 
 The neutral Level-1 `JsonApi` contract coordinates common resource, relationship, document, and
 PATCH operations. Major-specific capability APIs remain public for explicit codec, mapping,
-parameterized-type, heterogeneous-envelope, and policy control. [ADR-019](adr/019-level-one-application-api-contract.md)
+parameterized-type, heterogeneous-envelope, and policy control. [ADR-018](adr/018-level-one-application-api-contract.md)
 owns that boundary.
 
 ## Authority boundaries
@@ -109,19 +109,19 @@ Adapters are constructed from configured mapper instances and never mutate the c
 They may derive isolated internal mappers when a capability requires adapter modules or separate
 introspection state; that does not create another public construction model. See
 [ADR-004](adr/004-jackson-integration.md) and
-[ADR-016](adr/016-jackson-adapter-construction.md).
+[ADR-015](adr/015-jackson-adapter-construction.md).
 
 Ordinary mapped relationships always carry `data`; links-only and meta-only forms remain available
 through the core/document path. Resource meta, relationship meta, and identifier meta remain distinct
 locations. Identifier meta uses opt-in `RelationshipLinkage<T, M>` and changes only with whole-linkage
-replacement. See [ADR-015](adr/015-flat-whole-object-meta-mapping.md),
-[ADR-017](adr/017-resource-identifier-meta-mapping.md), and
-[ADR-018](adr/018-relationship-data-presence-in-domain-mapping.md).
+replacement. See [ADR-014](adr/014-flat-whole-object-meta-mapping.md),
+[ADR-016](adr/016-resource-identifier-meta-mapping.md), and
+[ADR-017](adr/017-relationship-data-presence-in-domain-mapping.md).
 
 Low-level `PatchCommand` and typed `PatchPresence<T>` DTOs are two projections of a validated update
 document. Both preserve omission versus explicit null; applications authorize and apply the result.
 Recursive structured changes and atomic-container boundaries are owned by
-[ADR-014](adr/014-recursive-structured-value-patch-semantics.md).
+[ADR-013](adr/013-recursive-structured-value-patch-semantics.md).
 
 ## Diagnostics
 
@@ -142,7 +142,7 @@ not used as a synthetic location. Public exception Javadocs own exact contracts.
 ArchUnit specifications protect module allowlists, Jackson-major isolation, supported-neutral versus
 internal packages, core and adapter package DAGs, and the passive shared-fixture boundary. The build
 also enforces formatting, compilation, tests, and coverage. Exact rules live with the modules they
-protect; changes to the protected architecture require [ADR-010](adr/010-architectural-tests.md) to
+protect; changes to the protected architecture require [ADR-009](adr/009-architectural-tests.md) to
 change with them.
 
 Current JSON:API support and draft-schema caveats are tracked in

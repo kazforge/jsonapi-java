@@ -1,4 +1,4 @@
-# ADR-012: Resource PATCH Produces Presence-Aware Commands
+# ADR-011: Resource PATCH Produces Presence-Aware Commands
 
 **Status:** Accepted  
 **Date:** 2026-07-30
@@ -32,7 +32,7 @@ The core update contract:
 - can compare the document resource identity with an expected endpoint identity supplied by the
   caller.
 
-Jackson binding uses ADR-011 mapping definitions to convert only supplied attributes and
+Jackson binding uses ADR-010 mapping definitions to convert only supplied attributes and
 relationship linkage into typed property changes. The command exposes presence explicitly and
 does not construct a complete DTO, resolve `included`, or mutate an existing object.
 

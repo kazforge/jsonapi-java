@@ -37,4 +37,4 @@ Identifier meta uses the neutral `RelationshipLinkage<T, M>` value rather than a
 This module provides no codec, document model, inclusion/fetch/cascade policy, query parser, or
 framework integration. See the [architecture overview](../docs/architecture.md),
 [ADR-004](../docs/adr/004-jackson-integration.md), and
-[ADR-015](../docs/adr/015-flat-whole-object-meta-mapping.md).
+[ADR-014](../docs/adr/014-flat-whole-object-meta-mapping.md).

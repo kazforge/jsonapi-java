@@ -15,7 +15,7 @@ import tools.jackson.databind.annotation.JsonSerialize;
 /**
  * Presence-aware nested PATCH shapes owned by {@code PatchStructuredBindingSpec}: naming-strategy
  * traversal, wrapper-level customization rejection (deserialization and serialization sides), and
- * deep construction-failure pointer translation (ADR-014). Each nested shape exists to isolate one
+ * deep construction-failure pointer translation (ADR-013). Each nested shape exists to isolate one
  * declaration-validation or diagnostic-translation mechanic.
  */
 @SuppressWarnings({"unused", "NullAway"})
@@ -27,7 +27,7 @@ public final class PatchStructureFixtures {
    * Ordinary non-record structured domain value type with a multi-word member, proving the naming
    * strategy applies to low-level structured traversal and that {@code wireName} / {@code
    * logicalName} divergence is preserved in the {@link
-   * com.kazforge.jsonapi.jackson.patch.StructuredPatch} (ADR-014).
+   * com.kazforge.jsonapi.jackson.patch.StructuredPatch} (ADR-013).
    */
   public static final class SnakeAddress {
 
@@ -63,7 +63,7 @@ public final class PatchStructureFixtures {
 
   /**
    * JavaBean-style presence-aware nested PATCH shape with a multi-word member, used to prove the
-   * naming strategy applies to nested structured marker maps (ADR-014).
+   * naming strategy applies to nested structured marker maps (ADR-013).
    */
   public static final class SnakeAddressPatch {
 
@@ -115,7 +115,7 @@ public final class PatchStructureFixtures {
 
   /**
    * Presence-aware nested PATCH shape with a getter-level {@code @JsonDeserialize}-customized
-   * member, proving nested wrapper customization is rejected on shape entry (ADR-014).
+   * member, proving nested wrapper customization is rejected on shape entry (ADR-013).
    */
   public static final class WrapperCustomizedAddressPatch {
 
@@ -163,7 +163,7 @@ public final class PatchStructureFixtures {
   /**
    * Presence-aware nested PATCH shape (JavaBean-style) with wrapper-level {@code @JsonDeserialize}
    * on the {@code city} setter, proving deserialization-side customization on a setter is detected
-   * and rejected on typed shape entry (ADR-014).
+   * and rejected on typed shape entry (ADR-013).
    */
   public static final class SetterCustomizedAddressPatch {
 
@@ -211,7 +211,7 @@ public final class PatchStructureFixtures {
   /**
    * Marker {@code @JsonSerialize} serializer for a presence-aware member, used to prove a
    * non-getter-side (setter) wrapper-level {@code @JsonSerialize} is detected and rejected on typed
-   * shape entry (ADR-014). Never actually invoked: the member is rejected during declaration
+   * shape entry (ADR-013). Never actually invoked: the member is rejected during declaration
    * validation.
    */
   public static final class ConstantPatchPresenceSerializer
@@ -228,7 +228,7 @@ public final class PatchStructureFixtures {
   /**
    * Presence-aware nested PATCH shape (JavaBean-style) with wrapper-level {@code @JsonSerialize} on
    * the {@code city} setter, proving serialization customization on a non-getter side is detected
-   * symmetrically and rejected on typed shape entry (ADR-014).
+   * symmetrically and rejected on typed shape entry (ADR-013).
    */
   public static final class SetterSerializeCustomizedAddressPatch {
 
@@ -277,7 +277,7 @@ public final class PatchStructureFixtures {
   /**
    * Presence-aware nested PATCH shape (record / creator-bound) with wrapper-level
    * {@code @JsonDeserialize} on the {@code city} creator parameter, proving deserialization-side
-   * customization on a creator parameter is detected and rejected on typed shape entry (ADR-014).
+   * customization on a creator parameter is detected and rejected on typed shape entry (ADR-013).
    */
   public record CreatorCustomizedAddressPatch(
       PatchPresence<String> street,
@@ -287,7 +287,7 @@ public final class PatchStructureFixtures {
   /**
    * Presence-aware nested PATCH shape whose deeper member is a throwing {@link ThrowingGeoPatch},
    * used to prove deep Jackson construction-failure paths are translated to wire-name pointers
-   * (ADR-014).
+   * (ADR-013).
    */
   public static final class ThrowingAddressPatch {
 
@@ -334,7 +334,7 @@ public final class PatchStructureFixtures {
   /**
    * Presence-aware nested PATCH shape whose canonical creator throws when constructed from a
    * supplied value, forcing a Jackson construction failure whose deep path must be translated to a
-   * wire-name pointer (ADR-014).
+   * wire-name pointer (ADR-013).
    */
   public record ThrowingGeoPatch(PatchPresence<String> lat) {
 
@@ -347,7 +347,7 @@ public final class PatchStructureFixtures {
 
   /**
    * Typed PATCH DTO whose canonical constructor always throws, forcing a Jackson construction
-   * failure with no property path so the shape-translated pointer falls back to the root (ADR-014).
+   * failure with no property path so the shape-translated pointer falls back to the root (ADR-013).
    */
   @JsonApiResource(type = "articles")
   public record ThrowingArticlePatch(

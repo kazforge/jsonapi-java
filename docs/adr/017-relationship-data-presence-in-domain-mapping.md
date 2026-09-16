@@ -1,4 +1,4 @@
-# ADR-018: Ordinary Domain Relationships Remain Linkage-Oriented
+# ADR-017: Ordinary Domain Relationships Remain Linkage-Oriented
 
 **Status:** Accepted
 **Date:** 2026-09-03
@@ -40,5 +40,5 @@ create request.
 - A DTO linkage property is not a lossless relationship-presence view. The core document always
   retains the wire distinction.
 - Mapping, relationship meta, decoration, inclusion, fieldsets, and PATCH keep separate authorities.
-- [ADR-019](019-level-one-application-api-contract.md) freezes this linkage-oriented boundary into
+- [ADR-018](018-level-one-application-api-contract.md) freezes this linkage-oriented boundary into
   the neutral Level-1 contract without replacing this decision.

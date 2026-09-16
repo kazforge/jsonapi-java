@@ -1,4 +1,4 @@
-# ADR-014: Recursive Structured Value PATCH Semantics
+# ADR-013: Recursive Structured Value PATCH Semantics
 
 **Status:** Accepted
 **Date:** 2026-08-18
@@ -37,7 +37,7 @@ Jackson introspection:
 Outer presence rules remain with the owning JSON:API location: attributes may be explicitly null,
 while object-valued meta may not.
 
-[ADR-015](015-flat-whole-object-meta-mapping.md) reuses this payload and recursion contract for meta.
+[ADR-014](014-flat-whole-object-meta-mapping.md) reuses this payload and recursion contract for meta.
 Under the combined rule, `PatchChange` has location-specific resource-meta and relationship-meta
 variants, while `StructuredPatch` remains a payload rather than a structured-value-specific variant.
 

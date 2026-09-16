@@ -17,7 +17,7 @@ Keep these responsibility boundaries:
 - `jsonapi-java-annotations` owns dependency-free domain-mapping roles.
 - `jsonapi-java-jackson-api` owns Jackson-major-neutral application, document, mapping,
   representation, diagnostic, and PATCH contracts. It contains no Jackson mechanics or runtime
-  dependency; [ADR-019](019-level-one-application-api-contract.md) owns its Level-1 operation seam.
+  dependency; [ADR-018](018-level-one-application-api-contract.md) owns its Level-1 operation seam.
 - `jsonapi-java-jackson3` and `jsonapi-java-jackson2` are separately compiled native-major
   implementations of those contracts. They do not share a runtime artifact or detect a major at
   runtime.
@@ -27,7 +27,7 @@ Keep these responsibility boundaries:
 
 `settings.gradle.kts` is the authority for current build membership. The root module registry
 distinguishes current modules from planned integrations. Public coordinates use the namespace chosen
-by [ADR-021](021-kazforge-namespace.md).
+by [ADR-020](020-kazforge-namespace.md).
 
 ## Consequences
 

@@ -14,7 +14,7 @@ import java.util.Objects;
  * clear-all or delete operation.
  *
  * <p>This type is the reusable neutral representation of the recursive structured value PATCH
- * semantics defined by ADR-014: it is a payload, not a {@link PatchChange} variant, so a structured
+ * semantics defined by ADR-013: it is a payload, not a {@link PatchChange} variant, so a structured
  * attribute on the low-level path surfaces as the existing {@link PatchChange.AttributeChange}
  * whose {@code value} is a {@code StructuredPatch} (discriminated via {@code instanceof}). A later
  * structured JSON:API {@code meta} mapping can consume the same payload without a second recursion

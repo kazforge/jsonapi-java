@@ -1,4 +1,4 @@
-# ADR-010: Architectural Tests for Module Boundaries
+# ADR-009: Architectural Tests for Module Boundaries
 
 **Status:** Accepted
 **Date:** 2026-07-29

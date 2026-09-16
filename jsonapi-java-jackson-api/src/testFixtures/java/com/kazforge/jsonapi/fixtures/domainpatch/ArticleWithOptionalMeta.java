@@ -10,7 +10,7 @@ import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
-/** Ordinary domain model with an {@link Optional}-wrapped resource meta target (ADR-015). */
+/** Ordinary domain model with an {@link Optional}-wrapped resource meta target (ADR-014). */
 @JsonApiResource(type = "articles")
 public record ArticleWithOptionalMeta(
     @JsonApiId String id,

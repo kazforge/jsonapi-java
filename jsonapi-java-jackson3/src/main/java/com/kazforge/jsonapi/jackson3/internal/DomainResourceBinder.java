@@ -26,7 +26,7 @@ import tools.jackson.databind.json.JsonMapper;
  * JsonMapper#convertValue(Object, JavaType)} so creators, deserializers, converters, and configured
  * modules remain authoritative (ADR-004). The JSON:API identifier is parsed before it enters the
  * map, so its target property's configured deserializer still applies during construction. Document
- * {@code included} is never read; relationships bind from linkage only (ADR-011).
+ * {@code included} is never read; relationships bind from linkage only (ADR-010).
  *
  * <p>Read-side bindability is resolved from Jackson's effective deserialization model,
  * independently of the serialization-oriented {@link ResourceMapping}. Setter-only, creator-only,
@@ -104,7 +104,7 @@ public final class DomainResourceBinder {
     ResourceTypeMatch.requireMatching(mapping.resourceType(), resource, rawType);
   }
 
-  /** Whole-meta declared-target validation for the read/write domain-mapping role (ADR-015). */
+  /** Whole-meta declared-target validation for the read/write domain-mapping role (ADR-014). */
   private void validateMetaTargets(ReadResourceMapping mapping, Class<?> rawType) {
     wholeMetaTarget.validateReadWriteTargets(mapping, rawType);
   }
@@ -225,7 +225,7 @@ public final class DomainResourceBinder {
    * configured Jackson external name when the referenced relationship is present and carries meta.
    * Absent relationship or absent meta leaves the property absent. A valid meta-only relationship
    * representation binds its meta here (read side); PATCH additionally requires {@code data}
-   * (ADR-015).
+   * (ADR-014).
    */
   private void bindRelationshipMeta(
       ResourceObject resource,

@@ -38,7 +38,7 @@ import tools.jackson.databind.json.JsonMapper;
  * MappingDiagnostic#UNKNOWN_PATCH_MEMBER} at their escaped supplied wire name. Document {@code
  * included} is never read.
  *
- * <p>Recursive structured attributes (ADR-014) use the {@link StructuredValueBinder}: a nested
+ * <p>Recursive structured attributes (ADR-013) use the {@link StructuredValueBinder}: a nested
  * member whose inner type is a deliberately presence-aware PATCH shape is bound as a complete
  * nested {@link PresenceMarker} tree so the single whole-tree {@code convertValue} preserves the
  * strict marker invariant. Deep Jackson construction-failure paths are translated to wire-name
@@ -182,7 +182,7 @@ public final class DomainPatchDtoBinder {
   }
 
   /**
-   * Whole-meta member validation for the typed PATCH DTO role (ADR-015): the shared patchable
+   * Whole-meta member validation for the typed PATCH DTO role (ADR-014): the shared patchable
    * member authority (exactly {@code PatchPresence<T>}, no wrapper-level customization) plus, after
    * unwrapping one {@code PatchPresence} and at most one {@link java.util.Optional}, an effective
    * Bean / Map / Object target.
@@ -307,7 +307,7 @@ public final class DomainPatchDtoBinder {
 
   /**
    * Binds supplied resource meta as a {@code PatchPresence} member. Supplied meta without a
-   * declared {@code @JsonApiMeta} member is rejected on the strict typed path (ADR-015).
+   * declared {@code @JsonApiMeta} member is rejected on the strict typed path (ADR-014).
    */
   private void bindResourceMeta(
       ResourceObject resource,
@@ -339,7 +339,7 @@ public final class DomainPatchDtoBinder {
    * Binds supplied relationship meta for each mapped relationship-meta member. Meta participates
    * only when the relationship carries {@code data}; supplied meta for a mapped relationship
    * without a declared {@code @JsonApiRelationshipMeta} member is rejected on the strict typed path
-   * (ADR-015).
+   * (ADR-014).
    */
   private void bindRelationshipMeta(
       ResourceObject resource,

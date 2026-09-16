@@ -1,4 +1,4 @@
-# ADR-017: Opt-in RelationshipLinkage for Resource Identifier Meta
+# ADR-016: Opt-in RelationshipLinkage for Resource Identifier Meta
 
 **Status:** Accepted
 **Date:** 2026-08-27

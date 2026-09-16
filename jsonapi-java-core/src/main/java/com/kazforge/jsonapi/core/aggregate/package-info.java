@@ -8,7 +8,7 @@
  * and extension/profile policy. Local construction invariants and stable diagnostics remain owned
  * by lower core packages.
  *
- * <p>See ADR-003, ADR-009, ADR-012, and {@code docs/conformance.md}.
+ * <p>See ADR-003, ADR-008, ADR-011, and {@code docs/conformance.md}.
  */
 @NullMarked
 package com.kazforge.jsonapi.core.aggregate;

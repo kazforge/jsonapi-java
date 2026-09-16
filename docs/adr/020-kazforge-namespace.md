@@ -1,4 +1,4 @@
-# ADR-021: KazForge Namespace and Maven Group
+# ADR-020: KazForge Namespace and Maven Group
 
 **Status:** Accepted
 **Date:** 2026-09-12

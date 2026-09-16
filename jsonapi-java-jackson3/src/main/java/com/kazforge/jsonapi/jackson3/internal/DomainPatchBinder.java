@@ -33,9 +33,9 @@ import tools.jackson.databind.json.JsonMapper;
  * readValue} rejects that shape earlier with {@code RELATIONSHIP_DATA_REQUIRED}, while {@code
  * fromDocument} skips it without re-validation. Identifier meta is not an independent {@link
  * PatchChange}; it rides on {@code ResourceIdentifier} values inside {@link
- * PatchChange.RelationshipChange} when linkage is supplied (ADR-017).
+ * PatchChange.RelationshipChange} when linkage is supplied (ADR-016).
  *
- * <p>Recursive structured attributes (ADR-014) use the {@link StructuredValueBinder}: a supplied
+ * <p>Recursive structured attributes (ADR-013) use the {@link StructuredValueBinder}: a supplied
  * attribute whose declared type is an ordinary traversable structured domain value (or a single
  * {@code PatchPresence} wrapper / transparent {@code Optional} around one) and whose wire value is
  * an object binds to an {@link PatchChange.AttributeChange} carrying a {@link
@@ -89,7 +89,7 @@ public final class DomainPatchBinder {
 
   /**
    * Whole-meta declared-target validation for the low-level domain-mapping role (read/write rule):
-   * Bean / Map / Object with at most one {@link java.util.Optional} wrapper (ADR-015).
+   * Bean / Map / Object with at most one {@link java.util.Optional} wrapper (ADR-014).
    */
   private void validateMetaTargets(ResourceMapping mapping, Class<?> rawType) {
     wholeMetaTarget.validateReadWriteTargets(mapping, rawType);
