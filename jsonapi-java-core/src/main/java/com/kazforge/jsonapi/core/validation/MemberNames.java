@@ -83,15 +83,18 @@ public final class MemberNames {
 
   private static boolean isWellFormedUtf16(String name) {
     int length = name.length();
-    for (int i = 0; i < length; i++) {
-      char c = name.charAt(i);
+    int index = 0;
+    while (index < length) {
+      char c = name.charAt(index);
       if (Character.isHighSurrogate(c)) {
-        if (i + 1 >= length || !Character.isLowSurrogate(name.charAt(i + 1))) {
+        if (index + 1 >= length || !Character.isLowSurrogate(name.charAt(index + 1))) {
           return false;
         }
-        i++;
+        index += 2;
       } else if (Character.isLowSurrogate(c)) {
         return false;
+      } else {
+        index++;
       }
     }
     return true;
