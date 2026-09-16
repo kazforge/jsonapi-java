@@ -2,8 +2,6 @@
 
 **Status:** Accepted  
 **Date:** 2026-07-26  
-**Amendment:** 2026-08-31 — JSON:API annotations are role-only; configured Jackson owns property names
-
 ## Context
 
 An independent field/component/getter scanner would disagree with Jackson about logical properties, visibility, mix-ins, naming, ignored values, creators, and custom serializers. That would make the mapping surprising and invalidate the claim that it behaves like normal Jackson serialization.

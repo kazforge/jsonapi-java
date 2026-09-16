@@ -1,223 +1,63 @@
 # jsonapi-java-jackson-api
 
-Public Jackson-major-neutral API surface shared by Jackson 2, Jackson 3, and future framework
-integrations.
+Jackson-major-neutral contracts shared by the Jackson 2 and Jackson 3 adapters and by framework
+integrations. This module defines contracts and values; it has no standalone Jackson runtime.
 
-## Packages
+## Packages and entry points
 
-| Package                                         | Role                                                                 |
-|-------------------------------------------------|----------------------------------------------------------------------|
-| `com.kazforge.jsonapi.jackson.document`    | Major-neutral JSON:API document read/write contract values           |
-| `com.kazforge.jsonapi.jackson.mapping`     | Application/domain mapping contracts                                 |
-| `com.kazforge.jsonapi.jackson.patch`       | Major-neutral PATCH state and change contracts                       |
-| `com.kazforge.jsonapi.jackson.representation` | Representation shaping and inclusion/fieldset contracts           |
-| `com.kazforge.jsonapi.jackson.diagnostic`  | Stable mapping/codec diagnostics and failure locations               |
-| `com.kazforge.jsonapi.jackson.api`         | Level-1 application operation contract: `JsonApi` root plus resources, relationships, documents, and patches facets with option/result values |
-| `com.kazforge.jsonapi.jackson.internal..`  | Unsupported Jackson-free implementation helpers shared by the adapters; not a supported API |
+| Package | Responsibility |
+|---------|----------------|
+| [`com.kazforge.jsonapi.jackson`](src/main/java/com/kazforge/jsonapi/jackson/package-info.java) | Supported-package overview and cross-package invariants |
+| [`com.kazforge.jsonapi.jackson.api`](src/main/java/com/kazforge/jsonapi/jackson/api/package-info.java) | Level-1 [`JsonApi`](src/main/java/com/kazforge/jsonapi/jackson/api/JsonApi.java) root and resource, relationship, document, and PATCH facets |
+| [`com.kazforge.jsonapi.jackson.document`](src/main/java/com/kazforge/jsonapi/jackson/document/package-info.java) | Document read contexts, primary-data kind, and write envelope |
+| [`com.kazforge.jsonapi.jackson.mapping`](src/main/java/com/kazforge/jsonapi/jackson/mapping/package-info.java) | Mapping, provenance, decoration, typed-envelope, registry, and identifier-meta contracts |
+| [`com.kazforge.jsonapi.jackson.patch`](src/main/java/com/kazforge/jsonapi/jackson/patch/package-info.java) | Presence, command, change, and structured PATCH contracts |
+| [`com.kazforge.jsonapi.jackson.representation`](src/main/java/com/kazforge/jsonapi/jackson/representation/package-info.java) | Include/fieldset selection and application policy |
+| [`com.kazforge.jsonapi.jackson.diagnostic`](src/main/java/com/kazforge/jsonapi/jackson/diagnostic/package-info.java) | Stable codec/mapping diagnostics and locations |
+| `com.kazforge.jsonapi.jackson.internal.{wire,mapping,patch,representation}` | Unsupported Jackson-free helpers used only for adapter cooperation |
 
-Conceptual layout:
+## Level-1 contract
 
-```text
-com.kazforge.jsonapi.jackson.api
-    Level-1 application operations (JsonApi root plus
-    resources/relationships/documents/patches facets)
-
-com.kazforge.jsonapi.jackson.document
-    document contracts
-
-com.kazforge.jsonapi.jackson.mapping
-    domain/mapping contracts
-
-com.kazforge.jsonapi.jackson.patch
-    PATCH contracts
-
-com.kazforge.jsonapi.jackson.representation
-    representation shaping
-
-com.kazforge.jsonapi.jackson.diagnostic
-    diagnostics
-
-com.kazforge.jsonapi.jackson.internal..
-    unsupported adapter-cooperation helpers
-```
-
-## Level-1 application contract
-
-Ordinary application code uses the neutral operation contract in
-`com.kazforge.jsonapi.jackson.api` rather than coordinating capability phases
-directly:
+An adapter supplies the implementation; application code can depend on the neutral interface:
 
 ```java
-import com.kazforge.jsonapi.jackson.api.JsonApi;
-import com.kazforge.jsonapi.jackson.api.ResourceWriteOptions;
+JsonApi api = /* Jackson 2 or Jackson 3 configured runtime */;
 
-JsonApi api = /* major-specific implementation, supplied separately, e.g. Jackson 2 or 3 */;
-ArticleDto article = api.resources().readOne(json, ArticleDto.class);
-String created = api.resources().writeCreateDocument(article);
-String represented = api.resources()
-    .writeOne(article, ResourceWriteOptions.defaults());
+Article article = api.resources().readOne(json, Article.class);
+String rendered = api.resources().writeOne(article);
+ArticlePatch patch = api.patches().readPatch(updateJson, ArticlePatch.class);
 ```
 
-Level 1 is ordinary application operations; the major-specific document
-readers/writers, resource mapper/binder, `JavaType` overloads, heterogeneous envelopes,
-and low-level contexts remain the advanced mechanism/control seams. The contract is
-client/server-neutral and models no Jackson mechanics. See
-[ADR-019](../docs/adr/019-level-one-application-api-contract.md). This module defines the
-contract only; Jackson 2 and Jackson 3 implementations are the configured `Jackson2JsonApi` and
-`Jackson3JsonApi` runtimes in their respective adapter modules (via
-`JsonApiJackson2.jsonApi`/`builder` and `JsonApiJackson3.jsonApi`/`builder`).
+`JsonApi` groups ordinary resource, linkage-document, raw-document, and PATCH operations. Advanced
+major-specific readers, writers, mapping/binding, parameterized Jackson types, and heterogeneous
+typed envelopes remain adapter capabilities. [ADR-019](../docs/adr/019-level-one-application-api-contract.md)
+owns that split.
 
-## Minimal usage
+## Neutral contract boundaries
 
-This module has no standalone entry points. Consumers use it through a Jackson adapter:
+- No production signature imports `tools.jackson.*`, `com.fasterxml.jackson.*`, or a major-specific
+  adapter package.
+- `DocumentReadContext` keeps primary-data decoding kind separate from endpoint role.
+- `RepresentationSelection` is operation-scoped; `RepresentationPolicy` is application/runtime
+  configuration and is not complete authorization.
+- `MappedDocument` carries sparse-fieldset provenance for the writer; callers do not translate it
+  into validation policy.
+- `PatchPresence.Present(null)` means explicit null, not omission. `PatchCommand` contains supplied
+  changes only, and an empty `StructuredPatch` is a supplied empty object rather than clear-all.
+- `RelationshipLinkage<T, M>` is the opt-in carrier for per-identifier meta.
+- Core validation, document-read, and mapping diagnostics remain separate families. Mapping
+  locations are absent or valid escaped JSON Pointers.
+- The `internal` namespace is unsupported and must not appear in supported public signatures; native
+  Jackson mechanics stay in each adapter per
+  [ADR-020](../docs/adr/020-jackson-neutral-implementation-helpers.md).
 
-```java
-// Jackson 2 and Jackson 3 consume the same neutral contracts:
-import com.kazforge.jsonapi.core.aggregate.ValidationContext;
-import com.kazforge.jsonapi.core.validation.PrimaryDataContext;
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext;
-import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
-import com.kazforge.jsonapi.jackson.representation.IncludePath;
-import com.kazforge.jsonapi.jackson.representation.IncludePolicy;
-import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy;
-import com.kazforge.jsonapi.jackson.representation.RepresentationSelection;
-import com.kazforge.jsonapi.jackson.patch.PatchCommand;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
+## Shared test fixtures
 
-DocumentReadContext context = DocumentReadContext.resourceDefaults();
-// Relationship endpoints compose identifier decoding with the relationship endpoint role:
-DocumentReadContext relationship = DocumentReadContext.of(
-    ValidationContext.defaults().withPrimaryDataContext(PrimaryDataContext.RELATIONSHIP),
-    PrimaryDataKind.RESOURCE_IDENTIFIER);
-RepresentationSelection selection =
-    RepresentationSelection.builder().include(IncludePath.of("comments.author")).build();
-RepresentationPolicy policy =
-    RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll());
-PatchCommand<ArticleDto> command = /* from JsonApiJackson3.patchCommandReader(...).readValue(...) */;
-PatchPresence<String> title = /* from an ArticlePatchDto member after patchDtoReader binding */;
-```
+The `java-test-fixtures` variant owns passive, major-neutral application-shaped DTOs, the
+[canonical JSON corpus](src/testFixtures/resources/jsonapi/corpus/1.1/README.md),
+[pinned draft schemas](src/testFixtures/resources/jsonapi/schema/vendor/1.1-pr1603/README.md), and the
+neutral `TestFixtureResources` loader. Behavioral expectations and assertions remain in each
+adapter's tests; this module provides no scenario registry or shared test orchestration.
 
-Decoding kind (`PrimaryDataKind`) and endpoint role (`PrimaryDataContext`, carried via
-`ValidationContext`) are independent axes: the former selects resource-object versus identifier
-decoding, the latter declares whether primary data represents ordinary resources or relationship
-linkage. The generic `DocumentReadContext.identifierDefaults()` retains the ordinary resource
-role; the Level-1 relationship operations in both Jackson adapters explicitly compose identifier
-decoding with the relationship role instead.
-
-Types here are values only: policies (`IncludePolicy`, `FieldPolicy`, allowance keys), read/write
-contexts (`DocumentReadContext`, `DocumentEnvelope`,
-`MappedDocument`), diagnostics (`MappingDiagnostic`, `CodecFailureCategory`,
-`JsonApiMappingException`, `JsonApiDocumentReadException`, `SourceLocation`, `MappingLocation`),
-identifier conversion (`IdentifierConverter`), representation values (`RepresentationSelection`,
-`RepresentationPolicy`), domain envelope values (`DomainData`,
-`IncludedResources`), decoration values (`ResourceDecorator`, `ResourceDecoration`,
-`RelationshipDecoration`, `ResourceDecoratorRegistry`), and presence-aware update contracts
-(`PatchCommand`, `PatchChange`, `PatchPresence`, `RelationshipLinkage`, `StructuredPatch`,
-`StructuredMember`, `StructuredMemberState`). `PatchChange` sealed variants cover resource-meta and
-relationship-meta changes per [ADR-015](../docs/adr/015-flat-whole-object-meta-mapping.md);
-identifier meta is not a variant. Applications that need `ResourceIdentifier.meta` opt into
-`RelationshipLinkage<T, M>`; identifier meta rides on whole-linkage `RelationshipChange` values
-per [ADR-017](../docs/adr/017-resource-identifier-meta-mapping.md). No type in this API imports
-or exposes `tools.jackson.*` or `com.fasterxml.jackson.*`; Jackson-bound factories, readers,
-writers, binders, and mapping introspection stay in the major-specific adapter packages.
-
-`RepresentationSelection` is per operation: it requests JSON:API wire-name include paths and sparse
-fieldsets only, while retaining whether `include` was explicitly supplied so absent and explicit
-empty requests remain distinct. `RepresentationPolicy` is application/configuration scoped: it determines which
-requested relationships and fields are permitted and bounds include traversal. Policy is not a
-complete authorization system. Applications may reuse a selection as an input to persistence
-projection planning, but jsonapi-java neither defines nor executes persistence projections.
-
-`ResourceDecorator`/`ResourceDecoration`/`RelationshipDecoration` are application/runtime
-decoration for domain writes: they add only `ResourceObject.links` and `Relationship.links` for
-existing mapped relationships. Decoration is keyed by the mapped property identity (Jackson logical
-name, e.g. `comments`), not the final wire name; the mapper follows configured-Jackson renaming
-(e.g. `@JsonProperty("article-comments")`) automatically. Decoration never replaces type, id, lid,
-attributes, linkage, meta, identifier meta, inclusion membership, or sparse-fieldset provenance, and
-it never resurrects a fieldset-omitted relationship or creates a synthetic relationship. Resource
-level links stay distinct from document-level `DocumentEnvelope.links` and from relationship links.
-Register decorators through the mapper's immutable `ResourceDecoratorRegistry`; no annotation carries
-decorator metadata.
-
-Advanced heterogeneous binding uses the Jackson-neutral `ResourceTypeRegistry`. Register each
-wire type explicitly with a raw class or `java.lang.reflect.Type` (including parameterized types):
-`ResourceTypeRegistry.builder().register("articles", Article.class).build()`. The registry does
-not infer names or scan classes; Jackson adapters convert targets to their native type model and
-verify configured `@JsonApiResource` metadata. It is used by the advanced typed-domain-envelope
-path only; Level-1 homogeneous reads remain registry-free.
-
-## Test Fixtures
-
-The `java-test-fixtures` variant contains passive, Jackson-major-neutral DTO carriers and the
-canonical JSON:API corpus and pinned draft-schema resources used by adapter tests. The corpus is the
-normative shared wire-input inventory for behavior that must match across Jackson majors. The small
-`com.kazforge.jsonapi.fixtures.TestFixtureResources` type only loads those classpath resources.
-Behavioral cases, policy tables, diagnostics, and assertions remain owned by each adapter's local
-specifications; this module does not provide shared test orchestration or scenario catalogs.
-
-For a future cross-major semantic regression, add or extend one neutral corpus case where the wire
-scenario is major-independent, consume it from both adapter suites, and keep major-specific mechanic
-proofs local.
-
-## Non-goals
-
-This module does not share Jackson-bound readers, writers, mapping introspection, serializers,
-binders, module registration, or mapper factories; there is no runtime major detection and no
-lowest-common-denominator Jackson abstraction. Jackson 2 and Jackson 3 remain separately compiled
-artifacts; see [ADR-007](../docs/adr/007-module-boundaries.md). It does contain a small
-`com.kazforge.jsonapi.jackson.internal..` namespace of Jackson-free implementation helpers
-used by both adapters. Those Java-public types are unsupported adapter-cooperation details and must
-not appear in supported public signatures; [ADR-020](../docs/adr/020-jackson-neutral-implementation-helpers.md)
-defines that boundary.
-
-## Further reading
-
-- [Architecture overview](../docs/architecture.md)
-- [Conformance checklist](../docs/conformance.md)
-- [ADR-004 — Jackson integration](../docs/adr/004-jackson-integration.md)
-- [ADR-007 — Module boundaries](../docs/adr/007-module-boundaries.md)
-- [ADR-009 — JSpecify nullness](../docs/adr/009-jspecify-nullness.md)
-- [ADR-010 — Architectural tests](../docs/adr/010-architectural-tests.md)
-- [ADR-015 — Flat whole-object mapping for resource-side meta](../docs/adr/015-flat-whole-object-meta-mapping.md)
-- [ADR-016 — Mapper-instance construction for Jackson adapters](../docs/adr/016-jackson-adapter-construction.md)
-- [ADR-017 — Opt-in RelationshipLinkage for resource identifier meta](../docs/adr/017-resource-identifier-meta-mapping.md)
-- [ADR-019 — Major-neutral Level-1 application API contract](../docs/adr/019-level-one-application-api-contract.md)
-- [ADR-020 — Jackson-neutral implementation helpers](../docs/adr/020-jackson-neutral-implementation-helpers.md)
-- [Root agent workflow](../AGENTS.md)
-
-## For contributors / agents
-
-- **Jackson-free boundary:** Production code must not import `tools.jackson.*`,
-  `com.fasterxml.jackson.*`, or any major-specific adapter package (`jackson2..`, `jackson3..`).
-  ArchUnit enforces this via `JacksonApiDependencyRulesSpec` (ADR-010). Moved-type Javadocs
-  must not `{@link}` Jackson-major-specific types; keep wording neutral.
-- **IncludedResources invariant:** Assemble with `IncludedResources.of(resources,
-  identitiesByPosition)` where each position declares the identities of its bound DTO. The index is
-  derived from those declarations, so `find` can only return the DTO at the position that declared
-  the identity: inconsistent states are unrepresentable. Duplicate identities across positions and
-  length mismatches are rejected. Do not re-introduce a raw two-collection constructor.
-- **Move policy:** Supported neutral contracts live here, not in the adapters. Jackson-free
-  implementation helpers that are required by both adapters may live under the unsupported
-  `jackson.internal..` namespace; they are Java-public only for adapter cooperation and are not
-  supported application API. When a type exposes Jackson APIs it must stay in the adapter. Adapter
-  architecture tests derive their duplicate-name guard from the supported package boundary, so
-  newly moved public contracts are protected without a second type-name inventory.
-- **Nullness:** Each concept package is `@NullMarked` (JSpecify only). Document/envelope/codec
-  contracts: Java `null` means member absence; explicit JSON `null` stays a sealed variant
-  (`DomainData.NullData`, etc.). Presence-aware PATCH: `PatchChange` entries in `changes()` are
-  present; explicit attribute JSON `null` / relationship NullLinkage use `@Nullable value == null`
-  (no sealed attribute-null variant). Direct PATCH DTO members declare presence through
-  `PatchPresence`: `Present` with a `null` value is explicit null, never omission; nullable
-  `Optional` stays a separate inner concern (`PatchPresence<Optional<T>>` is meaningful). Recursive
-  structured attributes use `StructuredPatch` / `StructuredMember(wireName, logicalName)` /
-  `StructuredMemberState` (`Atomic` / `Structured`) as the neutral requested-change payload
-  (ADR-014); an empty `StructuredPatch` is a supplied empty structured object, never a clear-all.
-  NullAway enforces this on Java `main` sources (ADR-009).
-- **Diagnostics:** Three families stay distinct: core validation (`JsonApiValidationException`),
-  codec/read (`JsonApiDocumentReadException`), and mapping (`JsonApiMappingException`). See
-  [architecture](../docs/architecture.md) for the taxonomy and `JsonApiMappingException` for the
-  mapping-location contract. Do not introduce new failure types without an implementation plan.
-- **Tests:** Spock specs under `src/test/groovy/` mirror the main package layout; unit/contract
-  tests of moved types live here, while Jackson-bound integration suites stay in the adapters.
-  The repository enforces a fixed 80% JaCoCo line and branch coverage floor; coverage failures
-  require meaningful tests rather than threshold tuning.
+See the [architecture overview](../docs/architecture.md) and
+[conformance checklist](../docs/conformance.md).

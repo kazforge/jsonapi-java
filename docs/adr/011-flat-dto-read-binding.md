@@ -2,8 +2,6 @@
 
 **Status:** Accepted  
 **Date:** 2026-07-30  
-**Amendment:** 2026-08-31 — explicit JSON:API role participation; conventional `id` remains the identifier convention
-
 ## Context
 
 ADR-006 established validated document-model reads as the first deserialization boundary and

@@ -1,17 +1,18 @@
 # jsonapi-java-core
 
-Zero-dependency Java representation of [JSON:API v1.1](https://jsonapi.org/) documents, with local construction invariants and aggregate document validation.
+Dependency-free Java representation of [JSON:API v1.1](https://jsonapi.org/) documents, with local
+construction invariants and aggregate document validation.
 
-## Packages
+## Packages and entry points
 
-| Package                                    | Role                                                               |
-|--------------------------------------------|--------------------------------------------------------------------|
-| `com.kazforge.jsonapi.core.model`          | Immutable document model (resources, relationships, links, errors) |
-| `com.kazforge.jsonapi.core.validation`     | Validation diagnostics, grammar, and model-independent policy      |
-| `com.kazforge.jsonapi.core.aggregate`      | Aggregate document validator and validation context                |
-| `com.kazforge.jsonapi.core.internal`       | Shared helpers; not a public API surface                           |
+| Package | Responsibility |
+|---------|----------------|
+| [`com.kazforge.jsonapi.core.model`](src/main/java/com/kazforge/jsonapi/core/model/package-info.java) | Immutable documents, resources, relationships, links, errors, and wire-state variants |
+| [`com.kazforge.jsonapi.core.validation`](src/main/java/com/kazforge/jsonapi/core/validation/package-info.java) | Stable diagnostics, member grammar, and model-independent policy values |
+| [`com.kazforge.jsonapi.core.aggregate`](src/main/java/com/kazforge/jsonapi/core/aggregate/package-info.java) | [`JsonApiDocumentValidator`](src/main/java/com/kazforge/jsonapi/core/aggregate/JsonApiDocumentValidator.java) and [`ValidationContext`](src/main/java/com/kazforge/jsonapi/core/aggregate/ValidationContext.java) |
+| [`com.kazforge.jsonapi.core.internal`](src/main/java/com/kazforge/jsonapi/core/internal/package-info.java) | Shared implementation helpers; unsupported API |
 
-## Minimal usage
+## Usage
 
 ```java
 ResourceObject resource = ResourceObject.of("articles", "1");
@@ -21,55 +22,27 @@ JsonApiDocument document = JsonApiDocument.withData(
 new JsonApiDocumentValidator().validate(document, ValidationContext.defaults());
 ```
 
-Construct model types first (local invariants run in constructors). Call `JsonApiDocumentValidator` with a `ValidationContext` for rules that need the whole document (identity uniqueness, full linkage, extension/profile policy, and similar). Operation (`DocumentUsage`), endpoint role (`PrimaryDataContext`), resource occurrence (primary data versus relationship linkage versus included resources), cardinality (the sealed `DocumentData` variant), and link location (`LinksContext`) are separate axes. For create requests use `DocumentUsage.CREATE_REQUEST` on the ordinary resource endpoint role: primary data must be a single resource object, and every relationship supplied on that primary resource must contain `data` (null, single, and collection linkage all remain valid). For update requests use `DocumentUsage.UPDATE_REQUEST`; a `withExpectedEndpointIdentity(EndpointIdentity)` context makes the validator compare the primary resource `type`+`id` against a caller-derived expected endpoint identity. Both comparisons apply only to primary resources on the resource endpoint role. Relationship endpoints use `PrimaryDataContext.RELATIONSHIP`: primary data is linkage (explicit null, single identifier, or identifier collection) and resource objects are rejected with `PRIMARY_DATA_CONTEXT_MISMATCH`. Included resources and relationship linkage are exempt from the primary relationship-data rule under both write usages; otherwise existing identity and aggregate rules apply unchanged. Create identity leniency (an omittable resource `id` on the primary create resource, with `id` and `lid` staying independent) applies only to that primary resource occurrence: a `lid`-only relationship identifier hosted by the primary resource is accepted only as a self-reference to the same primary resource (matching `type` and `lid`), while unrelated linkage, linkage hosted by included resources, and included resources themselves require `id`. A top-level `related` link is accepted only on the relationship endpoint role when primary data is present (explicit null linkage counts as present); documents without primary data reject it even on that role. Ordinary resource responses, including related-resource fetches, reject it with `INVALID_LINKS_CONTEXT`, and allowed profile member names do not override this restriction. Nested relationship `related` links remain accepted. HTTP/route derivation and mutation remain application-owned.
+Construct model values first; their constructors enforce invariants that need only the value being
+created. Run `JsonApiDocumentValidator` for identity uniqueness, full linkage, document usage,
+endpoint role, link context, and extension/profile policy. The
+[conformance checklist](../docs/conformance.md) owns the current rule inventory.
 
-### Error document construction
+Java `null` on a containing component means that a member is absent. Sealed model variants represent
+explicit JSON `null`, single, and collection forms. Present-empty wrappers and collections remain
+distinct from absence. `ErrorObject.builder()` and `ErrorSource.builder()` construct the same
+immutable core values as direct constructors.
 
-```java
-JsonApiDocument document = JsonApiDocument.withError(
-    ErrorObject.builder()
-        .status("422")
-        .code("invalid")
-        .title("Invalid Attribute")
-        .detail("Title is required")
-        .source(ErrorSource.builder()
-            .pointer("/data/attributes/title")
-            .build())
-        .build());
-```
+## Boundaries
 
-`ErrorObject.builder()` and `ErrorSource.builder()` produce ordinary immutable core values, so they
-preserve the same validation and wire behavior as direct construction. The builders do not select
-HTTP responses or define application error taxonomies.
+- Core has no functional third-party runtime dependency; JSpecify is compile-only metadata.
+- It provides no Jackson codec or mapping, HTTP adapter, query parser, persistence integration, or
+  extension-specific semantics.
+- Valid extension and `@` members are preserved without interpretation.
+- Validation failures use `JsonApiValidationException`, a stable `ValidationRuleCode`, and a
+  JSON Pointer-like path.
+- The package dependency direction is aggregate → model/internal/validation, model →
+  internal/validation, and internal → validation; reverse edges are forbidden.
 
-## Non-goals
-
-This module does not provide Jackson codecs, HTTP adapters, query-parameter parsing, or extension-specific semantics. Those belong in later artifacts; see [ADR-007](../docs/adr/007-module-boundaries.md).
-
-## Further reading
-
-- [Architecture overview](../docs/architecture.md)
-- [Conformance checklist](../docs/conformance.md)
-- [ADR-002 — Wire states](../docs/adr/002-document-representation.md)
-- [ADR-003 — Validation and immutability](../docs/adr/003-validation-and-immutability.md)
-- [ADR-009 — JSpecify nullness](../docs/adr/009-jspecify-nullness.md)
-- [ADR-010 — Architectural tests](../docs/adr/010-architectural-tests.md)
-- [Root agent workflow](../AGENTS.md)
-
-## For contributors / agents
-
-- **Local vs aggregate:** Compact constructors enforce single-value invariants (including RFC 6901
-  syntax for `ErrorSource.pointer`, and context-standard link names reserved out of
-  `Links.additionalMembers`). Cross-document rules live only in `JsonApiDocumentValidator`.
-  Pointer validation is syntax-only and does not resolve against a document; see [conformance](../docs/conformance.md).
-- **Identity uniqueness:** Duplicate detection is representation-strict (`ResourceObject.equals`) and alias-aware for identifier collections after id↔lid binding.
-- **Wire vocabulary:** `JsonApiMembers` holds shared JSON:API member-name constants for codecs and reserved-name sets; it is not an application-facing entry point.
-- **Links channels:** Typed `links()` holds `Link` values (including extension relation keys).
-  `additionalMembers` is for `@` pass-through (and other non-reserved open JSON); standard names
-  (`self`, `related`, `describedby`, pagination, `about`, `type`) are rejected there with
-  `RESERVED_FIELD_NAME`.
-- **Diagnostics:** Failures use `JsonApiValidationException` with a stable `ValidationRuleCode` and a JSON Pointer-like path—not bare `IllegalArgumentException`. The three diagnostic families (core validation, codec/read, mapping) are summarized in [architecture](../docs/architecture.md).
-- **Nullness:** Production packages are `@NullMarked` (JSpecify only). Use `@Nullable` for member absence and intentionally null map/list values. Explicit JSON `null` stays a sealed variant (`DocumentData.NullData`, etc.), not a bare nullable reference. Keep `LocalValidation.requireNonNull` for construction; do not use JetBrains/JSR-305/Checker nullness annotations. Groovy tests are not annotated.
-- **Architectural tests:** This dependency-free module relies on the compiler and its declared classpath for its module dependency boundary. ArchUnit guards the intra-module package DAG (`aggregate` -> `model`/`internal`/`validation`, `model` -> `internal`/`validation`, `internal` -> `validation`, with no back-edges) where the compiler and Gradle module graph cannot express the invariant (ADR-010).
-- **Tests:** Spock specs under `src/test/groovy/` mirror the main package layout.
-- **Extensions:** Preserve valid extension and `@` members; do not interpret extension semantics in core.
+See the [architecture overview](../docs/architecture.md),
+[ADR-002](../docs/adr/002-document-representation.md), and
+[ADR-003](../docs/adr/003-validation-and-immutability.md).
