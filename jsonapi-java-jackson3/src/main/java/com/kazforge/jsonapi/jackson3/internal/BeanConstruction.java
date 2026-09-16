@@ -20,7 +20,7 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Both binders supply a {@link FailurePathTranslator} so deep Jackson construction-failure paths
  * are translated into resource-relative {@link MappingLocation} pointers through the resource
- * mapping (and, for nested structured members, through the resolved shape metadata per ADR-014).
+ * mapping (and, for nested structured members, through the resolved shape metadata per ADR-013).
  * Translators never emit Jackson logical property names as locations: unmappable paths translate to
  * an absent location.
  */

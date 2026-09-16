@@ -32,7 +32,7 @@
  * {@code jsonapi.version} default. Request-scoped representation selection, document envelope, and
  * expected update identity remain method arguments. The advanced capability factories remain public
  * mechanism/control seams. Cross-major parity is semantic capability symmetry plus equivalent
- * configuration authority per ADR-016, not textual duplication of Jackson 3's convenience
+ * configuration authority per ADR-015, not textual duplication of Jackson 3's convenience
  * overloads.
  *
  * <p>Jackson-major adapters use a fully configured {@link

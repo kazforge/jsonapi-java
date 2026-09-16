@@ -30,7 +30,7 @@ import tools.jackson.databind.util.TokenBuffer;
  * {@code @JsonApiAttribute} / {@link com.kazforge.jsonapi.jackson.patch.PatchChange} / location
  * dependency: callers supply the containing bean's {@link JavaType}, the member's Jackson-resolved
  * wire name, the conversion-target {@link JavaType}, and the raw wire value, so a later structured
- * JSON:API {@code meta} mapping can reuse the same machinery at its own location (ADR-014).
+ * JSON:API {@code meta} mapping can reuse the same machinery at its own location (ADR-013).
  *
  * <p>The member's fully-contextualized property is resolved from the containing bean's {@link
  * BeanDeserializerBase} (the same {@link SettableBeanProperty} Jackson would use during normal

@@ -91,18 +91,18 @@
  * validation context themselves. Exemptions name exactly the included resources whose linking
  * relationship a fieldset removed, so unrelated full-linkage defects still fail validation.
  * Fieldsets select attributes and relationships only; whole-object resource meta is emitted
- * independently (ADR-015). Selection is operation scoped, while policy is application scoped and is
+ * independently (ADR-014). Selection is operation scoped, while policy is application scoped and is
  * not a complete authorization system. Applications may reuse selection as persistence-projection
  * input, but this adapter defines and executes no persistence projections.
  *
- * <p>Whole-object resource-side meta mapping (ADR-015) maps the complete {@code meta} object of a
+ * <p>Whole-object resource-side meta mapping (ADR-014) maps the complete {@code meta} object of a
  * resource or of a specific mapped relationship to one application-owned property per location via
  * {@link com.kazforge.jsonapi.annotation.JsonApiMeta} and {@link
  * com.kazforge.jsonapi.annotation.JsonApiRelationshipMeta}, across domain read, domain write, the
  * low-level {@link com.kazforge.jsonapi.jackson.patch.PatchCommand} path (new resource-meta and
  * relationship-meta {@link com.kazforge.jsonapi.jackson.patch.PatchChange} variants), and the typed
  * PATCH DTO path. Per-linkage identifier meta is an opt-in {@link
- * com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage} (ADR-017): {@code target} maps as the
+ * com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage} (ADR-016): {@code target} maps as the
  * ordinary relationship target and {@code meta} maps to {@code ResourceIdentifier.meta}. PATCH
  * participates only through whole-linkage replacement — never as an independent {@code PatchChange}
  * or typed PATCH member. Document-level meta remains document-owned through the domain envelope; no

@@ -74,5 +74,5 @@ application state. It does not detect another Jackson major at runtime.
 
 See the [architecture overview](../docs/architecture.md),
 [conformance checklist](../docs/conformance.md),
-[ADR-016](../docs/adr/016-jackson-adapter-construction.md), and
-[ADR-019](../docs/adr/019-level-one-application-api-contract.md).
+[ADR-015](../docs/adr/015-jackson-adapter-construction.md), and
+[ADR-018](../docs/adr/018-level-one-application-api-contract.md).

@@ -13,8 +13,8 @@ import org.jspecify.annotations.Nullable;
  * <p>Omitted members never appear. Explicit attribute JSON {@code null} is {@code value == null} on
  * a present {@link AttributeChange}. Relationship {@code NullLinkage} is Java {@code null} or empty
  * {@code Optional} as the Jackson adapter binder would produce. Resource and relationship meta
- * changes carry the converted atomic meta value, or a {@link StructuredPatch} where ADR-014
- * recursion applies on the low-level path (ADR-015).
+ * changes carry the converted atomic meta value, or a {@link StructuredPatch} where ADR-013
+ * recursion applies on the low-level path (ADR-014).
  */
 public sealed interface PatchChange
     permits PatchChange.AttributeChange,
@@ -60,7 +60,7 @@ public sealed interface PatchChange
    * <p>When the converted value is a {@code ResourceIdentifier}, a {@link
    * com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage}, or a collection of either,
    * identifier meta rides on those values. There is no separate identifier-meta change; supplying
-   * linkage replaces the whole linkage including per-identifier meta (ADR-017).
+   * linkage replaces the whole linkage including per-identifier meta (ADR-016).
    */
   record RelationshipChange(String jsonapiName, String logicalName, @Nullable Object value)
       implements PatchChange {
@@ -82,8 +82,8 @@ public sealed interface PatchChange
    * location marker, not a discriminator: an attribute named {@code meta} is wire-legal, so
    * consumers must dispatch on the sealed variant rather than infer semantics from the name alone.
    * {@link #logicalName()} is the annotated meta property's logical Java name and {@link #value()}
-   * the converted atomic meta value or a {@link StructuredPatch} where ADR-014 recursion applies on
-   * the low-level path (ADR-015).
+   * the converted atomic meta value or a {@link StructuredPatch} where ADR-013 recursion applies on
+   * the low-level path (ADR-014).
    */
   record ResourceMetaChange(String jsonapiName, String logicalName, @Nullable Object value)
       implements PatchChange {
@@ -104,8 +104,8 @@ public sealed interface PatchChange
    * <p>{@link #jsonapiName()} is the referenced relationship's JSON:API member name (pairing it
    * with the sibling {@link RelationshipChange} of the same name); {@link #logicalName()} is the
    * annotated meta property's logical Java name; {@link #value()} is the converted atomic meta
-   * value or a {@link StructuredPatch} where ADR-014 recursion applies on the low-level path
-   * (ADR-015).
+   * value or a {@link StructuredPatch} where ADR-013 recursion applies on the low-level path
+   * (ADR-014).
    */
   record RelationshipMetaChange(String jsonapiName, String logicalName, @Nullable Object value)
       implements PatchChange {

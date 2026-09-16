@@ -30,7 +30,7 @@ ArticlePatch patch = api.patches().readPatch(updateJson, ArticlePatch.class);
 
 `JsonApi` groups ordinary resource, linkage-document, raw-document, and PATCH operations. Advanced
 major-specific readers, writers, mapping/binding, parameterized Jackson types, and heterogeneous
-typed envelopes remain adapter capabilities. [ADR-019](../docs/adr/019-level-one-application-api-contract.md)
+typed envelopes remain adapter capabilities. [ADR-018](../docs/adr/018-level-one-application-api-contract.md)
 owns that split.
 
 ## Neutral contract boundaries
@@ -49,7 +49,7 @@ owns that split.
   locations are absent or valid escaped JSON Pointers.
 - The `internal` namespace is unsupported and must not appear in supported public signatures; native
   Jackson mechanics stay in each adapter per
-  [ADR-020](../docs/adr/020-jackson-neutral-implementation-helpers.md).
+  [ADR-019](../docs/adr/019-jackson-neutral-implementation-helpers.md).
 
 ## Shared test fixtures
 

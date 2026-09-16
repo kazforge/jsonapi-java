@@ -6,7 +6,7 @@ import com.kazforge.jsonapi.annotation.JsonApiResource;
 import com.kazforge.jsonapi.jackson.patch.PatchPresence;
 
 /**
- * Shared direct typed PATCH DTO with an invalid raw-{@code PatchPresence} nested shape (ADR-014).
+ * Shared direct typed PATCH DTO with an invalid raw-{@code PatchPresence} nested shape (ADR-013).
  */
 @JsonApiResource(type = "articles")
 public record ArticleWithRawAddressPatch(

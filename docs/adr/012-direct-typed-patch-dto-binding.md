@@ -1,11 +1,11 @@
-# ADR-013: Direct Typed PATCH DTO Binding
+# ADR-012: Direct Typed PATCH DTO Binding
 
 **Status:** Accepted
 **Date:** 2026-08-17
 
 ## Context
 
-The low-level `PatchCommand` from [ADR-012](012-resource-patch-binding.md) preserves supplied-member
+The low-level `PatchCommand` from [ADR-011](011-resource-patch-binding.md) preserves supplied-member
 state, but applications that prefer an annotated DTO otherwise need to project that command and
 restate omission semantics. A normal read/write DTO cannot reliably distinguish an omitted member
 from explicit JSON `null`, especially for immutable construction.

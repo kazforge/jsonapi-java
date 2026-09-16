@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Shared ordinary domain model with opt-in per-linkage identifier meta on to-one author and to-many
- * comments, plus independent relationship-level meta at both locations (ADR-017).
+ * comments, plus independent relationship-level meta at both locations (ADR-016).
  */
 @JsonApiResource(type = "articles")
 public record ArticleWithRelationshipLinkage(

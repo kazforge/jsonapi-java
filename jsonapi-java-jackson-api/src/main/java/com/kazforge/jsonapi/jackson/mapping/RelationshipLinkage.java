@@ -28,7 +28,7 @@ import org.jspecify.annotations.Nullable;
  * <p>{@code meta == null} supplies no identifier meta: the target is mapped normally, and any
  * {@code ResourceIdentifier.meta} already present on a direct identifier target is left in place.
  * The wrapper itself is not a JSON:API resource and is not independently patchable; identifier meta
- * participates in presence-aware PATCH only as part of whole-linkage replacement (ADR-017).
+ * participates in presence-aware PATCH only as part of whole-linkage replacement (ADR-016).
  *
  * @param <T> the ordinary relationship target type
  * @param <M> the application-owned identifier-meta type

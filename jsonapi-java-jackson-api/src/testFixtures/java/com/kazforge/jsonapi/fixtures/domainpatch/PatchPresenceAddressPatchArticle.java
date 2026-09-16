@@ -10,7 +10,7 @@ import com.kazforge.jsonapi.jackson.patch.PatchPresence;
  * shape: presence-aware PATCH shapes are a typed-path concept, so this composition fails loudly
  * with {@link
  * com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic#INVALID_PATCH_PROPERTY_TYPE} at the
- * attribute pointer (ADR-014).
+ * attribute pointer (ADR-013).
  */
 @JsonApiResource(type = "articles")
 public record PatchPresenceAddressPatchArticle(

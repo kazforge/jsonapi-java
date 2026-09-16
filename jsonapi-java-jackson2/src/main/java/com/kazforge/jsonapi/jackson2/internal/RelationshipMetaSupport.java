@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Shared helpers for whole-meta mapping properties and diagnostic locations (ADR-015). */
+/** Shared helpers for whole-meta mapping properties and diagnostic locations (ADR-014). */
 final class RelationshipMetaSupport {
 
   private RelationshipMetaSupport() {}

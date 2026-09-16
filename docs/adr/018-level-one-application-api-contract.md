@@ -1,4 +1,4 @@
-# ADR-019: Major-Neutral Level-1 Application API Contract
+# ADR-018: Major-Neutral Level-1 Application API Contract
 
 **Status:** Accepted
 **Date:** 2026-09-04
@@ -36,7 +36,7 @@ The contract preserves these architectural boundaries:
 - configured Jackson owns property discovery, names, visibility, mix-ins, creators, and ordinary
   Java conversion;
 - `id` and `lid` are separate protocol roles with no fallback or persistence interpretation;
-- ordinary relationships follow [ADR-018](018-relationship-data-presence-in-domain-mapping.md):
+- ordinary relationships follow [ADR-017](017-relationship-data-presence-in-domain-mapping.md):
   emitted mapped relationships contain linkage, while links-only and meta-only forms stay advanced;
 - decoration only adds links to existing mapped resources and relationships;
 - representation selection is operation-scoped, policy is runtime/application-scoped, and

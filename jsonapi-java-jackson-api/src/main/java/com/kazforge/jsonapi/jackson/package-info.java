@@ -42,9 +42,9 @@
  * com.kazforge.jsonapi.jackson.patch.StructuredPatch} / {@link
  * com.kazforge.jsonapi.jackson.patch.StructuredMember} (wire and logical member names) / {@link
  * com.kazforge.jsonapi.jackson.patch.StructuredMemberState} (Atomic / Structured) as the neutral
- * requested-change payload (ADR-014); an empty {@code StructuredPatch} is a supplied empty
+ * requested-change payload (ADR-013); an empty {@code StructuredPatch} is a supplied empty
  * structured object, never a clear-all. {@code @Nullable} marks intentionally null-bearing members
- * per ADR-009.
+ * per ADR-008.
  */
 @NullMarked
 package com.kazforge.jsonapi.jackson;

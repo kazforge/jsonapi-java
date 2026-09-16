@@ -7,7 +7,7 @@ import com.kazforge.jsonapi.jackson.patch.PatchPresence;
 
 /**
  * Shared low-level PATCH DTO with a scalar {@code PatchPresence<T>}-declared member, proving the
- * single-wrapper unwrap on the low-level path (ADR-014).
+ * single-wrapper unwrap on the low-level path (ADR-013).
  */
 @JsonApiResource(type = "articles")
 public record PatchPresenceTitleArticle(

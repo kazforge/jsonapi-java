@@ -15,7 +15,7 @@ import java.util.Objects;
  * Recursive meta conversion probes owned by {@code FlatMetaMappingSpec}: shapes proving that
  * low-level and typed PATCH conversion into a whole-meta target preserves generic JavaType binding,
  * property null providers, property-level polymorphic TypeDeserializers, and reports construction
- * failures at the nested wire pointer (ADR-015).
+ * failures at the nested wire pointer (ADR-014).
  */
 @SuppressWarnings({"unused", "NullAway"})
 public final class MetaConversionProbeFixtures {
@@ -61,7 +61,7 @@ public final class MetaConversionProbeFixtures {
   /**
    * Presence-aware nested whole-meta PATCH shape whose setter throws when a supplied member is
    * present, forcing a genuine Jackson construction failure during the final DTO construction whose
-   * deep path must be translated to a wire-name pointer (ADR-015). The {@code source} member's
+   * deep path must be translated to a wire-name pointer (ADR-014). The {@code source} member's
    * logical name differs from its wire name {@code w_source}.
    */
   public static final class ThrowingMetaPatch {
@@ -118,7 +118,7 @@ public final class MetaConversionProbeFixtures {
   /**
    * Presence-aware nested relationship-meta PATCH shape whose setter throws when a supplied member
    * is present, forcing a genuine Jackson construction failure during the final DTO construction
-   * whose deep path must be translated to a wire-name pointer (ADR-015). The {@code source}
+   * whose deep path must be translated to a wire-name pointer (ADR-014). The {@code source}
    * member's logical name differs from its wire name {@code w_source}.
    */
   public static final class ThrowingRelMetaPatch {

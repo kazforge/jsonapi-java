@@ -452,7 +452,7 @@ public final class DomainResourceWriter {
   /**
    * Whole-meta declared-target validation for the write mapping role: Bean / Map / Object with at
    * most one {@link Optional} wrapper. Validation lives at the consuming entry point, not the
-   * kind-agnostic resolver (ADR-015).
+   * kind-agnostic resolver (ADR-014).
    */
   private void validateMetaTargets(ResourceMapping mapping, Class<?> rawType) {
     wholeMetaTarget.validateReadWriteTargets(mapping, rawType);

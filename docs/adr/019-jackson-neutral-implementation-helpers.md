@@ -1,4 +1,4 @@
-# ADR-020: Jackson-Neutral Implementation Helpers
+# ADR-019: Jackson-Neutral Implementation Helpers
 
 **Status:** Accepted
 **Date:** 2026-09-09

@@ -10,7 +10,7 @@
  * com.kazforge.jsonapi.core.model.Links} additionally reserves context-standard link names out of
  * its {@code additionalMembers} map so those keys cannot hold open JSON.
  *
- * <p>See ADR-002, ADR-009, and {@code docs/conformance.md} for the representation and nullness
+ * <p>See ADR-002, ADR-008, and {@code docs/conformance.md} for the representation and nullness
  * contracts. Local construction invariants are enforced here; rules requiring full-document context
  * are enforced separately by aggregate validation.
  */

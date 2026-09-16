@@ -39,9 +39,9 @@ import tools.jackson.databind.json.JsonMapper;
  * com.kazforge.jsonapi.jackson.patch.PatchChange} dependency: callers supply the declared {@link
  * JavaType}, wire value, starting pointer, and (low-level) accessor, so a later structured JSON:API
  * {@code meta} mapping can reuse the same machinery at its own location with a stricter outer-state
- * policy (ADR-014).
+ * policy (ADR-013).
  *
- * <p>Two modes (ADR-014): the typed mode recurses only through deliberately presence-aware nested
+ * <p>Two modes (ADR-013): the typed mode recurses only through deliberately presence-aware nested
  * PATCH shapes (every visible member exactly {@code PatchPresence<T>}, no wrapper-level
  * customization); the low-level mode derives supplied-only nested changes from ordinary structured
  * domain value types under the traversable-bean + object-wire boundary, with {@link Optional} as a
@@ -309,7 +309,7 @@ final class StructuredValueBinder {
 
   /**
    * Translates a failed bean-construction Jackson path into a resource-relative mapping location
-   * (ADR-014). The path's first name selects the member's start through {@code startsByLogicalName}
+   * (ADR-013). The path's first name selects the member's start through {@code startsByLogicalName}
    * (Jackson logical name to wire prefix); deeper names are walked through resolved presence-aware
    * shape metadata, each matching member contributing its escaped wire-name segment. Walking stops
    * at the first name that is not a shape member, so Jackson-internal names below an atomic member

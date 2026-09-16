@@ -123,7 +123,7 @@ those capabilities are unavailable.
   states. Explicit null data/linkage uses sealed model variants, not bare Java null.
 - Production Java packages are JSpecify `@NullMarked`; NullAway checks `compileJava` only. ArchUnit
   enforces module dependency allowlists. Do not weaken those rules without updating
-  `docs/adr/010-architectural-tests.md`.
+  `docs/adr/009-architectural-tests.md`.
 
 # Test Design
 

@@ -17,19 +17,19 @@ import tools.jackson.databind.type.LogicalType;
 
 /**
  * Whole-meta target-shape rules shared by the entry points that consume whole-meta mappings
- * (ADR-015).
+ * (ADR-014).
  *
  * <p>The mapping cache/resolver is deliberately kind-agnostic; each consuming entry point validates
  * its own role's wrapper chain against these rules. Read/write and low-level domain mappings allow
  * at most one {@link Optional} wrapper around a Bean / {@link Map} / {@link Object} target; typed
  * PATCH DTOs allow exactly one {@code PatchPresence<T>} wrapper and at most one {@link Optional}
  * inside it. Identifier meta on an opt-in {@code RelationshipLinkage<T, M>} follows the same
- * object-shape rule for {@code M} (ADR-017).
+ * object-shape rule for {@code M} (ADR-016).
  *
  * <p>Whether an effective target is a legal whole-meta object target is decided by Jackson, not a
  * manually maintained scalar taxonomy: after rejecting primitives, containers, and the already
  * unwrapped {@link Optional}/{@code PatchPresence} raws, a target is valid iff its root
- * deserializer reports the POJO {@link LogicalType} — the same structured-value signal ADR-014's
+ * deserializer reports the POJO {@link LogicalType} — the same structured-value signal ADR-013's
  * bean boundary is built on, read through root-level decoration. This accepts records, POJOs,
  * constructor-bound beans, and root-polymorphic POJOs whose deserializer is wrapped by a {@code
  * TypeDeserializer} (concrete or abstract {@code @JsonTypeInfo} types), while rejecting JDK scalars
@@ -62,7 +62,7 @@ final class WholeMetaTarget {
    * domain-mapping roles, throwing {@link MappingDiagnostic#INVALID_META_TARGET} at the property's
    * resource-relative wire location when a declared target is not Bean / Map / Object with at most
    * one {@link Optional} wrapper. The mapping cache/resolver stays kind-agnostic; each consuming
-   * entry point invokes this shared rule itself (ADR-015).
+   * entry point invokes this shared rule itself (ADR-014).
    */
   void validateReadWriteTargets(ResourceMapping mapping, Class<?> rawType) {
     MappingProperty resourceMeta = mapping.resourceMeta();
