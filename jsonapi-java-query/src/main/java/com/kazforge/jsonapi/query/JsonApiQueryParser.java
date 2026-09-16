@@ -16,9 +16,17 @@ import org.jspecify.annotations.Nullable;
 /**
  * Parses JSON:API query selection from either a decoded parameter multimap or a raw query string.
  *
- * <p>The decoded-multimap methods are the canonical parsing seam. Raw input uses UTF-8 form
- * decoding, then invokes that same seam. No value is trimmed, interpreted as a Java property name,
- * or assigned pagination/filter semantics.
+ * <p>{@link #parseDecoded(Map)} is the canonical framework-integration seam. It recognizes exactly
+ * {@code include}, {@code fields[TYPE]}, and {@code sort}; each requires one value occurrence.
+ * Page, filter, and unknown parameters remain ordered opaque values. Include paths, resource types,
+ * field names, and directionless sort fields are exact JSON:API tokens: they are validated but
+ * never trimmed, renamed, or resolved as Java properties.
+ *
+ * <p>Raw parsing accepts an optional leading {@code ?}, splits occurrences at {@code &} and the
+ * first {@code =}, applies UTF-8 form decoding, and delegates to the decoded seam. Supplying a
+ * {@link QueryAllowList} rejects named selections not present in that exact allow-list. Successful
+ * parsing establishes only a requested selection upper bound; applications remain responsible for
+ * representation policy, authorization, filter/page semantics, and query execution.
  */
 public final class JsonApiQueryParser {
 
@@ -28,45 +36,53 @@ public final class JsonApiQueryParser {
   private static final String PAGE = "page";
   private static final String FILTER = "filter";
 
-  /** Parses a decoded parameter multimap without an allow-list. */
+  /** Alias for {@link #parseDecoded(Map)}. */
   public JsonApiQuery parse(@Nullable Map<String, ? extends List<String>> parameters) {
     return parseDecoded(parameters);
   }
 
-  /** Parses a decoded parameter multimap against an exact selection allow-list. */
+  /** Alias for {@link #parseDecoded(Map, QueryAllowList)}. */
   public JsonApiQuery parse(
       @Nullable Map<String, ? extends List<String>> parameters, QueryAllowList allowList) {
     return parseDecoded(parameters, allowList);
   }
 
-  /** Parses a raw query string without an allow-list. */
+  /** Alias for {@link #parseRaw(String)}. */
   public JsonApiQuery parse(@Nullable String rawQuery) {
     return parseRaw(rawQuery);
   }
 
-  /** Parses a raw query string against an exact selection allow-list. */
+  /** Alias for {@link #parseRaw(String, QueryAllowList)}. */
   public JsonApiQuery parse(@Nullable String rawQuery, QueryAllowList allowList) {
     return parseRaw(rawQuery, allowList);
   }
 
-  /** Parses a decoded parameter multimap without an allow-list. */
+  /**
+   * Parses already-decoded parameter names and values without applying an allow-list. Map and list
+   * encounter order are preserved; percent escapes and {@code +} have no special meaning here.
+   */
   public JsonApiQuery parseDecoded(@Nullable Map<String, ? extends List<String>> parameters) {
     return parseDecodedInternal(parameters, null);
   }
 
-  /** Parses a decoded parameter multimap against an exact selection allow-list. */
+  /**
+   * Parses already-decoded parameters and rejects each named include path, field, or directionless
+   * sort field that is absent from {@code allowList}.
+   */
   public JsonApiQuery parseDecoded(
       @Nullable Map<String, ? extends List<String>> parameters, QueryAllowList allowList) {
     Objects.requireNonNull(allowList, "allowList");
     return parseDecodedInternal(parameters, allowList);
   }
 
-  /** Parses a raw query string without an allow-list. */
+  /**
+   * Parses a raw UTF-8 form query using the delimiter and decoding rules described on this class.
+   */
   public JsonApiQuery parseRaw(@Nullable String rawQuery) {
     return parseRawInternal(rawQuery, null);
   }
 
-  /** Parses a raw query string against an exact selection allow-list. */
+  /** Parses a raw UTF-8 form query and applies the exact selection allow-list after decoding. */
   public JsonApiQuery parseRaw(@Nullable String rawQuery, QueryAllowList allowList) {
     Objects.requireNonNull(allowList, "allowList");
     return parseRawInternal(rawQuery, allowList);

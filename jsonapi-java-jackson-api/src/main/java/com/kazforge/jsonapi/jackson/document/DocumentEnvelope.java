@@ -6,10 +6,11 @@ import com.kazforge.jsonapi.core.model.Meta;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Carries optional document-level members — links, meta, and JSON:API object — that write mapping
- * attaches to a document.
+ * Optional top-level links, meta, and JSON:API object attached during domain mapping.
  *
- * <p>Each component may be {@code null}; absent members are omitted from the serialized document.
+ * <p>A {@code null} component means that member is absent and is omitted from the serialized
+ * document. A non-null empty value remains present: for example, {@link Links#empty()} and {@link
+ * Meta#empty()} produce empty {@code links} and {@code meta} objects rather than absence.
  */
 public record DocumentEnvelope(
     @Nullable Links links, @Nullable Meta meta, @Nullable JsonApiObject jsonapi) {}

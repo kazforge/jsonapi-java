@@ -50,6 +50,7 @@ public final class JsonApiDocumentReader {
     return mapper;
   }
 
+  /** Reads and validates one JSON:API document from JSON text. */
   public JsonApiDocument readValue(String json) {
     Objects.requireNonNull(json, "json");
     try (JsonParser parser = mapper.createParser(json)) {
@@ -59,6 +60,7 @@ public final class JsonApiDocumentReader {
     }
   }
 
+  /** Reads and validates one JSON:API document from UTF-8 JSON bytes. */
   public JsonApiDocument readValue(byte[] utf8Json) {
     Objects.requireNonNull(utf8Json, "utf8Json");
     try (JsonParser parser = mapper.createParser(utf8Json)) {

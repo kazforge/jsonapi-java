@@ -12,9 +12,9 @@ import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage;
 import java.io.IOException;
 
 /**
- * Identifier-meta conversion fixtures owned by {@code IdentifierMetaMappingSpec} (ADR-016): generic
- * {@code JavaType} preservation, configured naming, and custom serializers. Adapter-local Jackson 2
- * copies of the shared shapes; custom serializers use Jackson 2 SPI.
+ * Identifier-meta conversion fixtures owned by {@code IdentifierMetaMappingSpec}: generic {@code
+ * JavaType} preservation, configured naming, and custom serializers. Adapter-local Jackson 2 copies
+ * of the shared shapes; custom serializers use Jackson 2 SPI.
  */
 public final class IdentifierMetaFixtures {
 

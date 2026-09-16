@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * Ordinary non-record JavaBean-style structured domain value type proving the low-level
  * traversable-bean + object-wire boundary applies to ordinary Jackson-bean semantics, not record
- * components specifically (ADR-013).
+ * components specifically.
  */
 public final class MutableAddress {
 

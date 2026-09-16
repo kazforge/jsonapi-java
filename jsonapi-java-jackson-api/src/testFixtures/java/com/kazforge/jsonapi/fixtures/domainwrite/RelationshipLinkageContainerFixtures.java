@@ -18,8 +18,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Supported {@link RelationshipLinkage} container shapes for identifier-meta write and read: array,
- * {@link Set}, {@link Optional}, {@link Map} identifier meta, and a renamed relationship wire name
- * (ADR-016).
+ * {@link Set}, {@link Optional}, {@link Map} identifier meta, and a renamed relationship wire name.
  */
 public final class RelationshipLinkageContainerFixtures {
 

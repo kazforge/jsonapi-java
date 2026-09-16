@@ -11,10 +11,11 @@ import java.util.Set;
  * resources whose inbound linkage was removed by an applied sparse fieldset during that mapping
  * call.
  *
- * <p>Those sparse-fieldset linkage exemptions are mapping provenance, not caller state: pass the
- * whole {@code MappedDocument} to a JSON:API document writer and the writer composes its bound
- * {@link ValidationContext} with this provenance before validating and emitting. An empty set means
- * the mapped document carries no linkage exception and validates like any ordinary document.
+ * <p>Those sparse-fieldset linkage exemptions are mapping provenance, not authorization or caller
+ * policy. Pass the whole {@code MappedDocument}, rather than only {@link #document()}, to a
+ * JSON:API document writer; the writer composes its bound {@link ValidationContext} with the
+ * provenance before validating and emitting. An empty set means the mapped document carries no
+ * linkage exception and validates like any ordinary document.
  */
 public record MappedDocument(
     JsonApiDocument document, Set<ResourceIdentity> sparseFieldsetLinkageExemptions) {

@@ -8,7 +8,7 @@ import java.util.Optional;
 
 /**
  * Shared direct typed PATCH DTO whose structured attribute is an {@code Optional}-wrapped
- * presence-aware shape, proving typed {@code Optional} unwrap/rewrap semantics (ADR-013).
+ * presence-aware shape, proving typed {@code Optional} unwrap/rewrap semantics.
  */
 @JsonApiResource(type = "articles")
 public record ArticleWithOptionalAddressPatch(

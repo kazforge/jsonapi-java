@@ -1,6 +1,8 @@
 package com.kazforge.jsonapi.jackson.diagnostic;
 
-/** Stable diagnostic codes for domain-to-resource mapping failures. */
+/**
+ * Stable semantic codes for mapping, binding, registry, decoration, and representation failures.
+ */
 public enum MappingDiagnostic {
   DUPLICATE_ROLE,
   NAME_COLLISION,

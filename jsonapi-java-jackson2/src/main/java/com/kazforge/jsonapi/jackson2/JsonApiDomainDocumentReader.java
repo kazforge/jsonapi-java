@@ -54,8 +54,8 @@ import org.jspecify.annotations.Nullable;
  * DocumentReadContext, ResourceTypeRegistry)} or its overloads, never directly. Construction
  * re-resolves every registered target against the reader's configured resource metadata and rejects
  * keys that disagree with {@link MappingDiagnostic#RESOURCE_TYPE_MISMATCH} without a document
- * location; missing or invalid consumer metadata keeps its existing resolver diagnostic. The reader
- * is safe for concurrent use once created.
+ * location; missing or invalid consumer metadata reports the resolver diagnostic. The reader is
+ * safe for concurrent use once created.
  */
 public final class JsonApiDomainDocumentReader {
 

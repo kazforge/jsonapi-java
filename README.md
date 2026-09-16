@@ -21,7 +21,8 @@ Maven group: `com.kazforge`. Java packages: `com.kazforge.jsonapi.*`.
 
 `check` (and therefore `build`) enforces a fixed 80% JaCoCo line and branch coverage floor for
 library modules. `jsonapi-java-annotations` is exempt because it is annotation-only and has no
-executable coverage.
+executable coverage. It also validates consumer-facing Javadoc; `build` assembles a Javadoc JAR for
+each library module.
 
 ## Modules
 

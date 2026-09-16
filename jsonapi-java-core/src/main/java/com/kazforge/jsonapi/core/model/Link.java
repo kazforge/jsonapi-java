@@ -22,12 +22,14 @@ import org.jspecify.annotations.Nullable;
  */
 public sealed interface Link permits Link.StringLink, Link.ObjectLink {
 
+  /** String-form link containing one URI reference. */
   record StringLink(String href) implements Link {
     public StringLink {
       requireValidHref(href, path());
     }
   }
 
+  /** Link-object form with required {@code href} and optional standard or additional members. */
   record ObjectLink(
       String href,
       @Nullable String rel,
@@ -78,14 +80,17 @@ public sealed interface Link permits Link.StringLink, Link.ObjectLink {
               additionalMembers, path(), "Invalid link member name: ", RESERVED_ADDITIONAL);
     }
 
+    /** Creates the minimal object form containing only {@code href}. */
     public static ObjectLink ofHref(String href) {
       return new ObjectLink(href, null, null, null, null, null, null, Map.of());
     }
 
+    /** Creates an object link whose canonical {@code hreflang} value contains the supplied tags. */
     public static ObjectLink withHreflang(String href, List<String> hreflang) {
       return new ObjectLink(href, null, null, null, null, hreflang, null, Map.of());
     }
 
+    /** Creates an object link whose canonical {@code hreflang} value contains one tag. */
     public static ObjectLink withHreflang(String href, String singleLanguage) {
       return new ObjectLink(href, null, null, null, null, List.of(singleLanguage), null, Map.of());
     }

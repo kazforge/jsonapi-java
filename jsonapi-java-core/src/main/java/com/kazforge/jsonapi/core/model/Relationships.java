@@ -13,7 +13,16 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/** Flat relationships wrapper separating semantic members from pass-through members. */
+/**
+ * Immutable, insertion-ordered relationships object separating relationships from pass-through
+ * members.
+ *
+ * <p>{@link #empty()} represents a present-empty relationships object when attached to a resource;
+ * a Java {@code null} resource component means the member is absent. Factories snapshot both maps,
+ * reject null relationship values, and keep extension and {@code @} members in {@link
+ * #additionalMembers()} rather than treating them as semantic relationships. Extension/profile
+ * authorization remains aggregate-validation policy.
+ */
 public final class Relationships {
 
   private static final String PATH = "/relationships";
@@ -28,10 +37,15 @@ public final class Relationships {
     this.additionalMembers = additionalMembers;
   }
 
+  /** Returns a relationships object with neither relationships nor pass-through members. */
   public static Relationships empty() {
     return new Relationships(Map.of(), Map.of());
   }
 
+  /**
+   * Snapshots semantic relationships and pass-through members, preserving each map's encounter
+   * order and rejecting names shared by both maps. A {@code null} input map is treated as empty.
+   */
   public static Relationships of(
       @Nullable Map<String, @Nullable Relationship> relationships,
       @Nullable Map<String, ?> additionalMembers) {
@@ -55,23 +69,30 @@ public final class Relationships {
     return new Relationships(Collections.unmodifiableMap(relCopy), additionalCopy);
   }
 
+  /** Snapshots semantic relationships with no pass-through members. */
   public static Relationships ofRelationships(
       @Nullable Map<String, @Nullable Relationship> relationships) {
     return of(relationships, Map.of());
   }
 
+  /** Returns the immutable semantic relationship map in encounter order. */
   public Map<String, Relationship> relationships() {
     return members;
   }
 
+  /** Returns the immutable pass-through member map in encounter order. */
   public Map<String, @Nullable Object> additionalMembers() {
     return additionalMembers;
   }
 
+  /** Whether both semantic relationships and pass-through members are empty. */
   public boolean isEmpty() {
     return members.isEmpty() && additionalMembers.isEmpty();
   }
 
+  /**
+   * Returns one immutable wire-member map with relationships first and pass-through members second.
+   */
   public Map<String, @Nullable Object> flatten() {
     Map<String, @Nullable Object> flat = new LinkedHashMap<String, @Nullable Object>();
     flat.putAll(members);

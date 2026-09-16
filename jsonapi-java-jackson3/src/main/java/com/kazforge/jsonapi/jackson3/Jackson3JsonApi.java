@@ -33,10 +33,10 @@ import tools.jackson.databind.json.JsonMapper;
  * an optional resource-write JSON:API version default). The runtime is immutable and safe for
  * concurrent use once created.
  *
- * <p>The runtime coordinates the existing capability pipeline internally — resource mapping with
- * configured decoration, mapped-document validation, document writing, document decoding with
- * aggregate validation, flat DTO binding, and PATCH projection — so ordinary callers never
- * orchestrate those phases manually. The advanced capability APIs remain public and unchanged.
+ * <p>The runtime coordinates the capability pipeline internally: resource mapping with configured
+ * decoration, mapped-document validation, document writing, document decoding with aggregate
+ * validation, flat DTO binding, and PATCH projection — so ordinary callers never orchestrate those
+ * steps manually. The advanced capability APIs are also available.
  *
  * <p>Request-scoped values (representation selection, document envelope, and expected update
  * identity) stay method arguments. An absent per-write {@code jsonapi} member may inherit the

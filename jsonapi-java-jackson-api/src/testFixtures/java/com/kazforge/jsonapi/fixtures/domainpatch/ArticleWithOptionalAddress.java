@@ -7,7 +7,7 @@ import java.util.Optional;
 
 /**
  * Shared low-level PATCH DTO whose ordinary structured attribute is {@code Optional}-wrapped,
- * proving the transparent {@code Optional} qualification wrapper (ADR-013).
+ * proving the transparent {@code Optional} qualification wrapper.
  */
 @JsonApiResource(type = "articles")
 public record ArticleWithOptionalAddress(

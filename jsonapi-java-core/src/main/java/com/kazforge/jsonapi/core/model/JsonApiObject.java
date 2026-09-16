@@ -9,7 +9,12 @@ import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/** Top-level {@code jsonapi} object. */
+/**
+ * Top-level {@code jsonapi} object whose nullable components represent absent members.
+ *
+ * <p>Extension and profile URI lists are immutable snapshots. Construction validates URI syntax;
+ * aggregate validation applies the caller's allowed-profile and extension-member policy.
+ */
 public record JsonApiObject(
     @Nullable String version,
     @Nullable List<String> ext,
@@ -51,6 +56,7 @@ public record JsonApiObject(
             additionalMembers, "/jsonapi", "Invalid jsonapi member name: ", RESERVED_ADDITIONAL);
   }
 
+  /** Creates a {@code jsonapi} object containing only {@code version}. */
   public static JsonApiObject ofVersion(String version) {
     return new JsonApiObject(version, null, null, null, Map.of());
   }

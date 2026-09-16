@@ -14,8 +14,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper
 // authority on the write direction: class-level @JsonApiResource metadata is resolved through the
 // configured mapper's introspection (so class-level mix-ins provide or override it) in direct
 // domain writes and declared to-many relationship target validation. Mix-in mechanics are
-// Jackson-specific and stay local. Binding, PATCH, and registry sections belong to later Jackson 2
-// capabilities.
+// Jackson-specific and stay local; focused specs cover binding, PATCH, and registry authority.
 class ConfiguredResourceMetadataAuthoritySpec extends Specification {
 
   JsonMapper mixinMapper() {

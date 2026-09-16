@@ -35,33 +35,27 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Aggregate document validation requiring full document context.
+ * Validates rules that require complete-document context after local model construction.
  *
- * <p>Call after constructing a {@link JsonApiDocument}. Local construction already enforces
- * single-value invariants; this validator covers identity uniqueness, full linkage,
- * local-identifier consistency, context-specific links, pagination cardinality, and
- * extension/profile member policy according to the supplied {@link ValidationContext}. Identity
- * uniqueness is representation-strict and alias-aware for identifier collections after
- * document-wide id↔lid binding.
+ * <p>The validator covers resource identity uniqueness, alias-aware full linkage, canonical
+ * uniqueness in identifier collections, local-identifier consistency, link location and pagination
+ * cardinality, and extension/profile policy according to a {@link ValidationContext}. Model
+ * constructors remain responsible for invariants that need only the value being created.
  *
- * <p>Operation ({@link DocumentUsage}), endpoint role ({@link PrimaryDataContext}), resource
- * occurrence (primary data versus relationship linkage versus included resources), cardinality (the
- * sealed {@code DocumentData} variant), and link location ({@link LinksContext}) are separate axes.
- * Create and update primary-data shape rules, primary relationship-data requirements, and update
- * endpoint-identity comparison apply only to create/update operations on ordinary resource
- * endpoints with primary-data resource occurrences; relationship endpoints accept linkage primary
- * data and add no resource-shape rules in this increment. A top-level {@code related} link is
- * accepted only on the relationship endpoint role when primary data is present (explicit null
- * linkage counts as present); documents without primary data reject it even on that role. Ordinary
- * resource responses, including related-resource fetches, reject it with {@code
- * INVALID_LINKS_CONTEXT} at {@code /links/related}, and allowed profile member names do not
- * override this restriction. Nested relationship {@code related} links remain accepted. Create
- * identity leniency (an omittable resource {@code id} on the primary create resource, with {@code
- * id} and {@code lid} staying independent) applies only to the primary resource object on the
- * ordinary resource endpoint role. A {@code lid}-only relationship identifier hosted by the primary
- * resource is accepted only as a self-reference to that same primary create resource (matching
- * {@code type} and {@code lid}); unrelated linkage, linkage hosted by included resources, and
- * included resources themselves require {@code id}.
+ * <p>Operation, endpoint role, resource occurrence, cardinality, and link location are independent
+ * axes. Create/update primary-data shape applies only on ordinary resource endpoints; primary
+ * relationship-data requirements and update endpoint identity then apply only to the primary
+ * resource occurrence. Relationship endpoints accept linkage primary data without acquiring those
+ * resource-shape rules.
+ *
+ * <p>A top-level {@code related} link requires relationship-endpoint primary data; explicit null
+ * linkage counts as present, while absent primary data does not. Otherwise validation reports
+ * {@link ValidationRuleCode#INVALID_LINKS_CONTEXT} at {@code /links/related}; profile policy cannot
+ * override this rule, and nested relationship {@code related} links remain valid. Only the primary
+ * create resource may omit {@code id}, with {@code id} and {@code lid} remaining independent. A
+ * {@code lid}-only relationship identifier is valid only when the primary resource hosts it as a
+ * self-reference matching that resource's {@code type + lid}. Other linkage and included resources
+ * require {@code id}.
  */
 public final class JsonApiDocumentValidator {
 
@@ -70,6 +64,10 @@ public final class JsonApiDocumentValidator {
   private static final String PATH_LINKS = "/links";
   private static final String PATH_RELATIONSHIPS = "/relationships";
 
+  /**
+   * Validates {@code document} under {@code context}, throwing a stable rule code and JSON
+   * Pointer-like path in {@link JsonApiValidationException} at the first aggregate failure.
+   */
   public void validate(JsonApiDocument document, ValidationContext context) {
     validateAdditionalMembers(document.additionalMembers(), "", context);
     if (document.meta() != null) {

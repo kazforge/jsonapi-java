@@ -6,7 +6,7 @@ import com.kazforge.jsonapi.annotation.JsonApiResource;
 
 /**
  * JavaBean inheritance on the write path: mapped properties declared on a non-resource base type
- * plus a subclass-owned member (ADR-004 ordinary bean semantics).
+ * plus a subclass-owned member, exercising ordinary bean inheritance semantics.
  */
 public final class InheritedBlogFixtures {
 

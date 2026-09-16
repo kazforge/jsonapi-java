@@ -16,7 +16,13 @@ import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Flat links object with nullable link values and {@code @} / non-reserved pass-through members.
+ * Immutable, insertion-ordered links object with link relations separate from pass-through members.
+ *
+ * <p>A present relation mapped to Java {@code null} preserves an explicit JSON {@code null} link.
+ * {@link #empty()} represents a present-empty links object when attached to a containing value; a
+ * Java {@code null} component means the entire {@code links} member is absent. Construction checks
+ * relation syntax and reserved-name separation. Aggregate validation decides which standard,
+ * profile, extension, and pagination relations are valid at each document location.
  */
 public final class Links {
 
@@ -56,10 +62,15 @@ public final class Links {
     this.additionalMembers = additionalMembers;
   }
 
+  /** Returns a links object with neither link relations nor pass-through members. */
   public static Links empty() {
     return new Links(Map.of(), Map.of());
   }
 
+  /**
+   * Snapshots link relations and pass-through members, preserving explicit-null link values and
+   * each map's encounter order. A {@code null} input map is treated as empty.
+   */
   public static Links of(
       @Nullable Map<String, @Nullable Link> links, @Nullable Map<String, ?> additionalMembers) {
     Map<String, @Nullable Link> linkCopy = copyLinkEntries(links);
@@ -68,22 +79,30 @@ public final class Links {
     return new Links(linkCopy, additionalCopy);
   }
 
+  /** Snapshots link relations, including explicit-null values, with no pass-through members. */
   public static Links ofLinks(@Nullable Map<String, @Nullable Link> links) {
     return of(links, Map.of());
   }
 
+  /** Returns the immutable relation map, preserving explicit-null values and encounter order. */
   public Map<String, @Nullable Link> links() {
     return entries;
   }
 
+  /** Returns the immutable pass-through member map in encounter order. */
   public Map<String, @Nullable Object> additionalMembers() {
     return additionalMembers;
   }
 
+  /** Whether both link relations and pass-through members are empty. */
   public boolean isEmpty() {
     return entries.isEmpty() && additionalMembers.isEmpty();
   }
 
+  /**
+   * Returns one immutable wire-member map with link relations first and pass-through members
+   * second, retaining explicit-null values.
+   */
   public Map<String, @Nullable Object> flatten() {
     Map<String, @Nullable Object> flat = new LinkedHashMap<String, @Nullable Object>();
     flat.putAll(entries);
@@ -91,10 +110,17 @@ public final class Links {
     return OrderedMaps.copyOfNullableValues(flat);
   }
 
+  /**
+   * Whether {@code name} is standard for {@code context}; this does not test whether this instance
+   * contains the name.
+   */
   public boolean hasStandardMember(String name, LinksContext context) {
     return standardMembers(context).contains(name);
   }
 
+  /**
+   * Returns the immutable base-spec link names for a location, before profile or extension policy.
+   */
   public static Set<String> standardMembers(LinksContext context) {
     return switch (context) {
       case TOP_LEVEL -> TOP_LEVEL_STANDARD;

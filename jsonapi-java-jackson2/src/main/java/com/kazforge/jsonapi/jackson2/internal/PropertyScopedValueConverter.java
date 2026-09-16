@@ -30,8 +30,8 @@ import org.jspecify.annotations.Nullable;
  * applies to a supplied member. It has no {@code ResourceMapping} / {@code MappingProperty} /
  * {@code @JsonApiAttribute} / {@code PatchChange} / location dependency: callers supply the
  * containing bean's {@link JavaType}, the member's Jackson-resolved wire name, the
- * conversion-target {@link JavaType}, and the raw wire value, so a later structured JSON:API {@code
- * meta} mapping can reuse the same machinery at its own location.
+ * conversion-target {@link JavaType}, and the raw wire value, so structured JSON:API {@code meta}
+ * mapping can reuse the same machinery at its own location.
  *
  * <p>The member's fully-contextualized property is resolved from the containing bean's {@link
  * com.fasterxml.jackson.databind.deser.BeanDeserializerBase} (the same {@link
@@ -118,10 +118,10 @@ final class PropertyScopedValueConverter {
    * Serializes one mapped property through its configured Jackson property writer.
    *
    * <p>{@code fallbackValue} is used only when no property writer can be resolved; callers pass the
-   * JSON:API-unwrapped value there to preserve the adapter's existing Optional semantics. When a
-   * writer is available, its inclusion and assigned null serializer are preserved. Unsuppressed
-   * values use the writer's contextual serializer against the already-read value. The result
-   * records whether the writer emitted the property.
+   * JSON:API-unwrapped value there to preserve the adapter's Optional semantics. When a writer is
+   * available, its inclusion and assigned null serializer are preserved. Unsuppressed values use
+   * the writer's contextual serializer against the already-read value. The result records whether
+   * the writer emitted the property.
    */
   SerializationResult serialize(
       JavaType beanType,

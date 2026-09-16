@@ -18,6 +18,7 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
+    withJavadocJar()
 }
 
 dependencies {
@@ -54,6 +55,17 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
+tasks.withType<Javadoc>().configureEach {
+    // Unsupported implementation packages are not part of the consumer documentation surface.
+    exclude("**/internal/**")
+    (options as StandardJavadocDocletOptions).apply {
+        addStringOption("tag", "apiNote:a:API Note:")
+        // Keep syntax, reference, HTML, and accessibility checks strict without requiring
+        // low-information documentation for every parameter, return value, or declaration.
+        addBooleanOption("Xdoclint:all,-missing", true)
+    }
+}
+
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
     reports {
@@ -64,6 +76,7 @@ tasks.jacocoTestReport {
 
 tasks.named("check") {
     dependsOn(tasks.jacocoTestReport)
+    dependsOn(tasks.javadoc)
 }
 
 // Fixed repository policy: executable library modules require at least 80% line and branch

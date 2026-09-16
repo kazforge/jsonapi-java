@@ -1,6 +1,6 @@
 package com.kazforge.jsonapi.jackson.diagnostic;
 
-/** Stable failure category for {@link JsonApiDocumentReadException}. */
+/** Stable decoding or validation stage for a {@link JsonApiDocumentReadException}. */
 public enum CodecFailureCategory {
 
   /** Input is not well-formed JSON. */

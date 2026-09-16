@@ -10,9 +10,14 @@ import java.util.Set;
 /**
  * Immutable exact allow-list for parsed include paths, sparse fields, and sort fields.
  *
- * <p>Supplying an instance to {@link JsonApiQueryParser} restricts every named selection category.
- * An empty set rejects every non-empty selection in that category. Empty include and fieldset
- * requests contain no named selection and therefore remain valid.
+ * <p>Include paths match the complete dotted path, fields match by exact resource type and field
+ * name, and sort fields match their directionless token. There are no prefix, wildcard, naming, or
+ * Java-property conversions. Supplying an instance to {@link JsonApiQueryParser} restricts every
+ * named selection category. An empty set rejects every non-empty selection in that category. Empty
+ * include and fieldset requests contain no named selection and therefore remain valid.
+ *
+ * <p>This allow-list does not inspect page, filter, or unknown parameters and does not replace
+ * representation policy, authorization, traversal limits, or query execution policy.
  */
 public record QueryAllowList(
     Set<String> includePaths,
@@ -33,6 +38,7 @@ public record QueryAllowList(
     this(includePaths, sortFields, copyFieldsByResourceType(fieldsByResourceType));
   }
 
+  /** Creates an exact allow-list using include paths, sort fields, and fields by resource type. */
   public static QueryAllowList of(
       Set<String> includePaths,
       Set<String> sortFields,

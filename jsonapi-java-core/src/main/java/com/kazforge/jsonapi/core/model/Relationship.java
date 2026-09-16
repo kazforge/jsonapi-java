@@ -8,7 +8,15 @@ import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/** A JSON:API relationship with optional data, links, meta, and additional members. */
+/**
+ * A JSON:API relationship with optional data, links, meta, and additional members.
+ *
+ * <p>A Java {@code null} {@link #data()} component means the {@code data} member is absent; use a
+ * {@link RelationshipData} variant for explicit-null, to-one, or to-many linkage. Local
+ * construction requires at least one qualifying member and rejects pagination-only link objects.
+ * Aggregate validation applies operation-specific data requirements and link/profile/extension
+ * policy.
+ */
 public record Relationship(
     @Nullable RelationshipData data,
     @Nullable Links links,
@@ -41,18 +49,22 @@ public record Relationship(
     }
   }
 
+  /** Creates a relationship with links and no {@code data} member. */
   public static Relationship linkOnly(Links links) {
     return new Relationship(null, links, null, Map.of());
   }
 
+  /** Creates a relationship with meta and no {@code data} member. */
   public static Relationship metaOnly(Meta meta) {
     return new Relationship(null, null, meta, Map.of());
   }
 
+  /** Creates a relationship with a present {@code data} member. */
   public static Relationship withData(RelationshipData data) {
     return new Relationship(data, null, null, Map.of());
   }
 
+  /** Whether {@code data} is present, including explicit null and present-empty to-many linkage. */
   public boolean hasDataMember() {
     return data != null;
   }

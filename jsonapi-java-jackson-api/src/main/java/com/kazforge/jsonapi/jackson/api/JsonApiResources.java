@@ -27,23 +27,14 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Configured Jackson remains the sole property-naming authority; {@code id} and {@code lid} stay
  * independent roles; ordinary relationships stay linkage-oriented with a present {@code data}
- * member. Failures reuse the existing diagnostic families; no facade-specific exception type is
- * introduced.
+ * member. Failures retain the document-read, core validation, and mapping diagnostic families.
  */
 public interface JsonApiResources {
 
-  /**
-   * Reads exactly one resource DTO. Requires single-resource primary data.
-   *
-   * @param <T> the target DTO type
-   */
+  /** Reads exactly one resource DTO. Requires single-resource primary data. */
   <T> T readOne(String json, Class<T> type);
 
-  /**
-   * Stream variant of {@link #readOne(String, Class)}. The stream is not closed.
-   *
-   * @param <T> the target DTO type
-   */
+  /** Stream variant of {@link #readOne(String, Class)}. The stream is not closed. */
   <T> T readOne(InputStream json, Class<T> type);
 
   /**
@@ -61,16 +52,10 @@ public interface JsonApiResources {
   /**
    * Reads a resource collection. Requires collection primary data; never coerces one resource,
    * null, identifiers, or absent data into a collection.
-   *
-   * @param <T> the target DTO element type
    */
   <T> List<T> readMany(String json, Class<T> type);
 
-  /**
-   * Stream variant of {@link #readMany(String, Class)}. The stream is not closed.
-   *
-   * @param <T> the target DTO element type
-   */
+  /** Stream variant of {@link #readMany(String, Class)}. The stream is not closed. */
   <T> List<T> readMany(InputStream json, Class<T> type);
 
   /**
@@ -88,31 +73,19 @@ public interface JsonApiResources {
   /**
    * Reads one resource DTO together with top-level document state. Requires single-resource primary
    * data.
-   *
-   * @param <T> the target DTO type
    */
   <T> ResourceDocument<T> readOneDocument(String json, Class<T> type);
 
-  /**
-   * Stream variant of {@link #readOneDocument(String, Class)}. The stream is not closed.
-   *
-   * @param <T> the target DTO type
-   */
+  /** Stream variant of {@link #readOneDocument(String, Class)}. The stream is not closed. */
   <T> ResourceDocument<T> readOneDocument(InputStream json, Class<T> type);
 
   /**
    * Reads a resource collection together with top-level document state. Requires collection primary
    * data.
-   *
-   * @param <T> the target DTO element type
    */
   <T> ResourceCollectionDocument<T> readManyDocument(String json, Class<T> type);
 
-  /**
-   * Stream variant of {@link #readManyDocument(String, Class)}. The stream is not closed.
-   *
-   * @param <T> the target DTO element type
-   */
+  /** Stream variant of {@link #readManyDocument(String, Class)}. The stream is not closed. */
   <T> ResourceCollectionDocument<T> readManyDocument(InputStream json, Class<T> type);
 
   /** Writes one resource with default options and returns the JSON document. */

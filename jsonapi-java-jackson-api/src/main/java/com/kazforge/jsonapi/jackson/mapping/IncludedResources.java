@@ -12,6 +12,9 @@ import java.util.Set;
 /**
  * Independently bound {@code included} resources of a domain document envelope.
  *
+ * <p>On an envelope, {@code null} represents an absent {@code included} member; a non-null instance
+ * whose {@link #resources()} list is empty preserves a present {@code "included": []} member.
+ *
  * <p>{@link #resources()} preserves wire order. {@link #find(ResourceIdentity)} resolves a bound
  * DTO instance by structured identity; resources carrying both {@code id} and {@code lid} are
  * indexed under both {@link ResourceIdentity#ofId(String, String)} and {@link

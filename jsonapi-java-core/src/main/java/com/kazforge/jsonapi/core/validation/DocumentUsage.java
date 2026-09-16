@@ -12,8 +12,8 @@ public enum DocumentUsage {
    * {@code lid}-only relationship identifier hosted by the primary resource is accepted only as a
    * self-reference to the same primary resource (matching {@code type} and {@code lid}), while
    * unrelated linkage, linkage hosted by included resources, and included resources themselves
-   * require {@code id}. Core itself is not HTTP-method-aware; a future server layer selects this
-   * usage from its own operation context.
+   * require {@code id}. Core itself is not HTTP-method-aware; callers select this usage from their
+   * operation context.
    */
   CREATE_REQUEST,
   /**

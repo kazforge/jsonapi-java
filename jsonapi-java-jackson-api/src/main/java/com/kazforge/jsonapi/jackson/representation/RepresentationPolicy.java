@@ -3,13 +3,13 @@ package com.kazforge.jsonapi.jackson.representation;
 import java.util.Objects;
 
 /**
- * Immutable application policy governing an explicitly requested representation selection.
+ * Immutable application/runtime policy applied to a per-operation {@link RepresentationSelection}.
  *
  * <p>Defaults deny include traversal, allow every selected sparse field, limit include depth to 10,
  * and limit included resources to 100.
  *
- * <p>This is representation policy, not a complete authorization, persistence, endpoint-security,
- * or query policy.
+ * <p>A selection is a request and cannot override this policy. This policy governs representation
+ * shaping only; it is not complete authorization, persistence, endpoint-security, or query policy.
  */
 public record RepresentationPolicy(
     IncludePolicy includePolicy,

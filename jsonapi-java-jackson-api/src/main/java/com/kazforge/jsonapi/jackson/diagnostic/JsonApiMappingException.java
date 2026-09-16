@@ -5,36 +5,26 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Thrown when the domain-to-resource mapping layer encounters a structural or value problem.
+ * Domain mapping, binding, registry, decoration, or representation failure.
  *
  * <p>Every exception carries a stable {@link MappingDiagnostic} code, an optional {@link
- * #resourceClass()}, and an optional mapping {@link #location()}. The location is the single
- * documented coordinate contract for mapping diagnostics:
+ * #resourceClass()}, and an optional {@link #location()} over JSON:API wire names. Adapter-produced
+ * locations follow one coordinate contract:
  *
  * <ul>
- *   <li>When present, the location is a valid JSON Pointer (RFC 6901) whose segments are
- *       individually escaped ({@code ~} to {@code ~0}, {@code /} to {@code ~1}). Producers that map
- *       one resource object emit <em>resource-relative</em> pointers over JSON:API member names —
- *       {@code /type}, {@code /id}, {@code /lid}, {@code /attributes/headline}, {@code
- *       /relationships/author/data}, {@code /meta}, {@code /relationships/author/meta}, {@code
- *       /relationships/author/data/meta}, {@code /relationships/comments/data/0/meta}. Failures
- *       that have no meaningful member location (missing annotations, registry conflicts,
- *       include-path or fieldset specification errors) carry an <em>absent</em> location; the
- *       identifying names remain in the message. Absence is never encoded as {@code ""}, {@code /},
- *       or a class name.
- *   <li>Typed-envelope composition in the major-specific domain document readers structurally joins
- *       the resource-relative location under a document-relative prefix ({@code /data}, {@code
- *       /data/<index>}, {@code /included/<index>}), so failures escaping that boundary are
- *       document-relative. Document-level conversions without a resource context (such as envelope
- *       {@code metaAs}) report document-relative pointers directly.
- *   <li>The location addresses wire (JSON:API member) names. Java/Jackson logical property names
- *       are translated through the resource mapping before they appear in a location; a logical
- *       name is never silently reinterpreted as pointer syntax.
+ *   <li>Direct resource operations use resource-relative pointers such as {@code
+ *       /attributes/headline} or {@code /relationships/author/data}. Typed-envelope readers prepend
+ *       {@code /data}, {@code /data/<index>}, or {@code /included/<index>} so an escaping failure
+ *       is document-relative.
+ *   <li>Each segment is escaped independently per RFC 6901. Configured Jackson external names,
+ *       rather than logical Java property names, appear in the pointer.
+ *   <li>A failure without a meaningful member location carries {@code null}; absence is never
+ *       encoded as {@code ""}, {@code /}, or a class name.
  * </ul>
  *
  * <p>{@link #location()} is the canonical structural accessor; {@link #propertyPath()} is its
- * plain-string view. Locations are built through {@link MappingLocation}, so malformed or
- * logical-name "pointers" cannot enter the contract.
+ * string view. Document decoding and core document validation failures use {@link
+ * JsonApiDocumentReadException}, not this family.
  */
 public final class JsonApiMappingException extends RuntimeException {
 

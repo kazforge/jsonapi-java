@@ -32,17 +32,16 @@ import tools.jackson.databind.json.JsonMapper;
  * map as an internal {@link PresenceMarker}; the marker deserializer performs the sole inner-type
  * conversion while the bean is constructed with a single {@link JsonMapper#convertValue(Object,
  * JavaType)}. Creators, deserializers, converters, and configured modules therefore remain
- * authoritative (ADR-004). The JSON:API identifier is parsed first and then follows the same
- * target-property deserialization at construction time. Omitted members bind to {@code
- * PatchPresence.omitted()}; supplied unknown members fail with {@link
- * MappingDiagnostic#UNKNOWN_PATCH_MEMBER} at their escaped supplied wire name. Document {@code
- * included} is never read.
+ * authoritative. The JSON:API identifier is parsed first and then follows the same target-property
+ * deserialization at construction time. Omitted members bind to {@code PatchPresence.omitted()};
+ * supplied unknown members fail with {@link MappingDiagnostic#UNKNOWN_PATCH_MEMBER} at their
+ * escaped supplied wire name. Document {@code included} is never read.
  *
- * <p>Recursive structured attributes (ADR-013) use the {@link StructuredValueBinder}: a nested
- * member whose inner type is a deliberately presence-aware PATCH shape is bound as a complete
- * nested {@link PresenceMarker} tree so the single whole-tree {@code convertValue} preserves the
- * strict marker invariant. Deep Jackson construction-failure paths are translated to wire-name
- * locations through the resolved shape metadata.
+ * <p>Recursive structured attributes use the {@link StructuredValueBinder}: a nested member whose
+ * inner type is a deliberately presence-aware PATCH shape is bound as a complete nested {@link
+ * PresenceMarker} tree so the single whole-tree {@code convertValue} preserves the strict marker
+ * invariant. Deep Jackson construction-failure paths are translated to wire-name locations through
+ * the resolved shape metadata.
  */
 public final class DomainPatchDtoBinder {
 
@@ -182,8 +181,8 @@ public final class DomainPatchDtoBinder {
   }
 
   /**
-   * Whole-meta member validation for the typed PATCH DTO role (ADR-014): the shared patchable
-   * member authority (exactly {@code PatchPresence<T>}, no wrapper-level customization) plus, after
+   * Whole-meta member validation for the typed PATCH DTO role: the shared patchable member
+   * authority (exactly {@code PatchPresence<T>}, no wrapper-level customization) plus, after
    * unwrapping one {@code PatchPresence} and at most one {@link java.util.Optional}, an effective
    * Bean / Map / Object target.
    */
@@ -307,7 +306,7 @@ public final class DomainPatchDtoBinder {
 
   /**
    * Binds supplied resource meta as a {@code PatchPresence} member. Supplied meta without a
-   * declared {@code @JsonApiMeta} member is rejected on the strict typed path (ADR-014).
+   * declared {@code @JsonApiMeta} member is rejected on the strict typed path.
    */
   private void bindResourceMeta(
       ResourceObject resource,
@@ -338,8 +337,8 @@ public final class DomainPatchDtoBinder {
   /**
    * Binds supplied relationship meta for each mapped relationship-meta member. Meta participates
    * only when the relationship carries {@code data}; supplied meta for a mapped relationship
-   * without a declared {@code @JsonApiRelationshipMeta} member is rejected on the strict typed path
-   * (ADR-014).
+   * without a declared {@code @JsonApiRelationshipMeta} member is rejected on the strict typed
+   * path.
    */
   private void bindRelationshipMeta(
       ResourceObject resource,

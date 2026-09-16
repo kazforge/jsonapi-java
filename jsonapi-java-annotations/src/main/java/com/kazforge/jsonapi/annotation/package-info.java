@@ -12,8 +12,6 @@
  * are independent JSON:API identity members mapped by distinct role annotations; neither role falls
  * back to the other. Per-linkage identifier meta is an opt-in {@code RelationshipLinkage} value,
  * not an annotation.
- *
- * <p>See ADR-004, ADR-005, ADR-007, ADR-008, and {@code docs/conformance.md}.
  */
 @NullMarked
 package com.kazforge.jsonapi.annotation;

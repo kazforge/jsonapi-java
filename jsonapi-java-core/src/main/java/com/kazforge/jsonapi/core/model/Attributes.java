@@ -12,7 +12,13 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/** Flat attributes wrapper separating semantic members from pass-through members. */
+/**
+ * Immutable, insertion-ordered attributes object separating attributes from pass-through members.
+ *
+ * <p>{@link #empty()} represents a present-empty attributes object when attached to a resource; a
+ * Java {@code null} resource component means the member is absent. Factories snapshot nested open
+ * JSON values and keep extension and {@code @} members in {@link #additionalMembers()}.
+ */
 public final class Attributes {
 
   private static final String PATH = "/attributes";
@@ -27,10 +33,15 @@ public final class Attributes {
     this.additionalMembers = additionalMembers;
   }
 
+  /** Returns an attributes object with neither attributes nor pass-through members. */
   public static Attributes empty() {
     return new Attributes(Map.of(), Map.of());
   }
 
+  /**
+   * Snapshots attributes and pass-through members, preserving explicit-null values and each map's
+   * encounter order. A {@code null} input map is treated as empty.
+   */
   public static Attributes of(
       @Nullable Map<String, ?> attributes, @Nullable Map<String, ?> additionalMembers) {
     Map<String, @Nullable Object> attrCopy = copyMembers(attributes, false);
@@ -39,22 +50,29 @@ public final class Attributes {
     return new Attributes(attrCopy, additionalCopy);
   }
 
+  /** Snapshots semantic attributes with no pass-through members. */
   public static Attributes ofAttributes(@Nullable Map<String, ?> attributes) {
     return of(attributes, Map.of());
   }
 
+  /** Returns the immutable attribute map in encounter order, including explicit-null values. */
   public Map<String, @Nullable Object> attributes() {
     return members;
   }
 
+  /** Returns the immutable pass-through member map in encounter order. */
   public Map<String, @Nullable Object> additionalMembers() {
     return additionalMembers;
   }
 
+  /** Whether both attributes and pass-through members are empty. */
   public boolean isEmpty() {
     return members.isEmpty() && additionalMembers.isEmpty();
   }
 
+  /**
+   * Returns one immutable wire-member map with attributes first and pass-through members second.
+   */
   public Map<String, @Nullable Object> flatten() {
     Map<String, @Nullable Object> flat = new LinkedHashMap<String, @Nullable Object>();
     flat.putAll(members);

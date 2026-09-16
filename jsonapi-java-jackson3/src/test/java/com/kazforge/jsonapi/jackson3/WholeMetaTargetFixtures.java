@@ -20,7 +20,7 @@ public final class WholeMetaTargetFixtures {
 
   /**
    * Concrete POJO carrying root {@code @JsonTypeInfo}; its root deserializer is wrapped by a {@code
-   * TypeDeserializer} (decorated), yet it is still an object-shaped whole-meta target (ADR-014).
+   * TypeDeserializer} (decorated), yet it is still an object-shaped whole-meta target.
    */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kind")
   @JsonSubTypes({@JsonSubTypes.Type(value = ConcreteTypedMeta.class, name = "concrete")})
@@ -63,7 +63,7 @@ public final class WholeMetaTargetFixtures {
 
   /**
    * Abstract polymorphic whole-meta base type: Jackson materializes the concrete subtype from the
-   * {@code kind} discriminator through the property/root {@code TypeDeserializer} (ADR-014).
+   * {@code kind} discriminator through the property/root {@code TypeDeserializer}.
    */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "kind")
   @JsonSubTypes({@JsonSubTypes.Type(value = SourceMeta.class, name = "source")})

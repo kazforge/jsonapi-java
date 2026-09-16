@@ -26,8 +26,8 @@ import java.io.IOException
 
 // Jackson 2 mechanism probes for property-scoped serialization authority: property serializers,
 // null serializers (property- and module-assigned), inclusion, one accessor read per local member
-// render, mix-in serializers, and root-wrapping isolation. Identifier conversion and deserialization
-// authorities belong to the flat-read binder, a later Jackson 2 capability.
+// render, mix-in serializers, and root-wrapping isolation. Flat-read binder specs cover identifier
+// conversion and deserialization authority.
 class PropertyScopedAuthoritySpec extends Specification {
 
   def "attribute and both meta locations use direct property serializers"() {

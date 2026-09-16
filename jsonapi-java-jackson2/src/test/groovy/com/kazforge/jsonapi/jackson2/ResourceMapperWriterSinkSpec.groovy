@@ -13,7 +13,7 @@ import spock.lang.Shared
 import spock.lang.Specification
 import com.fasterxml.jackson.databind.json.JsonMapper
 
-// Representative mapped-document composition through every existing Jackson 2 writer sink: a
+// Representative mapped-document composition through every Jackson 2 writer sink: a
 // sparse-fieldset mapping that traverses an omitted linking relationship must validate and write
 // identically through each sink, with the writer composing the linkage-exemption provenance.
 class ResourceMapperWriterSinkSpec extends Specification {
