@@ -11,7 +11,13 @@ import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/** Flat, insertion-ordered JSON-compatible metadata members. */
+/**
+ * Immutable, insertion-ordered JSON-compatible metadata members.
+ *
+ * <p>{@link #empty()} represents a present-empty meta object when attached to a containing value; a
+ * Java {@code null} component means the member is absent. Explicit-null member values are
+ * preserved.
+ */
 public final class Meta {
 
   private final Map<String, @Nullable Object> members;
@@ -20,10 +26,15 @@ public final class Meta {
     this.members = members;
   }
 
+  /** Returns present-empty metadata. */
   public static Meta empty() {
     return new Meta(Map.of());
   }
 
+  /**
+   * Returns a deep immutable snapshot of the supplied open-JSON members, treating {@code null} as
+   * empty metadata.
+   */
   public static Meta of(@Nullable Map<String, ?> members) {
     if (members == null || members.isEmpty()) {
       return empty();
@@ -37,10 +48,12 @@ public final class Meta {
     return new Meta(OrderedMaps.copyOfNullableValues(copy));
   }
 
+  /** Returns the immutable members in encounter order, including explicit-null values. */
   public Map<String, @Nullable Object> members() {
     return members;
   }
 
+  /** Whether this present meta object has no members. */
   public boolean isEmpty() {
     return members.isEmpty();
   }

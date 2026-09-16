@@ -33,7 +33,7 @@ import java.util.Objects;
  * <p>Every overload declares {@code throws IOException}, consistent with the Jackson 2 writer.
  * Jackson parse failures become payload-safe {@link JsonApiDocumentReadException} values with
  * {@link CodecFailureCategory#MALFORMED_JSON}; unrelated source {@link IOException} values
- * propagate unchanged.
+ * propagate directly.
  */
 public final class JsonApiDocumentReader {
 

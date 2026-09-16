@@ -15,8 +15,8 @@ import tools.jackson.databind.module.SimpleModule;
 
 /**
  * Lets derived binder mappers round-trip core {@link Meta} when converting built-in {@code
- * ResourceIdentifier} values that carry identifier meta (ADR-016). Document codecs remain
- * token-driven and do not use this module.
+ * ResourceIdentifier} values that carry identifier meta. Document codecs remain token-driven and do
+ * not use this module.
  */
 public final class MetaBindingModule extends SimpleModule {
 

@@ -31,7 +31,7 @@ final class WireObjectMembers {
 
   /**
    * Variant that duplicate-checks only relevant members. Ignored unknown members are tolerated,
-   * including repeats; all recognized members keep the existing {@code DUPLICATE_MEMBER} behavior.
+   * including repeats; recognized duplicates report {@code DUPLICATE_MEMBER}.
    */
   static void forEachMember(
       JsonParser parser,

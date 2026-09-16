@@ -17,25 +17,24 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Whole-meta target-shape rules for the read/write domain-mapping roles (ADR-014).
+ * Whole-meta target-shape rules for the read/write domain-mapping roles.
  *
  * <p>The mapping cache/resolver is deliberately kind-agnostic; each consuming entry point validates
  * its role's wrapper chain against these rules. Read/write mapping allows at most one {@link
  * Optional} wrapper around a Bean / {@link Map} / {@link Object} target. Identifier meta on an
- * opt-in {@code RelationshipLinkage<T, M>} follows the same object-shape rule for {@code M}
- * (ADR-016).
+ * opt-in {@code RelationshipLinkage<T, M>} follows the same object-shape rule for {@code M}.
  *
  * <p>Whether an effective target is a legal whole-meta object target is decided by Jackson, not a
  * manually maintained scalar taxonomy: after rejecting primitives, containers, and the already
  * unwrapped {@link Optional}/{@code PatchPresence} raws, a target is valid iff its root
- * deserializer reports the POJO {@link LogicalType} — the same structured-value signal ADR-013's
- * bean boundary is built on, read through root-level decoration. This accepts records, POJOs,
- * constructor-bound beans, and root-polymorphic POJOs whose deserializer is wrapped by a {@code
- * TypeDeserializer} (concrete or abstract polymorphic types), while rejecting JDK scalars ({@code
- * String}, {@code Character}, {@code Boolean}, {@code Number}, {@code java.time}, {@code
- * java.math}, {@link java.util.UUID}, {@link java.net.URI}/{@link java.net.URL}), enums,
- * containers, and custom scalar deserializers (which report a non-POJO or null logical type).
- * {@code Object} and {@link Map}-like targets are valid and atomic.
+ * deserializer reports the POJO {@link LogicalType}, the same structured-value signal used by the
+ * bean boundary, read through root-level decoration. This accepts records, POJOs, constructor-bound
+ * beans, and root-polymorphic POJOs whose deserializer is wrapped by a {@code TypeDeserializer}
+ * (concrete or abstract polymorphic types), while rejecting JDK scalars ({@code String}, {@code
+ * Character}, {@code Boolean}, {@code Number}, {@code java.time}, {@code java.math}, {@link
+ * java.util.UUID}, {@link java.net.URI}/{@link java.net.URL}), enums, containers, and custom scalar
+ * deserializers (which report a non-POJO or null logical type). {@code Object} and {@link Map}-like
+ * targets are valid and atomic.
  */
 final class WholeMetaTarget {
 
@@ -60,7 +59,7 @@ final class WholeMetaTarget {
    * throwing {@link MappingDiagnostic#INVALID_META_TARGET} at the property's resource-relative wire
    * location when a declared target is not Bean / Map / Object with at most one {@link Optional}
    * wrapper. The mapping cache/resolver stays kind-agnostic; the consuming entry point invokes this
-   * shared rule itself (ADR-014).
+   * shared rule itself.
    */
   void validateReadWriteTargets(ResourceMapping mapping, Class<?> rawType) {
     MappingProperty resourceMeta = mapping.resourceMeta();

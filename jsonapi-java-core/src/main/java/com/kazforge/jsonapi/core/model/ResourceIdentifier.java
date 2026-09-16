@@ -9,7 +9,13 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/** Resource identifier with type, id, lid, meta, and additional members. */
+/**
+ * Resource identifier with independent {@code id} and {@code lid} members.
+ *
+ * <p>At least one identity member is required, and both may be present. {@link #identityKey()} uses
+ * {@code id} when both are present; aggregate validation uses the pair to bind document-scoped
+ * aliases.
+ */
 public record ResourceIdentifier(
     String type,
     @Nullable String id,
@@ -42,10 +48,12 @@ public record ResourceIdentifier(
             RESERVED_ADDITIONAL);
   }
 
+  /** Creates an identifier with {@code type} and {@code id}. */
   public static ResourceIdentifier of(String type, String id) {
     return new ResourceIdentifier(type, id, null, null, Map.of());
   }
 
+  /** Creates an identifier with {@code type} and {@code lid}. */
   public static ResourceIdentifier withLid(String type, String lid) {
     return new ResourceIdentifier(type, null, lid, null, Map.of());
   }
@@ -59,14 +67,17 @@ public record ResourceIdentifier(
     }
   }
 
+  /** Whether {@code id} is present; empty and whitespace values still count as present. */
   public boolean hasId() {
     return id != null;
   }
 
+  /** Whether {@code lid} is present; empty and whitespace values still count as present. */
   public boolean hasLid() {
     return lid != null;
   }
 
+  /** Returns the {@code id} identity when present, otherwise the required {@code lid} identity. */
   public ResourceIdentity identityKey() {
     if (hasId()) {
       return ResourceIdentity.ofId(type, Objects.requireNonNull(id));

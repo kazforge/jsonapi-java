@@ -5,8 +5,7 @@
  * ordered null-preserving collection copies, and additional-member copy helpers used by {@code
  * core.model} and {@code core.validation}. Inbound JSON Pointer syntax lives in {@link
  * com.kazforge.jsonapi.core.internal.SyntaxValidators}; {@link
- * com.kazforge.jsonapi.core.internal.JsonPointers} is emit/escape only. See ADR-008 for nullness
- * policy.
+ * com.kazforge.jsonapi.core.internal.JsonPointers} is emit/escape only.
  */
 @NullMarked
 package com.kazforge.jsonapi.core.internal;

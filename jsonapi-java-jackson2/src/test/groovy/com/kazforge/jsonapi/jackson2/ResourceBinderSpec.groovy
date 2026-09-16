@@ -571,7 +571,7 @@ class ResourceBinderSpec extends Specification {
     ex.resourceClass() == DirectionalityReadFixtures.ViewRestricted
   }
 
-  def "Jackson 2 permissive primitive-null default applies unchanged"() {
+  def "Jackson 2 permissive primitive-null default applies"() {
     given:
     def localBinder = JsonApiJackson2.resourceBinder(JsonMapper.builder().build())
 

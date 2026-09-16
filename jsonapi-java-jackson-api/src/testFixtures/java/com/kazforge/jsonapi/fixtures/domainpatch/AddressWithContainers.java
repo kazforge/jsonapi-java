@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * Ordinary structured domain value type with {@code Set}/{@code array}/{@code Map} members, proving
  * the low-level path treats each as one atomic replacement boundary rather than recursing into
- * elements or map keys (ADR-013).
+ * elements or map keys.
  */
 public record AddressWithContainers(
     String street, Set<String> aliases, String[] initials, Map<String, Integer> scores) {

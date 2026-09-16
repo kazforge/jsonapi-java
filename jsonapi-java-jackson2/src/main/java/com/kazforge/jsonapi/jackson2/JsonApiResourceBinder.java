@@ -17,21 +17,21 @@ import java.util.Objects;
  * never directly. The binder is safe for concurrent use once created. Binding uses the mapping
  * definitions (resolver and cache) and one {@link JsonMapper#convertValue(Object, JavaType)} per
  * resource, so Jackson's logical property model, creators, deserializers, converters, naming,
- * mix-ins, and configured modules remain authoritative (ADR-004). JSON:API annotations assign
- * semantic roles; unannotated Jackson-visible properties do not participate, except the
- * conventional identifier whose Jackson external name is {@code id}. Wire {@code id} binds only to
- * the id role and wire {@code lid} only to the {@code @JsonApiLocalId} role; neither member ever
- * falls back into the other role's property.
+ * mix-ins, and configured modules remain authoritative. JSON:API annotations assign semantic roles;
+ * unannotated Jackson-visible properties do not participate, except the conventional identifier
+ * whose Jackson external name is {@code id}. Wire {@code id} binds only to the id role and wire
+ * {@code lid} only to the {@code @JsonApiLocalId} role; neither member ever falls back into the
+ * other role's property.
  *
  * <p>Binding is read-only and document-first: callers pass an already-validated {@link
- * ResourceObject} and the binder never parses JSON nor reads document {@code included} (ADR-006,
- * ADR-010). Relationship properties receive linkage only — {@link
+ * ResourceObject} and the binder never parses JSON nor reads document {@code included}.
+ * Relationship properties receive linkage only — {@link
  * com.kazforge.jsonapi.core.model.ResourceIdentifier} (and {@link java.util.Optional}, {@link
  * java.util.List}, {@link java.util.Set}, or array variants) bind from linkage directly; any other
  * target class requires a registered {@link
  * com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper}. Built-in identifier linkage
- * preserves {@code ResourceIdentifier.meta} (ADR-016) and still drops additional members. Write
- * overlay of application-owned identifier meta uses opt-in {@link
+ * preserves {@code ResourceIdentifier.meta} and still drops additional members. Write overlay of
+ * application-owned identifier meta uses opt-in {@link
  * com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage}; it is not relationship-level {@code
  * meta}.
  *

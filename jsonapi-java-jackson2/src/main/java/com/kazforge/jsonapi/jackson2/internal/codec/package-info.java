@@ -1,13 +1,7 @@
 /**
- * Self-contained Jackson 2 JSON:API document codec: token-driven wire decoding, wire emission, and
- * document module registration. Not a public API surface.
- *
- * <p>Document, resource, error, and link readers decode through token primitives, object-member
- * iteration, open-value decoding, and shared meta decoding composed from above; nested readers
- * never call back into the top-level document orchestrator. The top-level document reader remains
- * the composition root for primary data, while open values recurse only through the dedicated
- * open-value owner. Public capability factories may depend on this package; this package depends
- * only on core, Jackson-major-neutral contracts and helpers, and Jackson 2.
+ * Unsupported Jackson 2 token-level JSON:API document decoding, emission, and module registration.
+ * Consumers use {@link com.kazforge.jsonapi.jackson2.JsonApiDocumentReader} and {@link
+ * com.kazforge.jsonapi.jackson2.JsonApiDocumentWriter} instead of depending on this package.
  */
 @NullMarked
 package com.kazforge.jsonapi.jackson2.internal.codec;

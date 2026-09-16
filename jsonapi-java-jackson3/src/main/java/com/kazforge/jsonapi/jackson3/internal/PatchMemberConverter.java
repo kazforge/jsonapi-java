@@ -171,9 +171,9 @@ final class PatchMemberConverter {
   }
 
   /**
-   * Converts one whole-meta value atomically on the low-level path (ADR-014). Reuses the same
-   * property-scoped Jackson authority as attribute conversion, but the caller supplies the
-   * location-specific meta location so failures never surface an attribute-oriented pointer.
+   * Converts one whole-meta value atomically on the low-level path. Reuses the same property-scoped
+   * Jackson authority as attribute conversion, but the caller supplies the location-specific meta
+   * location so failures never surface an attribute-oriented pointer.
    */
   @Nullable Object convertWholeMeta(
       MappingProperty property,
@@ -282,7 +282,7 @@ final class PatchMemberConverter {
     return targetType.isTypeOrSubTypeOf(Set.class) && !(intermediate instanceof Set);
   }
 
-  /** Unwraps a single exact {@code PatchPresence<T>} wrapper, leaving other types unchanged. */
+  /** Unwraps a single exact {@code PatchPresence<T>} wrapper and returns other types as-is. */
   static JavaType unwrapPatchPresence(JavaType type) {
     return type.getRawClass() == PatchPresence.class && type.containedTypeCount() == 1
         ? type.containedType(0)

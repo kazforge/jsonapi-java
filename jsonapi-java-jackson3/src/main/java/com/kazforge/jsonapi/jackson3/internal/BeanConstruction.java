@@ -20,9 +20,9 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Both binders supply a {@link FailurePathTranslator} so deep Jackson construction-failure paths
  * are translated into resource-relative {@link MappingLocation} pointers through the resource
- * mapping (and, for nested structured members, through the resolved shape metadata per ADR-013).
- * Translators never emit Jackson logical property names as locations: unmappable paths translate to
- * an absent location.
+ * mapping and, for nested structured members, through the resolved shape metadata. Translators
+ * never emit Jackson logical property names as locations: unmappable paths translate to an absent
+ * location.
  */
 final class BeanConstruction {
 
@@ -77,7 +77,7 @@ final class BeanConstruction {
    * throwing creators) as {@link ValueInstantiationException}. Both mean the bean could not be
    * constructed from the supplied inputs, so both map to {@link
    * MappingDiagnostic#MISSING_CREATOR_INPUT}; all other coercion, type, or property failures map to
-   * {@link MappingDiagnostic#UNSUPPORTED_ATTRIBUTE_VALUE} (milestone Phase 2.9 contract).
+   * {@link MappingDiagnostic#UNSUPPORTED_ATTRIBUTE_VALUE}.
    */
   private static boolean isCreatorInputFailure(Throwable failure) {
     if (failure instanceof ValueInstantiationException) {

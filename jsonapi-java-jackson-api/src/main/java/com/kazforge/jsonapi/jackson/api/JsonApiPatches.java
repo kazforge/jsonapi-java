@@ -14,22 +14,19 @@ import java.lang.reflect.Type;
  * readCommand} / {@code bindCommand}) remains the explicit lower-level, generic, and infrastructure
  * projection of the same validated update document. Neither path depends on global resource-type
  * registration and neither reads {@code included}.
+ *
+ * <p>Both paths describe requested changes only. They do not authorize a request, load domain
+ * state, resolve conflicts, or apply mutations; applications own those decisions.
  */
 public interface JsonApiPatches {
 
   /**
    * Decodes, validates as an update request, and binds the document directly into the caller's
    * PATCH DTO.
-   *
-   * @param <T> the PATCH DTO type
    */
   <T> T readPatch(String json, Class<T> dtoType);
 
-  /**
-   * Stream variant of {@link #readPatch(String, Class)}. The stream is not closed.
-   *
-   * @param <T> the PATCH DTO type
-   */
+  /** Stream variant of {@link #readPatch(String, Class)}. The stream is not closed. */
   <T> T readPatch(InputStream json, Class<T> dtoType);
 
   /**
@@ -47,16 +44,10 @@ public interface JsonApiPatches {
   /**
    * Decodes, validates as an update request, and binds only the supplied changes into a {@link
    * PatchCommand}.
-   *
-   * @param <T> the annotated DTO type carrying the resource identity
    */
   <T> PatchCommand<T> readCommand(String json, Class<T> resourceType);
 
-  /**
-   * Stream variant of {@link #readCommand(String, Class)}. The stream is not closed.
-   *
-   * @param <T> the annotated DTO type carrying the resource identity
-   */
+  /** Stream variant of {@link #readCommand(String, Class)}. The stream is not closed. */
   <T> PatchCommand<T> readCommand(InputStream json, Class<T> resourceType);
 
   /**
@@ -81,8 +72,6 @@ public interface JsonApiPatches {
   /**
    * Binds an already-validated update document into the caller's PATCH DTO without re-parsing or
    * re-validating.
-   *
-   * @param <T> the PATCH DTO type
    */
   <T> T bindPatch(JsonApiDocument document, Class<T> dtoType);
 
@@ -96,8 +85,6 @@ public interface JsonApiPatches {
   /**
    * Binds an already-validated update document into a {@link PatchCommand} without re-parsing or
    * re-validating.
-   *
-   * @param <T> the annotated DTO type carrying the resource identity
    */
   <T> PatchCommand<T> bindCommand(JsonApiDocument document, Class<T> resourceType);
 

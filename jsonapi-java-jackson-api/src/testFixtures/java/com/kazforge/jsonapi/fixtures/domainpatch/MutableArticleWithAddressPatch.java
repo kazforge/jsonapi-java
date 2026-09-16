@@ -7,8 +7,8 @@ import com.kazforge.jsonapi.jackson.patch.PatchPresence;
 
 /**
  * Direct typed PATCH DTO wrapping a JavaBean-style nested {@link MutableAddressPatch} shape,
- * proving typed-path recursion applies to ordinary Jackson-bean semantics, not records specifically
- * (ADR-013).
+ * proving typed-path recursion applies to ordinary Jackson-bean semantics, not records
+ * specifically.
  */
 @JsonApiResource(type = "articles")
 public record MutableArticleWithAddressPatch(

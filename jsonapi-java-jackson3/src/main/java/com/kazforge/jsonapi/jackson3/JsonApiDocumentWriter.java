@@ -56,12 +56,14 @@ public final class JsonApiDocumentWriter {
     return mapper;
   }
 
+  /** Validates a plain document against the bound context, then returns its JSON string. */
   public String writeValueAsString(JsonApiDocument document) {
     Objects.requireNonNull(document, DOCUMENT_PARAM);
     validator.validate(document, context);
     return mapper.writeValueAsString(document);
   }
 
+  /** Validates a plain document against the bound context, then returns its UTF-8 JSON bytes. */
   public byte[] writeValueAsBytes(JsonApiDocument document) {
     Objects.requireNonNull(document, DOCUMENT_PARAM);
     validator.validate(document, context);

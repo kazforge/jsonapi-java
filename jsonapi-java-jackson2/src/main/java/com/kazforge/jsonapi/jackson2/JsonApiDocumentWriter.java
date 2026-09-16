@@ -22,9 +22,8 @@ import java.util.Set;
  *
  * <p>Aggregate validation always runs before generator output starts, so validation failure cannot
  * leave a partially written document. Validation failures surface as unchecked {@link
- * com.kazforge.jsonapi.core.validation.JsonApiValidationException}; emission failures propagate
- * Jackson 2's checked {@link IOException} mechanics unchanged rather than introducing a new
- * exception family.
+ * com.kazforge.jsonapi.core.validation.JsonApiValidationException}; emission failures use Jackson
+ * 2's checked {@link IOException} model rather than a library-specific exception family.
  *
  * <p>Writing a {@link MappedDocument} is provenance-aware: this writer composes its bound context
  * with the mapping's sparse-fieldset linkage exemptions before validation, so callers never

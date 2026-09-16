@@ -16,7 +16,7 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Whole-meta declaration shapes shared across Jackson majors (ADR-014): valid Object/renamed
+ * Whole-meta declaration shapes shared across Jackson majors: valid Object/renamed
  * relationship-meta targets, missing-meta PATCH DTOs, and invalid scalar/list/JDK-scalar
  * declarations. Polymorphic {@code TypeDeserializer} targets stay adapter-local.
  */
@@ -103,7 +103,7 @@ public final class WholeMetaTargetFixtures {
       @JsonApiAttribute PatchPresence<String> title,
       @JsonApiMeta PatchPresence<PatchPresence<String>> meta) {}
 
-  /** Typed PATCH DTO without any meta member: supplied meta must be rejected (ADR-014). */
+  /** Typed PATCH DTO without any meta member: supplied meta must be rejected. */
   @JsonApiResource(type = "articles")
   public record NoMetaPatch(
       @JsonApiId String id,

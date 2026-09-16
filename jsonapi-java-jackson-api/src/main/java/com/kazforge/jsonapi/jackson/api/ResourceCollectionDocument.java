@@ -9,19 +9,19 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Optional Level-1 typed read result for a resource collection plus document-level state.
+ * Level-1 typed read result for a resource collection plus selected document-level state.
  *
- * <p>Carries the bound primary DTOs in wire order together with top-level {@code meta}, {@code
- * links}, {@code jsonapi}, and compound {@code included} state. Java {@code null} components mean
- * the member was absent. Included resources are carried as validated core {@link ResourceObject}
- * values in wire order, never bound to DTOs: included state may be heterogeneous while this path
- * stays homogeneous and registry-free, so DTO binding of included resources remains advanced.
+ * <p>{@link #resources()} is always the present primary {@code data} array in wire order; an empty
+ * list preserves {@code "data": []} and never means absent data. For nullable document-level
+ * components, Java {@code null} means the member was absent; in particular, a non-null empty {@code
+ * included} list preserves {@code "included": []}.
+ *
+ * <p>Included resources are carried as validated core {@link ResourceObject} values, never bound to
+ * DTOs: included state may be heterogeneous while this path stays homogeneous and registry-free.
  * Included resources are never hydrated into relationship properties. The result is returned only
  * after complete document validation. Error documents, identifier primary data, and additional
  * document members are not carried; reads requiring those states use the documents facet or an
  * advanced envelope instead.
- *
- * @param <T> the bound primary DTO element type
  */
 public record ResourceCollectionDocument<T>(
     List<T> resources,

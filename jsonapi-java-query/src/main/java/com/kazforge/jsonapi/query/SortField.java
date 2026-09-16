@@ -2,7 +2,11 @@ package com.kazforge.jsonapi.query;
 
 import java.util.Objects;
 
-/** Immutable direction plus the directionless JSON:API field token from one sort item. */
+/**
+ * Immutable direction plus the exact directionless JSON:API field token from one sort item.
+ *
+ * <p>The token is not trimmed, renamed, or resolved as a Java property.
+ */
 public record SortField(String field, SortDirection direction) {
 
   public SortField {

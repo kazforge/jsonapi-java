@@ -9,7 +9,8 @@ import java.util.Objects;
  *
  * <p>Carries the converted DTO identifier and exactly the supplied mapped attribute and
  * relationship changes. Does not construct a complete DTO, resolve {@code included}, or mutate
- * domain state — applications authorize and apply the command.
+ * domain state. The identity identifies the requested target but grants no access; applications
+ * authorize the request and decide how to apply each atomic or structured change.
  */
 public record PatchCommand<T>(Class<T> resourceType, Object identity, List<PatchChange> changes) {
 

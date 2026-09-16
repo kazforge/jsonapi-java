@@ -78,6 +78,7 @@ public record ValidationContext(
                 "relationshipPaginationHints must not be null"));
   }
 
+  /** Returns base-spec response validation for an ordinary resource endpoint with no allowances. */
   public static ValidationContext defaults() {
     return new ValidationContext(
         DocumentUsage.RESPONSE_OR_OTHER,
@@ -90,6 +91,7 @@ public record ValidationContext(
         null);
   }
 
+  /** Returns a context with the selected operation while preserving every other setting. */
   public ValidationContext withDocumentUsage(DocumentUsage usage) {
     return new ValidationContext(
         usage,

@@ -79,6 +79,7 @@ public final class JsonApiResourceMapper {
     this.inclusionEngine = new CompoundInclusionEngine(writer);
   }
 
+  /** Maps a domain object using a Jackson type inferred from its concrete runtime class. */
   public ResourceObject toResource(Object resource) {
     return writer.toResource(resource, writer.inferredType(resource));
   }
@@ -88,10 +89,12 @@ public final class JsonApiResourceMapper {
     return writer.toResource(resource, resourceType);
   }
 
+  /** Maps a domain object to a single-resource document without envelope members. */
   public JsonApiDocument toDocument(Object resource) {
     return toDocument(resource, null);
   }
 
+  /** Maps a domain object to a single-resource document with optional envelope members. */
   public JsonApiDocument toDocument(Object resource, @Nullable DocumentEnvelope envelope) {
     JavaType resourceType = writer.inferredType(resource);
     return toDocument(resource, resourceType, envelope);
@@ -183,9 +186,9 @@ public final class JsonApiResourceMapper {
    * {@link #toMappedDocument}, a primary resource with neither {@code id} nor {@code lid} value
    * maps with both members absent instead of failing; core {@code CREATE_REQUEST} validation owns
    * that leniency when the document is written. Compound inclusion likewise traverses an
-   * identity-less primary while included resources still require identity, and related linkage
-   * extraction is unchanged. Returns a {@link MappedDocument} carrying sparse-fieldset linkage
-   * provenance like {@link #toMappedDocument}.
+   * identity-less primary while included resources still require identity, and related linkage uses
+   * normal extraction. Returns a {@link MappedDocument} carrying sparse-fieldset linkage provenance
+   * like {@link #toMappedDocument}.
    */
   public MappedDocument toMappedCreateDocument(
       Object resource,
@@ -218,10 +221,12 @@ public final class JsonApiResourceMapper {
     return new MappedDocument(document, includedResult.sparseFieldsetLinkageExemptions());
   }
 
+  /** Maps domain objects to a resource-collection document without envelope members. */
   public JsonApiDocument toCollectionDocument(Iterable<?> resources) {
     return toCollectionDocument(resources, null);
   }
 
+  /** Maps domain objects to a resource-collection document with optional envelope members. */
   public JsonApiDocument toCollectionDocument(
       Iterable<?> resources, @Nullable DocumentEnvelope envelope) {
     Objects.requireNonNull(resources, RESOURCES);

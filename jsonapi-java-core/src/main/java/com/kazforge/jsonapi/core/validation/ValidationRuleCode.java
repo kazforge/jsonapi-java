@@ -5,7 +5,7 @@ package com.kazforge.jsonapi.core.validation;
  *
  * <p>Public diagnostic contract for {@link JsonApiValidationException}: callers may match on these
  * codes rather than exception messages. Codes cover both local construction failures and aggregate
- * validator failures. See {@code docs/conformance.md} for which rules are enforced.
+ * validator failures; the exception path identifies the failing location.
  */
 public enum ValidationRuleCode {
   INVALID_MEMBER_NAME,

@@ -32,6 +32,7 @@ public final class JsonApiQueryException extends RuntimeException {
     this.parameterName = parameterName;
   }
 
+  /** Returns the stable machine-readable query diagnostic. */
   public QueryDiagnostic diagnostic() {
     return diagnostic;
   }

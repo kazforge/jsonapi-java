@@ -121,7 +121,7 @@ public final class JsonApiJackson2 {
    * Returns a resource mapper with the given identifier converter and decoration registry. Derives
    * a new mapper via {@link JsonMapper#rebuild()} and never mutates the caller's mapper.
    *
-   * <p>Decorators add only {@code ResourceObject.links} and {@code Relationship.links} for existing
+   * <p>Decorators add only {@code ResourceObject.links} and {@code Relationship.links} for mapped
    * mapped relationships. They never replace type/id/attributes/linkage/meta/inclusion or resurrect
    * a fieldset-omitted relationship.
    */

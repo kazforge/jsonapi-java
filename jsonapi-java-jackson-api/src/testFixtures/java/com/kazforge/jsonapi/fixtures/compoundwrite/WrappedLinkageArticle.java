@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Compound-inclusion graph whose relationship targets are wrapped in {@link RelationshipLinkage} so
- * include traversal walks the unwrapped {@link Person} and {@link Comment} resources (ADR-016).
+ * include traversal walks the unwrapped {@link Person} and {@link Comment} resources.
  */
 @JsonApiResource(type = "articles")
 public record WrappedLinkageArticle(

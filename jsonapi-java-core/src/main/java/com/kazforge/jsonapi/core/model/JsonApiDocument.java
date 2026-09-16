@@ -69,15 +69,14 @@ public record JsonApiDocument(
     }
   }
 
+  /** Creates a document with a present {@code data} member, including explicit-null data. */
   public static JsonApiDocument withData(DocumentData data) {
     return new JsonApiDocument(data, null, null, null, null, null, Map.of());
   }
 
   /**
-   * Creates a document with one error object in its present {@code errors} member.
-   *
-   * <p>Delegates to {@link #withErrors(List)} so error-list validation and snapshotting remain in
-   * one construction path.
+   * Creates a document with one error object in its present {@code errors} member. A null value is
+   * rejected as a null collection element at {@code /errors/0}.
    */
   public static JsonApiDocument withError(ErrorObject error) {
     return withErrors(Collections.singletonList(error));
@@ -92,18 +91,22 @@ public record JsonApiDocument(
     return new JsonApiDocument(null, errors, null, null, null, null, Map.of());
   }
 
+  /** Creates a document whose required content member is {@code meta}. */
   public static JsonApiDocument withMeta(Meta meta) {
     return new JsonApiDocument(null, null, meta, null, null, null, Map.of());
   }
 
+  /** Whether {@code data} is present, including explicit null and present-empty collections. */
   public boolean hasDataMember() {
     return data != null;
   }
 
+  /** Whether {@code errors} is present, including a present-empty array. */
   public boolean hasErrorsMember() {
     return errors != null;
   }
 
+  /** Whether {@code included} is present, including a present-empty array. */
   public boolean hasIncludedMember() {
     return included != null;
   }

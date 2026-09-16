@@ -452,7 +452,7 @@ public final class DomainResourceWriter {
   /**
    * Whole-meta declared-target validation for the write mapping role: Bean / Map / Object with at
    * most one {@link Optional} wrapper. Validation lives at the consuming entry point, not the
-   * kind-agnostic resolver (ADR-014).
+   * kind-agnostic resolver.
    */
   private void validateMetaTargets(ResourceMapping mapping, Class<?> rawType) {
     wholeMetaTarget.validateReadWriteTargets(mapping, rawType);
@@ -782,8 +782,7 @@ public final class DomainResourceWriter {
    * {@code Object.class} always yields string keys (Jackson's untyped map representation), so the
    * non-string branch is defensive: it keeps the stable {@link
    * MappingDiagnostic#INVALID_META_TARGET} diagnostic at the known {@code metaLocation} instead of
-   * leaking a class cast or a core-validation failure if a future Jackson version ever emits
-   * non-string keys.
+   * leaking a class cast or a core-validation failure when conversion produces non-string keys.
    */
   private static Map<String, Object> castMembers(
       Map<?, ?> map, Object resource, MappingLocation metaLocation) {

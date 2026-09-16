@@ -12,7 +12,8 @@ import java.util.Objects;
  * NullData} means the document contains {@code "data": null}. Resource payloads are {@link Object}
  * because primary collections may be heterogeneous; callers cast using their resource-type registry
  * registrations. Identifier variants pass through the core {@link ResourceIdentifier} values
- * without DTO binding.
+ * without DTO binding. An empty {@link ResourceCollection} or {@link IdentifierCollection} is still
+ * present primary data and preserves {@code "data": []}.
  */
 public sealed interface DomainData
     permits DomainData.NullData,

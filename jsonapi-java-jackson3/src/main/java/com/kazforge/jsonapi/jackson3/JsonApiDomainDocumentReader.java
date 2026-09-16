@@ -38,8 +38,8 @@ import tools.jackson.databind.json.JsonMapper;
  * {@link JsonApiDocumentReadException} with the same category, pointer, location, and rule code.
  * {@link #fromDocument(JsonApiDocument)} binds only and never re-parses or re-validates.
  *
- * <p>Primary resource data and every present {@code included} element are bound through the Phase
- * 2.9 binder after looking up {@link ResourceObject#type()} in the supplied {@link
+ * <p>Primary resource data and every present {@code included} element are bound through the flat
+ * binder after looking up {@link ResourceObject#type()} in the supplied {@link
  * ResourceTypeRegistry}; identifier primary data and error documents never attempt DTO binding.
  * Resource types absent from the registry fail with {@link
  * MappingDiagnostic#UNREGISTERED_RESOURCE_TYPE} at the document pointer before any envelope
@@ -53,8 +53,8 @@ import tools.jackson.databind.json.JsonMapper;
  * DocumentReadContext, ResourceTypeRegistry)} or its overloads, never directly. Construction
  * re-resolves every registered target against the reader's configured resource metadata and rejects
  * keys that disagree with {@link MappingDiagnostic#RESOURCE_TYPE_MISMATCH} without a document
- * location; missing or invalid consumer metadata keeps its existing resolver diagnostic. The reader
- * is safe for concurrent use once created.
+ * location; missing or invalid consumer metadata reports the resolver diagnostic. The reader is
+ * safe for concurrent use once created.
  */
 public final class JsonApiDomainDocumentReader {
 

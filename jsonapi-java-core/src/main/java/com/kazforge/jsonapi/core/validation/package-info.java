@@ -8,8 +8,6 @@
  * com.kazforge.jsonapi.core.validation.MemberNames} validates JSON:API v1.1 member-name grammar.
  * Operation, endpoint role, link location, endpoint identity, and relationship pagination values
  * are shared inputs to aggregate validation without depending on the model or aggregate layer.
- *
- * <p>See ADR-003, ADR-008, ADR-011, and {@code docs/conformance.md}.
  */
 @NullMarked
 package com.kazforge.jsonapi.core.validation;

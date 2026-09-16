@@ -11,7 +11,7 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>One instance is created per {@link JsonApiDomainDocumentReader} and shared by all envelopes it
  * produces; {@code metaAs} therefore converts with the exact mapper configuration that bound the
- * document (ADR-004) without the envelope retaining the {@link JsonMapper} itself.
+ * document without the envelope retaining the {@link JsonMapper} itself.
  */
 final class BinderMetaConverter implements JsonApiDomainDocument.MetaConverter {
 

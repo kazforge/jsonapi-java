@@ -6,9 +6,16 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Document read failure with a stable codec category, JSON Pointer-like path, and safe source
- * location. When construction or aggregate validation failed, {@link #ruleCode()} carries the core
- * {@link ValidationRuleCode}.
+ * Failure while decoding or validating a JSON:API document.
+ *
+ * <p>Adapter-produced instances carry a stable {@link CodecFailureCategory}, a document-relative
+ * RFC 6901 JSON Pointer ({@code ""} for the document root), and a payload-safe best-effort {@link
+ * SourceLocation}. For {@link CodecFailureCategory#LOCAL_VALIDATION} and {@link
+ * CodecFailureCategory#AGGREGATE_VALIDATION}, {@link #ruleCode()} carries the core {@link
+ * ValidationRuleCode}; codec failures do not invent one.
+ *
+ * <p>This family ends at validated core-document construction. Domain binding, resource mapping,
+ * registry, and representation failures use {@link JsonApiMappingException} instead.
  */
 public final class JsonApiDocumentReadException extends RuntimeException {
 
@@ -50,18 +57,22 @@ public final class JsonApiDocumentReadException extends RuntimeException {
     this.ruleCode = ruleCode;
   }
 
+  /** Decoding or validation stage that failed. */
   public CodecFailureCategory category() {
     return category;
   }
 
+  /** Document-relative JSON Pointer; {@code ""} identifies the document root. */
   public String jsonPointer() {
     return jsonPointer;
   }
 
+  /** Best-effort payload-safe source position, or {@link SourceLocation#UNKNOWN}. */
   public SourceLocation sourceLocation() {
     return sourceLocation;
   }
 
+  /** Core validation rule when one was reported, otherwise {@code null}. */
   public @Nullable ValidationRuleCode ruleCode() {
     return ruleCode;
   }

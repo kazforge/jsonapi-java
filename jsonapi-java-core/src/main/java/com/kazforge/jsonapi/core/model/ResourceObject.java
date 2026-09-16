@@ -16,6 +16,8 @@ import org.jspecify.annotations.Nullable;
  * <p>Attributes and relationships share one field namespace. Semantic members and non-{@code @}
  * pass-through members cannot use the same name; {@code @}-prefixed pass-through members remain
  * outside that namespace. Extension and profile authorization remains aggregate-validator policy.
+ * The {@code id} and {@code lid} components are independent; local construction permits a type-only
+ * resource, while aggregate validation decides where an identifier is required.
  */
 public record ResourceObject(
     String type,
@@ -49,22 +51,34 @@ public record ResourceObject(
                 JsonApiMembers.META));
   }
 
+  /** Creates a type-only resource, such as a primary resource awaiting create validation. */
   public static ResourceObject ofType(String type) {
     return new ResourceObject(type, null, null, null, null, null, null, Map.of());
   }
 
+  /** Creates a resource with {@code type} and {@code id} only. */
   public static ResourceObject of(String type, String id) {
     return new ResourceObject(type, id, null, null, null, null, null, Map.of());
   }
 
+  /**
+   * Whether the {@code id} member is present; empty and whitespace values still count as present.
+   */
   public boolean hasId() {
     return id != null;
   }
 
+  /**
+   * Whether the {@code lid} member is present; empty and whitespace values still count as present.
+   */
   public boolean hasLid() {
     return lid != null;
   }
 
+  /**
+   * Returns the {@code type + id} identity when {@code id} is present, otherwise {@code type +
+   * lid}, or {@code null} for a type-only resource.
+   */
   public @Nullable ResourceIdentity identityKey() {
     if (hasId()) {
       return ResourceIdentity.ofId(type, Objects.requireNonNull(id));
@@ -77,6 +91,11 @@ public record ResourceObject(
 
   // NullAway misreads ResourceIdentifier's type-use @Nullable on class-path inputs during
   // incremental compiles; the component types are identical and the conversion is safe.
+  /**
+   * Converts identity, meta, and additional members to a resource identifier. Attributes,
+   * relationships, and links are not identifier members. A type-only resource cannot be converted
+   * because a resource identifier requires {@code id} or {@code lid}.
+   */
   @SuppressWarnings("NullAway")
   public ResourceIdentifier toIdentifier() {
     return new ResourceIdentifier(type, id, lid, meta, additionalMembers);

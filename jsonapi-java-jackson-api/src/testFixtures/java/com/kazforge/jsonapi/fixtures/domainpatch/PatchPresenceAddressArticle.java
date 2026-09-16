@@ -7,7 +7,7 @@ import com.kazforge.jsonapi.jackson.patch.PatchPresence;
 
 /**
  * Shared low-level PATCH DTO whose {@code PatchPresence<T>}-declared member wraps an ordinary
- * structured bean, proving the single-wrapper unwrap recurses on the low-level path (ADR-013).
+ * structured bean, proving the single-wrapper unwrap recurses on the low-level path.
  */
 @JsonApiResource(type = "articles")
 public record PatchPresenceAddressArticle(

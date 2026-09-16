@@ -10,8 +10,8 @@ import java.util.Objects;
  * <p>Carries the per-write document envelope (top-level links, meta, and JSON:API object) together
  * with the per-operation representation selection (include paths and sparse fieldsets). An absent
  * per-write {@code jsonapi} member (a null component on the envelope) is distinct from an explicit
- * per-write {@link com.kazforge.jsonapi.core.model.JsonApiObject}: explicit values override future
- * application-lifetime document defaults, while absent values leave those defaults in effect.
+ * per-write {@link com.kazforge.jsonapi.core.model.JsonApiObject}: explicit values override the
+ * configured application-lifetime document default, while absence leaves that default in effect.
  *
  * <p>Representation policy is application/runtime configuration owned by the major-specific
  * runtime, not a per-write value: these options deliberately carry no policy, so a default write

@@ -33,13 +33,12 @@ import org.jspecify.annotations.Nullable;
  * an optional resource-write JSON:API version default). The runtime is immutable and safe for
  * concurrent use once created.
  *
- * <p>The runtime coordinates the existing capability pipeline internally — resource mapping with
- * configured decoration, mapped-document validation, document writing, document decoding with
- * aggregate validation, flat DTO binding, and PATCH projection — so ordinary callers never
- * orchestrate those phases manually. The advanced capability APIs remain public and unchanged.
- * Jackson 2's checked I/O is adapted at this facade boundary to {@link
- * java.io.UncheckedIOException}; existing document-read, validation, and mapping failures retain
- * their existing exception families.
+ * <p>The runtime coordinates the capability pipeline internally: resource mapping with configured
+ * decoration, mapped-document validation, document writing, document decoding with aggregate
+ * validation, flat DTO binding, and PATCH projection — so ordinary callers never orchestrate those
+ * steps manually. The advanced capability APIs are also available. Jackson 2's checked I/O is
+ * adapted at this facade boundary to {@link java.io.UncheckedIOException}; document-read,
+ * validation, and mapping failures use their distinct exception families.
  *
  * <p>Request-scoped values (representation selection, document envelope, and expected update
  * identity) stay method arguments. An absent per-write {@code jsonapi} member may inherit the

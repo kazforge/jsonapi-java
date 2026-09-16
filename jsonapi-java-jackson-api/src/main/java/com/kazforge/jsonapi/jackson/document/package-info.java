@@ -1,11 +1,15 @@
 /**
  * Major-neutral JSON:API document read/write contract values.
  *
- * <p>Provides {@link com.kazforge.jsonapi.jackson.document.DocumentReadContext}, {@link
- * com.kazforge.jsonapi.jackson.document.PrimaryDataKind}, and {@link
- * com.kazforge.jsonapi.jackson.document.DocumentEnvelope}. {@code DocumentReadContext} carries an
- * aggregate {@code ValidationContext} (including the primary-data endpoint role) plus an explicit
- * decoding kind; endpoint semantics and decoding kind are independent axes.
+ * <p>{@link com.kazforge.jsonapi.jackson.document.DocumentReadContext} keeps aggregate-validation
+ * policy separate from {@link com.kazforge.jsonapi.jackson.document.PrimaryDataKind}. The
+ * validation context selects operation and endpoint semantics; the primary-data kind independently
+ * selects whether primary objects and arrays decode as resources or identifiers. Readers do not
+ * derive one axis from the other.
+ *
+ * <p>{@link com.kazforge.jsonapi.jackson.document.DocumentEnvelope} carries optional top-level
+ * write members. A {@code null} component means absence, while a non-null empty value remains a
+ * present empty object on the wire.
  */
 @NullMarked
 package com.kazforge.jsonapi.jackson.document;

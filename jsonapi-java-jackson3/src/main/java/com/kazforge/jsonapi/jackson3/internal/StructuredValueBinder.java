@@ -37,18 +37,18 @@ import tools.jackson.databind.json.JsonMapper;
  * policy, wire-pointer accumulation, and lazy nested declaration validation. It has no {@link
  * ResourceMapping} / {@link MappingProperty} / {@code @JsonApiAttribute} / {@link
  * com.kazforge.jsonapi.jackson.patch.PatchChange} dependency: callers supply the declared {@link
- * JavaType}, wire value, starting pointer, and (low-level) accessor, so a later structured JSON:API
- * {@code meta} mapping can reuse the same machinery at its own location with a stricter outer-state
- * policy (ADR-013).
+ * JavaType}, wire value, starting pointer, and (low-level) accessor, so structured JSON:API {@code
+ * meta} mapping can reuse the same machinery at its own location with a stricter outer-state
+ * policy.
  *
- * <p>Two modes (ADR-013): the typed mode recurses only through deliberately presence-aware nested
- * PATCH shapes (every visible member exactly {@code PatchPresence<T>}, no wrapper-level
- * customization); the low-level mode derives supplied-only nested changes from ordinary structured
- * domain value types under the traversable-bean + object-wire boundary, with {@link Optional} as a
- * transparent qualification wrapper and a single {@code PatchPresence} wrapper unwrap.
- * Presence-aware PATCH shapes are a typed-path concept: on the low-level path a {@code
- * PatchPresence<T>} member whose inner type is a presence-aware shape fails loudly with {@link
- * MappingDiagnostic#INVALID_PATCH_PROPERTY_TYPE} at the accumulated pointer.
+ * <p>The typed mode recurses only through deliberately presence-aware nested PATCH shapes (every
+ * visible member exactly {@code PatchPresence<T>}, no wrapper-level customization); the low-level
+ * mode derives supplied-only nested changes from ordinary structured domain value types under the
+ * traversable-bean + object-wire boundary, with {@link Optional} as a transparent qualification
+ * wrapper and a single {@code PatchPresence} wrapper unwrap. Presence-aware PATCH shapes are a
+ * typed-path concept: on the low-level path a {@code PatchPresence<T>} member whose inner type is a
+ * presence-aware shape fails loudly with {@link MappingDiagnostic#INVALID_PATCH_PROPERTY_TYPE} at
+ * the accumulated pointer.
  *
  * <p>Shape resolution is cached per {@link JavaType} plus the deserialization-config hash (naming
  * strategy and visibility checker), independently of the serialization-keyed resource-mapping
@@ -308,13 +308,13 @@ final class StructuredValueBinder {
   }
 
   /**
-   * Translates a failed bean-construction Jackson path into a resource-relative mapping location
-   * (ADR-013). The path's first name selects the member's start through {@code startsByLogicalName}
-   * (Jackson logical name to wire prefix); deeper names are walked through resolved presence-aware
-   * shape metadata, each matching member contributing its escaped wire-name segment. Walking stops
-   * at the first name that is not a shape member, so Jackson-internal names below an atomic member
-   * are never leaked into the location. The internal presence-marker {@code value} member between
-   * two presence-aware shape levels is skipped.
+   * Translates a failed bean-construction Jackson path into a resource-relative mapping location.
+   * The path's first name selects the member's start through {@code startsByLogicalName} (Jackson
+   * logical name to wire prefix); deeper names are walked through resolved presence-aware shape
+   * metadata, each matching member contributing its escaped wire-name segment. Walking stops at the
+   * first name that is not a shape member, so Jackson-internal names below an atomic member are
+   * never leaked into the location. The internal presence-marker {@code value} member between two
+   * presence-aware shape levels is skipped.
    *
    * <p>Only the typed PATCH DTO path walks here, so walking stays within presence-aware shapes;
    * ordinary flat binding translates through {@code FlatConstructionPaths} instead. Returns {@code

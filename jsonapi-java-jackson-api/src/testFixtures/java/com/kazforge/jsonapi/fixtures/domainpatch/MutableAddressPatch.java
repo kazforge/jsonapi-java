@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Ordinary JavaBean-style presence-aware PATCH shape (private fields, default constructor,
  * getter/setter property binding) proving typed-path recursion is ordinary Jackson-bean semantics,
- * not record-specific (ADR-013).
+ * not record-specific.
  */
 public final class MutableAddressPatch {
 

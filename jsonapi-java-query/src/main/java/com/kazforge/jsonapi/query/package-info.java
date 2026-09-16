@@ -1,9 +1,11 @@
 /**
  * Framework- and Jackson-major-neutral parsing of standardized JSON:API query selection.
  *
- * <p>The parser decodes include paths, sparse fieldsets, and sort fields into neutral values while
- * preserving page, filter, and unknown parameters as ordered opaque data. Parsing does not execute
- * filtering, pagination, persistence projections, authorization, or endpoint policy.
+ * <p>The parser recognizes {@code include}, {@code fields[TYPE]}, and {@code sort} without
+ * trimming, renaming, or resolving their JSON:API tokens. It preserves page, filter, and unknown
+ * parameters as ordered opaque data. Parsing and optional exact allow-list checks produce request
+ * selection only; they do not execute queries or decide representation, authorization, persistence,
+ * transport, or endpoint policy.
  */
 @NullMarked
 package com.kazforge.jsonapi.query;

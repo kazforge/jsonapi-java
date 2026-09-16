@@ -36,8 +36,8 @@ import org.jspecify.annotations.Nullable;
  * policy, wire-pointer accumulation, and lazy nested declaration validation. It has no {@link
  * ResourceMapping} / {@link MappingProperty} / {@code @JsonApiAttribute} / {@link
  * com.kazforge.jsonapi.jackson.patch.PatchChange} dependency: callers supply the declared {@link
- * JavaType}, wire value, starting pointer, and (low-level) accessor, so a later structured JSON:API
- * {@code meta} mapping can reuse the same machinery at its own location with a stricter outer-state
+ * JavaType}, wire value, starting pointer, and (low-level) accessor, so structured JSON:API {@code
+ * meta} mapping can reuse the same machinery at its own location with a stricter outer-state
  * policy.
  *
  * <p>Two modes: the typed mode recurses only through deliberately presence-aware nested PATCH

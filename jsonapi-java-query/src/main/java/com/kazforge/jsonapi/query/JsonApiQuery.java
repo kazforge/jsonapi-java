@@ -10,8 +10,15 @@ import java.util.Objects;
 /**
  * Immutable result of parsing one JSON:API query string or decoded parameter multimap.
  *
- * <p>Page, filter, and unprocessed parameters are intentionally opaque. Their ordered maps retain
- * parameter insertion order and each value list retains occurrence order.
+ * <p>{@link #selection()} preserves absent versus explicitly empty {@code include} and fieldset
+ * requests through {@link RepresentationSelection}. Selection and sort values retain exact JSON:API
+ * tokens; sort direction is represented separately. Page, filter, and unprocessed parameters are
+ * intentionally opaque. Their maps retain parameter insertion order and each value list retains
+ * occurrence order. Construction takes immutable snapshots of every collection.
+ *
+ * <p>This value records request syntax, not effective authorization or an executable query.
+ * Applications may further restrict the selection and own representation, filter/page, persistence,
+ * and transport policy.
  */
 public record JsonApiQuery(
     RepresentationSelection selection,

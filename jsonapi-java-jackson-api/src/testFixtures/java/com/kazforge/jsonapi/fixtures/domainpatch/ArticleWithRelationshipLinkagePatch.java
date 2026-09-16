@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Typed PATCH DTO that carries identifier meta only as part of whole-linkage {@link
- * RelationshipLinkage} replacement (ADR-016).
+ * RelationshipLinkage} replacement.
  */
 @JsonApiResource(type = "articles")
 public record ArticleWithRelationshipLinkagePatch(
