@@ -1,88 +1,48 @@
 # ADR-010: Architectural Tests for Module Boundaries
 
-**Status:** Accepted  
-**Date:** 2026-07-29  
-**Amended:** 2026-07-30 (jackson3 allowlist and `core.internal` ban); 2026-08-10 (jackson-common allowlist and the jackson3 common-contract dependency); 2026-08-11 (test-fixtures allowlist for the shared domain-write fixtures); 2026-08-12 (replaces Groovy codec fixtures with Java and JSON-P); 2026-08-31 (renames `jsonapi-java-jackson-common` to `jsonapi-java-jackson-api` and reorganizes API contracts into concept packages); 2026-09-02 (moves passive shared fixtures to the Jackson API test-fixtures source set and adds the neutral loader exception); 2026-09-10 (registers the neutral query-parser allowlist); 2026-09-15 (adds the core aggregate-validation package to Jackson allowlists); 2026-09-15 (adds core and adapter package-DAG guards)
+**Status:** Accepted
+**Date:** 2026-07-29
 
 ## Context
 
-ADR-007 and the vision require dependency-free foundation modules and controlled coupling for optional integrations. Gradle dependency declarations guard the published classpath, but they do not stop production sources from referring to types that appear on the compile or test classpath by mistake, or from sibling modules reaching into non-public packages such as `core.internal`.
-
-JSpecify (`org.jspecify.annotations`) is an intentional compile-only exception (ADR-009) and must remain allowed in production sources that use `@NullMarked` / `@Nullable`.
+Gradle controls artifact dependencies, but it cannot prevent production code from referring to an
+unintended type already present on a compile or test classpath. Compilation also cannot express the
+package responsibility DAGs inside core and the Jackson adapters.
 
 ## Decision
 
-- Enforce package and type dependency rules with [ArchUnit](https://www.archunit.org/) as a **`testImplementation`** dependency on library modules whose boundaries cannot be expressed by the compiler or Gradle. ArchUnit must never appear on the published runtime classpath.
-- ArchUnit is the project-wide architectural test tool—not core-only. New modules add ArchUnit rules alongside their production packages only when they have a package or type boundary that cannot be enforced by the compiler or Gradle; dependency-free modules without such a boundary do not require ArchUnit. Do not reinvent coupling checks with classpath or source-import scanners.
-- Current allowlists:
-  - `com.kazforge.jsonapi.jackson..` (jackson-api) → `java..`, `org.jspecify.annotations..`,
-    `com.kazforge.jsonapi.core.aggregate..`, `com.kazforge.jsonapi.core.model..`,
-    `com.kazforge.jsonapi.core.validation..`, and other `com.kazforge.jsonapi.jackson..` types.
-    Production sources must not depend on
-    `core.internal`, on either Jackson major (`tools.jackson..`, `com.fasterxml.jackson..`), or on
-    a major-specific adapter package (`jackson2..`, `jackson3..`).
-  - `com.kazforge.jsonapi.jackson3..` → `java..`, `org.jspecify.annotations..`,
-    `com.kazforge.jsonapi.core.aggregate..`, `com.kazforge.jsonapi.core.model..`,
-    `com.kazforge.jsonapi.core.validation..`,
-    `com.kazforge.jsonapi.annotation..`, `com.kazforge.jsonapi.jackson..`,
-    `com.kazforge.jsonapi.jackson3..`, and
-    `tools.jackson..`. Production sources must not depend on
-    `com.kazforge.jsonapi.core.internal..` or `com.fasterxml.jackson..`.
-  - `com.kazforge.jsonapi.fixtures..` (passive carriers and the one neutral resource loader in
-    the Jackson API test-fixtures source set) → `java..`,
-    `org.jspecify.annotations..`, `com.kazforge.jsonapi.annotation..`,
-    `com.kazforge.jsonapi.core.model..`, `com.kazforge.jsonapi.jackson..`, other
-    `com.kazforge.jsonapi.fixtures..` types, and `com.fasterxml.jackson.annotation..`. This
-    stricter sub-allowlist is the structural boundary for shared fixtures. `TestFixtureResources`
-    is the sole explicitly authorized executable exception: it may provide neutral classpath access
-    to the corpus and schemas using only the JDK and JSpecify. Scenario catalogs, descriptors,
-    invariant services, and other executable support remain outside this package. The Jackson 3
-    architecture suite imports the test-fixtures variant and enforces this allowlist.
-- Major-specific Jackson 2 allowlist (when registered):
-  - `com.kazforge.jsonapi.jackson2..` → JDK, JSpecify, `core.aggregate`, `core.model`,
-    `core.validation`, annotations, module-owned types, and `com.fasterxml.jackson..`; never Jackson
-    3 or another module's internals. Must not depend on `core.internal`.
-- Query allowlist:
-  - `com.kazforge.jsonapi.query..` → JDK, JSpecify, other query types,
-    `com.kazforge.jsonapi.core.validation.MemberNames`, and
-    `com.kazforge.jsonapi.jackson.representation..`. It has no Jackson-major or framework
-    dependency and does not depend on core internals.
-- Spring modules record their exact framework package allowlists when those modules are registered.
-  Spring may use public core, annotation, Jackson 3, and query contracts; no lower layer may
-  acquire Spring types.
-- Gradle continues to own artifact selection and publication; ArchUnit owns package/type coupling that Gradle cannot express.
-- Changing an allowlist requires updating this ADR.
-- Sibling modules must not depend on `com.kazforge.jsonapi.core.internal..`. That ban is
-  enforced for `jsonapi-java-jackson3` and `jsonapi-java-jackson-api` and must be added when
-  further sibling modules register.
-- Major-specific adapters must not re-declare public top-level contracts that live in
-  `jsonapi-java-jackson-api`; each adapter's architecture test derives the forbidden simple names
-  from the compiled API package boundary rather than a hand-maintained moved-type list. This
-  automatically protects later neutral contracts and is the model for Jackson 2 when registered.
-- Core keeps its intra-module responsibility DAG: `aggregate` may depend on `model`, `internal`,
-  and `validation`; `model` may depend on `internal` and `validation`; `internal` may depend on
-  `validation`. No other cross-responsibility core edge is allowed, so `validation` depends on no
-  higher core responsibility, `internal` does not depend on `model` or `aggregate`, and `model`
-  does not depend on `aggregate`. Core now carries ArchUnit as a `testImplementation` dependency
-  specifically because this intra-module package DAG cannot be expressed by Java compilation or the
-  Gradle module graph; Gradle and the compiler remain the primary module-boundary mechanisms.
-- Each Jackson adapter keeps its own responsibility DAG: the public composition root may depend on
-  `mapping`, exact `internal`, and `internal.codec`, while exact `internal` may depend on
-  `mapping`. No other adapter-local cross-responsibility edge is allowed, so `mapping` does not
-  depend on the root or either internal sibling, `internal.codec` is self-contained apart from
-  core, neutral contracts, and its Jackson major, and the two internal siblings never depend on
-  each other. The exact `internal` selector never uses a recursive `..internal..` match that would
-  also include `internal.codec`. Jackson 2 and Jackson 3 declare these rules independently in
-  their respective specifications without a shared test DSL. Same-package recursion, such as the
-  recursive structured-value PATCH model, stays outside generic cycle prohibitions, and no broad
-  ban on all cycles is introduced.
-- Every responsibility selector in these DAG rules must match at least one production class, so a
-  misspelled or mis-scoped selector cannot pass vacuously. The guards use package predicates, not
-  production-class inventories.
+Use ArchUnit as a `testImplementation`-only dependency where package or type boundaries need
+executable enforcement. It is the repository-wide tool for those checks; do not replace it with
+source-import or classpath scanners, and never publish it as a runtime dependency.
+
+Architecture specifications enforce allowlists for the neutral Jackson API, each Jackson adapter,
+shared fixtures, and query parsing. In particular:
+
+- neutral production code stays free of either Jackson major and major-specific adapter packages;
+- each adapter uses only its own Jackson major and supported lower-layer contracts;
+- sibling modules do not depend on `core.internal`;
+- supported neutral contracts are not redeclared by adapters, and shared internal helpers do not
+  leak through supported public signatures;
+- shared fixtures remain passive application-shaped data and resources, apart from the neutral
+  resource loader; behavioral orchestration and assertions remain adapter-local.
+
+Core preserves its downward responsibility DAG: aggregate validation may depend on model, internal,
+and validation responsibilities; model may depend on internal and validation; internal may depend on
+validation. The reverse edges are forbidden.
+
+Each Jackson adapter independently preserves its local DAG: the public composition root may depend
+on mapping and internal implementation packages, and the ordinary internal package may depend on
+mapping; reverse and sibling-internal edges are forbidden. Same-package recursive models are allowed,
+so there is no blanket cycle ban.
+
+Every responsibility selector must match production classes so rules cannot pass vacuously. A
+legitimate allowlist or protected-DAG change requires this ADR to change with the enforcing
+specification.
 
 ## Consequences
 
-- `./gradlew clean build` fails when a guarded module's production code gains an illegal type dependency.
-- Agents and contributors treat ArchUnit failures as boundary violations, not tests to delete or weaken without an ADR change.
-- Additional architectural rules (cross-module `internal` bans, layer DAGs) land alongside the
-  modules they protect.
+- `./gradlew clean build` fails near the module that violates a protected boundary.
+- Contributors treat failures as architecture violations, not tests to weaken without a decision
+  change.
+- Exact package inventories stay in the module-owned architecture specifications rather than this
+  rationale record.

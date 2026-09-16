@@ -2,138 +2,91 @@
 
 > Make JSON:API v1.1 documents straightforward to read and write in Java without taking ownership of an application's persistence, endpoints, or business architecture.
 
-This document is stable product direction and principles. It does not describe what currently
-exists; current capability lives in the [root module registry](../README.md) and each module
-README. The current cross-module mental model lives in [`docs/architecture.md`](architecture.md).
-Future work coordination, when used, lives in an external coordinating layer—not in this
-repository. Authority and owner/reference rules are in [`AGENTS.md`](../AGENTS.md).
+This document owns stable product direction. Current modules and capability live in the
+[root registry](../README.md), module READMEs, [architecture snapshot](architecture.md), and
+[conformance checklist](conformance.md).
 
 ## Product boundary
 
-`jsonapi-java` is a lightweight, Java 21+ document codec with optional bidirectional
-domain-mapping, query-parameter, and web-framework adapters.
+`jsonapi-java` is a lightweight Java document library with optional domain-mapping, query-parsing,
+and framework integrations. The library owns:
 
-The library owns:
+- an immutable representation of JSON:API documents;
+- local and whole-document validation;
+- opt-in encoding, decoding, and flat application-value mapping;
+- presence-aware update projections that do not mutate application state;
+- optional parsing of standardized query selections;
+- thin optional framework integration for JSON:API transport concerns.
 
-- an immutable, dependency-free representation of JSON:API documents;
-- strict validation of document structure and cross-document invariants;
-- Jackson encoding and decoding of that document model;
-- opt-in mapping between ordinary Jackson-visible POJOs/records and flat resource objects through
-  domain-facing document envelopes;
-- presence-aware resource-update commands that preserve omitted values versus explicit JSON
-  `null` without mutating application objects;
-- optional parsing of JSON:API query parameters;
-- optional Spring integration for the JSON:API media type.
-
-Applications continue to own:
-
-- controller and endpoint design;
-- persistence, repositories, transactions, and authorization;
-- filtering, sorting, pagination, and query execution;
-- decisions about supported include paths, fields, profiles, and extensions;
-- authorization and application of resource-update commands to existing domain state;
-- HTTP operation semantics beyond behavior explicitly implemented by an adapter.
-
-This boundary is deliberate. The project is not an API engine, ORM bridge, repository abstraction, or endpoint generator.
-
-## What “lightweight” means
-
-- `jsonapi-java-core` has no third-party runtime dependencies. A compile-only JSpecify
-  annotation jar may be used for nullness metadata (see ADR-009); it is not a functional
-  runtime dependency and must not appear on the published runtime classpath.
-- Domain mapping is opt-in, bidirectional for documented flat DTO shapes, and requires no
-  inheritance or framework interfaces.
-- Jackson, query parsing, and Spring WebMVC are separate artifacts.
-- A relationship creates linkage; it does not automatically traverse and include an object graph.
-- The library does not execute filters, sorts, or pagination strategies.
-- Framework adapters remain thin and do not introduce application architecture.
-
-“Lightweight” does not mean omitting required JSON:API semantics. Presence versus explicit `null`, compound-document linkage, link forms, extension members, and media-type behavior must remain representable and testable.
+Applications continue to own endpoints, persistence, transactions, authorization, query execution,
+relationship resolution, supported fields/includes/profiles/extensions, business validation, and
+application of updates. The project is not an API engine, ORM bridge, repository abstraction, or
+endpoint generator.
 
 ## Design principles
 
 ### Wire semantics before Java convenience
 
-The document model preserves distinctions visible on the wire, including an absent member versus a member whose value is `null`. Public types are designed from official JSON:API examples and negative cases, not from a desired type count.
+The model preserves distinctions visible on the wire, including absence, explicit `null`, present
+empty values, and linkage cardinality. Public contracts follow JSON:API semantics rather than
+minimizing the number of Java types.
 
-### Strict documents, explicit application policy
+### Strict documents, explicit policy
 
-Local invariants are enforced when values are constructed. Invariants involving a whole document, such as included-resource uniqueness and full linkage, are enforced by document validation. Inclusion, sparse fieldsets, traversal limits, and supported query features are explicit policies rather than hidden defaults.
+Local invariants are enforced during value construction; rules involving a whole document are
+enforced by aggregate validation. Inclusion, sparse fieldsets, traversal limits, supported query
+features, and authorization are explicit policy rather than hidden defaults.
 
-### Jackson is authoritative for Java properties
+### Configured Jackson authority
 
-Domain mapping uses Jackson's logical property model. It preserves Jackson visibility, naming, mix-ins, ignored properties, custom serializers, and creator rules instead of independently reflecting over fields and getters.
+Domain mapping follows configured Jackson property discovery, visibility, names, mix-ins, creators,
+serializers, and deserializers. JSON:API annotations assign semantic roles; they do not create a
+second Java-property model.
 
-### Document-first correctness, DTO-first adapters
+### Document-first reads, application-owned graphs
 
-Deserialization first produces and validates the JSON:API document model. Jackson and framework
-adapters may then bind primary resources to annotated flat DTOs and expose document-level members
-through a typed domain envelope, so routine application code need not manipulate the core model.
+Deserialization first produces and validates the JSON:API document model. Optional adapters may then
+bind flat application shapes. Relationships remain linkage-oriented, and included resources are not
+automatically injected into relationship properties. Reconstructing arbitrary graphs requires
+identity, persistence, loading, and authorization policy that belongs to the application.
 
-Relationship properties bind resource linkage only. Included resources are bound independently
-through explicit resource-type registration and are never injected into relationship properties.
-Automatic reconstruction of arbitrary domain graphs remains outside the product boundary because
-unresolved linkage, cycles, identity, and persistence resolution require application policy.
+### Presence-aware updates without mutation
 
-Resource PATCH binding produces a presence-aware update command. Omitted attributes and
-relationships remain distinguishable from explicit attribute `null` and explicit null, single, or
-collection linkage. Applications authorize and apply that command; the library does not mutate an
-existing DTO or persistence object. A direct typed PATCH DTO path is also available: applications
-can declare an annotated PATCH DTO whose patchable members are `PatchPresence<T>` and bind a
-validated update document straight into it, keeping the same presence tri-state without a
-`PatchCommand`-to-DTO projector.
+Update binding preserves omitted members versus explicit null and supplied values. The library
+validates and projects requested changes; applications authorize and apply them to domain or
+persistence state.
 
 ### Extensible without interpreting extensions
 
-The base model preserves valid extension members and `@` members. It does not implement extension-specific semantics unless a separate feature explicitly declares support.
+Valid extension and `@` members remain representable without the base library claiming their
+semantics. Extension-specific behavior requires an explicitly scoped feature.
 
-## Modules
+## Module strategy
 
-Optional adapters are separate artifacts ([ADR-007](adr/007-module-boundaries.md)). Maven group is
-`com.kazforge`; Java packages live under `com.kazforge.jsonapi` (see
-[ADR-021](adr/021-kazforge-namespace.md)).
+- Core remains free of functional third-party runtime dependencies; compile-only nullness metadata
+  is allowed.
+- Domain mapping is opt-in and requires no inheritance or framework interface.
+- Jackson majors, query parsing, and framework integrations remain separate artifacts.
+- Native-major adapters share neutral semantic contracts without runtime detection or a
+  lowest-common-denominator Jackson abstraction.
+- Framework adapters stay thin and depend on lower-layer public contracts, never the reverse.
+- Planned modules have no usable entry point until they join the build. `settings.gradle.kts` owns
+  current membership; the root README provides its human-readable inventory.
 
-Current inventory and capability live in the [root README](../README.md) and each module README.
-Planned modules appear in that registry; they have no usable entry points until implemented.
+## Compliance philosophy
 
-## Compliance contract
+Compliance is reported by feature and layer, not claimed globally. Core and codec guarantees,
+optional-adapter behavior, delegated application policy, deferred work, and out-of-scope concerns
+remain distinguishable. Supplemental schema checks never replace the textual JSON:API specification
+or the feature statuses in [`docs/conformance.md`](conformance.md).
 
-Compliance is tracked by feature and layer instead of claimed globally. Current status is
-[`docs/conformance.md`](conformance.md). When a capability is implemented, that checklist is
-updated with one of: supported, pass-through, delegated, deferred, or out of scope.
+## Non-goals
 
-### Guaranteed by the core and codec when implemented
-
-- JSON:API v1.1 base document structures and legal wire forms.
-- Required local and aggregate document invariants.
-- Correct distinction between absent, explicit `null`, single, and collection data.
-- Parsing and emission of standard links, errors, metadata, resource linkage, and compound documents.
-- Preservation of valid extension and `@` members without interpreting their semantics.
-
-### Guaranteed only by optional adapters
-
-- Query-family parsing is guaranteed by `jsonapi-java-query`; support and execution remain application choices.
-- JSON:API `Content-Type` and `Accept` handling is guaranteed only by the applicable web adapter.
-- Domain mapping, typed envelopes, and PATCH commands are guaranteed only for documented Jackson
-  property shapes and mapping policies.
-
-### Application responsibilities
-
-- Endpoint availability and operation semantics.
-- HTTP status selection outside adapter-defined behavior.
-- Persistence and relationship mutation.
-- Authorization and application of presence-aware update commands.
-- Authorization and visibility of fields and relationships.
-- Query execution and limits.
-- Extension and profile semantics.
-
-## Initial non-goals
-
-- Generated controllers or repositories.
-- ORM-specific behavior or automatic lazy association traversal.
-- Automatic domain graph hydration or injection of `included` resources into relationships.
-- Automatic application of PATCH commands to domain or persistence objects.
-- A filtering or pagination DSL.
+- Generated controllers, endpoints, or repositories.
+- ORM-specific behavior or automatic lazy-association traversal.
+- Automatic domain-graph hydration.
+- Automatic application of update projections.
+- Query execution, filtering, sorting, or pagination strategies.
 - Relationship endpoint implementation.
-- Extension-specific processing beyond explicitly supported extensions.
+- Unscoped interpretation of extension or profile semantics.
 - A guarantee that an application using the library is globally JSON:API compliant.

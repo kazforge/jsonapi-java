@@ -1,60 +1,78 @@
 ---
 name: module-docs
-description: Creates or updates dual-audience module documentation (README, package-info, entry-point Javadoc, root module registration). Use when adding a submodule, changing a module’s public packages or entry points, or when the user asks to document or refresh module docs.
+description: Assesses and updates affected module documentation proportionally (README, package-info, public entry-point Javadoc, root registration). Use when adding a submodule, changing public packages or entry points, changing validate/read flows or non-goals, or refreshing module docs.
 disable-model-invocation: true
 ---
 
 # Module Docs
 
-Keep thin dual-audience documentation for a Gradle submodule. Follow the `jsonapi-java-core`
-golden example; do not invent a second style.
+Update only the canonical documentation owners affected by a module change. A complete result is
+usable and navigable, not mechanically uniform with other modules.
 
 ## When to run
 
 Use this skill when:
 
-- adding a new submodule under `settings.gradle.kts`;
-- public packages, entry points, validate/read flows, non-goals, or agent-relevant invariants changed;
-- the user asks to create or refresh module docs.
+- adding a submodule under `settings.gradle.kts`;
+- changing public packages, entry points, validate/read flows, non-goals, or module-local invariants;
+- the user asks to create or refresh module documentation.
 
-Skip when only internals or tests changed with no public-surface impact.
+Skip it when internal code or tests change without affecting any documented contract.
 
-## Checklist
+## Ownership rules
 
-1. Resolve the target module directory (e.g. `jsonapi-java-core`).
-2. Read existing `<module>/README.md` and `package-info.java` files; extend them in place.
-3. Create or update `<module>/README.md` with these sections in order:
-   - Title + one-line purpose
-   - **Packages** table (package → role)
-   - **Minimal usage** (always present: short code sample when an entry point exists; otherwise a
-     concise note that no usable entry point exists yet)
-   - **Non-goals** (link ADR-007 / vision; do not restate the product boundary at length)
-   - **Further reading** (only relevant canonical links, such as Vision, conformance, ADR,
-     build/CI, and root-agent sources; titles or short labels must make their relevance clear)
-   - **For contributors / agents** (module-specific invariants only: local vs aggregate rules,
-     diagnostics, tests, extension policy, etc.; include ADR-009 nullness bullets for Java
-     production packages; do not repeat root build, CI, or planning workflow)
-4. Ensure `package-info.java` exists for every production package.
-   Every production `package-info.java` must be `@NullMarked` (`org.jspecify.annotations`) and briefly
-   state absence (`@Nullable`) versus wire-null (sealed types) when the package holds document model
-   types (see ADR-009).
-   Keep package documentation role-focused: describe its responsibility, public or internal
-   boundary, and the contract needed before opening its types. Link to policy sources instead of
-   copying them.
-5. Ensure focused Javadoc on public entry points only, including construction versus validation and
-   wire-state distinctions where relevant; do not document every type.
-6. Ensure the root `README.md` lists and links the module. Keep `AGENTS.md` generic: it routes
-   through `<module>/README.md` and must not accumulate one link per module.
-7. Link to relevant Vision, ADR, conformance, build, CI, and root-workflow sources rather than
-   duplicating their prose. Prefer the root module registry for unbuilt surfaces; never invent
-   current-capability prose for modules that do not exist yet.
-8. Re-read the golden example and verify section order, compact density, minimal usage, package
-   roles, nullness, entry-point Javadoc, root registration, link-out behavior, and agent notes.
-9. Report every path created or updated.
+- A module README owns current module purpose, capability, consumption entry points, non-goals, and
+  genuinely module-local maintenance constraints.
+- `package-info.java` owns package responsibility, public/internal boundaries, and package-local
+  invariants.
+- Focused public Javadoc owns API semantics. Do not copy method contracts or overload inventories
+  into the README.
+- The root README owns human-readable module registration; `settings.gradle.kts` owns actual build
+  membership.
+- Architecture, conformance, ADRs, build policy, and workflow stay with their existing canonical
+  owners. Link to them instead of restating them.
 
-## Golden example
+Documentation additions must fill a missing contract or replace duplication. Uniform section
+completion is not a goal.
 
-`jsonapi-java-core/README.md` plus `core.model` / `core.validation` / `core.internal` package-info is
-the reference. New modules should match that density and link-out style: model packages document
-wire/nullness distinctions, service packages document aggregate behavior and diagnostics, and
-internal packages state that they are not public API.
+## Workflow
+
+1. Resolve the target module against `settings.gradle.kts`. Planned or nonexistent modules have no
+   usable entry points; never invent current capability for them.
+2. Read the module README, every affected production `package-info.java`, and the focused Javadoc on
+   changed public entry points. Read only the directly relevant architecture, conformance, or ADR
+   sections.
+3. Identify each changed durable fact and its canonical owner before editing. Update only those
+   owners and navigation needed to reach them.
+4. Keep the README proportional to the module. Include, when useful:
+   - a concise purpose and current capability;
+   - a package or public-entry-point map when it materially improves navigation;
+   - enough usage to make the primary consumption path understandable;
+   - module-specific non-goals or differences;
+   - genuinely local maintainer invariants;
+   - a small set of relevant canonical links.
+
+   Equivalent headings are acceptable. Omit empty or redundant sections. Never duplicate one
+   inventory as a table, diagram, and prose list.
+5. Include an example only when prose plus a focused entry-point link would be materially less clear.
+   Do not require examples per module or capability, and do not document overload matrices.
+6. Ensure every production package has `package-info.java`. Production package docs are
+   `@NullMarked` with JSpecify, remain role-focused, and state absence versus explicit wire null when
+   a document-model package needs that distinction.
+7. Update focused Javadoc when the public entry-point contract changed. Do not turn an unrelated
+   module-doc task into cleanup of existing Javadocs or documentation of every type.
+8. Register and link a newly built module in the root README. Keep `AGENTS.md` generic; do not add
+   one route or link per module.
+9. Apply the deletion test: if a README section has no unique module contract after canonical links
+   are considered, remove it.
+10. Verify package and entry-point maps against source, check changed links, and report every path
+    created or updated.
+
+## Guardrails
+
+- Keep only module-local contributor constraints. Repository build, nullness, testing, coverage,
+  workflow, and architecture policy remain in their canonical owners unless the module has a real
+  local specialization.
+- Root registration does not require every module README to adopt the same headings or density.
+- Package documentation and Javadoc are mandatory where their contracts belong; README coverage is
+  conditional on information value.

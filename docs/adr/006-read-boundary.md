@@ -2,8 +2,6 @@
 
 **Status:** Accepted  
 **Date:** 2026-07-26  
-**Amended:** 2026-07-30
-
 ## Context
 
 Resource linkage may reference a resource not present in `included`. Arbitrary domain graph hydration also requires identity handling, cycle policy, constructor selection, partial-update semantics, and application-specific resolution.

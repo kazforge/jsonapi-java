@@ -71,7 +71,7 @@ descriptive, not an automatic task-matching router:
 |-------------------|------------------------|
 | Review implementation against the requested outcome | `implementation-review` |
 | Produce a fresh-session review handoff when required | `implementation-handoff` |
-| Add a module or change public packages, entry points, validate/read flows, or non-goals | `module-docs` |
+| Assess affected documentation when adding a module or changing public packages, entry points, validate/read flows, non-goals, or module-local invariants | `module-docs` |
 | Format Spotless-covered files | `spotless-format` |
 
 **Planning uses the capabilities available in the current session.** Establish facts from repository
@@ -153,7 +153,10 @@ behavior is expected.
 
 # Knowledge And Plans
 
-Every durable fact has one canonical owner; other documents should link or provide only navigation.
+Every durable fact has one canonical owner; other documents should add only local context or
+navigation. Update the affected canonical owner and any necessary navigation, not every related
+surface for completeness. New documentation must fill a missing contract or replace duplication;
+uniform section completion is not a goal.
 
 | Fact | Canonical owner |
 |------|-----------------|

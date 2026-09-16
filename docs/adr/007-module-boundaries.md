@@ -1,48 +1,39 @@
 # ADR-007: Optional Adapter Modules
 
-**Status:** Accepted  
-**Date:** 2026-07-26  
-**Amended:** 2026-07-30 (registers `jsonapi-java-jackson3` write surface); 2026-08-10 (registers `jsonapi-java-jackson-common`); 2026-08-16 (presence-aware PATCH command contracts move to jackson-common); 2026-08-31 (renames `jsonapi-java-jackson-common` to `jsonapi-java-jackson-api` and reorganizes public contracts into concept packages); 2026-09-04 (evolves `jsonapi-java-jackson-api` from neutral values to values plus the narrow Level-1 operation contract owned by ADR-019)
+**Status:** Accepted
+**Date:** 2026-07-26
 
 ## Context
 
-Document consumers should not acquire Jackson or Spring transitively, and domain classes should not depend on web-framework types. Query parsing is useful outside Spring but is not part of a JSON:API document.
+Document-model consumers should not acquire Jackson or Spring transitively, domain classes should
+not depend on web frameworks, and query parsing is useful outside transport integrations. Jackson 2
+and Jackson 3 also need independent native integration rather than runtime-major detection.
 
 ## Decision
 
-Use these module boundaries:
+Keep these responsibility boundaries:
 
-- `jsonapi-java-core`: dependency-free document model and validation;
-- `jsonapi-java-annotations`: dependency-free domain-mapping annotations;
-- `jsonapi-java-jackson-api`: public Jackson-major-neutral API surface for codec and
-  domain-mapping policy, diagnostics, contexts, domain envelope values, presence-aware
-  update-command values, and the Level-1 application operation contract
-   (`com.kazforge.jsonapi.jackson.api`: root `JsonApi` plus resources,
-  relationships, documents, and patches facets with their option/result values), with no
-  runtime dependency on either Jackson major and no Jackson-mechanics abstraction;
-  [ADR-019](019-level-one-application-api-contract.md) owns that operation contract;
-- `jsonapi-java-jackson3`: Jackson 3 document codec (writer, reads, and mapping),
-  flat DTO mapping, typed envelopes, and PATCH reader entry points that produce the
-  API presence-aware update commands; depends on `jsonapi-java-jackson-api` for neutral
-  contracts;
-- `jsonapi-java-jackson2`: separately compiled Jackson 2 artifact with parity contracts; consumes
-  the same API contracts;
-- `jsonapi-java-query`: optional query-parameter parser;
-- `jsonapi-java-spring-webmvc`: optional Spring Boot WebMVC integration;
-- `jsonapi-java-spring-webflux`: separately evaluated future integration.
+- `jsonapi-java-core` owns the dependency-free document model and validation.
+- `jsonapi-java-annotations` owns dependency-free domain-mapping roles.
+- `jsonapi-java-jackson-api` owns Jackson-major-neutral application, document, mapping,
+  representation, diagnostic, and PATCH contracts. It contains no Jackson mechanics or runtime
+  dependency; [ADR-019](019-level-one-application-api-contract.md) owns its Level-1 operation seam.
+- `jsonapi-java-jackson3` and `jsonapi-java-jackson2` are separately compiled native-major
+  implementations of those contracts. They do not share a runtime artifact or detect a major at
+  runtime.
+- `jsonapi-java-query` owns optional framework- and Jackson-neutral query parsing.
+- Framework integrations are separate optional modules that depend on lower-layer public contracts;
+  lower layers never depend on a framework.
 
-Spring modules depend on the lower layers they adapt. The first WebMVC adapter targets Jackson 3;
-Jackson 2 remains usable without Spring integration. Lower layers never depend on Spring.
-
-Package and Maven coordinates use the permanent namespace in ADR-021 (`com.kazforge` / `com.kazforge.jsonapi`).
+`settings.gradle.kts` is the authority for current build membership. The root module registry
+distinguishes current modules from planned integrations. Public coordinates use the namespace chosen
+by [ADR-021](021-kazforge-namespace.md).
 
 ## Consequences
 
-- Core remains usable with no third-party runtime dependency.
-- Consumers select only the adapters they need.
-- Jackson 2 and Jackson 3 public APIs never share one runtime artifact or use runtime major
-  detection; both majors may share the neutral `jsonapi-java-jackson-api` contract artifact
-  without combining any major's implementation.
-- WebMVC can stabilize without coupling its release to WebFlux.
-- More artifacts and Gradle subprojects must be maintained.
-- Build complexity is accepted in exchange for dependency and responsibility boundaries.
+- Core and annotations remain usable without third-party runtime dependencies.
+- Consumers select only the adapters they need, and neutral callers can avoid choosing a Jackson
+  major in their own contracts.
+- Jackson-major implementations can evolve natively while preserving semantic contract parity.
+- More artifacts and independently enforced boundaries are accepted in exchange for dependency and
+  responsibility isolation.
