@@ -71,7 +71,7 @@ descriptive, not an automatic task-matching router:
 |-------------------|------------------------|
 | Review implementation against the requested outcome | `implementation-review` |
 | Produce a fresh-session review handoff when required | `implementation-handoff` |
-| Assess affected documentation when adding a module or changing public packages, entry points, validate/read flows, or non-goals | `module-docs` |
+| Assess affected documentation when adding a module or changing public packages, entry points, validate/read flows, non-goals, or module-local invariants | `module-docs` |
 | Format Spotless-covered files | `spotless-format` |
 
 **Planning uses the capabilities available in the current session.** Establish facts from repository
