@@ -17,12 +17,12 @@ answer a concrete library-user question; repository guidance remains in its cano
 
 ## Preview and build
 
-Run from the repository root with Python and its `venv` module installed:
+Run from the repository root with Python 3.13 and its `venv` module installed:
 
 ```bash
 python3 -m venv .venv-docs
 . .venv-docs/bin/activate
-python -m pip install --requirement docs/requirements.txt
+python -m pip install --only-binary :all: --require-hashes --requirement docs/requirements.txt
 mkdocs serve --strict
 ```
 
