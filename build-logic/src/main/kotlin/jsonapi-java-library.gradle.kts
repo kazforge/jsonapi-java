@@ -51,8 +51,18 @@ plugins.withId("java-test-fixtures") {
     }
 }
 
+// Test runtime selection: workers default to the Java 21 baseline so a plain local
+// build behaves exactly as before. CI passes -PtestJavaVersion=<matrix> to run the
+// suite on a newer runtime while compilation stays on the 21 toolchain above.
+val testJavaVersion = providers.gradleProperty("testJavaVersion").getOrElse("21")
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(testJavaVersion.toInt()))
+        },
+    )
 }
 
 tasks.withType<Javadoc>().configureEach {
