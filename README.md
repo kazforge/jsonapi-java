@@ -43,14 +43,17 @@ entry points. Shared Gradle conventions live in `build-logic/`; maintainer docum
 
 ## Documentation
 
+- [Documentation index](docs/README.md) — public-site source, maintainer-documentation ownership, and
+  local authoring instructions
 - [Vision](docs/vision.md) — stable product direction and principles
 - [Architecture](docs/architecture.md) — current cross-module mental model and flows
 - [Conformance checklist](docs/conformance.md) — current JSON:API 1.1 feature status
 - [Architecture decision records](docs/adr/README.md)
 - [Agent workflow](AGENTS.md) — knowledge ownership, routing, and completion gates
 
-The module registry links directly to each module's capability, entry-point, and local-maintenance
-documentation.
+The public site source is intentionally isolated under `docs/site/`; maintainer documentation remains
+in the rest of `docs/`. The module registry links directly to each module's capability, entry-point,
+and local-maintenance documentation.
 
 ## License
 
