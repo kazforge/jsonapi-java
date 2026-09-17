@@ -1,0 +1,64 @@
+site_name: jsonapi-java
+site_description: JSON:API v1.1 document, mapping, and validation library for Java.
+site_url: https://kazforge.github.io/jsonapi-java/
+repo_name: kazforge/jsonapi-java
+repo_url: https://github.com/kazforge/jsonapi-java
+edit_uri: edit/main/docs/site/
+
+docs_dir: docs/site
+site_dir: build/docs-site
+strict: true
+use_directory_urls: true
+
+theme:
+  name: material
+  language: en
+  logo: assets/images/favicon.png
+  favicon: assets/images/favicon.png
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+  features:
+    - content.action.edit
+    - content.code.copy
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.share
+    - toc.follow
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    anchors: warn
+    not_found: warn
+    unrecognized_links: warn
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+nav:
+  - Overview: index.md
