@@ -3,5 +3,14 @@
   "extends": [
     "config:recommended",
     "helpers:pinGitHubActionDigests"
+  ],
+  "packageRules": [
+    {
+      "description": "Java compatibility versions are explicit CI matrix intent, not Renovate-managed dependencies. Keep updating the setup-java action itself.",
+      "matchManagers": ["github-actions"],
+      "matchDatasources": ["java-version"],
+      "matchPackageNames": ["java", "java-jdk", "java-jre"],
+      "enabled": false
+    }
   ]
 }
