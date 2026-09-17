@@ -1,14 +1,68 @@
-name: Build
+name: Java CI
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.java'
+      - '**/*.kt'
+      - '**/*.kts'
+      - '**/*.gradle'
+      - '**/*.groovy'
+      - 'build.gradle*'
+      - 'settings.gradle*'
+      - 'gradle.properties'
+      - 'gradle/**'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'build-logic/**'
+      - 'config/**'
+      - '.github/workflows/build.yml'
+      - '.github/scripts/**'
+      - 'renovate.json'
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      java: ${{ steps.filter.outputs.java }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Detect Java/build-relevant changes
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            java:
+              - '**/*.java'
+              - '**/*.kt'
+              - '**/*.kts'
+              - '**/*.gradle'
+              - '**/*.groovy'
+              - 'build.gradle*'
+              - 'settings.gradle*'
+              - 'gradle.properties'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'gradlew.bat'
+              - 'build-logic/**'
+              - 'config/**'
+              - '.github/workflows/build.yml'
+              - '.github/scripts/**'
+              - 'renovate.json'
+
   build:
     name: Build (Java ${{ matrix.java-version }})
+    needs: changes
+    if: needs.changes.outputs.java == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -77,3 +131,18 @@ jobs:
           reporter: java-junit
           use-actions-summary: 'true'
           fail-on-error: 'false'
+
+  # Stable required check; matrix jobs may be skipped before expansion.
+  required:
+    name: Java CI required
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Verify Java CI gate
+        run: |
+          test "${{ needs.changes.result }}" = "success"
+          test "${{ needs.changes.outputs.java }}" != "true" \
+            || test "${{ needs.build.result }}" = "success"

@@ -1,20 +1,15 @@
-name: Publish documentation site
+name: Documentation
 
 on:
   pull_request:
     branches: [main]
-    paths:
-      - .github/workflows/docs-pages.yml
-      - docs/requirements.txt
-      - docs/site/**
-      - mkdocs.yml
   push:
     branches: [main]
     paths:
-      - .github/workflows/docs-pages.yml
-      - docs/requirements.txt
-      - docs/site/**
-      - mkdocs.yml
+      - 'docs/site/**'
+      - 'docs/requirements.txt'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs-pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -25,7 +20,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Detect documentation-relevant changes
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            docs:
+              - 'docs/site/**'
+              - 'docs/requirements.txt'
+              - 'mkdocs.yml'
+              - '.github/workflows/docs-pages.yml'
+
   build:
+    name: Documentation build
+    needs: changes
+    # Manual docs runs always build because there is no PR diff.
+    if: needs.changes.outputs.docs == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -49,6 +71,7 @@ jobs:
           path: build/docs-site
 
   deploy:
+    name: Documentation deploy
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
@@ -62,3 +85,19 @@ jobs:
       - name: Deploy Pages artifact
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+
+  # Stable required check; the build job may be skipped. Does not depend on
+  # deployment, which is not a PR concern.
+  required:
+    name: Documentation required
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Verify documentation gate
+        run: |
+          test "${{ needs.changes.result }}" = "success"
+          test "${{ needs.changes.outputs.docs }}" != "true" \
+            || test "${{ needs.build.result }}" = "success"
