@@ -17,10 +17,10 @@ answer a concrete library-user question; repository guidance remains in its cano
 
 ## Preview and build
 
-Run from the repository root on Linux with Python 3.13 and its `venv` module installed.
-Windows contributors use WSL2. The locked hashes in `requirements.txt` currently target
-Linux CPython 3.13 for CI and local preview; other platforms or Python versions are not
-covered by the lock:
+Run from the repository root on Linux x86_64 with Python 3.13 and its `venv` module installed.
+Windows contributors use WSL2 on x86_64. The locked hashes in `requirements.txt` currently
+target Linux x86_64 CPython 3.13 for CI and local preview; other platforms, architectures,
+or Python versions are not covered by the lock:
 
 ```bash
 python3 -m venv .venv-docs
