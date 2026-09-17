@@ -1,15 +1,29 @@
 name: Java CI
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.java'
+      - '**/*.kt'
+      - '**/*.kts'
+      - '**/*.gradle'
+      - '**/*.groovy'
+      - 'build.gradle*'
+      - 'settings.gradle*'
+      - 'gradle.properties'
+      - 'gradle/**'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'build-logic/**'
+      - 'config/**'
+      - '.github/workflows/build.yml'
+      - '.github/scripts/**'
+      - 'renovate.json'
 
 jobs:
-  # Lightweight change detection: the expensive Java matrix only runs when
-  # Java/build-relevant files changed. The "Java CI required" gate job below is
-  # the stable ruleset required check; the matrix leg names are not.
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
@@ -118,33 +132,17 @@ jobs:
           use-actions-summary: 'true'
           fail-on-error: 'false'
 
-  # Stable, always-created gate for ruleset required checks. jobs.<job>.if is
-  # evaluated before matrix expansion, so a skipped matrix leg might never
-  # create its check run; this job always exists and passes without running
-  # build work when no Java/build-relevant files changed. It fails when change
-  # detection failed, or when the matrix ran but did not succeed. Configure
-  # "Java CI required" as the required check, not "Build (Java 21/25)".
+  # Stable required check; matrix jobs may be skipped before expansion.
   required:
     name: Java CI required
     needs: [changes, build]
-    if: ${{ always() }}
+    if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Verify Java CI gate
-        env:
-          CHANGES_RESULT: ${{ needs.changes.result }}
-          JAVA_CHANGES: ${{ needs.changes.outputs.java }}
-          BUILD_RESULT: ${{ needs.build.result }}
         run: |
-          set -euo pipefail
-          if [[ "$CHANGES_RESULT" != "success" ]]; then
-            echo "::error::Change detection did not succeed (result: $CHANGES_RESULT)."
-            exit 1
-          fi
-          if [[ "$JAVA_CHANGES" == "true" && "$BUILD_RESULT" != "success" ]]; then
-            echo "::error::Java/build-relevant changes detected but matrix result is '$BUILD_RESULT'."
-            exit 1
-          fi
-          echo "Gate passed (matrix: $BUILD_RESULT)."
+          test "${{ needs.changes.result }}" = "success"
+          test "${{ needs.changes.outputs.java }}" != "true" \
+            || test "${{ needs.build.result }}" = "success"

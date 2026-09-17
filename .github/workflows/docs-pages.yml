@@ -5,6 +5,11 @@ on:
     branches: [main]
   push:
     branches: [main]
+    paths:
+      - 'docs/site/**'
+      - 'docs/requirements.txt'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs-pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -15,10 +20,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Lightweight change detection: MkDocs only runs when documentation-relevant
-  # files changed (or the workflow is run manually). The "Documentation
-  # required" gate job below is the stable ruleset required check; the build
-  # and deploy jobs are not.
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
@@ -45,7 +46,7 @@ jobs:
   build:
     name: Documentation build
     needs: changes
-    # Manual dispatches have no PR diff to filter on, so they always build.
+    # Manual docs runs always build because there is no PR diff.
     if: needs.changes.outputs.docs == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -85,34 +86,18 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
 
-  # Stable, always-created gate for ruleset required checks. The conditional
-  # "Documentation build" job may be skipped and then never creates its check
-  # run; this job always exists and passes without running MkDocs when no
-  # documentation-relevant files changed. It fails when change detection
-  # failed, or when the build ran but did not succeed. It deliberately does
-  # not depend on deployment, which is not a PR concern. Configure
-  # "Documentation required" as the required check, not "Documentation build".
+  # Stable required check; the build job may be skipped. Does not depend on
+  # deployment, which is not a PR concern.
   required:
     name: Documentation required
     needs: [changes, build]
-    if: ${{ always() }}
+    if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Verify documentation gate
-        env:
-          CHANGES_RESULT: ${{ needs.changes.result }}
-          DOCS_CHANGES: ${{ needs.changes.outputs.docs }}
-          BUILD_RESULT: ${{ needs.build.result }}
         run: |
-          set -euo pipefail
-          if [[ "$CHANGES_RESULT" != "success" ]]; then
-            echo "::error::Change detection did not succeed (result: $CHANGES_RESULT)."
-            exit 1
-          fi
-          if [[ "$DOCS_CHANGES" == "true" && "$BUILD_RESULT" != "success" ]]; then
-            echo "::error::Documentation-relevant changes detected but build result is '$BUILD_RESULT'."
-            exit 1
-          fi
-          echo "Gate passed (build: $BUILD_RESULT)."
+          test "${{ needs.changes.result }}" = "success"
+          test "${{ needs.changes.outputs.docs }}" != "true" \
+            || test "${{ needs.build.result }}" = "success"
