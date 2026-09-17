@@ -33,7 +33,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - name: Install documentation dependencies
         run: "python -m pip install --only-binary :all: --require-hashes --requirement docs/requirements.txt"
       - name: Build documentation site
