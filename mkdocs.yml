@@ -13,7 +13,7 @@ use_directory_urls: true
 theme:
   name: material
   language: en
-  logo: assets/images/logo.png
+  logo: assets/images/favicon.png
   favicon: assets/images/favicon.png
   palette:
     - scheme: default

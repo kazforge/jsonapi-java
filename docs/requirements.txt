@@ -1,4 +1,4 @@
-# Locked for the Python 3.13 Linux CI environment; refresh deliberately.
+# Locked for Linux (including WSL2) CPython 3.13 CI and local preview; refresh deliberately.
 babel==2.18.0 --hash=sha256:e2b422b277c2b9a9630c1d7903c2a00d0830c409c59ac8cae9081c92f1aeba35
 backrefs==8.0 --hash=sha256:601ce68ca12385dbda06ce264406b4c4210cf5b79fd0fd627592365c92f29a88
 certifi==2026.7.22 --hash=sha256:62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775
