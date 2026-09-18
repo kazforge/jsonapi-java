@@ -41,14 +41,6 @@ Gradle build / sign / Maven Central publish
 4. Verify the deployment under the `com.kazforge` namespace. Published
    releases are immutable; fixes ship as the next train version.
 
-## Credentials
-
-All secrets stay out of the repository. The workflows consume only these
-secret names: `RELEASE_PLEASE_TOKEN`, `CENTRAL_USERNAME`,
-`CENTRAL_PASSWORD`, `SIGNING_KEY`, `SIGNING_PASSWORD`. Local builds skip
-signing without key material; the `Publish` workflow fails fast when
-`SIGNING_KEY` is absent.
-
 ## Failure and retry
 
 - Conflicting release PR: resolve in favor of the release-please proposal and
