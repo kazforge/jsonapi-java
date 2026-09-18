@@ -15,9 +15,9 @@ Release PR
         ↓ merge
 Git tag v<version> + GitHub Release
         ↓
-GitHub Actions
-        ↓
-Gradle build / sign / Maven Central publish
+Publish job (same workflow run)
+- checkout tag
+- Gradle build / sign / Maven Central publish
 ```
 
 ## Single root release
@@ -30,24 +30,29 @@ Gradle build / sign / Maven Central publish
   version.
 - Tags are named `v<version>`; the changelog is the root `CHANGELOG.md`,
   both maintained by release-please.
+- One `Release` workflow runs both jobs. release-please runs with a personal
+  access token so its release PRs receive the normal required checks; the
+  publish job checks out the finalized tag and only receives the
+  Central/signing secrets.
 
 ## Maintainer runbook
 
 1. Review the release PR (`gradle.properties`, `CHANGELOG.md`, manifest) and
    merge it. Merging is the release decision.
-2. release-please creates the `v<version>` tag and GitHub Release.
-3. The `Publish` workflow builds, signs, and uploads the bundle to the
+2. release-please creates the `v<version>` tag and GitHub Release; the publish
+   job checks out that tag, then builds, signs, and uploads the bundle to the
    Central Portal with automatic publishing.
-4. Verify the deployment under the `com.kazforge` namespace. Published
+3. Verify the deployment under the `com.kazforge` namespace. Published
    releases are immutable; fixes ship as the next train version.
 
 ## Failure and retry
 
 - Conflicting release PR: resolve in favor of the release-please proposal and
   re-review the version.
-- Missing tag or Release after merging: re-run the `Release Please` workflow;
-  never create the tag by hand.
-- `Publish` failure: fix the cause and re-run the failed run; the tag already
-  exists, so the same version republishes.
+- Missing tag or Release after merging: re-run the `Release` workflow; never
+  create the tag by hand.
+- Publish job failure: fix the cause and re-run the failed publish job only.
+  Re-running the whole workflow would find the release already created and
+  skip publication.
 - Portal validation failure: fix the cause and ship it as the next train
   version. Published releases are never overwritten.
