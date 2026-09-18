@@ -168,6 +168,7 @@ uniform section completion is not a goal.
 | Public API contract and semantics | Javadoc |
 | Behavioral proof | tests |
 | Cross-cutting architecture rationale | accepted ADR under `docs/adr/` |
+| Release/versioning and change-semantics policy | [ADR-021](docs/adr/021-unified-release-train.md) |
 | JSON:API compliance state | `docs/conformance.md` |
 | Workflow and agent routing | this file and `.agents/skills/` |
 | Planning/review finding severity and stage ownership | `.agents/skills/review-findings.md` |

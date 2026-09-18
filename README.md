@@ -24,6 +24,12 @@ library modules. `jsonapi-java-annotations` is exempt because it is annotation-o
 executable coverage. It also validates consumer-facing Javadoc; `build` assembles a Javadoc JAR for
 each library module.
 
+## Releases and versioning
+
+All six publishable artifacts release together on one version train from the root `version`
+property. Commit grammar, bump rules, and breaking-change semantics are owned by
+[ADR-021](docs/adr/021-unified-release-train.md).
+
 ## Modules
 
 | Module | Status | Purpose |

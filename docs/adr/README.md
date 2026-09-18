@@ -26,3 +26,4 @@ lives in [`docs/architecture.md`](../architecture.md). Stable product direction 
 - [ADR-018: Major-Neutral Level-1 Application API Contract](018-level-one-application-api-contract.md)
 - [ADR-019: Jackson-Neutral Implementation Helpers](019-jackson-neutral-implementation-helpers.md)
 - [ADR-020: KazForge Namespace and Maven Group](020-kazforge-namespace.md)
+- [ADR-021: Unified Release Train and Version Semantics](021-unified-release-train.md)
