@@ -28,7 +28,8 @@ each library module.
 
 All six publishable artifacts release together on one version train from the root `version`
 property. Commit grammar, bump rules, and breaking-change semantics are owned by
-[ADR-021](docs/adr/021-unified-release-train.md).
+[ADR-021](docs/adr/021-unified-release-train.md). The automated lifecycle is
+owned by [docs/release.md](docs/release.md).
 
 ## Modules
 
