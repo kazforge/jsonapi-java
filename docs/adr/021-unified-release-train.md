@@ -64,14 +64,14 @@ Releases use [Conventional Commits](https://www.conventionalcommits.org/) with t
 |---------------|----------------|
 | `feat` | Minor release |
 | `fix` or `perf` | Patch release |
+| `revert` without a breaking-change marker | Patch release |
 | `refactor`, `docs`, `test`, `build`, `ci`, `chore`, and similar internal-only changes | No release by default |
 | `!` in the commit header or a `BREAKING CHANGE:` footer | Breaking change (see below) |
 
 Internal-only types do not trigger a release unless they carry an explicit breaking-change marker
-or are intentionally reclassified as user-visible `fix`/`feat` work. A `revert` commit is
-classified by the user-visible change it produces, not by the type of the commit it reverts: the
-breaking-change rules below take precedence; a revert that is not breaking releases like the
-equivalent `feat`/`fix`/`perf` change, or triggers no release when it is internal-only.
+or are intentionally reclassified as user-visible `fix`/`feat` work. A `revert` commit is a patch
+release by default; a `revert!` commit or a `revert` with a `BREAKING CHANGE:` footer follows the
+breaking-change rules below. Release automation does not infer what kind of change was reverted.
 
 ### Breaking-change semantics
 

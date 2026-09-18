@@ -47,6 +47,7 @@ custom commit parsing:
 |---------------|----------------|
 | `feat` | Minor release |
 | `fix` or `perf` | Patch release |
+| `revert` without a breaking-change marker | Patch release |
 | `refactor`, `docs`, `test`, `build`, `ci`, `chore`, and similar internal-only changes | No release by default |
 | `!` in the commit header or a `BREAKING CHANGE:` footer before 1.0 | Minor release, never patch |
 | `!` in the commit header or a `BREAKING CHANGE:` footer from 1.0 onward | Major release |
@@ -119,36 +120,30 @@ Gradle owns Java publication with standard `maven-publish` and `signing`:
 
 ## Credentials and signing setup
 
-All secrets stay out of the repository. Required GitHub Actions secrets:
+All secrets stay out of the repository. The workflows consume this credential
+contract and nothing else:
 
-| Secret | Source |
-|--------|--------|
-| `RELEASE_PLEASE_TOKEN` | Fine-grained personal access token for the release-please workflow |
-| `CENTRAL_USERNAME` | Central Portal user token username |
-| `CENTRAL_PASSWORD` | Central Portal user token password |
-| `SIGNING_KEY` | ASCII-armored GPG private key used for artifact signing |
-| `SIGNING_PASSWORD` | Passphrase for `SIGNING_KEY`, empty when the key has none |
+| Secret | What it is | Constraint |
+|--------|------------|------------|
+| `RELEASE_PLEASE_TOKEN` | Personal access token the release-please workflow runs as | Scoped to this repository with Contents and Pull requests read/write. Must not be the default `GITHUB_TOKEN`: releases created with `GITHUB_TOKEN` do not trigger downstream workflows, so `Publish` would never fire |
+| `CENTRAL_USERNAME` / `CENTRAL_PASSWORD` | Central Portal user token pair (not the Portal login password) | Used as Bearer credentials for the Publisher API upload |
+| `SIGNING_KEY` | ASCII-armored GPG private key for artifact signing | Public counterpart distributed to a public keyserver so consumers can verify signatures |
+| `SIGNING_PASSWORD` | Passphrase for `SIGNING_KEY` | Empty when the key has none |
 
-Setup:
+Gradle reads the signing material through the `signingKey` and
+`signingPassword` project properties, mapped in the workflow from
+`ORG_GRADLE_PROJECT_signingKey` and `ORG_GRADLE_PROJECT_signingPassword`.
+Local builds without those properties skip signing so `./gradlew clean build`
+stays token-free. The `Publish` workflow instead fails fast when the signing
+secrets are absent and verifies the staged `.asc` signatures before uploading,
+so an unsigned bundle can never reach the Portal.
 
-1. Create a fine-grained personal access token scoped to this repository with
-   Contents read/write and Pull requests read/write access. Store it as
-   `RELEASE_PLEASE_TOKEN`. The release-please workflow must run with this
-   token rather than the default `GITHUB_TOKEN`: releases created with
-   `GITHUB_TOKEN` do not trigger downstream workflows, so the `Publish`
-   workflow would never fire.
-2. Create a Central Portal user token from the Portal account settings. Store
-   the generated username and password as `CENTRAL_USERNAME` and
-   `CENTRAL_PASSWORD`. Portal tokens differ from the Portal login password.
-3. Generate a dedicated signing key pair for releases and distribute the public
-   key to a public keyserver so consumers can verify signatures.
-4. Export the private key armored and store it as `SIGNING_KEY`; store its
-   passphrase as `SIGNING_PASSWORD`.
-5. Gradle reads the signing material through the `signingKey` and
-   `signingPassword` project properties, mapped in the workflow from
-   `ORG_GRADLE_PROJECT_signingKey` and `ORG_GRADLE_PROJECT_signingPassword`.
-   Local builds without those properties skip signing so `./gradlew clean build`
-   stays token-free; release builds with them sign every publication.
+Provider setup lives in the authoritative provider docs: [Central Portal
+tokens](https://central.sonatype.org/publish/generate-portal-token/), [GitHub
+personal access
+tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens),
+and [GnuPG key
+management](https://www.gnupg.org/documentation/manuals/gnupg/).
 
 ## Failure and retry behavior
 
