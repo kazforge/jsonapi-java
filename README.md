@@ -27,11 +27,7 @@ each library module.
 ## Releases and versioning
 
 All six publishable artifacts release together on one version train from the root `version`
-property. Commits follow [Conventional Commits](https://www.conventionalcommits.org/): `feat` bumps
-the minor version, `fix` and `perf` bump the patch version, and internal-only commit types do not
-trigger a release. A breaking change (`!` in the header or a `BREAKING CHANGE:` footer) increments
-the minor version before 1.0 and the major version from 1.0. The full policy — release-train
-rationale, the complete commit-to-bump map, release-note semantics, and the BOM posture — lives in
+property. Commit grammar, bump rules, and breaking-change semantics are owned by
 [ADR-021](docs/adr/021-unified-release-train.md).
 
 ## Modules

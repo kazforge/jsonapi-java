@@ -68,8 +68,10 @@ Releases use [Conventional Commits](https://www.conventionalcommits.org/) with t
 | `!` in the commit header or a `BREAKING CHANGE:` footer | Breaking change (see below) |
 
 Internal-only types do not trigger a release unless they carry an explicit breaking-change marker
-or are intentionally reclassified as user-visible `fix`/`feat` work. A `revert` commit takes the
-release effect of the change it reverts, judged against the change as it now stands.
+or are intentionally reclassified as user-visible `fix`/`feat` work. A `revert` commit is
+classified by the user-visible change it produces, not by the type of the commit it reverts: the
+breaking-change rules below take precedence; a revert that is not breaking releases like the
+equivalent `feat`/`fix`/`perf` change, or triggers no release when it is internal-only.
 
 ### Breaking-change semantics
 
@@ -98,8 +100,7 @@ reopen it.
   whole set together.
 - Pre-1.0 minor releases may contain breaking changes; a 0.x patch release never does. This is the
   documented, deliberate pre-1.0 posture and is surfaced in release notes.
-- Automation can derive the next version from commit history alone: the highest applicable bump
-  since the last release wins, with breaking changes escalating it per the rules above.
-- A future BOM, if any, is a mechanical addition under this train, not a versioning-model change.
+- Release automation derives versions mechanically from the bump and breaking-change rules above;
+  per-artifact version variance is never introduced.
 - Any move to independent trains, a BOM now, or Spring in this train requires a new ADR, not a
   silent drift in automation configuration.
