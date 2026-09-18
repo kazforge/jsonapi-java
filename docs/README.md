@@ -29,7 +29,7 @@ python -m pip install --only-binary :all: --require-hashes --requirement docs/re
 mkdocs serve --strict
 ```
 
-Open <http://127.0.0.1:8000/jsonapi-java/>. Build the deployable site without starting a server with:
+Open <http://127.0.0.1:8000/>. Build the deployable site without starting a server with:
 
 ```bash
 mkdocs build --strict

@@ -1,6 +1,6 @@
 site_name: jsonapi-java
 site_description: JSON:API v1.1 document, mapping, and validation library for Java.
-site_url: https://kazforge.github.io/jsonapi-java/
+site_url: https://jsonapi.kazforge.com/
 repo_name: kazforge/jsonapi-java
 repo_url: https://github.com/kazforge/jsonapi-java
 edit_uri: edit/main/docs/site/
