@@ -1,9 +1,8 @@
 # Release lifecycle
 
-One coherent release lifecycle for the unified release train. Version and
-change semantics are owned by
-[ADR-021](adr/021-unified-release-train.md); this page owns the mechanics that
-implement it.
+One coherent release lifecycle for the unified release train. Change and
+version semantics are owned by
+[ADR-021](adr/021-unified-release-train.md); this page owns the mechanics.
 
 ```
 Conventional Commits
@@ -23,148 +22,40 @@ Gradle build / sign / Maven Central publish
 
 ## Single root release
 
-- release-please is the only release and version orchestrator. There is no
-  Gradle-driven version calculator and no Nebula Release plugin.
-- One release-please package at the repository root (`.`).
-- One version for the complete repository release, stored once in the root
-  `gradle.properties` `version` property and consumed by all modules.
-- All six `com.kazforge:jsonapi-java-*` artifacts always ship that exact
-  version: `jsonapi-java-core`, `jsonapi-java-annotations`,
-  `jsonapi-java-jackson-api`, `jsonapi-java-query`, `jsonapi-java-jackson2`,
-  `jsonapi-java-jackson3`.
-- Tags are named `v<version>` (for example `v0.2.0`); the component name is not
-  included in the tag.
-- The changelog is the root `CHANGELOG.md`, maintained by release-please.
-- Configuration lives in `release-please-config.json` with version tracking in
-  `.release-please-manifest.json`.
-
-## Release classification
-
-The release-please configuration implements the ADR-021 bump rules without
-custom commit parsing:
-
-| Commit change | Release effect |
-|---------------|----------------|
-| `feat` | Minor release |
-| `fix` or `perf` | Patch release |
-| `revert` without a breaking-change marker | Patch release |
-| `refactor`, `docs`, `test`, `build`, `ci`, `chore`, and similar internal-only changes | No release by default |
-| `!` in the commit header or a `BREAKING CHANGE:` footer before 1.0 | Minor release, never patch |
-| `!` in the commit header or a `BREAKING CHANGE:` footer from 1.0 onward | Major release |
-
-Relevant configuration:
-
-- `bump-minor-pre-major: true` keeps pre-1.0 breaking changes on minor.
-- `bump-patch-for-minor-pre-major: false` keeps pre-1.0 features on minor.
-- `skip-snapshot: true` disables the Java strategy snapshot pull requests, so
-  there is no automatic snapshot bump mechanism competing with the release PR.
-- `include-component-in-tag: false` with `include-v-in-tag: true` produces
-  `v<version>` tags.
-- `gradle.properties` carries the release-please version annotations, so the
-  release PR updates the single version source directly.
-
-## What is out of scope
-
-- Independent per-artifact trains or version variance.
-- A BOM artifact.
-- Spring artifacts.
-- Automated snapshot publication.
-- Release-candidate or other pre-release automation.
-- API or dependency compatibility tooling and SBOM or provenance generation,
-  which extend the publication lifecycle without duplicating orchestration.
-
-## Normal development
-
-- Write Conventional Commits on the path to `main`. The Conventional Commits
-  check guards PR titles and commit messages.
-- Do not edit the version by hand to cut a release. Do not publish mutable
-  snapshots from development branches.
-- Between releases the repository version stays at the last release version
-  until the next release PR proposes the bump.
+- release-please is the only version orchestrator: one package at the
+  repository root, configured in `release-please-config.json` with version
+  tracking in `.release-please-manifest.json`.
+- The single version source is the root `gradle.properties` `version`
+  property; all six `com.kazforge:jsonapi-java-*` artifacts ship that exact
+  version.
+- Tags are named `v<version>`; the changelog is the root `CHANGELOG.md`,
+  both maintained by release-please.
 
 ## Maintainer runbook
 
-1. Let release-please open and update the release PR on `main`. Review the
-   proposed version in `gradle.properties`, the `CHANGELOG.md` entry, and the
-   manifest update together.
-2. Merge the release PR when the notes and version are correct. Merging is the
-   release decision.
-3. release-please creates the `v<version>` tag and the corresponding GitHub
-   Release from the merged PR.
-4. The `Publish` workflow starts from the published release. It runs
-   `./gradlew clean build publish`, assembles `build/central-bundle.zip` from
-   `build/staging-deploy`, and uploads the bundle to the Central Portal with
-   automatic publishing.
-5. Verify the deployment in the Central Portal and the artifacts under the
-   `com.kazforge` namespace. The published release is immutable; fixes ship as
-   the next release train version.
+1. Review the release PR (`gradle.properties`, `CHANGELOG.md`, manifest) and
+   merge it. Merging is the release decision.
+2. release-please creates the `v<version>` tag and GitHub Release.
+3. The `Publish` workflow builds, signs, and uploads the bundle to the
+   Central Portal with automatic publishing.
+4. Verify the deployment under the `com.kazforge` namespace. Published
+   releases are immutable; fixes ship as the next train version.
 
-## Publication
+## Credentials
 
-Gradle owns Java publication with standard `maven-publish` and `signing`:
+All secrets stay out of the repository. The workflows consume only these
+secret names: `RELEASE_PLEASE_TOKEN`, `CENTRAL_USERNAME`,
+`CENTRAL_PASSWORD`, `SIGNING_KEY`, `SIGNING_PASSWORD`. Local builds skip
+signing without key material; the `Publish` workflow fails fast when
+`SIGNING_KEY` is absent.
 
-- Each publishable module applies the shared `jsonapi-java-publish`
-  convention, which configures the `mavenJava` publication from the `java`
-  component with the module `artifactId` and the root project version.
-- Every artifact publishes the main JAR plus sources and Javadoc JARs. The
-  shared library conventions already assemble Javadoc JARs; the publish
-  convention additionally enables sources JARs.
-- Every publication carries the required POM metadata: name, description, project
-  URL, Apache-2.0 license, developer, and SCM coordinates.
-- The publish convention stages all six publications into the shared
-  `build/staging-deploy` Maven layout. The `Publish` workflow zips that layout
-  and uploads it to the Central Portal Publisher API. The workflow never
-  calculates a second version; it publishes the release-please-owned version.
-- The `com.kazforge` Sonatype Central namespace is already verified. The
-  superseded `io.github.kazemek` coordinates are not published.
+## Failure and retry
 
-## Credentials and signing setup
-
-All secrets stay out of the repository. The workflows consume this credential
-contract and nothing else:
-
-| Secret | What it is | Constraint |
-|--------|------------|------------|
-| `RELEASE_PLEASE_TOKEN` | Personal access token the release-please workflow runs as | Scoped to this repository with Contents and Pull requests read/write. Must not be the default `GITHUB_TOKEN`: releases created with `GITHUB_TOKEN` do not trigger downstream workflows, so `Publish` would never fire |
-| `CENTRAL_USERNAME` / `CENTRAL_PASSWORD` | Central Portal user token pair (not the Portal login password) | Used as Bearer credentials for the Publisher API upload |
-| `SIGNING_KEY` | ASCII-armored GPG private key for artifact signing | Public counterpart distributed to a public keyserver so consumers can verify signatures |
-| `SIGNING_PASSWORD` | Passphrase for `SIGNING_KEY` | Empty when the key has none |
-
-Gradle reads the signing material through the `signingKey` and
-`signingPassword` project properties, mapped in the workflow from
-`ORG_GRADLE_PROJECT_signingKey` and `ORG_GRADLE_PROJECT_signingPassword`.
-Local builds without those properties skip signing so `./gradlew clean build`
-stays token-free. The `Publish` workflow instead fails fast when the signing
-secrets are absent and verifies the staged `.asc` signatures before uploading,
-so an unsigned bundle can never reach the Portal.
-
-Provider setup lives in the authoritative provider docs: [Central Portal
-tokens](https://central.sonatype.org/publish/generate-portal-token/), [GitHub
-personal access
-tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens),
-and [GnuPG key
-management](https://www.gnupg.org/documentation/manuals/gnupg/).
-
-## Failure and retry behavior
-
-- Release PR out of date or conflicting: let release-please update the PR,
-  resolve any `gradle.properties`, `CHANGELOG.md`, or manifest conflicts in
-  favor of the release-please proposal, and re-review the version.
-- Missing or expired `RELEASE_PLEASE_TOKEN`: the `Release Please` workflow run
-  fails visibly and the chain stalls before any release PR. Renew the token
-  with the same repository scopes, update the secret, and re-run the workflow.
-  Do not fall back to the default `GITHUB_TOKEN`; releases it creates would not
-  trigger the `Publish` workflow.
-- Missing tag or GitHub Release after merging: re-run the `Release Please`
-  workflow for the `main` branch. Do not create the tag by hand; the tag must
-  match the manifest version and the release PR.
-- `Publish` workflow build or signing failure: fix the underlying build or
-  signing secret, then re-run the failed workflow run. The release tag already
-  exists, so a re-run republishes the same version.
-- Central Portal validation failure: inspect the deployment in the Portal UI,
-  fix POM metadata, sources, Javadoc, or signing, cut the fix as the next
-  release train version, and publish again. Published releases are never
-  overwritten.
-- The `central-bundle` workflow artifact (bundle zip plus staging layout) is
-  retained for inspection. A maintainer with Portal access can also upload that
-  bundle manually through the Portal UI when automation cannot proceed.
+- Conflicting release PR: resolve in favor of the release-please proposal and
+  re-review the version.
+- Missing tag or Release after merging: re-run the `Release Please` workflow;
+  never create the tag by hand.
+- `Publish` failure: fix the cause and re-run the failed run; the tag already
+  exists, so the same version republishes.
+- Portal validation failure: fix the cause and ship it as the next train
+  version. Published releases are never overwritten.
