@@ -49,7 +49,7 @@ jobs:
         env:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
-        run: ./gradlew clean build publish
+        run: ./gradlew publish
       - name: Assemble Central Portal bundle
         run: |
           test -d build/staging-deploy
