@@ -1,22 +1,39 @@
-name: Publish
+name: Release
 
 on:
-  release:
-    types: [published]
-
-permissions:
-  contents: read
+  push:
+    branches: [main]
 
 jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      # PAT so release PRs receive the normal required CI checks.
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
   publish:
     name: Build, sign, and publish to Maven Central
-    if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
-          ref: ${{ github.ref }}
+          ref: ${{ needs.release-please.outputs.tag_name }}
       - name: Set up JDK 21 (toolchain baseline)
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
