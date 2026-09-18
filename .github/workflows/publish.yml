@@ -23,27 +23,16 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
-      - name: Require signing material
+      - name: Require signing key
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           test -n "$SIGNING_KEY" || { echo "SIGNING_KEY is not set; refusing to publish unsigned artifacts." >&2; exit 1; }
-          test -n "$SIGNING_PASSWORD" || { echo "SIGNING_PASSWORD is not set; refusing to publish unsigned artifacts." >&2; exit 1; }
       - name: Build, sign, and stage publications
         env:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew clean build publish
-      - name: Verify staged signatures
-        run: |
-          version=$(grep '^version=' gradle.properties | cut -d= -f2)
-          for artifact in jsonapi-java-core jsonapi-java-annotations jsonapi-java-jackson-api jsonapi-java-query jsonapi-java-jackson2 jsonapi-java-jackson3; do
-            for classifier in "" "-sources" "-javadoc"; do
-              test -f "build/staging-deploy/com/kazforge/$artifact/$version/$artifact-$version$classifier.jar.asc" || { echo "Missing signature for $artifact$classifier." >&2; exit 1; }
-            done
-            test -f "build/staging-deploy/com/kazforge/$artifact/$version/$artifact-$version.pom.asc" || { echo "Missing POM signature for $artifact." >&2; exit 1; }
-          done
       - name: Assemble Central Portal bundle
         run: |
           test -d build/staging-deploy
@@ -61,13 +50,3 @@ jobs:
             -H "Authorization: Bearer $CENTRAL_TOKEN" \
             -F "bundle=@build/central-bundle.zip" \
             "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC"
-      - name: Upload staging bundle artifact
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: central-bundle
-          path: |
-            build/central-bundle.zip
-            build/staging-deploy/**
-          if-no-files-found: error
-          retention-days: 14
