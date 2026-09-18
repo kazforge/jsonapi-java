@@ -1,0 +1,9 @@
+{
+  "name": "jsonapi-java-commitlint",
+  "private": true,
+  "description": "Commitlint configuration used by the Conventional Commits CI guardrail.",
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2"
+  }
+}

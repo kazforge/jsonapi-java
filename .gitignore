@@ -44,3 +44,6 @@ build/
 .classpath
 .factorypath
 bin/
+
+# Node (commitlint tooling under .github/commitlint/)
+node_modules/
