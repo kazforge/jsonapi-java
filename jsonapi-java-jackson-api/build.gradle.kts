@@ -1,5 +1,6 @@
 plugins {
     id("jsonapi-java-library")
+    id("jsonapi-java-publish")
     id("java-test-fixtures")
 }
 
