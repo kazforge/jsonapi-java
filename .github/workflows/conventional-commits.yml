@@ -1,0 +1,42 @@
+name: Conventional Commits
+
+on:
+  pull_request:
+    branches: [main]
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-commits:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: .github/commitlint/package-lock.json
+      - name: Install commitlint
+        working-directory: .github/commitlint
+        run: npm ci
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        working-directory: .github/commitlint
+        run: printf '%s\n' "$PR_TITLE" | npx --no-install commitlint --config commitlint.title.mjs --verbose
+      - name: Validate commit messages
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        working-directory: .github/commitlint
+        run: |
+          MERGE_BASE=$(git merge-base origin/main "$HEAD_SHA")
+          npx --no-install commitlint --from "$MERGE_BASE" --to "$HEAD_SHA" --verbose
