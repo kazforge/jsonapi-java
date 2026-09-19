@@ -21,13 +21,13 @@ class GenericDomainResourceBinderSpec extends Specification {
         null,
         Attributes.ofAttributes([title: "Hello"]),
         Relationships.ofRelationships([
-            author: Relationship.withData(
-                new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "p1"))),
-            comments: Relationship.withData(
-                new RelationshipData.IdentifierCollectionLinkage([
-                    ResourceIdentifier.of("comments", "c1"),
-                    ResourceIdentifier.of("comments", "c2")
-                ]))
+          author: Relationship.withData(
+          new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "p1"))),
+          comments: Relationship.withData(
+          new RelationshipData.IdentifierCollectionLinkage([
+            ResourceIdentifier.of("comments", "c1"),
+            ResourceIdentifier.of("comments", "c2")
+          ]))
         ]),
         null,
         null,
@@ -41,8 +41,8 @@ class GenericDomainResourceBinderSpec extends Specification {
     article.title == "Hello"
     article.author == ResourceIdentifier.of("people", "p1")
     article.comments == [
-        ResourceIdentifier.of("comments", "c1"),
-        ResourceIdentifier.of("comments", "c2")
+      ResourceIdentifier.of("comments", "c1"),
+      ResourceIdentifier.of("comments", "c2")
     ]
   }
 
@@ -75,7 +75,7 @@ class GenericDomainResourceBinderSpec extends Specification {
         null,
         null,
         Relationships.ofRelationships([
-            author: Relationship.metaOnly(com.kazforge.jsonapi.core.model.Meta.of([note: "x"]))
+          author: Relationship.metaOnly(com.kazforge.jsonapi.core.model.Meta.of([note: "x"]))
         ]),
         null,
         null,
@@ -99,7 +99,7 @@ class GenericDomainResourceBinderSpec extends Specification {
         null,
         null,
         Relationships.ofRelationships([
-            author: Relationship.withData(RelationshipData.NullLinkage.INSTANCE)
+          author: Relationship.withData(RelationshipData.NullLinkage.INSTANCE)
         ]),
         null,
         null,
@@ -180,23 +180,27 @@ class GenericDomainResourceBinderSpec extends Specification {
 
   private static FakeBindingBackend backend() {
     new FakeBindingBackend([
-        (BoundArticle): new BindingDefinition<>(
-            "articles",
-            BoundArticle,
-            prop("id", MappingRole.ID, String),
-            null,
-            [prop("title", MappingRole.ATTRIBUTE, String)],
-            [
-                prop("author", MappingRole.RELATIONSHIP, ResourceIdentifier),
-                prop("comments", MappingRole.RELATIONSHIP, List)
-            ]),
-        (BoundDraft): new BindingDefinition<>(
-            "drafts",
-            BoundDraft,
-            null,
-            prop("localId", "lid", MappingRole.LOCAL_ID, String),
-            [prop("title", MappingRole.ATTRIBUTE, String)],
-            [])
+      (BoundArticle): new BindingDefinition<>(
+      "articles",
+      BoundArticle,
+      prop("id", MappingRole.ID, String),
+      null,
+      [
+        prop("title", MappingRole.ATTRIBUTE, String)
+      ],
+      [
+        prop("author", MappingRole.RELATIONSHIP, ResourceIdentifier),
+        prop("comments", MappingRole.RELATIONSHIP, List)
+      ]),
+      (BoundDraft): new BindingDefinition<>(
+      "drafts",
+      BoundDraft,
+      null,
+      prop("localId", "lid", MappingRole.LOCAL_ID, String),
+      [
+        prop("title", MappingRole.ATTRIBUTE, String)
+      ],
+      [])
     ])
   }
 
@@ -218,7 +222,7 @@ class GenericDomainResourceBinderSpec extends Specification {
   }
 
   private static final class FakeBindingBackend
-      implements DomainBindingBackend<Class<?>, String> {
+  implements DomainBindingBackend<Class<?>, String> {
 
     private final Map<Class<?>, BindingDefinition<Class<?>, String>> definitions
     final Set<String> nonBindable = new HashSet<>()
@@ -319,10 +323,10 @@ class GenericDomainResourceBinderSpec extends Specification {
     final List<ResourceIdentifier> comments
 
     BoundArticle(
-        String id,
-        String title,
-        ResourceIdentifier author,
-        List<ResourceIdentifier> comments) {
+    String id,
+    String title,
+    ResourceIdentifier author,
+    List<ResourceIdentifier> comments) {
       this.id = id
       this.title = title
       this.author = author
