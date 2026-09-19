@@ -221,16 +221,15 @@ class GenericDomainResourceWriterSpec extends Specification {
 
     @Override
     Object read(Object domain, MappingPropertyDefinition<FakeType, String> property) {
-      switch (property.handle()) {
-        case "id" -> domain.id
-        case "lid" -> domain.lid
-        case "title" -> domain.title
-        case "name" -> domain.name
-        case "body" -> domain.body
-        case "author" -> domain.author
-        case "comments" -> domain.comments
-        default -> throw new IllegalArgumentException(property.handle())
-      }
+      def handle = property.handle()
+      if (handle == "id") return domain.id
+      if (handle == "lid") return domain.lid
+      if (handle == "title") return domain.title
+      if (handle == "name") return domain.name
+      if (handle == "body") return domain.body
+      if (handle == "author") return domain.author
+      if (handle == "comments") return domain.comments
+      throw new IllegalArgumentException(handle)
     }
 
     @Override
