@@ -25,7 +25,10 @@ class GenericDomainResourceWriterSpec extends Specification {
         "a1",
         "Hello",
         new Person("p1", "Alice"),
-        [new Comment("c1", "First"), new Comment("c2", "Second")])
+        [
+          new Comment("c1", "First"),
+          new Comment("c2", "Second")
+        ])
 
     when:
     def resource = writer.toResource(article)
@@ -39,8 +42,9 @@ class GenericDomainResourceWriterSpec extends Specification {
         new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "p1"))
     resource.relationships().relationships().comments.data() ==
         new RelationshipData.IdentifierCollectionLinkage([
-            ResourceIdentifier.of("comments", "c1"),
-            ResourceIdentifier.of("comments", "c2")])
+          ResourceIdentifier.of("comments", "c1"),
+          ResourceIdentifier.of("comments", "c2")
+        ])
   }
 
   def "maps local identifier independently of id"() {
@@ -83,9 +87,9 @@ class GenericDomainResourceWriterSpec extends Specification {
     def article = new Article("a1", "Hello", new Person("p1", "Alice"), [])
     def representation = representation(
         RepresentationSelection.builder()
-            .include("author")
-            .fields("articles", ["title"])
-            .build(),
+        .include("author")
+        .fields("articles", ["title"])
+        .build(),
         RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll()))
 
     when:
@@ -98,7 +102,9 @@ class GenericDomainResourceWriterSpec extends Specification {
     included.included()*.type() == ["people"]
     included.included()*.id() == ["p1"]
     included.sparseFieldsetLinkageExemptions() as List ==
-        [com.kazforge.jsonapi.core.model.ResourceIdentity.ofId("people", "p1")]
+        [
+          com.kazforge.jsonapi.core.model.ResourceIdentity.ofId("people", "p1")
+        ]
   }
 
   def "unknown sparse field fails in mapping diagnostic family"() {
@@ -143,37 +149,45 @@ class GenericDomainResourceWriterSpec extends Specification {
 
   private static FakeBackend backend() {
     new FakeBackend([
-        (ARTICLES): new MappingDefinition<>(
-            "articles",
-            ARTICLES,
-            prop("id", MappingRole.ID, ARTICLES, false),
-            null,
-            [prop("title", MappingRole.ATTRIBUTE, ARTICLES, false)],
-            [
-                prop("author", MappingRole.RELATIONSHIP, PEOPLE, false),
-                prop("comments", MappingRole.RELATIONSHIP, COMMENTS, true)
-            ]),
-        (PEOPLE): new MappingDefinition<>(
-            "people",
-            PEOPLE,
-            prop("id", MappingRole.ID, PEOPLE, false),
-            null,
-            [prop("name", MappingRole.ATTRIBUTE, PEOPLE, false)],
-            []),
-        (COMMENTS): new MappingDefinition<>(
-            "comments",
-            COMMENTS,
-            prop("id", MappingRole.ID, COMMENTS, false),
-            null,
-            [prop("body", MappingRole.ATTRIBUTE, COMMENTS, false)],
-            []),
-        (DRAFTS): new MappingDefinition<>(
-            "drafts",
-            DRAFTS,
-            null,
-            prop("lid", MappingRole.LOCAL_ID, DRAFTS, false),
-            [prop("title", MappingRole.ATTRIBUTE, DRAFTS, false)],
-            [])
+      (ARTICLES): new MappingDefinition<>(
+      "articles",
+      ARTICLES,
+      prop("id", MappingRole.ID, ARTICLES, false),
+      null,
+      [
+        prop("title", MappingRole.ATTRIBUTE, ARTICLES, false)
+      ],
+      [
+        prop("author", MappingRole.RELATIONSHIP, PEOPLE, false),
+        prop("comments", MappingRole.RELATIONSHIP, COMMENTS, true)
+      ]),
+      (PEOPLE): new MappingDefinition<>(
+      "people",
+      PEOPLE,
+      prop("id", MappingRole.ID, PEOPLE, false),
+      null,
+      [
+        prop("name", MappingRole.ATTRIBUTE, PEOPLE, false)
+      ],
+      []),
+      (COMMENTS): new MappingDefinition<>(
+      "comments",
+      COMMENTS,
+      prop("id", MappingRole.ID, COMMENTS, false),
+      null,
+      [
+        prop("body", MappingRole.ATTRIBUTE, COMMENTS, false)
+      ],
+      []),
+      (DRAFTS): new MappingDefinition<>(
+      "drafts",
+      DRAFTS,
+      null,
+      prop("lid", MappingRole.LOCAL_ID, DRAFTS, false),
+      [
+        prop("title", MappingRole.ATTRIBUTE, DRAFTS, false)
+      ],
+      [])
     ])
   }
 
