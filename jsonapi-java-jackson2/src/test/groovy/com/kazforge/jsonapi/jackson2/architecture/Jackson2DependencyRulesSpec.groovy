@@ -43,6 +43,7 @@ class Jackson2DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.core.validation..",
         "com.kazforge.jsonapi.annotation..",
         "com.kazforge.jsonapi.jackson..",
+        "com.kazforge.jsonapi.mapping.internal..",
         "com.kazforge.jsonapi.jackson2..",
         "com.fasterxml.jackson..")
         .check(jackson2Classes)
@@ -196,7 +197,9 @@ class Jackson2DependencyRulesSpec extends Specification {
   }
 
   private static boolean isSharedInternalType(JavaClass candidate) {
-    isInternalPackage(candidate.packageName)
+    isInternalPackage(candidate.packageName) ||
+        candidate.packageName == "com.kazforge.jsonapi.mapping.internal" ||
+        candidate.packageName.startsWith("com.kazforge.jsonapi.mapping.internal.")
   }
 
   private static Set<JavaClass> exposedTypes(JavaClass candidate) {

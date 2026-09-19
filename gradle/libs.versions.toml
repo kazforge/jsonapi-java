@@ -12,6 +12,7 @@ archunit = "1.5.0"
 jackson2 = "2.22.2"
 jackson3 = "3.2.2"
 json-schema-validator = "3.0.7"
+gson = "2.14.0"
 
 [libraries]
 spock-core = { module = "org.spockframework:spock-core", version.ref = "spock" }
@@ -28,6 +29,7 @@ jackson2-jdk8 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jdk8
 jackson3-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson3" }
 jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.22" }
 json-schema-validator = { module = "com.networknt:json-schema-validator", version.ref = "json-schema-validator" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 [plugins]
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
