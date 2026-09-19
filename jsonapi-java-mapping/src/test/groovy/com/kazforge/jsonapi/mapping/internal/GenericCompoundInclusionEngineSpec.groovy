@@ -118,16 +118,18 @@ class GenericCompoundInclusionEngineSpec extends Specification {
         def engine = new GenericCompoundInclusionEngine<FakeType>(
                 new FakeBackend(["articles#author": personType]))
 
+        and:
+        def representation = new MappingRepresentation(
+                RepresentationSelection.builder().include("author").build(),
+                RepresentationPolicy.defaults())
+
         when:
         engine.collectIncluded(
                 [new Article("1", new Person("9"))],
                 [articleType],
                 [ResourceObject.of("articles", "1")],
                 null,
-                new MappingRepresentation(
-                        RepresentationSelection.builder().include("author").build(),
-                        RepresentationPolicy.defaults()))
-        )
+                representation)
 
         then:
         def ex = thrown(JsonApiMappingException)
