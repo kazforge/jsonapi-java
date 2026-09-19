@@ -281,12 +281,16 @@ class GenericDomainResourceBinderSpec extends Specification {
     @Override
     Object convertRelationship(
         RelationshipData data, BindingPropertyDefinition<Class<?>, String> property) {
-      switch (data) {
-        case RelationshipData.NullLinkage ignored -> null
-        case RelationshipData.SingleLinkage single -> single.identifier()
-        case RelationshipData.IdentifierCollectionLinkage collection ->
-          collection.identifiers()
+      if (data instanceof RelationshipData.NullLinkage) {
+        return null
       }
+      if (data instanceof RelationshipData.SingleLinkage) {
+        return data.identifier()
+      }
+      if (data instanceof RelationshipData.IdentifierCollectionLinkage) {
+        return data.identifiers()
+      }
+      throw new IllegalArgumentException(data.toString())
     }
 
     @Override
