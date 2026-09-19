@@ -25,19 +25,23 @@ class GenericCompoundInclusionEngineSpec extends Specification {
     def representation = new MappingRepresentation(
         RepresentationSelection.builder().include("author").build(),
         RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll())
-    )
+        )
 
     when:
     def result = engine.collectIncluded(
         [article],
         [articleType],
-        [ResourceObject.of("articles", "1")],
+        [
+          ResourceObject.of("articles", "1")
+        ],
         null,
         representation
-    )
+        )
 
     then:
-    result.included() == [ResourceObject.of("people", "9")]
+    result.included() == [
+      ResourceObject.of("people", "9")
+    ]
     result.sparseFieldsetLinkageExemptions().isEmpty()
   }
 
@@ -51,23 +55,27 @@ class GenericCompoundInclusionEngineSpec extends Specification {
     engine.collectIncluded(
         [new Article("1", null)],
         [articleType],
-        [ResourceObject.of("articles", "1")],
+        [
+          ResourceObject.of("articles", "1")
+        ],
         null,
         new MappingRepresentation(
-            RepresentationSelection.none(),
-            RepresentationPolicy.defaults())
-    ).included() == null
+        RepresentationSelection.none(),
+        RepresentationPolicy.defaults())
+        ).included() == null
 
     and:
     engine.collectIncluded(
         [new Article("1", null)],
         [articleType],
-        [ResourceObject.of("articles", "1")],
+        [
+          ResourceObject.of("articles", "1")
+        ],
         null,
         new MappingRepresentation(
-            RepresentationSelection.builder().includeRequested().build(),
-            RepresentationPolicy.defaults())
-    ).included() == []
+        RepresentationSelection.builder().includeRequested().build(),
+        RepresentationPolicy.defaults())
+        ).included() == []
   }
 
   def "mismatched primary snapshots are rejected before traversal"() {
@@ -79,12 +87,14 @@ class GenericCompoundInclusionEngineSpec extends Specification {
     engine.collectIncluded(
         [new Article("1", null)],
         [],
-        [ResourceObject.of("articles", "1")],
+        [
+          ResourceObject.of("articles", "1")
+        ],
         null,
         new MappingRepresentation(
-            RepresentationSelection.builder().include("author").build(),
-            RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll()))
-    )
+        RepresentationSelection.builder().include("author").build(),
+        RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll()))
+        )
 
     then:
     thrown(IllegalArgumentException)
@@ -99,12 +109,14 @@ class GenericCompoundInclusionEngineSpec extends Specification {
     engine.collectIncluded(
         [new Article("1", null)],
         [type],
-        [ResourceObject.of("articles", "1")],
+        [
+          ResourceObject.of("articles", "1")
+        ],
         null,
         new MappingRepresentation(
-            RepresentationSelection.builder().include("missing").build(),
-            RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll()))
-    )
+        RepresentationSelection.builder().include("missing").build(),
+        RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll()))
+        )
 
     then:
     def ex = thrown(JsonApiMappingException)
@@ -125,9 +137,13 @@ class GenericCompoundInclusionEngineSpec extends Specification {
 
     when:
     engine.collectIncluded(
-        [new Article("1", new Person("9"))],
+        [
+          new Article("1", new Person("9"))
+        ],
         [articleType],
-        [ResourceObject.of("articles", "1")],
+        [
+          ResourceObject.of("articles", "1")
+        ],
         null,
         representation)
 
@@ -145,16 +161,20 @@ class GenericCompoundInclusionEngineSpec extends Specification {
 
     when:
     engine.collectIncluded(
-        [new Article("1", new Person("9"))],
+        [
+          new Article("1", new Person("9"))
+        ],
         [articleType],
-        [ResourceObject.of("articles", "1")],
+        [
+          ResourceObject.of("articles", "1")
+        ],
         null,
         new MappingRepresentation(
-            RepresentationSelection.builder().include("author").build(),
-            RepresentationPolicy.defaults()
-                .withIncludePolicy(IncludePolicy.allowAll())
-                .withMaxIncludeDepth(0))
-    )
+        RepresentationSelection.builder().include("author").build(),
+        RepresentationPolicy.defaults()
+        .withIncludePolicy(IncludePolicy.allowAll())
+        .withMaxIncludeDepth(0))
+        )
 
     then:
     def ex = thrown(JsonApiMappingException)
@@ -169,22 +189,30 @@ class GenericCompoundInclusionEngineSpec extends Specification {
         new FakeBackend(["articles#author": personType]))
     def representation = new MappingRepresentation(
         RepresentationSelection.builder()
-            .include("author")
-            .fields("articles", ["title"])
-            .build(),
+        .include("author")
+        .fields("articles", ["title"])
+        .build(),
         RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll()))
 
     when:
     def result = engine.collectIncluded(
-        [new Article("1", new Person("9"))],
+        [
+          new Article("1", new Person("9"))
+        ],
         [articleType],
-        [ResourceObject.of("articles", "1")],
+        [
+          ResourceObject.of("articles", "1")
+        ],
         null,
         representation)
 
     then:
-    result.included() == [ResourceObject.of("people", "9")]
-    result.sparseFieldsetLinkageExemptions() == [ResourceIdentity.ofId("people", "9")] as Set
+    result.included() == [
+      ResourceObject.of("people", "9")
+    ]
+    result.sparseFieldsetLinkageExemptions() == [
+      ResourceIdentity.ofId("people", "9")
+    ] as Set
   }
 
   def "max included resource count is enforced during traversal"() {
@@ -196,16 +224,20 @@ class GenericCompoundInclusionEngineSpec extends Specification {
 
     when:
     engine.collectIncluded(
-        [new Article("1", new Person("9"))],
+        [
+          new Article("1", new Person("9"))
+        ],
         [articleType],
-        [ResourceObject.of("articles", "1")],
+        [
+          ResourceObject.of("articles", "1")
+        ],
         null,
         new MappingRepresentation(
-            RepresentationSelection.builder().include("author").build(),
-            RepresentationPolicy.defaults()
-                .withIncludePolicy(IncludePolicy.allowAll())
-                .withMaxIncludedResources(0))
-    )
+        RepresentationSelection.builder().include("author").build(),
+        RepresentationPolicy.defaults()
+        .withIncludePolicy(IncludePolicy.allowAll())
+        .withMaxIncludedResources(0))
+        )
 
     then:
     def ex = thrown(JsonApiMappingException)
