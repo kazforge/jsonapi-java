@@ -11,6 +11,6 @@ dependencies {
     testImplementation(project(":jsonapi-java-mapping"))
     testImplementation(testFixtures(project(":jsonapi-java-mapping")))
     testImplementation(libs.gson)
-    testCompileOnly(libs.jspecify)
     testImplementation(libs.archunit)
+    testCompileOnly(libs.jspecify)
 }
