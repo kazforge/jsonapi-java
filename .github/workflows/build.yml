@@ -72,9 +72,7 @@ jobs:
         # test suite on a newer runtime.
         java-version: [21, 25]
     permissions:
-      # KAZ-138 temporary: Java 21 commits Spotless output back to the PoC head branch.
-      # Revert to read after the one-time formatting commit.
-      contents: write
+      contents: read
       checks: write
       pull-requests: write
     steps:
@@ -97,19 +95,6 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java-version }}
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
-      - name: KAZ-138 one-time format PoC head
-        if: ${{ matrix.java-version == 21 && github.head_ref == 'poc/kaz-137-mapping-domain' }}
-        run: |
-          git fetch origin "${{ github.head_ref }}"
-          git checkout -B "${{ github.head_ref }}" "origin/${{ github.head_ref }}"
-          ./gradlew spotlessApply
-          if ! git diff --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "chore: format PoC sources"
-            git push origin "HEAD:${{ github.head_ref }}"
-          fi
       - name: Build & Test (Java ${{ matrix.java-version }})
         run: ./gradlew clean spotlessCheck build -PtestJavaVersion=${{ matrix.java-version }}
       - name: Sonar Scan (Java 21 only)
