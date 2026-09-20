@@ -104,7 +104,7 @@ final class GsonPrototypeMappingBackend implements DomainMappingBackend<Type, Fi
       Object domain,
       MappingDefinition<Type, Field> mapping,
       MappingPropertyDefinition<Type, Field> property) {
-    return MappingValue.emitted(toOpenValue(gson.toJsonTree(read(domain, property))));
+    return MappingValue.emitted(toOpenValue(read(domain, property)));
   }
 
   @Override
@@ -196,6 +196,38 @@ final class GsonPrototypeMappingBackend implements DomainMappingBackend<Type, Fi
       return cls;
     }
     throw new IllegalArgumentException("Unsupported PoC type: " + type);
+  }
+
+  private @Nullable Object toOpenValue(@Nullable Object value) {
+    if (value == null) {
+      return null;
+    }
+    if (value instanceof Map<?, ?> map) {
+      Map<String, @Nullable Object> values = new java.util.LinkedHashMap<>();
+      for (Map.Entry<?, ?> entry : map.entrySet()) {
+        if (!(entry.getKey() instanceof String key)) {
+          return toOpenValue(gson.toJsonTree(value));
+        }
+        values.put(key, toOpenValue(entry.getValue()));
+      }
+      return java.util.Collections.unmodifiableMap(values);
+    }
+    if (value instanceof Collection<?> collection) {
+      List<@Nullable Object> values = new ArrayList<>(collection.size());
+      for (Object item : collection) {
+        values.add(toOpenValue(item));
+      }
+      return java.util.Collections.unmodifiableList(values);
+    }
+    if (value.getClass().isArray()) {
+      int length = Array.getLength(value);
+      List<@Nullable Object> values = new ArrayList<>(length);
+      for (int i = 0; i < length; i++) {
+        values.add(toOpenValue(Array.get(value, i)));
+      }
+      return java.util.Collections.unmodifiableList(values);
+    }
+    return toOpenValue(gson.toJsonTree(value));
   }
 
   private static @Nullable Object toOpenValue(JsonElement element) {
