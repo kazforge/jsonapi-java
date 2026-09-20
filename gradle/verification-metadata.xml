@@ -4,6 +4,8 @@
       <verify-metadata>true</verify-metadata>
       <verify-signatures>false</verify-signatures>
       <trusted-artifacts>
+         <trust group="com.google.code.gson" version="2.14.0" reason="KAZ-137 spike-only Gson fitness test; replace with generated checksums before any production merge"/>
+         <trust group="com.google.errorprone" version="2.48.0" reason="Transitive Gson compile dependency for KAZ-137 spike; replace with generated checksums before any production merge"/>
          <trust file=".*-javadoc[.]jar" regex="true" reason="IntelliJ downloads javadoc classifier jars during Gradle sync; not on the CLI graph"/>
          <trust file=".*-sources[.]jar" regex="true" reason="IntelliJ downloads sources classifier jars during Gradle sync; not on the CLI graph"/>
       </trusted-artifacts>
