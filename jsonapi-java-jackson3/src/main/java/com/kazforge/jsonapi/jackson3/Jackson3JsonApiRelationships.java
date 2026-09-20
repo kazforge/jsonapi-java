@@ -1,12 +1,12 @@
 package com.kazforge.jsonapi.jackson3;
 
+import com.kazforge.jsonapi.api.JsonApiRelationships;
 import com.kazforge.jsonapi.core.model.DocumentData;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
-import com.kazforge.jsonapi.jackson.api.JsonApiRelationships;
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
+import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;

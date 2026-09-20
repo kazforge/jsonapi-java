@@ -1,8 +1,8 @@
 package com.kazforge.jsonapi.jackson3.internal.codec;
 
 import com.kazforge.jsonapi.core.model.Meta;
-import com.kazforge.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
-import com.kazforge.jsonapi.jackson.internal.wire.ValidationPointers;
+import com.kazforge.jsonapi.internal.wire.JsonPointerAccumulator;
+import com.kazforge.jsonapi.internal.wire.ValidationPointers;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JsonParser;

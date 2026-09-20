@@ -8,14 +8,14 @@ import com.kazforge.jsonapi.core.model.Relationship;
 import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.core.model.Relationships;
 import com.kazforge.jsonapi.core.model.ResourceObject;
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.jackson.internal.mapping.ResourceTypeMatch;
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
-import com.kazforge.jsonapi.jackson.patch.PatchChange;
-import com.kazforge.jsonapi.jackson.patch.PatchCommand;
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
+import com.kazforge.jsonapi.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch;
 import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.mapping.IdentifierConverter;
+import com.kazforge.jsonapi.patch.PatchChange;
+import com.kazforge.jsonapi.patch.PatchCommand;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +39,9 @@ import org.jspecify.annotations.Nullable;
  * whose declared type is an ordinary traversable structured domain value (or a single {@code
  * PatchPresence} wrapper / transparent {@code Optional} around one) and whose wire value is an
  * object binds to an {@link PatchChange.AttributeChange} carrying a {@link
- * com.kazforge.jsonapi.jackson.patch.StructuredPatch} of supplied-only nested changes instead of a
- * fully materialized replacement bean. Presence-aware PATCH shapes remain a typed-path concept and
- * are rejected on this path.
+ * com.kazforge.jsonapi.patch.StructuredPatch} of supplied-only nested changes instead of a fully
+ * materialized replacement bean. Presence-aware PATCH shapes remain a typed-path concept and are
+ * rejected on this path.
  */
 public final class DomainPatchBinder {
 

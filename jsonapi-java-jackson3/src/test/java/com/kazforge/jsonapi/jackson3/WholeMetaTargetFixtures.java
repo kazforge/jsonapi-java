@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.kazforge.jsonapi.annotation.JsonApiId;
 import com.kazforge.jsonapi.annotation.JsonApiMeta;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
+import com.kazforge.jsonapi.patch.PatchPresence;
 import java.util.Objects;
 
 /**

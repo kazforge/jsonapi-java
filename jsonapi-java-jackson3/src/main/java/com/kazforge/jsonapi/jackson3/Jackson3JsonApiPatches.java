@@ -1,8 +1,8 @@
 package com.kazforge.jsonapi.jackson3;
 
+import com.kazforge.jsonapi.api.JsonApiPatches;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
-import com.kazforge.jsonapi.jackson.api.JsonApiPatches;
-import com.kazforge.jsonapi.jackson.patch.PatchCommand;
+import com.kazforge.jsonapi.patch.PatchCommand;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.Objects;

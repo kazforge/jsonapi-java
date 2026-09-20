@@ -24,7 +24,7 @@ changes it.
 |----------|-----------------|
 | `com.kazforge:jsonapi-java-core` | Release-train version |
 | `com.kazforge:jsonapi-java-annotations` | Release-train version |
-| `com.kazforge:jsonapi-java-jackson-api` | Release-train version |
+| `com.kazforge:jsonapi-java-api` | Release-train version |
 | `com.kazforge:jsonapi-java-query` | Release-train version |
 | `com.kazforge:jsonapi-java-jackson2` | Release-train version |
 | `com.kazforge:jsonapi-java-jackson3` | Release-train version |

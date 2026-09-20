@@ -11,8 +11,8 @@ sharing native Jackson mechanics would create a lowest-common-denominator abstra
 
 ## Decision
 
-Keep neutral helper implementations in the existing `jsonapi-java-jackson-api` artifact under the
-`com.kazforge.jsonapi.jackson.internal` namespace and its subpackages. These classes are Java-public
+Keep neutral helper implementations in the existing `jsonapi-java-api` artifact under the
+`com.kazforge.jsonapi.internal` namespace and its subpackages. These classes are Java-public
 only for cross-artifact cooperation. They are unsupported application API and must not occur in
 supported public signatures.
 

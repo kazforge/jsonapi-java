@@ -22,26 +22,26 @@
  * <p>Readers decode and aggregate-validate before returning, and writers validate before output.
  * Java {@code null} on model components means member absence; explicit JSON {@code null} uses model
  * variants such as {@link com.kazforge.jsonapi.core.model.DocumentData.NullData}. Read failures use
- * {@link com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException}, mapping and binding
- * failures use {@link com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException}, and write
+ * {@link com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException}, mapping and binding
+ * failures use {@link com.kazforge.jsonapi.diagnostic.JsonApiMappingException}, and write
  * validation failures use {@link com.kazforge.jsonapi.core.validation.JsonApiValidationException}.
  * Advanced reader and writer APIs retain Jackson 2's checked {@link java.io.IOException} model;
  * Level-1 operations adapt unavoidable checked stream failures to {@link
  * java.io.UncheckedIOException}.
  *
  * <p>{@link JsonApiResourceMapper} maps domain values to core documents. Its sparse-fieldset
- * overloads return {@link com.kazforge.jsonapi.jackson.mapping.MappedDocument}; {@link
+ * overloads return {@link com.kazforge.jsonapi.mapping.MappedDocument}; {@link
  * JsonApiDocumentWriter} composes that mapping provenance into validation. {@link
  * JsonApiDomainDocumentReader} uses an explicit {@link
- * com.kazforge.jsonapi.jackson.mapping.ResourceTypeRegistry} to bind primary and included resources
+ * com.kazforge.jsonapi.mapping.ResourceTypeRegistry} to bind primary and included resources
  * independently into {@link JsonApiDomainDocument}; identifier data remains in the core model and
  * error documents are not bound.
  *
  * <p>{@link JsonApiPatchCommandReader} and {@link JsonApiPatchDtoReader} enforce update-request
  * validation and preserve supplied-member presence, either as a neutral patch command or an
- * application-owned {@link com.kazforge.jsonapi.jackson.patch.PatchPresence} DTO. Shared policy,
+ * application-owned {@link com.kazforge.jsonapi.patch.PatchPresence} DTO. Shared policy,
  * diagnostic, representation, mapping, envelope, and PATCH contracts live in {@link
- * com.kazforge.jsonapi.jackson}.
+ * com.kazforge.jsonapi}.
  */
 @NullMarked
 package com.kazforge.jsonapi.jackson2;

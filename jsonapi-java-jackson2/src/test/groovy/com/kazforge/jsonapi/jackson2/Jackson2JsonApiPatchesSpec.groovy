@@ -6,9 +6,9 @@ import com.kazforge.jsonapi.core.validation.DocumentUsage
 import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticlePatch
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext
-import com.kazforge.jsonapi.jackson.document.PrimaryDataKind
-import com.kazforge.jsonapi.jackson.patch.PatchPresence
+import com.kazforge.jsonapi.document.DocumentReadContext
+import com.kazforge.jsonapi.document.PrimaryDataKind
+import com.kazforge.jsonapi.patch.PatchPresence
 import com.kazforge.jsonapi.jackson2.CloseTrackingFixtures.TrackingInputStream
 import com.kazforge.jsonapi.jackson2.ParameterizedBindingFixtures.GenericPatch
 import spock.lang.Shared

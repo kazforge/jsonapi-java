@@ -7,9 +7,9 @@ import com.fasterxml.jackson.databind.json.JsonMapper
 import com.kazforge.jsonapi.annotation.JsonApiAttribute
 import com.kazforge.jsonapi.annotation.JsonApiId
 import com.kazforge.jsonapi.annotation.JsonApiResource
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.mapping.IdentifierConverter
 import com.kazforge.jsonapi.jackson2.JacksonFeatureFixtures.ArticleWithFormattedTitle
 import com.kazforge.jsonapi.jackson2.JacksonFeatureFixtures.CreatorBasedArticle
 import com.kazforge.jsonapi.jackson2.JacksonFeatureFixtures.FormattedTitle

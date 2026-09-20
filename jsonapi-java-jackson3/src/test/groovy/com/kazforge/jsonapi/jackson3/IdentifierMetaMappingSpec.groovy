@@ -8,10 +8,10 @@ import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.Relationships
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceObject
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage
+import com.kazforge.jsonapi.mapping.IdentifierConverter
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.EncodedIdMeta
 import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.GenericIdentifierMetaArticle
 import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.IdMetaBox

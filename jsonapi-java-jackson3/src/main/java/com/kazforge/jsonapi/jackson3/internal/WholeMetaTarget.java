@@ -1,10 +1,10 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.jackson.internal.mapping.IdentifierMetaSupport;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
+import com.kazforge.jsonapi.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
+import com.kazforge.jsonapi.patch.PatchPresence;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

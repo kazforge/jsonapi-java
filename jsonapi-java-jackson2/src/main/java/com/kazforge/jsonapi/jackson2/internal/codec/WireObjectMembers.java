@@ -2,7 +2,7 @@ package com.kazforge.jsonapi.jackson2.internal.codec;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.kazforge.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
+import com.kazforge.jsonapi.internal.wire.JsonPointerAccumulator;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;

@@ -4,6 +4,6 @@ plugins {
 }
 
 dependencies {
-    api(project(":jsonapi-java-jackson-api"))
+    api(project(":jsonapi-java-api"))
     testImplementation(libs.archunit)
 }

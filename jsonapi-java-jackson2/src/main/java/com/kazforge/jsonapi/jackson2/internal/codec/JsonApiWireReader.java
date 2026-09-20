@@ -3,8 +3,8 @@ package com.kazforge.jsonapi.jackson2.internal.codec;
 import com.fasterxml.jackson.core.JsonParser;
 import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
-import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
-import com.kazforge.jsonapi.jackson.internal.wire.ReadLocationIndex;
+import com.kazforge.jsonapi.document.PrimaryDataKind;
+import com.kazforge.jsonapi.internal.wire.ReadLocationIndex;
 import java.io.IOException;
 
 /**

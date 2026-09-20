@@ -5,8 +5,8 @@ import com.kazforge.jsonapi.annotation.JsonApiRelationship
 import com.kazforge.jsonapi.annotation.JsonApiResource
 import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import spock.lang.Specification
 import com.fasterxml.jackson.databind.json.JsonMapper
 

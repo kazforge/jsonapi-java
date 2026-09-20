@@ -4,7 +4,7 @@ import com.kazforge.jsonapi.annotation.JsonApiAttribute;
 import com.kazforge.jsonapi.annotation.JsonApiId;
 import com.kazforge.jsonapi.annotation.JsonApiRelationship;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
+import com.kazforge.jsonapi.patch.PatchPresence;
 
 /**
  * Generic DTO shapes whose mapped member types must resolve from an explicitly bound parameterized

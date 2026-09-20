@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.json.JsonMapper
-import com.kazforge.jsonapi.jackson.patch.PatchPresence
+import com.kazforge.jsonapi.patch.PatchPresence
 import spock.lang.Specification
 
 class PropertyScopedConvertSpec extends Specification {

@@ -1,8 +1,8 @@
 package com.kazforge.jsonapi.query;
 
 import com.kazforge.jsonapi.core.validation.MemberNames;
-import com.kazforge.jsonapi.jackson.representation.IncludePath;
-import com.kazforge.jsonapi.jackson.representation.RepresentationSelection;
+import com.kazforge.jsonapi.representation.IncludePath;
+import com.kazforge.jsonapi.representation.RepresentationSelection;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

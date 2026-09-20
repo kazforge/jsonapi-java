@@ -5,14 +5,14 @@ import com.kazforge.jsonapi.core.model.DocumentData;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.core.validation.DocumentUsage;
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext;
-import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
-import com.kazforge.jsonapi.jackson.patch.PatchCommand;
+import com.kazforge.jsonapi.document.DocumentReadContext;
+import com.kazforge.jsonapi.document.PrimaryDataKind;
 import com.kazforge.jsonapi.jackson3.internal.DomainPatchBinder;
 import com.kazforge.jsonapi.jackson3.internal.MappingDefinitionCache;
 import com.kazforge.jsonapi.jackson3.internal.MetaBindingModule;
 import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.mapping.IdentifierConverter;
+import com.kazforge.jsonapi.patch.PatchCommand;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Objects;
@@ -27,9 +27,9 @@ import tools.jackson.databind.json.JsonMapper;
  * DocumentReadContext} ({@link PrimaryDataKind#RESOURCE} with {@link
  * DocumentUsage#UPDATE_REQUEST}), then binds only supplied mapped attributes and relationships.
  * {@link #fromDocument} binds without re-validation. Codec and aggregate failures stay {@link
- * com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException}; bind failures stay {@link
- * com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException} with resource-relative pointers
- * and are never prefixed with {@code /data}. Built-in linkage conversion preserves {@code
+ * com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException}; bind failures stay {@link
+ * com.kazforge.jsonapi.diagnostic.JsonApiMappingException} with resource-relative pointers and are
+ * never prefixed with {@code /data}. Built-in linkage conversion preserves {@code
  * ResourceIdentifier.meta} through a binder mapper that can round-trip core {@link
  * com.kazforge.jsonapi.core.model.Meta}.
  *

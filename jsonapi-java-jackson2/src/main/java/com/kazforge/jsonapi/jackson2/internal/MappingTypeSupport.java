@@ -2,8 +2,8 @@ package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
+import com.kazforge.jsonapi.mapping.RelationshipLinkage;
+import com.kazforge.jsonapi.patch.PatchPresence;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;

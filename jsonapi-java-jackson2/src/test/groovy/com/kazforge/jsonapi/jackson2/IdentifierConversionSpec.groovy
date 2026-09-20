@@ -3,7 +3,7 @@ package com.kazforge.jsonapi.jackson2
 import com.kazforge.jsonapi.annotation.JsonApiAttribute
 import com.kazforge.jsonapi.annotation.JsonApiId
 import com.kazforge.jsonapi.annotation.JsonApiResource
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter
+import com.kazforge.jsonapi.mapping.IdentifierConverter
 import com.kazforge.jsonapi.fixtures.domainwrite.Person
 import spock.lang.Specification
 import com.fasterxml.jackson.databind.json.JsonMapper

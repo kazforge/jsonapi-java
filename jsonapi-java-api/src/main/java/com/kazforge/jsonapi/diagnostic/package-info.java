@@ -1,0 +1,25 @@
+/**
+ * Stable backend-independent document-read and mapping diagnostic families.
+ *
+ * <p>{@link com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException} reports JSON decoding and
+ * core local or aggregate validation failures. Adapter-produced instances carry a document-relative
+ * JSON Pointer ({@code ""} for the document root), a payload-safe best-effort {@link
+ * com.kazforge.jsonapi.diagnostic.SourceLocation}, and a core validation rule code when validation
+ * supplied one.
+ *
+ * <p>{@link com.kazforge.jsonapi.diagnostic.JsonApiMappingException} reports domain mapping,
+ * binding, registry, and representation failures through a stable {@link
+ * com.kazforge.jsonapi.diagnostic.MappingDiagnostic}. Its optional {@link
+ * com.kazforge.jsonapi.diagnostic.MappingLocation} is a validated JSON Pointer over wire names;
+ * direct resource operations use resource-relative locations and envelope composition may prepend a
+ * document-relative prefix. No applicable member location is represented by {@code null}, never
+ * {@code ""} or {@code /}.
+ *
+ * <p>The families remain separate: successful document decoding followed by a domain-mapping
+ * failure is not reclassified as a document-read failure. The current Jackson adapters produce
+ * these backend-independent diagnostics; Jackson-specific decode mechanics stay adapter-local.
+ */
+@NullMarked
+package com.kazforge.jsonapi.diagnostic;
+
+import org.jspecify.annotations.NullMarked;

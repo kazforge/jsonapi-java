@@ -1,6 +1,6 @@
 package com.kazforge.jsonapi.query
 
-import com.kazforge.jsonapi.jackson.representation.IncludePath
+import com.kazforge.jsonapi.representation.IncludePath
 import groovy.transform.CompileStatic
 import spock.lang.Specification
 import spock.lang.Unroll

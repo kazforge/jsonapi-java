@@ -17,14 +17,14 @@ import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithTags
 import com.kazforge.jsonapi.fixtures.domainpatch.BoxPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.MutableArticle
 import com.kazforge.jsonapi.fixtures.domainpatch.PatchPresenceAddressPatchArticle
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.jackson.patch.PatchChange
-import com.kazforge.jsonapi.jackson.patch.PatchCommand
-import com.kazforge.jsonapi.jackson.patch.PatchPresence
-import com.kazforge.jsonapi.jackson.patch.StructuredMember
-import com.kazforge.jsonapi.jackson.patch.StructuredMemberState
-import com.kazforge.jsonapi.jackson.patch.StructuredPatch
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.patch.PatchChange
+import com.kazforge.jsonapi.patch.PatchCommand
+import com.kazforge.jsonapi.patch.PatchPresence
+import com.kazforge.jsonapi.patch.StructuredMember
+import com.kazforge.jsonapi.patch.StructuredMemberState
+import com.kazforge.jsonapi.patch.StructuredPatch
 import spock.lang.Specification
 import spock.lang.Unroll
 

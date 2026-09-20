@@ -112,9 +112,9 @@ public final class MappingDefinitionCache {
    * Resolves and validates the configured class-level resource type name for {@code rawType}
    * through mapper-aware introspection (class-level mix-ins honored).
    *
-   * @throws com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException {@link
-   *     com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic#MISSING_RESOURCE_ANNOTATION} when
-   *     no configured metadata exists, or {@code INVALID_RESOURCE_TYPE} when the name is empty or
+   * @throws com.kazforge.jsonapi.diagnostic.JsonApiMappingException {@link
+   *     com.kazforge.jsonapi.diagnostic.MappingDiagnostic#MISSING_RESOURCE_ANNOTATION} when no
+   *     configured metadata exists, or {@code INVALID_RESOURCE_TYPE} when the name is empty or
    *     invalid
    */
   public String requireResourceTypeName(Class<?> rawType) {

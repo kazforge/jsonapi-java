@@ -25,8 +25,8 @@ publishing {
                             "Dependency-free domain-mapping role annotations."
                         }
 
-                        "jsonapi-java-jackson-api" -> {
-                            "Jackson-major-neutral application and capability contracts."
+                        "jsonapi-java-api" -> {
+                            "Backend-neutral application and capability contracts."
                         }
 
                         "jsonapi-java-query" -> {

@@ -1,10 +1,10 @@
 package com.kazforge.jsonapi.jackson2;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.kazforge.jsonapi.api.JsonApiDocuments;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
-import com.kazforge.jsonapi.jackson.api.JsonApiDocuments;
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext;
-import com.kazforge.jsonapi.jackson.mapping.MappedDocument;
+import com.kazforge.jsonapi.document.DocumentReadContext;
+import com.kazforge.jsonapi.mapping.MappedDocument;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Objects;

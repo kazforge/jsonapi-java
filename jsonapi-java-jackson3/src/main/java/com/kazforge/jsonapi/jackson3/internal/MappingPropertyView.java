@@ -1,6 +1,6 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import com.kazforge.jsonapi.jackson.internal.mapping.PropertyRole;
+import com.kazforge.jsonapi.internal.mapping.PropertyRole;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.introspect.BeanPropertyDefinition;
 

@@ -2,10 +2,10 @@ package com.kazforge.jsonapi.jackson3.internal.codec;
 
 import com.kazforge.jsonapi.core.model.Link;
 import com.kazforge.jsonapi.core.model.Relationship;
-import com.kazforge.jsonapi.jackson.diagnostic.CodecFailureCategory;
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException;
-import com.kazforge.jsonapi.jackson.diagnostic.SourceLocation;
-import com.kazforge.jsonapi.jackson.internal.wire.JsonPointerAccumulator;
+import com.kazforge.jsonapi.diagnostic.CodecFailureCategory;
+import com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException;
+import com.kazforge.jsonapi.diagnostic.SourceLocation;
+import com.kazforge.jsonapi.internal.wire.JsonPointerAccumulator;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

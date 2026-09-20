@@ -7,13 +7,13 @@ import com.kazforge.jsonapi.core.model.JsonApiDocument
 import com.kazforge.jsonapi.core.model.Link
 import com.kazforge.jsonapi.core.model.Links
 import com.kazforge.jsonapi.core.model.Meta
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext
+import com.kazforge.jsonapi.document.DocumentReadContext
 import com.kazforge.jsonapi.jackson3.CloseTrackingFixtures.TrackingInputStream
 import com.kazforge.jsonapi.jackson3.CloseTrackingFixtures.TrackingOutputStream
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.fixtures.domainwrite.Article
-import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy
-import com.kazforge.jsonapi.jackson.representation.RepresentationSelection
+import com.kazforge.jsonapi.representation.RepresentationPolicy
+import com.kazforge.jsonapi.representation.RepresentationSelection
 import spock.lang.Shared
 import spock.lang.Specification
 import tools.jackson.databind.json.JsonMapper
