@@ -1,5 +1,5 @@
 /**
- * Stable document-read and mapping diagnostic families.
+ * Stable backend-independent document-read and mapping diagnostic families.
  *
  * <p>{@link com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException} reports JSON
  * decoding and core local or aggregate validation failures. Adapter-produced instances carry a
@@ -16,7 +16,8 @@
  * never {@code ""} or {@code /}.
  *
  * <p>The families remain separate: successful document decoding followed by a domain-mapping
- * failure is not reclassified as a document-read failure.
+ * failure is not reclassified as a document-read failure. The current Jackson adapters produce
+ * these backend-independent diagnostics; Jackson-specific decode mechanics stay adapter-local.
  */
 @NullMarked
 package com.kazforge.jsonapi.jackson.diagnostic;

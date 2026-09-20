@@ -1,5 +1,5 @@
 /**
- * Major-neutral presence and requested-change contracts for resource PATCH.
+ * Backend-independent presence and requested-change contracts for resource PATCH.
  *
  * <p>{@link com.kazforge.jsonapi.jackson.patch.PatchPresence} distinguishes an omitted DTO member
  * from a supplied value, including a supplied converted {@code null}. {@link
@@ -13,7 +13,9 @@
  * element-addressed mutation protocols.
  *
  * <p>These values describe a requested change; they do not authorize it or mutate application
- * state. The application owns authorization, concurrency, persistence, and mutation semantics.
+ * state. The application owns authorization, concurrency, persistence, and mutation semantics. The
+ * current Jackson adapters populate these backend-independent values through caller-configured
+ * Jackson conversion.
  */
 @NullMarked
 package com.kazforge.jsonapi.jackson.patch;

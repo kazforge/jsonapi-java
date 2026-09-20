@@ -3,7 +3,8 @@ package com.kazforge.jsonapi.jackson.patch;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Jackson-major-neutral tri-state presence for a single patchable PATCH DTO member.
+ * Backend-independent tri-state presence for a single patchable PATCH DTO member. The current
+ * Jackson adapters populate it through caller-configured Jackson conversion.
  *
  * <p>A patchable attribute or relationship declared as {@code PatchPresence<T>} on an annotated
  * PATCH DTO distinguishes three states: the member was omitted from the update document ({@link
@@ -12,7 +13,7 @@ import org.jspecify.annotations.Nullable;
  * Present} with a {@code null} value). {@code Present} with a {@code null} value is present — it is
  * not omission.
  *
- * <p>The type is deliberately Jackson-major-neutral and models only presence. It does not own
+ * <p>The type is deliberately backend-independent and models only presence. It does not own
  * mapping, validation, persistence, or business semantics; applications inspect the tri-state and
  * decide how to apply each member. Because nullable {@link java.util.Optional} is a distinct
  * concern, {@code PatchPresence<Optional<T>>} remains meaningful: an omitted member is {@link

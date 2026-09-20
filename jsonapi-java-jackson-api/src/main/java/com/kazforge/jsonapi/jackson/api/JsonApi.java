@@ -1,7 +1,8 @@
 package com.kazforge.jsonapi.jackson.api;
 
 /**
- * Major-neutral Level-1 JSON:API application entry point.
+ * Backend-independent Level-1 JSON:API application entry point, currently implemented by the
+ * configured Jackson 2 and Jackson 3 runtimes.
  *
  * <p>Level 1 coordinates ordinary client and server operations: strict resource reads,
  * single/collection writes, create/update authoring, linkage documents, raw documents with explicit
@@ -11,7 +12,8 @@ package com.kazforge.jsonapi.jackson.api;
  *
  * <p>The contract is bidirectional and does not encode HTTP transport, persistence, authorization,
  * or controller policy. Application-lifetime Jackson and representation configuration belongs to
- * the major-specific runtime; this interface exposes cohesive per-operation facets only.
+ * the major-specific runtime; this interface exposes cohesive per-operation facets only. Property
+ * semantics are currently derived through caller-configured Jackson.
  */
 public interface JsonApi {
 

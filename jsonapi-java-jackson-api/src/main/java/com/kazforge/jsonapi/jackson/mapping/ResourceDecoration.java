@@ -8,7 +8,8 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Additive resource-level decoration for domain writes.
+ * Backend-independent additive resource-level decoration for domain writes. The current Jackson
+ * adapters apply it through caller-configured Jackson.
  *
  * <p>Carries only:
  *
@@ -20,9 +21,11 @@ import org.jspecify.annotations.Nullable;
  * It never replaces type, id/lid, attributes, relationship linkage/data, resource meta,
  * relationship meta, identifier meta, inclusion membership, or sparse-fieldset provenance, and it
  * never creates a relationship that normal mapping did not produce. Relationship entries are keyed
- * by the mapped property <em>identity</em> — the Jackson logical name (e.g. {@code "comments"} for
- * a Java field named {@code comments}) — not the final wire name. The mapper applies each entry
- * under the configured-Jackson external name automatically, so
+ * by the logical application-property identity — the Jackson logical name (e.g. {@code "comments"}
+ * for a Java field named {@code comments}) — not the configured-Jackson external property name
+ * (e.g. {@code @JsonProperty("article-comments")}) and not a separately supplied final JSON:API
+ * member name. The mapper translates the identity through the configured external name and applies
+ * each entry under the final wire member name automatically, so
  * {@code @JsonProperty("article-comments")} does not require a second key.
  *
  * <p>Decoration is immutable: the relationship map is defensively copied and unmodifiable. Null

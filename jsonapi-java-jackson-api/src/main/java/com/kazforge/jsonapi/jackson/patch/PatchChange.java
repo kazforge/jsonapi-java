@@ -4,8 +4,9 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
- * One requested change in a {@link PatchCommand}: a supplied mapped attribute, relationship, or
- * resource-side meta location. Identifier meta ({@code ResourceIdentifier.meta}) is not an
+ * Backend-independent requested change in a {@link PatchCommand}: a supplied mapped attribute,
+ * relationship, or resource-side meta location. The current Jackson adapters populate it through
+ * caller-configured Jackson. Identifier meta ({@code ResourceIdentifier.meta}) is not an
  * independent change variant; applications that need it opt into {@link
  * com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage} and it participates only as part of
  * whole-linkage replacement on {@link RelationshipChange}.
@@ -26,9 +27,11 @@ public sealed interface PatchChange
   String jsonapiName();
 
   /**
-   * Jackson internal property identity on the annotated DTO (Java field, record component, or
-   * JavaBean name). Distinct from {@link #jsonapiName()}, which is the configured-Jackson external
-   * JSON:API member name.
+   * Logical application-property identity on the annotated DTO (Java field, record component, or
+   * JavaBean name). Distinct from {@link #jsonapiName()}, which is the final JSON:API member name
+   * after configured-Jackson external naming applies. This value does not carry the
+   * configured-Jackson external property name as a third field; the current adapters translate
+   * between the two through caller-configured Jackson.
    */
   String logicalName();
 

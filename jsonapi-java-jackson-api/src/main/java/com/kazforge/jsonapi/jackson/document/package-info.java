@@ -1,5 +1,5 @@
 /**
- * Major-neutral JSON:API document read/write contract values.
+ * Backend-independent JSON:API document read/write contract values.
  *
  * <p>{@link com.kazforge.jsonapi.jackson.document.DocumentReadContext} keeps aggregate-validation
  * policy separate from {@link com.kazforge.jsonapi.jackson.document.PrimaryDataKind}. The
@@ -9,7 +9,8 @@
  *
  * <p>{@link com.kazforge.jsonapi.jackson.document.DocumentEnvelope} carries optional top-level
  * write members. A {@code null} component means absence, while a non-null empty value remains a
- * present empty object on the wire.
+ * present empty object on the wire. These values carry document state only; the current Jackson
+ * adapters supply the decode/encode mechanics through caller-configured Jackson.
  */
 @NullMarked
 package com.kazforge.jsonapi.jackson.document;
