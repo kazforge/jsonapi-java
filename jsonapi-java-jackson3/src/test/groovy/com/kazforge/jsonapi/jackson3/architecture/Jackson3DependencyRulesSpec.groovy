@@ -8,6 +8,7 @@ import com.tngtech.archunit.core.domain.JavaClasses
 import com.tngtech.archunit.core.domain.JavaModifier
 import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.core.importer.ImportOption
+import com.kazforge.jsonapi.mapping.internal.ArchitectureMappingInternalFixture
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -163,6 +164,15 @@ class Jackson3DependencyRulesSpec extends Specification {
     }
   }
 
+  def "supported common type selector excludes mapping implementation types"() {
+    given:
+    def fixtureClasses = new ClassFileImporter()
+        .importClasses(ArchitectureMappingInternalFixture)
+
+    expect:
+    fixtureClasses.every { JavaClass candidate -> !isSupportedCommonType(candidate) }
+  }
+
   def "jackson3 supported public signatures do not expose shared internal types"() {
     given:
     def violations = jackson3Classes.findAll { JavaClass candidate ->
@@ -267,7 +277,8 @@ class Jackson3DependencyRulesSpec extends Specification {
         candidate.modifiers.contains(JavaModifier.PUBLIC) &&
         (candidate.packageName == "com.kazforge.jsonapi" ||
         (isNeutralContractPackage(candidate.packageName) &&
-        !isInternalPackage(candidate.packageName)))
+        !isInternalPackage(candidate.packageName) &&
+        !isMappingInternalPackage(candidate.packageName)))
   }
 
   private static boolean isNeutralContractPackage(String packageName) {
@@ -305,7 +316,12 @@ class Jackson3DependencyRulesSpec extends Specification {
   }
 
   private static boolean isSharedInternalType(JavaClass candidate) {
-    isInternalPackage(candidate.packageName)
+    isInternalPackage(candidate.packageName) || isMappingInternalPackage(candidate.packageName)
+  }
+
+  private static boolean isMappingInternalPackage(String packageName) {
+    packageName == "com.kazforge.jsonapi.mapping.internal" ||
+        packageName.startsWith("com.kazforge.jsonapi.mapping.internal.")
   }
 
   private static Set<JavaClass> exposedTypes(JavaClass candidate) {

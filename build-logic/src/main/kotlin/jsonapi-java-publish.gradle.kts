@@ -29,6 +29,10 @@ publishing {
                             "Backend-neutral application and capability contracts."
                         }
 
+                        "jsonapi-java-mapping" -> {
+                            "Internal cross-artifact mapping implementation namespace."
+                        }
+
                         "jsonapi-java-query" -> {
                             "Neutral query-parameter parsing."
                         }

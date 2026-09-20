@@ -12,6 +12,18 @@ sonar {
         property("sonar.organization", "kazemek")
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.qualitygate.wait", "true")
+        // The mapping foundation module intentionally ships only its documented
+        // package-info namespace anchor until the first extraction moves behavior there;
+        // a package-info-only package is the deliverable, not clutter.
+        property("sonar.issue.ignore.multicriteria", "mapping-foundation-package-info")
+        property(
+            "sonar.issue.ignore.multicriteria.mapping-foundation-package-info.ruleKey",
+            "java:S4032",
+        )
+        property(
+            "sonar.issue.ignore.multicriteria.mapping-foundation-package-info.resourceKey",
+            "jsonapi-java-mapping/src/main/java/com/kazforge/jsonapi/mapping/internal/package-info.java",
+        )
         // Intentional Jackson 2/Jackson 3 parity duplication: these Jackson 2 production files are
         // adapter-local adaptations of their Jackson 3 counterparts (document codec, read-side,
         // typed domain envelope, write-side domain mapping engine, flat DTO resource binding, and

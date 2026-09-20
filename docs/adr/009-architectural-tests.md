@@ -15,14 +15,19 @@ Use ArchUnit as a `testImplementation`-only dependency where package or type bou
 executable enforcement. It is the repository-wide tool for those checks; do not replace it with
 source-import or classpath scanners, and never publish it as a runtime dependency.
 
-Architecture specifications enforce allowlists for the neutral Jackson API, each Jackson adapter,
+Architecture specifications enforce allowlists for the neutral Jackson API, the mapping
+implementation namespace, each Jackson adapter,
 shared fixtures, and query parsing. In particular:
 
 - neutral production code stays free of either Jackson major and major-specific adapter packages;
+- neutral production code does not depend on the mapping implementation namespace;
+- mapping implementation production code depends only on neutral contracts, core, and platform
+  types, never on a backend or backend-native library;
 - each adapter uses only its own Jackson major and supported lower-layer contracts;
 - sibling modules do not depend on `core.internal`;
 - supported neutral contracts are not redeclared by adapters, and shared internal helpers do not
-  leak through supported public signatures;
+  leak through supported public signatures; the mapping implementation namespace is treated as
+  shared internal implementation for that signature check;
 - shared fixtures remain passive application-shaped data and resources, apart from the neutral
   resource loader; behavioral orchestration and assertions remain adapter-local;
 - shared characterization contract specs under `com.kazforge.jsonapi.fixtures.contract` are the
@@ -31,7 +36,9 @@ shared fixtures, and query parsing. In particular:
   and the neutral packages the passive fixtures may use.
 Core preserves its downward responsibility DAG: aggregate validation may depend on model, internal,
 and validation responsibilities; model may depend on internal and validation; internal may depend on
-validation. The reverse edges are forbidden.
+validation. The reverse edges are forbidden. The declared Gradle project edges themselves are the
+source of truth for physical module dependencies; ArchUnit enforces production-code boundaries,
+not build declarations.
 
 Each Jackson adapter independently preserves its local DAG: the public composition root may depend
 on mapping and internal implementation packages, and the ordinary internal package may depend on

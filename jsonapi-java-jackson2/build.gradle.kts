@@ -7,6 +7,7 @@ dependencies {
     api(project(":jsonapi-java-api"))
     api(project(":jsonapi-java-annotations"))
     api(project(":jsonapi-java-core"))
+    implementation(project(":jsonapi-java-mapping"))
     api(libs.jackson2.databind)
     // Runtime Optional support for the mapping fallback: registered on the derived mapping mapper
     // only when the caller's configured mapper lacks Optional serialization (see JsonApiJackson2).
