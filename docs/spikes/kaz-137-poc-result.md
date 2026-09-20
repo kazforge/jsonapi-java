@@ -134,8 +134,12 @@ The PoC exposed an important distinction:
 These can differ. For example, a JSON-library annotation may rename an identifier property while the
 JSON:API member remains `id`.
 
-This distinction belongs in the neutral mapping model even though the external name is produced by
-the concrete backend.
+The PoC now makes the identity invariant explicit: `MappingRole.ID` must use JSON:API member
+`id`, and `MappingRole.LOCAL_ID` must use `lid`. A backend-resolved name such as
+`@JsonProperty("blog_id")` or `@SerializedName("blog_id")` remains separate backend metadata.
+
+This distinction belongs in the neutral mapping model even though the external/backend name is
+produced by the concrete backend.
 
 ### Compound inclusion and sparse fieldsets are mapping-domain semantics
 
@@ -203,8 +207,15 @@ The PoC uses:
 
 The Gson PoC does **not** establish production support parity.
 
+An independent review identified a concrete null-open-value bug in the first Gson prototype:
+`List.copyOf` / `Map.copyOf` rejected valid nested JSON nulls. The PoC now preserves nested null
+values and the shared mapping contract explicitly covers a nullable array/list element and nullable
+object member across backends. This is useful evidence that the backend contract can catch real
+cross-library semantic drift.
+
 A separate product-scope evaluation should decide whether a small supported Gson module is worthwhile.
-Likely questions include TypeAdapter/custom conversion behavior, generic typing, polymorphism,
+Likely questions include `FieldNamingStrategy`, `ExclusionStrategy`, `@Expose`,
+`@SerializedName.alternate`, TypeAdapter/custom conversion behavior, generic typing, polymorphism,
 diagnostic expectations, JSON:API wire coverage and maintenance cost.
 
 The architecture does not require a Gson backend to match Jackson-only advanced parser capabilities.
@@ -265,7 +276,7 @@ It contains shared implementations for representative:
 - compound inclusion;
 - sparse-fieldset behavior;
 - supporting neutral definitions/capabilities;
-- an exploratory low-level PATCH mapping slice.
+- an exploratory low-level PATCH mapping API sketch.
 
 The current backend bridges are much smaller than the existing duplicated Jackson
 `DomainResourceWriter` implementations, but source reduction alone is not the decision criterion.
@@ -282,10 +293,16 @@ The following must not be inferred from the successful representative slices:
 - all Optional/array/set/map/container combinations;
 - full structured-attribute behavior;
 - complete polymorphic/generic model behavior;
+- low-level PATCH architecture beyond a preliminary API/seam sketch;
 - complete PATCH / structured PATCH extraction;
 - identical diagnostics for every construction edge case;
 - production-ready Gson support;
 - a decision to replace Jackson token parsing.
+
+The PATCH prototype is intentionally weaker evidence than writer/binder/inclusion: it has no shared
+cross-backend characterization contract and currently reuses write-side `MappingDefinition`.
+Production PATCH work should therefore be treated as a later, separate extraction and should evaluate
+read/inbound or dedicated patch metadata before stabilizing any SPI.
 
 These are follow-up implementation/contract risks, not reasons to reject the architecture.
 
@@ -304,6 +321,11 @@ incrementally:
 
 The new black-box backend contracts should be expanded during production extraction around each
 moved semantic slice rather than trying to recreate the entire existing suite in advance.
+
+The independent review reached the same overall conclusion: accept the architecture direction, but
+do not freeze the PoC capability interfaces as final SPIs. The hardest remaining proof areas are
+RelationshipLinkage/custom linkage, resource/relationship/identifier meta, construction diagnostics,
+structured values, and PATCH/structured PATCH.
 
 ## Proposed production work if KAZ-137 is accepted
 
