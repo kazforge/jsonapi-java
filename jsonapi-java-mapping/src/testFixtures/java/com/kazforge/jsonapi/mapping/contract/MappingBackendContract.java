@@ -48,6 +48,23 @@ public final class MappingBackendContract {
         openValues.attributes(),
         "nullable open values");
 
+    Map<String, Object> nestedAddress = new java.util.LinkedHashMap<>();
+    nestedAddress.put("street", null);
+    Map<String, Object> payload = new java.util.LinkedHashMap<>();
+    payload.put("items", java.util.Arrays.asList("one", null, "two"));
+    payload.put("address", nestedAddress);
+    ResourceObject openValue =
+        adapter.toResource(new MappingContractFixtures.OpenValueResource("o1", payload));
+    Map<String, Object> expectedAddress = new java.util.LinkedHashMap<>();
+    expectedAddress.put("street", null);
+    Map<String, Object> expectedPayload = new java.util.LinkedHashMap<>();
+    expectedPayload.put("items", java.util.Arrays.asList("one", null, "two"));
+    expectedPayload.put("address", expectedAddress);
+    requireEquals(
+        Attributes.ofAttributes(Map.of("payload", expectedPayload)),
+        openValue.attributes(),
+        "null-preserving structured open value");
+
     MappingContractFixtures.Person author = new MappingContractFixtures.Person("p1", "Alice");
     MappingContractFixtures.Comment first = new MappingContractFixtures.Comment("c1", "First");
     MappingContractFixtures.Comment second = new MappingContractFixtures.Comment("c2", "Second");
