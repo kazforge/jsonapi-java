@@ -8,6 +8,7 @@ import com.kazforge.jsonapi.annotation.JsonApiResource;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import java.util.List;
 import java.util.Map;
+import java.util.Map;
 
 /** Shared application-shaped fixtures for JSON-library mapping backend contract tests. */
 public final class MappingContractFixtures {
@@ -22,6 +23,11 @@ public final class MappingContractFixtures {
       @JsonApiId String id,
       @JsonApiAttribute List<Object> items,
       @JsonApiAttribute Map<String, Object> object) {}
+
+  @JsonApiResource(type = "open-values")
+  public record OpenValueResource(
+      @JsonApiId String id,
+      @JsonApiAttribute Map<String, Object> payload) {}
 
   @JsonApiResource(type = "people")
   public record Person(@JsonApiId String id, @JsonApiAttribute String name) {}
