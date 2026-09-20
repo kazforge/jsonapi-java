@@ -1,11 +1,11 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.JavaType;
-import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.jackson.internal.mapping.PropertyRole;
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
+import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
 import com.kazforge.jsonapi.mapping.internal.BindingDefinition;
 import com.kazforge.jsonapi.mapping.internal.BindingPropertyDefinition;
 import com.kazforge.jsonapi.mapping.internal.DomainBindingBackend;
@@ -15,9 +15,7 @@ import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
-/**
- * KAZ-137 bridge from the existing jackson2 deserialization model to the neutral binding PoC.
- */
+/** KAZ-137 bridge from the existing jackson2 deserialization model to the neutral binding PoC. */
 public final class Jackson2PrototypeBindingBackend
     implements DomainBindingBackend<JavaType, ReadMappingProperty> {
 

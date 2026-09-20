@@ -77,17 +77,16 @@ final class GsonPrototypeMappingBackend implements DomainMappingBackend<Type, Fi
         attributes.add(property(field, externalName, MappingRole.ATTRIBUTE, fieldType, false));
       } else if (field.isAnnotationPresent(JsonApiRelationship.class)) {
         relationships.add(
-            property(field, externalName, MappingRole.RELATIONSHIP, fieldType, isToMany(fieldType)));
+            property(
+                field, externalName, MappingRole.RELATIONSHIP, fieldType, isToMany(fieldType)));
       }
     }
 
-    return new MappingDefinition<>(
-        resource.type(), type, id, lid, attributes, relationships);
+    return new MappingDefinition<>(resource.type(), type, id, lid, attributes, relationships);
   }
 
   @Override
-  public @Nullable Object read(
-      Object domain, MappingPropertyDefinition<Type, Field> property) {
+  public @Nullable Object read(Object domain, MappingPropertyDefinition<Type, Field> property) {
     Field field = property.handle();
     try {
       if (!field.canAccess(domain) && !field.trySetAccessible()) {

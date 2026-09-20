@@ -1,19 +1,19 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.mapping.internal.InclusionMappingBackend;
 import com.kazforge.jsonapi.jackson.internal.representation.EffectiveRepresentation;
-import com.kazforge.jsonapi.mapping.internal.MappingRepresentation;
 import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage;
+import com.kazforge.jsonapi.mapping.internal.InclusionMappingBackend;
+import com.kazforge.jsonapi.mapping.internal.MappingRepresentation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
-import com.fasterxml.jackson.databind.JavaType;
 
 /**
  * jackson2 bridge for the backend-neutral compound-inclusion engine.
@@ -21,8 +21,7 @@ import com.fasterxml.jackson.databind.JavaType;
  * <p>Only mapper-specific type/property mechanics belong here; JSON:API traversal semantics live in
  * the shared engine.
  */
-final class Jackson2InclusionMappingBackend
-    implements InclusionMappingBackend<JavaType> {
+final class Jackson2InclusionMappingBackend implements InclusionMappingBackend<JavaType> {
 
   private final DomainResourceWriter writer;
 
@@ -52,8 +51,7 @@ final class Jackson2InclusionMappingBackend
   }
 
   @Override
-  public List<Object> relatedValues(
-      Object domain, JavaType ownerType, String relationshipName) {
+  public List<Object> relatedValues(Object domain, JavaType ownerType, String relationshipName) {
     ResourceMapping mapping = writer.mappingFor(ownerType);
     MappingProperty property = findRelationship(mapping, relationshipName);
     if (property == null) {
@@ -99,8 +97,7 @@ final class Jackson2InclusionMappingBackend
   }
 
   @Override
-  public ResourceObject render(
-      Object domain, JavaType type, MappingRepresentation representation) {
+  public ResourceObject render(Object domain, JavaType type, MappingRepresentation representation) {
     return writer.toResource(
         domain,
         type,

@@ -63,8 +63,7 @@ public final class GenericDomainPatchBinder<T, P> {
     }
 
     Object identity =
-        backend.convertPatchIdentity(
-            Objects.requireNonNull(resource.id()), mapping, idProperty);
+        backend.convertPatchIdentity(Objects.requireNonNull(resource.id()), mapping, idProperty);
     List<PatchChange> changes = new ArrayList<>();
     bindAttributes(resource, mapping, changes);
     bindRelationships(resource, mapping, changes);
@@ -72,9 +71,7 @@ public final class GenericDomainPatchBinder<T, P> {
   }
 
   private void bindAttributes(
-      ResourceObject resource,
-      MappingDefinition<T, P> mapping,
-      List<PatchChange> changes) {
+      ResourceObject resource, MappingDefinition<T, P> mapping, List<PatchChange> changes) {
     Attributes attributes = resource.attributes();
     if (attributes == null || mapping.attributes().isEmpty()) {
       return;
@@ -87,15 +84,12 @@ public final class GenericDomainPatchBinder<T, P> {
       }
       Object value = backend.convertPatchAttribute(entry.getValue(), mapping, property);
       changes.add(
-          new PatchChange.AttributeChange(
-              property.jsonapiName(), property.logicalName(), value));
+          new PatchChange.AttributeChange(property.jsonapiName(), property.logicalName(), value));
     }
   }
 
   private void bindRelationships(
-      ResourceObject resource,
-      MappingDefinition<T, P> mapping,
-      List<PatchChange> changes) {
+      ResourceObject resource, MappingDefinition<T, P> mapping, List<PatchChange> changes) {
     Relationships relationships = resource.relationships();
     if (relationships == null || mapping.relationships().isEmpty()) {
       return;

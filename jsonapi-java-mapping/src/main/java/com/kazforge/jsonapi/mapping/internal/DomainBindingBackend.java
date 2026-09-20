@@ -4,9 +4,7 @@ import com.kazforge.jsonapi.core.model.RelationshipData;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Minimal construction capabilities required by the shared Core-to-application binding PoC.
- */
+/** Minimal construction capabilities required by the shared Core-to-application binding PoC. */
 public interface DomainBindingBackend<T, P> {
 
   T constructType(Class<?> rawType);

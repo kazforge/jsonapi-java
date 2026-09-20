@@ -15,9 +15,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Tiny test-only facade proving Gson can use the same backend-neutral mapping-domain writer.
- */
+/** Tiny test-only facade proving Gson can use the same backend-neutral mapping-domain writer. */
 final class GsonPoCResourceMapper {
 
   private final GenericDomainResourceWriter<Type, Field> writer;
@@ -47,19 +45,11 @@ final class GsonPoCResourceMapper {
         writer.collectIncluded(resource, type, primary, representation).included();
 
     return new JsonApiDocument(
-        new DocumentData.SingleResource(primary),
-        null,
-        null,
-        null,
-        null,
-        included,
-        Map.of());
+        new DocumentData.SingleResource(primary), null, null, null, null, included, Map.of());
   }
 
   MappingContractResult toMappedDocument(
-      Object resource,
-      List<String> includePaths,
-      Map<String, List<String>> fieldsets) {
+      Object resource, List<String> includePaths, Map<String, List<String>> fieldsets) {
     Type type = writer.inferredType(resource);
     RepresentationSelection.Builder selection = RepresentationSelection.builder();
     for (String path : includePaths) {
@@ -84,7 +74,6 @@ final class GsonPoCResourceMapper {
             null,
             includedResult.included(),
             Map.of());
-    return new MappingContractResult(
-        document, includedResult.sparseFieldsetLinkageExemptions());
+    return new MappingContractResult(document, includedResult.sparseFieldsetLinkageExemptions());
   }
 }

@@ -23,8 +23,8 @@ import java.util.Map;
 /**
  * Spike-only Gson tree codec for the representative KAZ-137 contract slice.
  *
- * <p>This deliberately supports only single-resource documents, included resources, attributes,
- * and relationship linkage. It demonstrates backend independence, not JSON:API conformance.
+ * <p>This deliberately supports only single-resource documents, included resources, attributes, and
+ * relationship linkage. It demonstrates backend independence, not JSON:API conformance.
  */
 final class GsonPoCCodec {
 
@@ -62,13 +62,7 @@ final class GsonPoCCodec {
       included = List.copyOf(included);
     }
     return new JsonApiDocument(
-        new DocumentData.SingleResource(primary),
-        null,
-        null,
-        null,
-        null,
-        included,
-        Map.of());
+        new DocumentData.SingleResource(primary), null, null, null, null, included, Map.of());
   }
 
   private JsonObject writeResource(ResourceObject resource) {
@@ -139,8 +133,7 @@ final class GsonPoCCodec {
     Attributes attributes = null;
     if (object.has("attributes")) {
       Map<String, Object> values = new LinkedHashMap<>();
-      for (Map.Entry<String, JsonElement> entry :
-          object.getAsJsonObject("attributes").entrySet()) {
+      for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("attributes").entrySet()) {
         values.put(entry.getKey(), openValue(entry.getValue()));
       }
       attributes = Attributes.ofAttributes(values);
@@ -159,8 +152,7 @@ final class GsonPoCCodec {
       relationships = Relationships.ofRelationships(values);
     }
 
-    return new ResourceObject(
-        type, id, lid, attributes, relationships, null, null, Map.of());
+    return new ResourceObject(type, id, lid, attributes, relationships, null, null, Map.of());
   }
 
   private RelationshipData readRelationshipData(JsonElement element) {

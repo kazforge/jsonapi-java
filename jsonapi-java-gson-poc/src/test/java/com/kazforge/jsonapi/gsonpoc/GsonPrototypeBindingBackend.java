@@ -70,8 +70,7 @@ final class GsonPrototypeBindingBackend implements DomainBindingBackend<Type, Fi
       }
     }
 
-    return new BindingDefinition<>(
-        resource.type(), type, id, lid, attributes, relationships);
+    return new BindingDefinition<>(resource.type(), type, id, lid, attributes, relationships);
   }
 
   @Override
@@ -104,19 +103,9 @@ final class GsonPrototypeBindingBackend implements DomainBindingBackend<Type, Fi
   }
 
   private static BindingPropertyDefinition<Type, Field> property(
-      Field field,
-      String externalName,
-      String jsonapiName,
-      MappingRole role,
-      Type type) {
+      Field field, String externalName, String jsonapiName, MappingRole role, Type type) {
     return new BindingPropertyDefinition<>(
-        field,
-        field.getName(),
-        externalName,
-        jsonapiName,
-        role,
-        type,
-        true);
+        field, field.getName(), externalName, jsonapiName, role, type, true);
   }
 
   private static ResourceIdentifier copyIdentifier(ResourceIdentifier identifier) {

@@ -1,11 +1,9 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.JavaType;
-import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.jackson.internal.mapping.PropertyRole;
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import com.kazforge.jsonapi.mapping.internal.BindingDefinition;
 import com.kazforge.jsonapi.mapping.internal.BindingPropertyDefinition;
 import com.kazforge.jsonapi.mapping.internal.DomainBindingBackend;
@@ -14,10 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.json.JsonMapper;
 
-/**
- * KAZ-137 bridge from the existing jackson3 deserialization model to the neutral binding PoC.
- */
+/** KAZ-137 bridge from the existing jackson3 deserialization model to the neutral binding PoC. */
 public final class Jackson3PrototypeBindingBackend
     implements DomainBindingBackend<JavaType, ReadMappingProperty> {
 
@@ -84,8 +82,7 @@ public final class Jackson3PrototypeBindingBackend
 
   @Override
   public Object construct(Map<String, @Nullable Object> properties, JavaType targetType) {
-    return BeanConstruction.convertBean(
-        mapper, properties, targetType, targetType.getRawClass());
+    return BeanConstruction.convertBean(mapper, properties, targetType, targetType.getRawClass());
   }
 
   private @Nullable BindingPropertyDefinition<JavaType, ReadMappingProperty> translateNullable(

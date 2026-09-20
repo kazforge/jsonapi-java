@@ -2,9 +2,9 @@ package com.kazforge.jsonapi.mapping.contract;
 
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
 import com.kazforge.jsonapi.annotation.JsonApiId;
+import com.kazforge.jsonapi.annotation.JsonApiLocalId;
 import com.kazforge.jsonapi.annotation.JsonApiRelationship;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
-import com.kazforge.jsonapi.annotation.JsonApiLocalId;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import java.util.List;
 import java.util.Map;

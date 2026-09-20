@@ -4,9 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Neutral JSON:API mapping definition produced by one concrete JSON-library backend.
- */
+/** Neutral JSON:API mapping definition produced by one concrete JSON-library backend. */
 public record MappingDefinition<T, P>(
     String resourceType,
     T domainType,

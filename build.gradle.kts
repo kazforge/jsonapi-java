@@ -79,7 +79,6 @@ sonar {
     }
 }
 
-
 // KAZ-138 temporary CI helper: capture Spotless' exact Java output for the PoC branch.
 // Remove after the formatted sources have been committed.
 val collectSpotlessFormattedSources =

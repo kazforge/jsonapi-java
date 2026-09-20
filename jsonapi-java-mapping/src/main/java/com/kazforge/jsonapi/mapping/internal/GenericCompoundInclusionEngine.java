@@ -23,9 +23,9 @@ import org.jspecify.annotations.Nullable;
  * Backend-neutral JSON:API compound-inclusion semantics.
  *
  * <p>This class intentionally knows nothing about Jackson. Mapper-specific type introspection,
- * property access, optional/collection handling, and configured value conversion stay behind
- * {@link InclusionMappingBackend}. The traversal, include policy, identity handling, sparse
- * fieldset behavior, ordering, and compound-document semantics live here once for every backend.
+ * property access, optional/collection handling, and configured value conversion stay behind {@link
+ * InclusionMappingBackend}. The traversal, include policy, identity handling, sparse fieldset
+ * behavior, ordering, and compound-document semantics live here once for every backend.
  *
  * <p>This is an internal proof-of-concept boundary for KAZ-137.
  */
@@ -96,9 +96,7 @@ public final class GenericCompoundInclusionEngine<T> {
   }
 
   private void preValidate(
-      List<T> distinctTypes,
-      List<IncludePath> paths,
-      MappingRepresentation representation) {
+      List<T> distinctTypes, List<IncludePath> paths, MappingRepresentation representation) {
     for (IncludePath path : paths) {
       if (path.segments().size() > representation.policy().maxIncludeDepth()) {
         Class<?> resourceClass =
@@ -283,11 +281,11 @@ public final class GenericCompoundInclusionEngine<T> {
         String propertyPath,
         Queue<DomainAtSegment<T>> queue) {
       T effectiveRelatedType = backend.effectiveType(relatedDomain, relatedType);
-      ResourceIdentifier relatedIdentifier = backend.identifier(relatedDomain, effectiveRelatedType);
+      ResourceIdentifier relatedIdentifier =
+          backend.identifier(relatedDomain, effectiveRelatedType);
 
       if (state.matchesPrimary(relatedIdentifier)) {
-        enqueueNextSegment(
-            relatedDomain, effectiveRelatedType, nextSegment, lastSegment, queue);
+        enqueueNextSegment(relatedDomain, effectiveRelatedType, nextSegment, lastSegment, queue);
         return;
       }
       if (edgeOmittedByFieldset) {
@@ -297,8 +295,7 @@ public final class GenericCompoundInclusionEngine<T> {
       ResourceObject relatedResource =
           backend.render(relatedDomain, effectiveRelatedType, representation);
       state.offerIncluded(relatedResource, propertyPath);
-      enqueueNextSegment(
-          relatedDomain, effectiveRelatedType, nextSegment, lastSegment, queue);
+      enqueueNextSegment(relatedDomain, effectiveRelatedType, nextSegment, lastSegment, queue);
     }
 
     private void enqueueNextSegment(

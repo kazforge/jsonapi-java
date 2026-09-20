@@ -26,8 +26,7 @@ public final class BindingBackendContract {
                 Map.of(
                     "author",
                     Relationship.withData(
-                        new RelationshipData.SingleLinkage(
-                            ResourceIdentifier.of("people", "p1"))),
+                        new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "p1"))),
                     "comments",
                     Relationship.withData(
                         new RelationshipData.IdentifierCollectionLinkage(
@@ -45,9 +44,7 @@ public final class BindingBackendContract {
     requireEquals("Hello", article.title, "bound attribute");
     requireEquals(ResourceIdentifier.of("people", "p1"), article.author, "bound to-one linkage");
     requireEquals(
-        List.of(
-            ResourceIdentifier.of("comments", "c1"),
-            ResourceIdentifier.of("comments", "c2")),
+        List.of(ResourceIdentifier.of("comments", "c1"), ResourceIdentifier.of("comments", "c2")),
         article.comments,
         "bound to-many linkage");
 
@@ -73,9 +70,7 @@ public final class BindingBackendContract {
             null,
             null,
             Relationships.ofRelationships(
-                Map.of(
-                    "author",
-                    Relationship.withData(RelationshipData.NullLinkage.INSTANCE))),
+                Map.of("author", Relationship.withData(RelationshipData.NullLinkage.INSTANCE))),
             null,
             null,
             Map.of());

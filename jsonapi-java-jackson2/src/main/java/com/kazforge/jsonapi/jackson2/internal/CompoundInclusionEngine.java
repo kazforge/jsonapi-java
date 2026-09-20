@@ -1,15 +1,15 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.kazforge.jsonapi.core.model.ResourceObject;
+import com.kazforge.jsonapi.jackson.internal.representation.EffectiveRepresentation;
+import com.kazforge.jsonapi.jackson.internal.representation.IncludedResourcesResult;
 import com.kazforge.jsonapi.mapping.internal.GenericCompoundInclusionEngine;
 import com.kazforge.jsonapi.mapping.internal.MappingIncludedResult;
 import com.kazforge.jsonapi.mapping.internal.MappingRepresentation;
-import com.kazforge.jsonapi.jackson.internal.representation.EffectiveRepresentation;
-import com.kazforge.jsonapi.jackson.internal.representation.IncludedResourcesResult;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
-import com.fasterxml.jackson.databind.JavaType;
 
 /**
  * jackson2 facade for compound-document inclusion.
@@ -23,7 +23,8 @@ public final class CompoundInclusionEngine {
 
   public CompoundInclusionEngine(DomainResourceWriter writer) {
     Objects.requireNonNull(writer, "writer");
-    this.delegate = new GenericCompoundInclusionEngine<>(new Jackson2InclusionMappingBackend(writer));
+    this.delegate =
+        new GenericCompoundInclusionEngine<>(new Jackson2InclusionMappingBackend(writer));
   }
 
   public IncludedResourcesResult collectIncluded(
@@ -59,7 +60,6 @@ public final class CompoundInclusionEngine {
   }
 
   private static IncludedResourcesResult adapt(MappingIncludedResult result) {
-    return new IncludedResourcesResult(
-        result.included(), result.sparseFieldsetLinkageExemptions());
+    return new IncludedResourcesResult(result.included(), result.sparseFieldsetLinkageExemptions());
   }
 }

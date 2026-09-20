@@ -13,7 +13,5 @@ public interface MappingContractAdapter {
   JsonApiDocument toDocument(Object resource, List<String> includePaths);
 
   MappingContractResult toMappedDocument(
-      Object resource,
-      List<String> includePaths,
-      Map<String, List<String>> fieldsets);
+      Object resource, List<String> includePaths, Map<String, List<String>> fieldsets);
 }

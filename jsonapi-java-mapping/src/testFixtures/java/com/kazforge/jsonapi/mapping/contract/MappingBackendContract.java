@@ -39,8 +39,7 @@ public final class MappingBackendContract {
     nullableObject.put("city", "Berlin");
     ResourceObject openValues =
         adapter.toResource(
-            new MappingContractFixtures.OpenValues(
-                "open-1", nullableItems, nullableObject));
+            new MappingContractFixtures.OpenValues("open-1", nullableItems, nullableObject));
     Map<String, Object> expectedOpenAttributes = new LinkedHashMap<>();
     expectedOpenAttributes.put("items", nullableItems);
     expectedOpenAttributes.put("object", nullableObject);
@@ -78,8 +77,7 @@ public final class MappingBackendContract {
         relationships.relationships().get("comments"),
         "to-many relationship");
 
-    JsonApiDocument document =
-        adapter.toDocument(article, List.of("author", "comments"));
+    JsonApiDocument document = adapter.toDocument(article, List.of("author", "comments"));
     if (!(document.data() instanceof DocumentData.SingleResource single)) {
       throw new AssertionError("expected single-resource primary data but got " + document.data());
     }
@@ -88,14 +86,13 @@ public final class MappingBackendContract {
     List<ResourceObject> included = Objects.requireNonNull(document.included(), "included");
     requireEquals(3, included.size(), "included resource count");
     requireEquals(resource("people", "p1", "name", "Alice"), included.get(0), "included author");
-    requireEquals(resource("comments", "c1", "body", "First"), included.get(1), "included comment 1");
-    requireEquals(resource("comments", "c2", "body", "Second"), included.get(2), "included comment 2");
+    requireEquals(
+        resource("comments", "c1", "body", "First"), included.get(1), "included comment 1");
+    requireEquals(
+        resource("comments", "c2", "body", "Second"), included.get(2), "included comment 2");
 
     MappingContractResult sparse =
-        adapter.toMappedDocument(
-            article,
-            List.of("author"),
-            Map.of("articles", List.of("title")));
+        adapter.toMappedDocument(article, List.of("author"), Map.of("articles", List.of("title")));
     if (!(sparse.document().data() instanceof DocumentData.SingleResource sparseSingle)) {
       throw new AssertionError("expected sparse single-resource primary data");
     }
@@ -105,7 +102,9 @@ public final class MappingBackendContract {
         sparsePrimary.attributes(),
         "sparse attributes");
     requireEquals(null, sparsePrimary.relationships(), "sparse relationship omission");
-    requireEquals(1, Objects.requireNonNull(sparse.document().included(), "sparse included").size(),
+    requireEquals(
+        1,
+        Objects.requireNonNull(sparse.document().included(), "sparse included").size(),
         "sparse included count");
     requireEquals(
         resource("people", "p1", "name", "Alice"),

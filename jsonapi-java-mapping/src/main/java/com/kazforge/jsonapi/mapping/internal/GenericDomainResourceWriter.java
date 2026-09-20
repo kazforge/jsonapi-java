@@ -81,8 +81,7 @@ public final class GenericDomainResourceWriter<T, P> {
       }
       Object rawValue = backend.read(domain, property);
       relationships.put(
-          property.jsonapiName(),
-          Relationship.withData(relationshipData(rawValue, property)));
+          property.jsonapiName(), Relationship.withData(relationshipData(rawValue, property)));
     }
 
     return new ResourceObject(
@@ -196,8 +195,7 @@ public final class GenericDomainResourceWriter<T, P> {
     @Override
     public java.util.Optional<T> relatedType(
         T ownerType, String relationshipName, String dottedPath) {
-      MappingPropertyDefinition<T, P> relationship =
-          relationship(ownerType, relationshipName);
+      MappingPropertyDefinition<T, P> relationship = relationship(ownerType, relationshipName);
       return relationship == null
           ? java.util.Optional.empty()
           : java.util.Optional.of(backend.relationshipTargetType(relationship));
@@ -222,8 +220,7 @@ public final class GenericDomainResourceWriter<T, P> {
     }
 
     @Override
-    public ResourceObject render(
-        Object domain, T type, MappingRepresentation representation) {
+    public ResourceObject render(Object domain, T type, MappingRepresentation representation) {
       return GenericDomainResourceWriter.this.toResource(domain, type, representation);
     }
 
@@ -236,7 +233,8 @@ public final class GenericDomainResourceWriter<T, P> {
 
     private @Nullable MappingPropertyDefinition<T, P> relationship(
         T ownerType, String relationshipName) {
-      for (MappingPropertyDefinition<T, P> property : backend.mappingFor(ownerType).relationships()) {
+      for (MappingPropertyDefinition<T, P> property :
+          backend.mappingFor(ownerType).relationships()) {
         if (property.jsonapiName().equals(relationshipName)) {
           return property;
         }

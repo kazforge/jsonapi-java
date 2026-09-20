@@ -1,7 +1,5 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.JavaType;
 import com.kazforge.jsonapi.jackson.internal.mapping.PropertyRole;
 import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.internal.DomainMappingBackend;
@@ -13,10 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.json.JsonMapper;
 
-/**
- * KAZ-137 bridge from the existing jackson3 mapping metadata to the neutral mapping-domain PoC.
- */
+/** KAZ-137 bridge from the existing jackson3 mapping metadata to the neutral mapping-domain PoC. */
 public final class Jackson3PrototypeMappingBackend
     implements DomainMappingBackend<JavaType, MappingProperty> {
 
@@ -28,7 +26,8 @@ public final class Jackson3PrototypeMappingBackend
     this(mapper, IdentifierConverter.defaults());
   }
 
-  public Jackson3PrototypeMappingBackend(JsonMapper mapper, IdentifierConverter identifierConverter) {
+  public Jackson3PrototypeMappingBackend(
+      JsonMapper mapper, IdentifierConverter identifierConverter) {
     this.cache = new MappingDefinitionCache(mapper);
     this.propertyScoped = new PropertyScopedValueConverter(mapper);
     this.identifierConverter = identifierConverter;
@@ -115,8 +114,7 @@ public final class Jackson3PrototypeMappingBackend
 
   @Override
   public List<Object> relationshipValues(
-      @Nullable Object rawValue,
-      MappingPropertyDefinition<JavaType, MappingProperty> property) {
+      @Nullable Object rawValue, MappingPropertyDefinition<JavaType, MappingProperty> property) {
     Object value = unwrapOptional(rawValue);
     if (property.toMany()) {
       if (value == null) {
@@ -139,8 +137,7 @@ public final class Jackson3PrototypeMappingBackend
     return property == null ? null : translate(property);
   }
 
-  private MappingPropertyDefinition<JavaType, MappingProperty> translate(
-      MappingProperty property) {
+  private MappingPropertyDefinition<JavaType, MappingProperty> translate(MappingProperty property) {
     JavaType type = property.accessor().getType();
     MappingRole mappingRole = role(property.role());
     return new MappingPropertyDefinition<>(
