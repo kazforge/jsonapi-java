@@ -216,14 +216,14 @@ final class GsonPrototypeMappingBackend implements DomainMappingBackend<Type, Fi
       for (JsonElement item : array) {
         values.add(toOpenValue(item));
       }
-      return List.copyOf(values);
+      return java.util.Collections.unmodifiableList(values);
     }
     if (element instanceof JsonObject object) {
       Map<String, Object> values = new java.util.LinkedHashMap<>();
       for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
         values.put(entry.getKey(), toOpenValue(entry.getValue()));
       }
-      return Map.copyOf(values);
+      return java.util.Collections.unmodifiableMap(values);
     }
     throw new IllegalArgumentException("Unsupported Gson value: " + element);
   }
