@@ -158,7 +158,8 @@ class GenericDomainResourceBinderSpec extends Specification {
         .fromResource(ResourceObject.of("articles", "a1"), BoundArticle)
 
     then:
-    thrown(JsonApiMappingException).diagnostic() == MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED
   }
 
   def "identifier parser failure has stable diagnostic"() {
@@ -171,7 +172,8 @@ class GenericDomainResourceBinderSpec extends Specification {
         .fromResource(ResourceObject.of("articles", "a1"), BoundArticle)
 
     then:
-    thrown(JsonApiMappingException).diagnostic() == MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED
   }
 
   private static GenericDomainResourceBinder<Class<?>, String> binder() {
