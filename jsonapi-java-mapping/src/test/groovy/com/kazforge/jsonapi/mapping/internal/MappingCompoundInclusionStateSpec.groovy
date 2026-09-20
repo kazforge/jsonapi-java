@@ -1,5 +1,6 @@
 package com.kazforge.jsonapi.mapping.internal
 
+import com.kazforge.jsonapi.core.model.Attributes
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.model.ResourceObject
@@ -46,17 +47,18 @@ class MappingCompoundInclusionStateSpec extends Specification {
 
     then:
     state.result().sparseFieldsetLinkageExemptions() ==
-        [ResourceIdentity.ofId("people", "p1")] as Set
+        [
+          ResourceIdentity.ofId("people", "p1")
+        ] as Set
   }
 
   def "identityless included resource is ignored"() {
     given:
     def state = new MappingCompoundInclusionState(RepresentationPolicy.defaults())
+    def resource = new ResourceObject("people", null, null, null, null, null, null, [:])
 
     when:
-    state.offerIncluded(
-        new ResourceObject("people", null, null, null, null, null, null, [:]),
-        "author")
+    state.offerIncluded(resource, "author")
 
     then:
     state.result().included().isEmpty()
@@ -79,30 +81,28 @@ class MappingCompoundInclusionStateSpec extends Specification {
   def "conflicting included representation for shared identity fails"() {
     given:
     def state = new MappingCompoundInclusionState(RepresentationPolicy.defaults())
-    state.offerIncluded(
-        new ResourceObject(
-            "people",
-            "p1",
-            null,
-            com.kazforge.jsonapi.core.model.Attributes.ofAttributes([name: "Alice"]),
-            null,
-            null,
-            null,
-            [:]),
-        "author")
+    def alice = new ResourceObject(
+        "people",
+        "p1",
+        null,
+        Attributes.ofAttributes([name: "Alice"]),
+        null,
+        null,
+        null,
+        [:])
+    def bob = new ResourceObject(
+        "people",
+        "p1",
+        null,
+        Attributes.ofAttributes([name: "Bob"]),
+        null,
+        null,
+        null,
+        [:])
+    state.offerIncluded(alice, "author")
 
     when:
-    state.offerIncluded(
-        new ResourceObject(
-            "people",
-            "p1",
-            null,
-            com.kazforge.jsonapi.core.model.Attributes.ofAttributes([name: "Bob"]),
-            null,
-            null,
-            null,
-            [:]),
-        "editor")
+    state.offerIncluded(bob, "editor")
 
     then:
     def ex = thrown(JsonApiMappingException)
