@@ -40,6 +40,13 @@
   represent or observe the application shape under test; behavioral expectations and assertions
   belong in each adapter's own tests. Do not introduce shared test orchestration, expected-outcome
   descriptors, scenario registries, or assertion frameworks.
+- Shared characterization contract specs under `com.kazforge.jsonapi.fixtures.contract` are the
+  sanctioned exception: abstract Spock specs asserting neutral Level-1 observable semantics,
+  executed on every adapter through adapter-supplied concrete subclasses that provide the
+  configured runtime only. Contract specs must not select scenarios, dispatch adapter-specific
+  calls, or encode adapter-local diagnostics or exception policies. New or shared observable
+  semantics for an extraction slice are first secured in a contract spec for that slice, before
+  ownership moves.
 - Before changing shared fixtures or corpora, read the affected corpus/schema resource READMEs; those files own fixture-specific invariants.
 - Keep orthogonal concerns orthogonal: test semantic behavior through one representative entry
   point, and test overload/sink parity with representative data; do not cross-product both
@@ -142,8 +149,11 @@ behavior is expected.
   several helper layers, simplify the test.
 - Shared `testFixtures` may provide major-neutral input data and application-shaped types, including
   minimal observable behavior such as access counters when the behavior under test requires it.
-  They must not invoke adapter APIs, select scenarios, encode expected behavioral outcomes, or
-  contain assertions. Jackson-major-specific mechanism fixtures remain adapter-local.
+  Those passive fixtures must not invoke adapter APIs, select scenarios, encode expected behavioral
+  outcomes, or contain assertions. The characterization contract specs are the sanctioned shared
+  exception: they assert neutral Level-1 observable semantics against the runtime each adapter
+  supplies, and stay at the JSON:API member level (no member-ordering assertions, no backend
+  mechanics). Jackson-major-specific mechanism fixtures remain adapter-local.
 - Shared JSON/schema corpora are test input and inventory, not a behavioral oracle. Adapter-specific
   diagnostics, locations, policies, and expected decoded/mapped values belong in adapter-owned
   specifications.

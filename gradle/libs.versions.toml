@@ -11,10 +11,12 @@ nullaway-plugin = "3.2.0"
 archunit = "1.5.0"
 jackson2 = "2.22.2"
 jackson3 = "3.2.2"
+groovy = "5.0.3"
 json-schema-validator = "3.0.7"
 
 [libraries]
 spock-core = { module = "org.spockframework:spock-core", version.ref = "spock" }
+groovy-json = { module = "org.apache.groovy:groovy-json", version.ref = "groovy" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 spotless-plugin = { module = "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin", version.ref = "spotless" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
