@@ -40,6 +40,7 @@ sonar {
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/BeanConstruction.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/BinderMetaConverter.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/CompoundInclusionEngine.java,
+            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/Jackson2InclusionMappingBackend.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/DocumentWireReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/DomainPatchBinder.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/DomainPatchDtoBinder.java,
