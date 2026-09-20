@@ -205,6 +205,11 @@ The PoC uses:
 - the same shared core→domain binder;
 - a deliberately small Gson tree-based JSON↔core codec.
 
+The shared mapping contract also covers structured/open values containing nested JSON nulls, for
+example array values such as `["one", null, "two"]` and object members such as
+`{"street": null}`. The Gson prototype preserves those nulls rather than using immutable-copy
+helpers that reject null elements or values.
+
 The Gson PoC does **not** establish production support parity.
 
 An independent review identified a concrete null-open-value bug in the first Gson prototype:
@@ -304,6 +309,11 @@ cross-backend characterization contract and currently reuses write-side `Mapping
 Production PATCH work should therefore be treated as a later, separate extraction and should evaluate
 read/inbound or dedicated patch metadata before stabilizing any SPI.
 
+PATCH deserves particular caution: production PATCH includes presence semantics, recursively
+structured values, property-scoped conversion, whole/resource/relationship meta, custom linkage and
+diagnostic behavior. Its eventual metadata model should be derived from inbound/read requirements or
+a dedicated patch view rather than assuming the write-side `MappingDefinition` is authoritative.
+
 These are follow-up implementation/contract risks, not reasons to reject the architecture.
 
 ## Test-surface conclusion
@@ -326,6 +336,24 @@ The independent review reached the same overall conclusion: accept the architect
 do not freeze the PoC capability interfaces as final SPIs. The hardest remaining proof areas are
 RelationshipLinkage/custom linkage, resource/relationship/identifier meta, construction diagnostics,
 structured values, and PATCH/structured PATCH.
+
+
+## Independent review follow-up
+
+An independent review of `main`, the PoC branch, and draft PR #204 reached the same architectural
+conclusion with important constraints:
+
+- accept the responsibility-based architecture direction, not the current PoC interfaces as a final SPI;
+- keep write-side and read-side metadata distinct while allowing a shared semantic property identity;
+- preserve the explicit logical/backend/JSON:API naming distinction;
+- treat PATCH as the largest remaining architecture proof and extract it later behind its own contracts;
+- keep Jackson token codecs unchanged during the mapping refactor;
+- treat Gson as a plausible separately scoped product backend, not as a prerequisite for the core refactor;
+- expand characterization/backend contracts per extracted responsibility during production migration.
+
+These findings have been folded into the PoC rather than merely recorded: identity-member naming is
+now enforced, null-containing structured open values are covered by the shared mapping contract, and
+the unvalidated executable PATCH sketch has been removed.
 
 ## Proposed production work if KAZ-137 is accepted
 
