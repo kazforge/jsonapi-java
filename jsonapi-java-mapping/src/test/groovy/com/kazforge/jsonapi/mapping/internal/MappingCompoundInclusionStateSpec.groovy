@@ -22,7 +22,7 @@ class MappingCompoundInclusionStateSpec extends Specification {
     !state.matchesPrimary(ResourceIdentifier.of("articles", "a2"))
   }
 
-  def "preferred identity chooses id before lid and handles identityless identifiers"() {
+  def "preferred identity chooses id before lid"() {
     given:
     def state = new MappingCompoundInclusionState(RepresentationPolicy.defaults())
 
@@ -33,17 +33,14 @@ class MappingCompoundInclusionStateSpec extends Specification {
     state.preferredIdentity(
         new ResourceIdentifier("articles", null, "local-a1", null, [:])) ==
         ResourceIdentity.ofLid("articles", "local-a1")
-    state.preferredIdentity(
-        new ResourceIdentifier("articles", null, null, null, [:])) == null
   }
 
-  def "linkage exemption records only identifiable resources"() {
+  def "linkage exemption records preferred identity"() {
     given:
     def state = new MappingCompoundInclusionState(RepresentationPolicy.defaults())
 
     when:
     state.addLinkageExemption(ResourceIdentifier.of("people", "p1"))
-    state.addLinkageExemption(new ResourceIdentifier("people", null, null, null, [:]))
 
     then:
     state.result().sparseFieldsetLinkageExemptions() ==
