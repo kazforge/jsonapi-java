@@ -13,4 +13,5 @@ dependencies {
     testImplementation(testFixtures(project(":jsonapi-java-mapping")))
     testImplementation(libs.archunit)
     testImplementation(libs.json.schema.validator)
+    testCompileOnly(libs.jspecify)
 }
