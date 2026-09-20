@@ -78,3 +78,21 @@ sonar {
         )
     }
 }
+
+
+// KAZ-138 temporary CI helper: capture Spotless' exact Java output for the PoC branch.
+// Remove after the formatted sources have been committed.
+val collectSpotlessFormattedSources =
+    tasks.register<Copy>("collectSpotlessFormattedSources") {
+        dependsOn("spotlessApply")
+        from(layout.projectDirectory) {
+            include("**/*.java")
+            exclude("**/build/**", "**/bin/**")
+        }
+        into(layout.buildDirectory.dir("reports/jacoco/spotless-formatted"))
+    }
+
+tasks.named("spotlessCheck") {
+    dependsOn("spotlessApply")
+    finalizedBy(collectSpotlessFormattedSources)
+}
