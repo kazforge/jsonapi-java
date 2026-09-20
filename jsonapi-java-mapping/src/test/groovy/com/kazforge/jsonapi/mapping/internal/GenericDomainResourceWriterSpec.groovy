@@ -211,10 +211,18 @@ class GenericDomainResourceWriterSpec extends Specification {
 
     @Override
     FakeType inferredType(Object domain) {
-      if (domain instanceof Article) return ARTICLES
-      if (domain instanceof Person) return PEOPLE
-      if (domain instanceof Comment) return COMMENTS
-      if (domain instanceof Draft) return DRAFTS
+      if (domain instanceof Article) {
+        return ARTICLES
+      }
+      if (domain instanceof Person) {
+        return PEOPLE
+      }
+      if (domain instanceof Comment) {
+        return COMMENTS
+      }
+      if (domain instanceof Draft) {
+        return DRAFTS
+      }
       throw new IllegalArgumentException("Unsupported domain " + domain.getClass())
     }
 
@@ -236,13 +244,27 @@ class GenericDomainResourceWriterSpec extends Specification {
     @Override
     Object read(Object domain, MappingPropertyDefinition<FakeType, String> property) {
       def handle = property.handle()
-      if (handle == "id") return domain.id
-      if (handle == "lid") return domain.lid
-      if (handle == "title") return domain.title
-      if (handle == "name") return domain.name
-      if (handle == "body") return domain.body
-      if (handle == "author") return domain.author
-      if (handle == "comments") return domain.comments
+      if (handle == "id") {
+        return domain.id
+      }
+      if (handle == "lid") {
+        return domain.lid
+      }
+      if (handle == "title") {
+        return domain.title
+      }
+      if (handle == "name") {
+        return domain.name
+      }
+      if (handle == "body") {
+        return domain.body
+      }
+      if (handle == "author") {
+        return domain.author
+      }
+      if (handle == "comments") {
+        return domain.comments
+      }
       throw new IllegalArgumentException(handle)
     }
 
@@ -269,7 +291,9 @@ class GenericDomainResourceWriterSpec extends Specification {
     @Override
     List<Object> relationshipValues(
         Object rawValue, MappingPropertyDefinition<FakeType, String> property) {
-      if (rawValue == null) return []
+      if (rawValue == null) {
+        return []
+      }
       property.toMany() ? new ArrayList<>((Collection<?>) rawValue) : [rawValue]
     }
   }
