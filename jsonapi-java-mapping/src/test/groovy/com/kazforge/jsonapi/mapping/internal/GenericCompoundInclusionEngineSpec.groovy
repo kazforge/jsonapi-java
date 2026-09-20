@@ -80,7 +80,6 @@ class GenericCompoundInclusionEngineSpec extends Specification {
 
   def "mismatched primary snapshots are rejected before traversal"() {
     given:
-    def type = new FakeType("articles", Article)
     def engine = new GenericCompoundInclusionEngine<FakeType>(new FakeBackend([:]))
 
     when:
