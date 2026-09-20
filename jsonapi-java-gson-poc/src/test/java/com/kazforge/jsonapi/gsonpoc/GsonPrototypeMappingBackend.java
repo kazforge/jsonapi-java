@@ -153,8 +153,14 @@ final class GsonPrototypeMappingBackend implements DomainMappingBackend<Type, Fi
 
   private static MappingPropertyDefinition<Type, Field> property(
       Field field, String externalName, MappingRole role, Type type, boolean toMany) {
+    String jsonapiName =
+        switch (role) {
+          case ID -> "id";
+          case LOCAL_ID -> "lid";
+          case ATTRIBUTE, RELATIONSHIP -> externalName;
+        };
     return new MappingPropertyDefinition<>(
-        field, field.getName(), externalName, externalName, role, type, toMany);
+        field, field.getName(), externalName, jsonapiName, role, type, toMany);
   }
 
   private static boolean isToMany(Type type) {
