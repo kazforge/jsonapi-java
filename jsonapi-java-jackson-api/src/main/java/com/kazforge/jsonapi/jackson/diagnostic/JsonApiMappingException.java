@@ -5,7 +5,8 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Domain mapping, binding, registry, decoration, or representation failure.
+ * Backend-independent domain mapping, binding, registry, decoration, or representation failure. The
+ * current Jackson adapters produce it through caller-configured Jackson.
  *
  * <p>Every exception carries a stable {@link MappingDiagnostic} code, an optional {@link
  * #resourceClass()}, and an optional {@link #location()} over JSON:API wire names. Adapter-produced
@@ -16,8 +17,8 @@ import org.jspecify.annotations.Nullable;
  *       /attributes/headline} or {@code /relationships/author/data}. Typed-envelope readers prepend
  *       {@code /data}, {@code /data/<index>}, or {@code /included/<index>} so an escaping failure
  *       is document-relative.
- *   <li>Each segment is escaped independently per RFC 6901. Configured Jackson external names,
- *       rather than logical Java property names, appear in the pointer.
+ *   <li>Each segment is escaped independently per RFC 6901. Configured-Jackson external names,
+ *       rather than logical application-property identities, appear in the pointer.
  *   <li>A failure without a meaningful member location carries {@code null}; absence is never
  *       encoded as {@code ""}, {@code /}, or a class name.
  * </ul>

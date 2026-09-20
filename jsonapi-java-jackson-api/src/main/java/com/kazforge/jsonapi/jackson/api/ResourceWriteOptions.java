@@ -5,7 +5,8 @@ import com.kazforge.jsonapi.jackson.representation.RepresentationSelection;
 import java.util.Objects;
 
 /**
- * Ordinary resource-write options composing existing neutral semantics.
+ * Backend-independent ordinary resource-write options composing existing neutral semantics. The
+ * current Jackson adapters interpret these values through caller-configured Jackson.
  *
  * <p>Carries the per-write document envelope (top-level links, meta, and JSON:API object) together
  * with the per-operation representation selection (include paths and sparse fieldsets). An absent

@@ -1,7 +1,9 @@
 # jsonapi-java-jackson-api
 
-Jackson-major-neutral contracts shared by the Jackson 2 and Jackson 3 adapters and by framework
-integrations. This module defines contracts and values; it has no standalone Jackson runtime.
+Backend-independent application contracts and values currently housed in this historically named
+module and currently implemented by the configured Jackson 2 and Jackson 3 runtimes. This module
+defines contracts and values; it has no standalone Jackson runtime, and its artifact and package
+names remain current.
 
 ## Packages and entry points
 
@@ -14,7 +16,18 @@ integrations. This module defines contracts and values; it has no standalone Jac
 | [`com.kazforge.jsonapi.jackson.patch`](src/main/java/com/kazforge/jsonapi/jackson/patch/package-info.java) | Presence, command, change, and structured PATCH contracts |
 | [`com.kazforge.jsonapi.jackson.representation`](src/main/java/com/kazforge/jsonapi/jackson/representation/package-info.java) | Include/fieldset selection and application policy |
 | [`com.kazforge.jsonapi.jackson.diagnostic`](src/main/java/com/kazforge/jsonapi/jackson/diagnostic/package-info.java) | Stable codec/mapping diagnostics and locations |
-| `com.kazforge.jsonapi.jackson.internal.{wire,mapping,patch,representation}` | Unsupported Jackson-free helpers used only for adapter cooperation |
+| `com.kazforge.jsonapi.jackson.internal.mapping` | Unsupported shared mapping bookkeeping used only for adapter cooperation |
+| `com.kazforge.jsonapi.jackson.internal.representation` | Unsupported shared representation and inclusion bookkeeping used only for adapter cooperation |
+| `com.kazforge.jsonapi.jackson.internal.patch` | Unsupported shared typed-PATCH bridge state used only for adapter cooperation |
+| `com.kazforge.jsonapi.jackson.internal.wire` | Unsupported shared wire-reading support used only for adapter cooperation |
+
+Supported packages above are backend-independent contract/value shapes: logical application
+properties, JSON:API member names, document envelopes, selections, and diagnostics. The current
+Jackson 2 and Jackson 3 adapters derive observable property semantics through caller-configured
+Jackson (discovery, visibility, external names, construction, and conversion), and native
+type/property handles, introspection, naming, serializers, deserializers, parser/generator
+mechanics, and wire codecs remain adapter-owned. `id` and `lid` stay invariant JSON:API role
+names.
 
 ## Level-1 contract
 

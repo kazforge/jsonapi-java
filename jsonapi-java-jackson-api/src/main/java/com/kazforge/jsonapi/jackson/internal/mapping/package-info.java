@@ -1,5 +1,5 @@
 /**
- * Jackson-major-neutral mapping implementation helpers.
+ * Shared mapping bookkeeping used only for adapter cooperation.
  *
  * <p>This package is an unsupported implementation namespace shipped inside the Jackson API
  * artifact so the Jackson 2 and Jackson 3 adapters can share neutral mapping roles, diagnostics,

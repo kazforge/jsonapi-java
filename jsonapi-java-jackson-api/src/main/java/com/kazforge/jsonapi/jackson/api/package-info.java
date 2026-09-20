@@ -1,5 +1,5 @@
 /**
- * Major-neutral Level-1 JSON:API application operations.
+ * Backend-independent Level-1 JSON:API application operations.
  *
  * <p>Level 1 coordinates the ordinary client/server-neutral operations that applications commonly
  * need. Major-specific advanced APIs remain the explicit control surface for mapper configuration,
@@ -17,10 +17,12 @@
  * com.kazforge.jsonapi.jackson.api.ResourceCollectionDocument} carry neutral per-operation state
  * and add no Jackson mechanics.
  *
- * <p>No type in this package imports or models Jackson implementation types; Jackson 2 and Jackson
- * 3 remain separately compiled implementations of these contracts. The facade adds no unified
- * failure family: document-read, core validation, and mapping failures retain their focused
- * contracts, and each adapter documents how its transport I/O failures cross the Level-1 boundary.
+ * <p>No type in this package imports or models backend implementation types. The current Jackson 2
+ * and Jackson 3 runtimes implement these contracts through caller-configured Jackson, which remains
+ * the current property authority for discovery, visibility, external names, construction, and
+ * conversion. The facade adds no unified failure family: document-read, core validation, and
+ * mapping failures retain their focused contracts, and each adapter documents how its transport I/O
+ * failures cross the Level-1 boundary.
  */
 @NullMarked
 package com.kazforge.jsonapi.jackson.api;

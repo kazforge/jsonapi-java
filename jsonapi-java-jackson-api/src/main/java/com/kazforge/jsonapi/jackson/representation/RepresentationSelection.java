@@ -8,14 +8,15 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Immutable per-operation selection of include paths and sparse fieldsets.
+ * Backend-independent immutable per-operation selection of include paths and sparse fieldsets. The
+ * current Jackson adapters resolve its JSON:API member names through caller-configured Jackson.
  *
  * <p>An absent include request ({@code include} was not supplied) omits {@code included}. An
  * explicitly requested empty include emits {@code included: []} when no resources resolve, and a
  * non-empty include-path list that resolves to no resources does the same. An absent fieldset type
  * leaves its attributes and relationships unrestricted; a present type with an empty list selects
- * none. Include-path segments and field names are JSON:API external member names resolved by the
- * configured Jackson mapper, never Java logical property names.
+ * none. Include-path segments and field names are final JSON:API external member names resolved by
+ * the configured Jackson mapper, never logical application-property identities.
  *
  * <p>This value contains representation-shaping requests only. It does not model filters, sorting,
  * pagination, persistence projections, authorization state, or query predicates.

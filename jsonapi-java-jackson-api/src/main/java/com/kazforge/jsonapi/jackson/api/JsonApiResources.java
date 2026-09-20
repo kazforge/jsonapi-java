@@ -8,8 +8,9 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Level-1 ordinary resource operations: strict homogeneous reads, single/collection writes, and
- * create/update document authoring.
+ * Backend-independent Level-1 ordinary resource operations: strict homogeneous reads,
+ * single/collection writes, and create/update document authoring. The current Jackson adapters
+ * implement these operations through caller-configured Jackson.
  *
  * <p>Reads bind directly to the caller-supplied target type and never require a resource-type
  * registry. {@code readOne} requires primary data that is exactly one resource object; {@code

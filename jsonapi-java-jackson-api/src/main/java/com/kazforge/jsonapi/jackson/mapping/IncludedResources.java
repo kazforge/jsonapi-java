@@ -28,8 +28,8 @@ import java.util.Set;
  * identities declared for each wire-order position, so {@code find(identity)} can only return the
  * DTO at the position that declared that identity: inconsistent states are unrepresentable.
  * Duplicate identities across positions, length mismatches, and {@code null} elements are rejected
- * at construction. Major-specific readers build the declarations from validated documents, so wire
- * order and identity lookup always agree.
+ * at construction. The current backend readers build the declarations from validated documents
+ * through caller-configured Jackson, so wire order and identity lookup always agree.
  */
 public final class IncludedResources {
 

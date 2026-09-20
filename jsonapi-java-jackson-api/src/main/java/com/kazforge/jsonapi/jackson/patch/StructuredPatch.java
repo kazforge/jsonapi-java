@@ -4,14 +4,15 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Jackson-major-neutral low-level requested-change payload for a supplied structured value.
+ * Backend-independent low-level requested-change payload for a supplied structured value. The
+ * current Jackson adapters populate it through caller-configured Jackson.
  *
  * <p>A present structured value's requested changes: exactly the supplied nested members, in the
- * application type's declaration order as Jackson resolves it. Omission is implied by absence — a
- * member that is not present in {@link #members()} was not supplied — mirroring the top-level
- * {@link PatchCommand#changes()} philosophy. An empty {@link #members()} list means the structured
- * value was supplied as an explicit empty object (present, zero nested changes); it is never a
- * clear-all or delete operation.
+ * application type's declaration order as the configured Jackson runtime resolves it. Omission is
+ * implied by absence — a member that is not present in {@link #members()} was not supplied —
+ * mirroring the top-level {@link PatchCommand#changes()} philosophy. An empty {@link #members()}
+ * list means the structured value was supplied as an explicit empty object (present, zero nested
+ * changes); it is never a clear-all or delete operation.
  *
  * <p>This is a payload, not a {@link PatchChange} variant. A recursively traversed attribute
  * appears as an {@link PatchChange.AttributeChange} whose value is a {@code StructuredPatch};

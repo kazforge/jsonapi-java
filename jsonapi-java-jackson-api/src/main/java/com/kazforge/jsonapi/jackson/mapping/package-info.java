@@ -1,11 +1,11 @@
 /**
- * Major-neutral application/domain mapping contracts and values.
+ * Backend-independent application/domain mapping contracts and values.
  *
- * <p>Configured Jackson remains the authority for property discovery, visibility, wire names,
- * creators, and ordinary Java conversion. JSON:API mapping roles select protocol locations without
- * replacing that property configuration. Identifier conversion, resource-type registrations, and
- * resource decorators are explicit inputs to major-specific mapper or reader construction; there is
- * no global registry or ambient mapping configuration.
+ * <p>Configured Jackson remains the current authority for property discovery, visibility, external
+ * names, creators, and ordinary Java conversion. JSON:API mapping roles select protocol locations
+ * without replacing that property configuration. Identifier conversion, resource-type
+ * registrations, and resource decorators are explicit inputs to major-specific mapper or reader
+ * construction; there is no global registry or ambient mapping configuration.
  *
  * <p>{@link com.kazforge.jsonapi.jackson.mapping.MappedDocument} carries mapping-produced
  * sparse-fieldset provenance to the document writer so validation observes the representation that

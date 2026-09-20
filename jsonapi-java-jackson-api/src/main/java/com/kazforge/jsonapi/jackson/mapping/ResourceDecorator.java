@@ -1,7 +1,8 @@
 package com.kazforge.jsonapi.jackson.mapping;
 
 /**
- * Application-provided decoration for JSON:API resource links during domain writes.
+ * Backend-independent application-provided decoration for JSON:API resource links during domain
+ * writes. The current Jackson adapters invoke it through caller-configured Jackson.
  *
  * <p>Decorators are application/runtime collaborators, not domain-model metadata. They are supplied
  * through mapper construction so dependency-injected, request-aware, or tenant-aware link builders
@@ -19,11 +20,12 @@ package com.kazforge.jsonapi.jackson.mapping;
  * meta, relationship meta, identifier meta, included membership, sparse-fieldset provenance, and
  * document-level links — remain owned by normal mapping.
  *
- * <p>Relationship decoration is keyed by the mapped property <em>identity</em>, i.e. the Jackson
- * logical property name (the internal name derived from the Java field/record component/getter,
- * e.g. {@code "comments"}). The mapper resolves that identity through the configured Jackson
- * external name (for example {@code @JsonProperty("article-comments")}) and applies the decoration
- * under the final wire member name automatically. Decorators must not repeat the wire name.
+ * <p>Relationship decoration is keyed by the logical application-property <em>identity</em>, i.e.
+ * the Jackson logical property name (the internal name derived from the Java field/record
+ * component/getter, e.g. {@code "comments"}). The mapper resolves that identity through the
+ * configured-Jackson external property name (for example {@code @JsonProperty("article-comments")})
+ * and applies the decoration under the final JSON:API wire member name automatically. Decorators
+ * must not repeat the external or wire name.
  *
  * <p>Returning {@code null} or a decoration containing {@code null} keys/values is invalid and
  * fails with a stable mapping diagnostic. Unknown or non-relationship targets also fail

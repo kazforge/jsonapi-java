@@ -33,15 +33,18 @@ authorization, query execution, relationship mutation, and application of PATCH 
 |--------|------|--------------------------------------------|
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable wire model, local invariants, aggregate validation | None |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free semantic mapping roles | None |
-| [`jsonapi-java-jackson-api`](../jsonapi-java-jackson-api/README.md) | Jackson-major-neutral application, document, mapping, representation, diagnostic, and PATCH contracts | Core |
+| [`jsonapi-java-jackson-api`](../jsonapi-java-jackson-api/README.md) | Backend-independent application, document, mapping, representation, diagnostic, and PATCH contracts currently implemented by configured Jackson | Core |
 | [`jsonapi-java-query`](../jsonapi-java-query/README.md) | Neutral query selection parsing and opaque parameter preservation | Core and neutral Jackson representation contracts |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Native Jackson 3 codec, mapping, binding, PATCH, and Level-1 runtime | Core, annotations, neutral Jackson API |
 | [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Native Jackson 2 codec, mapping, binding, PATCH, and Level-1 runtime | Core, annotations, neutral Jackson API |
 
-The two Jackson adapters implement the same neutral semantics while remaining separately compiled
-native-major integrations. There is no runtime-major detection or lowest-common-denominator Jackson
-abstraction. The neutral API contains no Jackson-major imports. Framework integrations, when added,
-depend on these lower-layer public contracts; no lower layer depends on a framework.
+The two Jackson adapters implement the same backend-independent semantics while remaining
+separately compiled native-major integrations. There is no runtime-major detection or
+lowest-common-denominator Jackson abstraction. The neutral API contains no Jackson-major imports;
+configured Jackson remains the current property authority, and native type/property handles,
+introspection, naming, construction, conversion, serializers, deserializers, parser/generator
+mechanics, and wire codecs remain adapter-owned. Framework integrations, when added, depend on
+these lower-layer public contracts; no lower layer depends on a framework.
 
 Within core, aggregate validation depends downward on the model, internal helpers, and validation
 types; the model and internal helpers may depend on validation, but lower responsibilities do not
