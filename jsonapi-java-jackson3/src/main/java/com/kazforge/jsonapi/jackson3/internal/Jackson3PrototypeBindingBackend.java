@@ -95,14 +95,23 @@ public final class Jackson3PrototypeBindingBackend
 
   private BindingPropertyDefinition<JavaType, ReadMappingProperty> translate(
       ReadMappingProperty property) {
+    MappingRole mappingRole = role(property.role());
     return new BindingPropertyDefinition<>(
         property,
         property.logicalName(),
         property.jacksonName(),
-        property.jsonapiName(),
-        role(property.role()),
+        jsonapiName(mappingRole, property.jsonapiName()),
+        mappingRole,
         property.type(),
         property.deserializable());
+  }
+
+  private static String jsonapiName(MappingRole role, String backendResolvedName) {
+    return switch (role) {
+      case ID -> "id";
+      case LOCAL_ID -> "lid";
+      case ATTRIBUTE, RELATIONSHIP -> backendResolvedName;
+    };
   }
 
   private List<BindingPropertyDefinition<JavaType, ReadMappingProperty>> translateAll(
