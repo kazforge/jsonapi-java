@@ -142,14 +142,23 @@ public final class Jackson2PrototypeMappingBackend
   private MappingPropertyDefinition<JavaType, MappingProperty> translate(
       MappingProperty property) {
     JavaType type = property.accessor().getType();
+    MappingRole mappingRole = role(property.role());
     return new MappingPropertyDefinition<>(
         property,
         property.logicalName(),
         property.jacksonName(),
-        property.jsonapiName(),
-        role(property.role()),
+        jsonapiName(mappingRole, property.jsonapiName()),
+        mappingRole,
         type,
         MappingTypeSupport.isToManyType(MappingTypeSupport.unwrapOptionalType(type)));
+  }
+
+  private static String jsonapiName(MappingRole role, String backendResolvedName) {
+    return switch (role) {
+      case ID -> "id";
+      case LOCAL_ID -> "lid";
+      case ATTRIBUTE, RELATIONSHIP -> backendResolvedName;
+    };
   }
 
   private List<MappingPropertyDefinition<JavaType, MappingProperty>> translateAll(
