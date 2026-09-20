@@ -42,21 +42,15 @@ final class MappingCompoundInclusionState {
     return false;
   }
 
-  @Nullable ResourceIdentity preferredIdentity(ResourceIdentifier identifier) {
+  ResourceIdentity preferredIdentity(ResourceIdentifier identifier) {
     if (identifier.hasId()) {
       return ResourceIdentity.ofId(identifier.type(), Objects.requireNonNull(identifier.id()));
     }
-    if (identifier.hasLid()) {
-      return ResourceIdentity.ofLid(identifier.type(), Objects.requireNonNull(identifier.lid()));
-    }
-    return null;
+    return ResourceIdentity.ofLid(identifier.type(), Objects.requireNonNull(identifier.lid()));
   }
 
   void addLinkageExemption(ResourceIdentifier identifier) {
-    ResourceIdentity identity = preferredIdentity(identifier);
-    if (identity != null) {
-      linkageExemptions.add(identity);
-    }
+    linkageExemptions.add(preferredIdentity(identifier));
   }
 
   void offerIncluded(ResourceObject candidate, String propertyPath) {
