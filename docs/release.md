@@ -26,7 +26,7 @@ Publish job (same workflow run)
   repository root, configured in `release-please-config.json` with version
   tracking in `.release-please-manifest.json`.
 - The single version source is the root `gradle.properties` `version`
-  property; all six `com.kazforge:jsonapi-java-*` artifacts ship that exact
+  property; all seven `com.kazforge:jsonapi-java-*` artifacts ship that exact
   version.
 - Tags are named `v<version>`; the changelog is the root `CHANGELOG.md`,
   both maintained by release-please.

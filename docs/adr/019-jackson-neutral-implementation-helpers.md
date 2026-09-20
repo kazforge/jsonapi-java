@@ -38,3 +38,10 @@ being redeclared.
 - Unsupported Java-public classes are present in the API artifact; consumers must not depend on them.
 - Intentional duplication remains for major-specific mechanics, and boundary changes require matching
   architecture-test and duplication-policy updates.
+
+## Partial supersession
+
+The published-but-unsupported `jsonapi-java-mapping` artifact now exists as the future home for
+this shared boundary, so the no-new-artifact and unchanged-dependency-direction conclusions above
+no longer apply. Existing helper ownership is unchanged: the helpers listed in this record remain
+in the API artifact under `com.kazforge.jsonapi.internal` until a later extraction moves them.

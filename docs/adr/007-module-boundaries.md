@@ -18,9 +18,13 @@ Keep these responsibility boundaries:
 - `jsonapi-java-api` owns Jackson-major-neutral application, document, mapping,
   representation, diagnostic, and PATCH contracts. It contains no Jackson mechanics or runtime
   dependency; [ADR-018](018-level-one-application-api-contract.md) owns its Level-1 operation seam.
+- `jsonapi-java-mapping` owns the internal cross-artifact mapping implementation namespace
+  consumed by backend runtimes. It depends on the neutral API and is published on the unified
+  release train, but it is unsupported consumer API and currently carries no mapping behavior.
 - `jsonapi-java-jackson3` and `jsonapi-java-jackson2` are separately compiled native-major
   implementations of those contracts. They do not share a runtime artifact or detect a major at
-  runtime.
+  runtime. Each backend depends on mapping while retaining its direct API, annotations, and core
+  dependencies.
 - `jsonapi-java-query` owns optional framework- and Jackson-neutral query parsing.
 - Framework integrations are separate optional modules that depend on lower-layer public contracts;
   lower layers never depend on a framework.

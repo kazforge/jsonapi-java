@@ -16,6 +16,7 @@ rootProject.name = "jsonapi-java"
 include("jsonapi-java-core")
 include("jsonapi-java-annotations")
 include("jsonapi-java-api")
+include("jsonapi-java-mapping")
 include("jsonapi-java-query")
 include("jsonapi-java-jackson3")
 include("jsonapi-java-jackson2")

@@ -1,6 +1,7 @@
 package com.kazforge.jsonapi.architecture
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 
 import com.kazforge.jsonapi.ArchitectureConstructorSignatureLeakFixture
 import com.kazforge.jsonapi.ArchitectureSignatureLeakFixture
@@ -146,6 +147,25 @@ class JacksonApiDependencyRulesSpec extends Specification {
         .should()
         .onlyDependOnClassesThat()
         .resideOutsideOfPackages("tools.jackson..", "com.fasterxml..")
+        .check(commonClasses)
+  }
+
+  def "neutral production types do not depend on mapping implementation detail"() {
+    expect:
+    noClasses()
+        .that()
+        .resideInAnyPackage(
+        "com.kazforge.jsonapi",
+        "com.kazforge.jsonapi.api..",
+        "com.kazforge.jsonapi.document..",
+        "com.kazforge.jsonapi.mapping..",
+        "com.kazforge.jsonapi.patch..",
+        "com.kazforge.jsonapi.representation..",
+        "com.kazforge.jsonapi.diagnostic..",
+        "com.kazforge.jsonapi.internal..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAPackage("com.kazforge.jsonapi.mapping.internal..")
         .check(commonClasses)
   }
 
