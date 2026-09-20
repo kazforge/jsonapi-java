@@ -225,9 +225,6 @@ public final class GenericCompoundInclusionEngine<T> {
       T declaredType = current.declaredType();
       if (!isLenientRoot(domain, declaredType, current.segmentIndex())) {
         ResourceIdentity identity = identityOf(domain, declaredType);
-        if (identity == null) {
-          return;
-        }
         VisitKey<T> visitKey =
             new VisitKey<>(identity, declaredType, pathIndex, current.segmentIndex());
         if (!visited.add(visitKey)) {
@@ -309,7 +306,7 @@ public final class GenericCompoundInclusionEngine<T> {
       }
     }
 
-    private @Nullable ResourceIdentity identityOf(Object domain, T declaredType) {
+    private ResourceIdentity identityOf(Object domain, T declaredType) {
       return state.preferredIdentity(backend.identifier(domain, declaredType));
     }
 
