@@ -55,15 +55,14 @@ public final class GenericDomainResourceBinder<T, P> {
     }
 
     Map<String, @Nullable Object> properties = new LinkedHashMap<>();
-    bindIdentity(resource, mapping.idProperty(), resource.id(), "id", rawType, properties);
-    bindIdentity(resource, mapping.localIdProperty(), resource.lid(), "lid", rawType, properties);
+    bindIdentity(mapping.idProperty(), resource.id(), "id", rawType, properties);
+    bindIdentity(mapping.localIdProperty(), resource.lid(), "lid", rawType, properties);
     bindAttributes(resource, mapping, rawType, properties);
     bindRelationships(resource, mapping, rawType, properties);
     return backend.construct(properties, targetType);
   }
 
   private void bindIdentity(
-      ResourceObject resource,
       @Nullable BindingPropertyDefinition<T, P> property,
       @Nullable String wireValue,
       String memberName,
@@ -126,13 +125,10 @@ public final class GenericDomainResourceBinder<T, P> {
     }
     for (BindingPropertyDefinition<T, P> property : mapping.relationships()) {
       Relationship relationship = relationships.relationships().get(property.jsonapiName());
-      if (relationship == null) {
+      if (relationship == null || relationship.data() == null) {
         continue;
       }
-      RelationshipData data = relationship.data();
-      if (data == null) {
-        continue;
-      }
+      RelationshipData data = Objects.requireNonNull(relationship.data());
       MappingLocation location =
           MappingLocation.of("relationships", property.jsonapiName(), "data");
       requireBindable(property, location, rawType);
