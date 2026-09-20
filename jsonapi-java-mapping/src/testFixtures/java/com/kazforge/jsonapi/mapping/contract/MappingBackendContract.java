@@ -8,6 +8,8 @@ import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.core.model.Relationships;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,6 +29,25 @@ public final class MappingBackendContract {
     requireEquals("drafts", draft.type(), "local-id resource type");
     requireEquals(null, draft.id(), "local-id resource id");
     requireEquals("draft-1", draft.lid(), "local-id resource lid");
+
+    List<Object> nullableItems = new ArrayList<>();
+    nullableItems.add("one");
+    nullableItems.add(null);
+    nullableItems.add("two");
+    Map<String, Object> nullableObject = new LinkedHashMap<>();
+    nullableObject.put("street", null);
+    nullableObject.put("city", "Berlin");
+    ResourceObject openValues =
+        adapter.toResource(
+            new MappingContractFixtures.OpenValues(
+                "open-1", nullableItems, nullableObject));
+    Map<String, Object> expectedOpenAttributes = new LinkedHashMap<>();
+    expectedOpenAttributes.put("items", nullableItems);
+    expectedOpenAttributes.put("object", nullableObject);
+    requireEquals(
+        Attributes.ofAttributes(expectedOpenAttributes),
+        openValues.attributes(),
+        "nullable open values");
 
     MappingContractFixtures.Person author = new MappingContractFixtures.Person("p1", "Alice");
     MappingContractFixtures.Comment first = new MappingContractFixtures.Comment("c1", "First");
