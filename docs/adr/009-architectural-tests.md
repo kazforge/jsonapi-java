@@ -24,8 +24,11 @@ shared fixtures, and query parsing. In particular:
 - supported neutral contracts are not redeclared by adapters, and shared internal helpers do not
   leak through supported public signatures;
 - shared fixtures remain passive application-shaped data and resources, apart from the neutral
-  resource loader; behavioral orchestration and assertions remain adapter-local.
-
+  resource loader; behavioral orchestration and assertions remain adapter-local;
+- shared characterization contract specs under `com.kazforge.jsonapi.fixtures.contract` are the
+  sanctioned shared-assertion exception: abstract Spock specs asserting neutral Level-1 observable
+  semantics, executed through adapter-supplied concrete subclasses, depending only on Groovy, Spock,
+  and the neutral packages the passive fixtures may use.
 Core preserves its downward responsibility DAG: aggregate validation may depend on model, internal,
 and validation responsibilities; model may depend on internal and validation; internal may depend on
 validation. The reverse edges are forbidden.

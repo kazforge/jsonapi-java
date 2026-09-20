@@ -59,5 +59,14 @@ The `java-test-fixtures` variant owns passive, major-neutral application-shaped 
 neutral `TestFixtureResources` loader. Behavioral expectations and assertions remain in each
 adapter's tests; this module provides no scenario registry or shared test orchestration.
 
+The `com.kazforge.jsonapi.fixtures.contract` fixtures own the shared characterization contract
+specs: abstract Spock specs asserting neutral Level-1 observable semantics that every adapter runs
+through a concrete subclass supplying its configured runtime only. Contract specs stay at the
+JSON:API member level and never freeze JSON object member ordering; fixture carriers there may use
+Jackson-major-neutral annotations such as `@JsonProperty` purely as test mechanics, which are not
+part of the backend-neutral contract and must not constrain future non-Jackson backends. New or
+shared observable semantics for an extraction slice are first secured in a contract spec for that
+slice, before ownership moves.
+
 See the [architecture overview](../docs/architecture.md) and
 [conformance checklist](../docs/conformance.md).

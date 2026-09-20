@@ -148,15 +148,41 @@ class Jackson2DependencyRulesSpec extends Specification {
     assert violations.isEmpty(), violations.join(System.lineSeparator())
   }
 
-  def "shared test fixtures depend only on allowed application-shaped packages"() {
+  def "shared passive test fixtures depend only on allowed application-shaped packages"() {
     expect:
     classes()
         .that()
         .resideInAPackage("com.kazforge.jsonapi.fixtures..")
+        .and()
+        .haveSimpleNameNotEndingWith("CharacterizationSpec")
         .should()
         .onlyDependOnClassesThat()
         .resideInAnyPackage(
         "java..",
+        "org.jspecify.annotations..",
+        "com.kazforge.jsonapi.annotation..",
+        "com.kazforge.jsonapi.core.model..",
+        "com.kazforge.jsonapi.jackson..",
+        "com.kazforge.jsonapi.fixtures..",
+        "com.fasterxml.jackson.annotation..")
+        .check(sharedFixtureClasses)
+  }
+
+  def "shared characterization contract specs depend only on allowed contract packages"() {
+    expect:
+    classes()
+        .that()
+        .resideInAPackage("com.kazforge.jsonapi.fixtures..")
+        .and()
+        .haveSimpleNameEndingWith("CharacterizationSpec")
+        .should()
+        .onlyDependOnClassesThat()
+        .resideInAnyPackage(
+        "java..",
+        "groovy..",
+        "org.codehaus.groovy..",
+        "spock..",
+        "org.spockframework..",
         "org.jspecify.annotations..",
         "com.kazforge.jsonapi.annotation..",
         "com.kazforge.jsonapi.core.model..",
