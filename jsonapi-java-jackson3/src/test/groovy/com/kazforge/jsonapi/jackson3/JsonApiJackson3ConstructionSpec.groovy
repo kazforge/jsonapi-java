@@ -1,13 +1,13 @@
 package com.kazforge.jsonapi.jackson3
 
-import com.kazforge.jsonapi.jackson.mapping.ResourceTypeRegistry
+import com.kazforge.jsonapi.mapping.ResourceTypeRegistry
 
 import com.kazforge.jsonapi.core.model.JsonApiDocument
 import com.kazforge.jsonapi.core.aggregate.ValidationContext
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter
-import com.kazforge.jsonapi.jackson.mapping.MappedDocument
-import com.kazforge.jsonapi.jackson.mapping.ResourceDecoratorRegistry
+import com.kazforge.jsonapi.document.DocumentReadContext
+import com.kazforge.jsonapi.mapping.IdentifierConverter
+import com.kazforge.jsonapi.mapping.MappedDocument
+import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry
 import java.lang.reflect.Modifier
 import spock.lang.Specification
 import tools.jackson.databind.json.JsonMapper

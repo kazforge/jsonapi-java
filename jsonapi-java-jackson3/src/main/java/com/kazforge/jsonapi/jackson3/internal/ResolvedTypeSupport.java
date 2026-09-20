@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.jackson.internal.mapping.PropertyRole;
+import com.kazforge.jsonapi.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.internal.mapping.PropertyRole;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Member;

@@ -6,7 +6,7 @@ import com.kazforge.jsonapi.annotation.JsonApiResource;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.fixtures.domainpatch.AuthorIdMeta;
 import com.kazforge.jsonapi.fixtures.domainpatch.CommentIdMeta;
-import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage;
+import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import java.util.Set;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;

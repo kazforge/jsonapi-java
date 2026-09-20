@@ -21,7 +21,15 @@ class Jackson3DependencyRulesSpec extends Specification {
   @Shared
   JavaClasses commonClasses = new ClassFileImporter()
   .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-  .importPackages("com.kazforge.jsonapi.jackson..")
+  .importPackages(
+  "com.kazforge.jsonapi",
+  "com.kazforge.jsonapi.api..",
+  "com.kazforge.jsonapi.document..",
+  "com.kazforge.jsonapi.mapping..",
+  "com.kazforge.jsonapi.patch..",
+  "com.kazforge.jsonapi.representation..",
+  "com.kazforge.jsonapi.diagnostic..",
+  "com.kazforge.jsonapi.internal..")
 
   @Shared
   JavaClasses sharedFixtureClasses = new ClassFileImporter()
@@ -41,7 +49,14 @@ class Jackson3DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.core.model..",
         "com.kazforge.jsonapi.core.validation..",
         "com.kazforge.jsonapi.annotation..",
-        "com.kazforge.jsonapi.jackson..",
+        "com.kazforge.jsonapi",
+        "com.kazforge.jsonapi.api..",
+        "com.kazforge.jsonapi.document..",
+        "com.kazforge.jsonapi.mapping..",
+        "com.kazforge.jsonapi.patch..",
+        "com.kazforge.jsonapi.representation..",
+        "com.kazforge.jsonapi.diagnostic..",
+        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.jackson3..",
         "tools.jackson..")
         .check(jackson3Classes)
@@ -133,6 +148,21 @@ class Jackson3DependencyRulesSpec extends Specification {
     commonContractNames.intersect(jackson3TypeNames).isEmpty()
   }
 
+  def "supported common type selector matches known neutral contract types"() {
+    expect:
+    [
+      "com.kazforge.jsonapi.api.JsonApi",
+      "com.kazforge.jsonapi.document.DocumentReadContext",
+      "com.kazforge.jsonapi.mapping.MappedDocument",
+      "com.kazforge.jsonapi.patch.PatchPresence",
+      "com.kazforge.jsonapi.representation.RepresentationSelection",
+      "com.kazforge.jsonapi.diagnostic.JsonApiMappingException"
+    ].every { String typeName ->
+      def candidate = commonClasses.find { JavaClass it -> it.fullName == typeName }
+      candidate != null && isSupportedCommonType(candidate)
+    }
+  }
+
   def "jackson3 supported public signatures do not expose shared internal types"() {
     given:
     def violations = jackson3Classes.findAll { JavaClass candidate ->
@@ -161,7 +191,14 @@ class Jackson3DependencyRulesSpec extends Specification {
         "org.jspecify.annotations..",
         "com.kazforge.jsonapi.annotation..",
         "com.kazforge.jsonapi.core.model..",
-        "com.kazforge.jsonapi.jackson..",
+        "com.kazforge.jsonapi",
+        "com.kazforge.jsonapi.api..",
+        "com.kazforge.jsonapi.document..",
+        "com.kazforge.jsonapi.mapping..",
+        "com.kazforge.jsonapi.patch..",
+        "com.kazforge.jsonapi.representation..",
+        "com.kazforge.jsonapi.diagnostic..",
+        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)
@@ -181,7 +218,14 @@ class Jackson3DependencyRulesSpec extends Specification {
         "org.jspecify.annotations..",
         "com.kazforge.jsonapi.annotation..",
         "com.kazforge.jsonapi.core.model..",
-        "com.kazforge.jsonapi.jackson..",
+        "com.kazforge.jsonapi",
+        "com.kazforge.jsonapi.api..",
+        "com.kazforge.jsonapi.document..",
+        "com.kazforge.jsonapi.mapping..",
+        "com.kazforge.jsonapi.patch..",
+        "com.kazforge.jsonapi.representation..",
+        "com.kazforge.jsonapi.diagnostic..",
+        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)
@@ -205,7 +249,14 @@ class Jackson3DependencyRulesSpec extends Specification {
         "org.jspecify.annotations..",
         "com.kazforge.jsonapi.annotation..",
         "com.kazforge.jsonapi.core.model..",
-        "com.kazforge.jsonapi.jackson..",
+        "com.kazforge.jsonapi",
+        "com.kazforge.jsonapi.api..",
+        "com.kazforge.jsonapi.document..",
+        "com.kazforge.jsonapi.mapping..",
+        "com.kazforge.jsonapi.patch..",
+        "com.kazforge.jsonapi.representation..",
+        "com.kazforge.jsonapi.diagnostic..",
+        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)
@@ -214,9 +265,22 @@ class Jackson3DependencyRulesSpec extends Specification {
   private static boolean isSupportedCommonType(JavaClass candidate) {
     candidate.topLevelClass &&
         candidate.modifiers.contains(JavaModifier.PUBLIC) &&
-        (candidate.packageName == "com.kazforge.jsonapi.jackson" ||
-        (candidate.packageName.startsWith("com.kazforge.jsonapi.jackson.") &&
+        (candidate.packageName == "com.kazforge.jsonapi" ||
+        (isNeutralContractPackage(candidate.packageName) &&
         !isInternalPackage(candidate.packageName)))
+  }
+
+  private static boolean isNeutralContractPackage(String packageName) {
+    isExactOrDescendant(packageName, "com.kazforge.jsonapi.api") ||
+        isExactOrDescendant(packageName, "com.kazforge.jsonapi.document") ||
+        isExactOrDescendant(packageName, "com.kazforge.jsonapi.mapping") ||
+        isExactOrDescendant(packageName, "com.kazforge.jsonapi.patch") ||
+        isExactOrDescendant(packageName, "com.kazforge.jsonapi.representation") ||
+        isExactOrDescendant(packageName, "com.kazforge.jsonapi.diagnostic")
+  }
+
+  private static boolean isExactOrDescendant(String packageName, String basePackage) {
+    packageName == basePackage || packageName.startsWith(basePackage + ".")
   }
 
   private static boolean isSupportedAdapterType(JavaClass candidate) {
@@ -231,8 +295,8 @@ class Jackson3DependencyRulesSpec extends Specification {
   }
 
   private static boolean isInternalPackage(String packageName) {
-    packageName == "com.kazforge.jsonapi.jackson.internal" ||
-        packageName.startsWith("com.kazforge.jsonapi.jackson.internal.")
+    packageName == "com.kazforge.jsonapi.internal" ||
+        packageName.startsWith("com.kazforge.jsonapi.internal.")
   }
 
   private static boolean isAdapterInternalPackage(String packageName) {

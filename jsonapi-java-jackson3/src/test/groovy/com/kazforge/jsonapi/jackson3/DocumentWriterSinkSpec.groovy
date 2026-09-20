@@ -23,7 +23,7 @@ import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException
 import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
-import com.kazforge.jsonapi.jackson.mapping.MappedDocument
+import com.kazforge.jsonapi.mapping.MappedDocument
 
 import spock.lang.Specification
 

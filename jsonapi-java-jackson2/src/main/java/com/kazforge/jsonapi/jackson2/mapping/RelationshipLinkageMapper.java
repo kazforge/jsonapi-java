@@ -2,9 +2,9 @@ package com.kazforge.jsonapi.jackson2.mapping;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.kazforge.jsonapi.core.model.RelationshipData;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
-import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage;
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
+import com.kazforge.jsonapi.mapping.IdentifierConverter;
+import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import org.jspecify.annotations.Nullable;
 
 /**

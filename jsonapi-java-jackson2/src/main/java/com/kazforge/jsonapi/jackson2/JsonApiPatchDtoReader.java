@@ -11,14 +11,14 @@ import com.kazforge.jsonapi.core.model.DocumentData;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.core.validation.DocumentUsage;
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext;
-import com.kazforge.jsonapi.jackson.document.PrimaryDataKind;
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
+import com.kazforge.jsonapi.document.DocumentReadContext;
+import com.kazforge.jsonapi.document.PrimaryDataKind;
 import com.kazforge.jsonapi.jackson2.internal.DomainPatchDtoBinder;
 import com.kazforge.jsonapi.jackson2.internal.MappingDefinitionCache;
 import com.kazforge.jsonapi.jackson2.internal.MetaBindingModule;
 import com.kazforge.jsonapi.jackson2.internal.PatchPresenceModule;
 import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -32,13 +32,13 @@ import java.util.Optional;
  * <p>{@link #readValue} decodes and aggregate-validates through a factory-composed {@link
  * DocumentReadContext} ({@link PrimaryDataKind#RESOURCE} with {@link
  * DocumentUsage#UPDATE_REQUEST}), then binds the whole update into the PATCH DTO: patchable
- * attributes and relationships declared as {@link com.kazforge.jsonapi.jackson.patch.PatchPresence}
- * receive {@code omitted()}, {@code present(value)}, or {@code present(null)} (explicit JSON {@code
- * null} / null relationship linkage), and the identifier binds through {@link IdentifierConverter}.
- * {@link #fromDocument} binds without re-validation. Codec and aggregate failures stay {@link
- * com.kazforge.jsonapi.jackson.diagnostic.JsonApiDocumentReadException}; bind failures stay {@link
- * com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException} with resource-relative pointers
- * and are never prefixed with {@code /data}.
+ * attributes and relationships declared as {@link com.kazforge.jsonapi.patch.PatchPresence} receive
+ * {@code omitted()}, {@code present(value)}, or {@code present(null)} (explicit JSON {@code null} /
+ * null relationship linkage), and the identifier binds through {@link IdentifierConverter}. {@link
+ * #fromDocument} binds without re-validation. Codec and aggregate failures stay {@link
+ * com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException}; bind failures stay {@link
+ * com.kazforge.jsonapi.diagnostic.JsonApiMappingException} with resource-relative pointers and are
+ * never prefixed with {@code /data}.
  *
  * <p>Close/ownership rules match {@link JsonApiDocumentReader}: convenience overloads close parsers
  * they create; caller-owned streams and parsers stay open. Construct via {@link

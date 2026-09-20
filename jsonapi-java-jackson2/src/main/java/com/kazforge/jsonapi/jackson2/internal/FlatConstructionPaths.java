@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.deser.BeanDeserializerBase;
 import com.fasterxml.jackson.databind.deser.DefaultDeserializationContext;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

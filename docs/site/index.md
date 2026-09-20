@@ -12,7 +12,7 @@ optional modules add domain-mapping roles, query parsing, and native Jackson 2 o
 |--------|----------------|
 | `jsonapi-java-core` | Immutable document model and aggregate validation |
 | `jsonapi-java-annotations` | Domain-mapping role annotations |
-| `jsonapi-java-jackson-api` | Backend-independent application and capability contracts currently implemented by configured Jackson |
+| `jsonapi-java-api` | Backend-independent application and capability contracts currently implemented by configured Jackson |
 | `jsonapi-java-query` | Query-selection parsing and opaque parameter preservation |
 | `jsonapi-java-jackson2` | Native Jackson 2 codec, mapping, and PATCH binding |
 | `jsonapi-java-jackson3` | Native Jackson 3 codec, mapping, and PATCH binding |

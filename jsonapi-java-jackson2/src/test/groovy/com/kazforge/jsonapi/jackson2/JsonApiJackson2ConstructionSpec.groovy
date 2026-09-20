@@ -4,10 +4,10 @@ import com.kazforge.jsonapi.core.model.DocumentData
 import com.kazforge.jsonapi.core.model.JsonApiDocument
 import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.core.aggregate.ValidationContext
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter
-import com.kazforge.jsonapi.jackson.mapping.ResourceDecoratorRegistry
-import com.kazforge.jsonapi.jackson.mapping.ResourceTypeRegistry
+import com.kazforge.jsonapi.document.DocumentReadContext
+import com.kazforge.jsonapi.mapping.IdentifierConverter
+import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry
+import com.kazforge.jsonapi.mapping.ResourceTypeRegistry
 import java.lang.reflect.Modifier
 
 import com.fasterxml.jackson.databind.json.JsonMapper

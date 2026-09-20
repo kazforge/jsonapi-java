@@ -21,9 +21,9 @@ import com.kazforge.jsonapi.core.validation.PrimaryDataContext
 import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext
-import com.kazforge.jsonapi.jackson.document.PrimaryDataKind
-import com.kazforge.jsonapi.jackson.mapping.MappedDocument
+import com.kazforge.jsonapi.document.DocumentReadContext
+import com.kazforge.jsonapi.document.PrimaryDataKind
+import com.kazforge.jsonapi.mapping.MappedDocument
 
 import spock.lang.Shared
 import spock.lang.Specification

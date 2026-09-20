@@ -13,9 +13,9 @@ import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMetaPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleMetaPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.AuthorMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.WholeMetaTargetFixtures
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.jackson.patch.PatchPresence
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.patch.PatchPresence
 import spock.lang.Specification
 import spock.lang.Unroll
 

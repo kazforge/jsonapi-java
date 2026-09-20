@@ -25,7 +25,7 @@ Article readBack = api.resources().readOne(json, Article.class);
 ArticlePatch patch = api.patches().readPatch(updateJson, ArticlePatch.class);
 ```
 
-The runtime implements the neutral [`JsonApi`](../jsonapi-java-jackson-api/README.md) facets:
+The runtime implements the neutral [`JsonApi`](../jsonapi-java-api/README.md) facets:
 resources, linkage relationships, raw documents, and PATCH. Resource reads are strict and
 homogeneous; create/update authoring selects the corresponding core validation usage. Use
 `JsonApiJackson3.builder(mapper)` for application-lifetime identifier conversion, linkage mappers,
@@ -48,7 +48,7 @@ Advanced mapping accepts a complete Jackson `JavaType` when a parameterized root
 from its runtime class. Typed documents use an explicit neutral `ResourceTypeRegistry`; included DTOs
 remain independently bound rather than being injected into relationships. Shared representation,
 meta, identifier, decoration, and PATCH semantics are owned by
-[`jsonapi-java-jackson-api`](../jsonapi-java-jackson-api/README.md), public Javadocs, and the linked
+[`jsonapi-java-api`](../jsonapi-java-api/README.md), public Javadocs, and the linked
 ADRs rather than repeated here.
 
 ## Jackson 3 boundary
@@ -61,7 +61,7 @@ ADRs rather than repeated here.
   modules or introspection state require it.
 - The public composition package may depend on mapping and the two internal responsibilities;
   mapping and `internal.codec` do not depend back on composition or on sibling internals.
-- Supported signatures do not expose shared `com.kazforge.jsonapi.jackson.internal` helpers, and
+- Supported signatures do not expose shared `com.kazforge.jsonapi.internal` helpers, and
   this module does not redeclare neutral contract types.
 - Jackson 3 property, serializer/deserializer, and PATCH-marker mechanics stay adapter-local. The
   `PatchPresence` module is registered only on derived typed-PATCH mappers, never the caller mapper.

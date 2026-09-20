@@ -1,11 +1,11 @@
 package com.kazforge.jsonapi.jackson2
 
 import com.kazforge.jsonapi.core.model.ResourceIdentity
-import com.kazforge.jsonapi.jackson.mapping.MappedDocument
-import com.kazforge.jsonapi.jackson.representation.IncludePath
-import com.kazforge.jsonapi.jackson.representation.IncludePolicy
-import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy
-import com.kazforge.jsonapi.jackson.representation.RepresentationSelection
+import com.kazforge.jsonapi.mapping.MappedDocument
+import com.kazforge.jsonapi.representation.IncludePath
+import com.kazforge.jsonapi.representation.IncludePolicy
+import com.kazforge.jsonapi.representation.RepresentationPolicy
+import com.kazforge.jsonapi.representation.RepresentationSelection
 import com.kazforge.jsonapi.fixtures.domainwrite.Article
 import com.kazforge.jsonapi.fixtures.domainwrite.Comment
 import com.kazforge.jsonapi.fixtures.domainwrite.Person

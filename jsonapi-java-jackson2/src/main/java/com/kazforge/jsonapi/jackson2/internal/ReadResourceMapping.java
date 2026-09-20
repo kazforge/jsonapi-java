@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

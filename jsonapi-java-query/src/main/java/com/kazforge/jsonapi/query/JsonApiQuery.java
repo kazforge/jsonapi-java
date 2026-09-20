@@ -1,6 +1,6 @@
 package com.kazforge.jsonapi.query;
 
-import com.kazforge.jsonapi.jackson.representation.RepresentationSelection;
+import com.kazforge.jsonapi.representation.RepresentationSelection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -1,9 +1,9 @@
 package com.kazforge.jsonapi.jackson3.contract
 
 import com.kazforge.jsonapi.fixtures.contract.InclusionFieldsetCharacterizationSpec
-import com.kazforge.jsonapi.jackson.api.JsonApi
-import com.kazforge.jsonapi.jackson.representation.IncludePolicy
-import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy
+import com.kazforge.jsonapi.api.JsonApi
+import com.kazforge.jsonapi.representation.IncludePolicy
+import com.kazforge.jsonapi.representation.RepresentationPolicy
 import com.kazforge.jsonapi.jackson3.JsonApiJackson3
 import tools.jackson.databind.json.JsonMapper
 

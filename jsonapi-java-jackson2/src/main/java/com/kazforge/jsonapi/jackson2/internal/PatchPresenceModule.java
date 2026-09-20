@@ -1,8 +1,8 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.kazforge.jsonapi.jackson.internal.patch.PresenceMarker;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
+import com.kazforge.jsonapi.internal.patch.PresenceMarker;
+import com.kazforge.jsonapi.patch.PatchPresence;
 
 /**
  * Registers the minimal internal {@link PatchPresence} deserializer and the deterministic {@link

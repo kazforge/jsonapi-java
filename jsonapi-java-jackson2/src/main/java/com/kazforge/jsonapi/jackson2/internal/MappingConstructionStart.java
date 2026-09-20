@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.diagnostic.MappingLocation;
 
 /**
  * Mapping-owned construction-path translation start for one top-level synthetic-map key: the

@@ -16,7 +16,7 @@ sonar {
         // adapter-local adaptations of their Jackson 3 counterparts (document codec, read-side,
         // typed domain envelope, write-side domain mapping engine, flat DTO resource binding, and
         // presence-aware PATCH binding), kept adapter-local for Jackson-major isolation per ADR-007.
-        // Jackson-major-neutral implementation bookkeeping is shared in jackson-api; do not exclude
+        // Jackson-major-neutral implementation bookkeeping is shared in jsonapi-java-api; do not exclude
         // whole packages.
         // Paths must be repository-root-relative; module-relative `src/main/java/...` at project
         // level is deprecated by SonarCloud.

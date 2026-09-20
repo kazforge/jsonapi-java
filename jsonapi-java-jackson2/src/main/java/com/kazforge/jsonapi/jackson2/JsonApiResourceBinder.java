@@ -3,8 +3,8 @@ package com.kazforge.jsonapi.jackson2;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.kazforge.jsonapi.core.model.ResourceObject;
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.jackson2.internal.DomainResourceBinder;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +32,7 @@ import java.util.Objects;
  * com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper}. Built-in identifier linkage
  * preserves {@code ResourceIdentifier.meta} and still drops additional members. Write overlay of
  * application-owned identifier meta uses opt-in {@link
- * com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage}; it is not relationship-level {@code
- * meta}.
+ * com.kazforge.jsonapi.mapping.RelationshipLinkage}; it is not relationship-level {@code meta}.
  *
  * <p>Binding failures throw {@link JsonApiMappingException} with a stable {@link MappingDiagnostic}
  * and a resource-relative JSON Pointer-like path.

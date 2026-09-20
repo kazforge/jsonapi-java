@@ -1,6 +1,6 @@
 package com.kazforge.jsonapi.jackson3.internal.codec;
 
-import com.kazforge.jsonapi.jackson.diagnostic.SourceLocation;
+import com.kazforge.jsonapi.diagnostic.SourceLocation;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.TokenStreamLocation;

@@ -36,7 +36,7 @@
   versions are in `gradle/libs.versions.toml`; there is no code-generation step.
 - Shared test fixtures contain major-neutral application-shaped DTOs, canonical JSON/schema
   resources, and the neutral `TestFixtureResources` loader under
-  `jsonapi-java-jackson-api/src/testFixtures`. Fixture behavior is limited to the minimum needed to
+  `jsonapi-java-api/src/testFixtures`. Fixture behavior is limited to the minimum needed to
   represent or observe the application shape under test; behavioral expectations and assertions
   belong in each adapter's own tests. Do not introduce shared test orchestration, expected-outcome
   descriptors, scenario registries, or assertion frameworks.
@@ -124,8 +124,8 @@ those capabilities are unavailable.
   and query execution remain application policy; do not hide policy in mapping or adapter defaults.
 - `jsonapi-java-core` has no functional third-party runtime dependencies; compile-only JSpecify is
   allowed. Optional integrations belong in separate modules.
-- `jsonapi-java-jackson-api` must remain free of Jackson-major imports
-  (`tools.jackson.*` and `com.fasterxml.jackson.*`) despite its name.
+- `jsonapi-java-api` must remain free of Jackson-major imports
+  (`tools.jackson.*` and `com.fasterxml.jackson.*`).
 - Preserve wire-visible distinctions: absent, explicit JSON `null`, and present-empty are different
   states. Explicit null data/linkage uses sealed model variants, not bare Java null.
 - Production Java packages are JSpecify `@NullMarked`; NullAway checks `compileJava` only. ArchUnit

@@ -8,7 +8,7 @@ import com.kazforge.jsonapi.annotation.JsonApiId;
 import com.kazforge.jsonapi.annotation.JsonApiRelationship;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
-import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage;
+import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import java.io.IOException;
 
 /**

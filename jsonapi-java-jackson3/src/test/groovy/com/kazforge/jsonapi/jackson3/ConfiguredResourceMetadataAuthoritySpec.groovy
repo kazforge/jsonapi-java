@@ -7,13 +7,13 @@ import com.kazforge.jsonapi.core.model.Attributes
 import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceObject
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext
-import com.kazforge.jsonapi.jackson.mapping.DomainData
-import com.kazforge.jsonapi.jackson.mapping.ResourceTypeRegistry
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.jackson.patch.PatchChange
-import com.kazforge.jsonapi.jackson.patch.PatchPresence
+import com.kazforge.jsonapi.document.DocumentReadContext
+import com.kazforge.jsonapi.mapping.DomainData
+import com.kazforge.jsonapi.mapping.ResourceTypeRegistry
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.patch.PatchChange
+import com.kazforge.jsonapi.patch.PatchPresence
 import spock.lang.Specification
 import tools.jackson.databind.json.JsonMapper
 

@@ -104,7 +104,7 @@ failures remain explicit so schema changes force review.
 | `string-and-object-links` | Draft accepts only string `hreflang` | v1.1 permits the canonical list representation emitted by the writers |
 
 Schema provenance, pins, and fixture-specific invariants live in the
-[vendored schema README](../jsonapi-java-jackson-api/src/testFixtures/resources/jsonapi/schema/vendor/1.1-pr1603/README.md).
+[vendored schema README](../jsonapi-java-api/src/testFixtures/resources/jsonapi/schema/vendor/1.1-pr1603/README.md).
 
 ## Domain mapping
 

@@ -15,7 +15,7 @@ Keep these responsibility boundaries:
 
 - `jsonapi-java-core` owns the dependency-free document model and validation.
 - `jsonapi-java-annotations` owns dependency-free domain-mapping roles.
-- `jsonapi-java-jackson-api` owns Jackson-major-neutral application, document, mapping,
+- `jsonapi-java-api` owns Jackson-major-neutral application, document, mapping,
   representation, diagnostic, and PATCH contracts. It contains no Jackson mechanics or runtime
   dependency; [ADR-018](018-level-one-application-api-contract.md) owns its Level-1 operation seam.
 - `jsonapi-java-jackson3` and `jsonapi-java-jackson2` are separately compiled native-major

@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
+import com.kazforge.jsonapi.mapping.RelationshipLinkage;
+import com.kazforge.jsonapi.patch.PatchPresence;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;

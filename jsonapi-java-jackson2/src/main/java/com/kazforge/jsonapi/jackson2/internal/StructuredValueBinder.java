@@ -10,14 +10,14 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.introspect.ClassIntrospector;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.jackson.internal.patch.PresenceMarker;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
-import com.kazforge.jsonapi.jackson.patch.StructuredMember;
-import com.kazforge.jsonapi.jackson.patch.StructuredMemberState;
-import com.kazforge.jsonapi.jackson.patch.StructuredPatch;
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
+import com.kazforge.jsonapi.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.internal.patch.PresenceMarker;
+import com.kazforge.jsonapi.patch.PatchPresence;
+import com.kazforge.jsonapi.patch.StructuredMember;
+import com.kazforge.jsonapi.patch.StructuredMemberState;
+import com.kazforge.jsonapi.patch.StructuredPatch;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,10 +35,9 @@ import org.jspecify.annotations.Nullable;
  * boundary classification, low-level nested conversion, typed marker-tree construction, null
  * policy, wire-pointer accumulation, and lazy nested declaration validation. It has no {@link
  * ResourceMapping} / {@link MappingProperty} / {@code @JsonApiAttribute} / {@link
- * com.kazforge.jsonapi.jackson.patch.PatchChange} dependency: callers supply the declared {@link
- * JavaType}, wire value, starting pointer, and (low-level) accessor, so structured JSON:API {@code
- * meta} mapping can reuse the same machinery at its own location with a stricter outer-state
- * policy.
+ * com.kazforge.jsonapi.patch.PatchChange} dependency: callers supply the declared {@link JavaType},
+ * wire value, starting pointer, and (low-level) accessor, so structured JSON:API {@code meta}
+ * mapping can reuse the same machinery at its own location with a stricter outer-state policy.
  *
  * <p>Two modes: the typed mode recurses only through deliberately presence-aware nested PATCH
  * shapes (every visible member exactly {@code PatchPresence<T>}, no wrapper-level customization);

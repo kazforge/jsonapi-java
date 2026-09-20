@@ -2,7 +2,7 @@ package com.kazforge.jsonapi.jackson2.internal.codec;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
-import com.kazforge.jsonapi.jackson.diagnostic.SourceLocation;
+import com.kazforge.jsonapi.diagnostic.SourceLocation;
 import org.jspecify.annotations.Nullable;
 
 /** Converts Jackson locations into safe {@link SourceLocation} values. */

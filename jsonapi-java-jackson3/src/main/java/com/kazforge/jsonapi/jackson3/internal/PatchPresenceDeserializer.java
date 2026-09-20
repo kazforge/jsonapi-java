@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import com.kazforge.jsonapi.jackson.internal.patch.PresenceMarker;
-import com.kazforge.jsonapi.jackson.patch.PatchPresence;
+import com.kazforge.jsonapi.internal.patch.PresenceMarker;
+import com.kazforge.jsonapi.patch.PatchPresence;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.JsonToken;

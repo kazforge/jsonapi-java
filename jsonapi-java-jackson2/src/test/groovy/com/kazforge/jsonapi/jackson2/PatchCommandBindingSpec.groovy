@@ -21,16 +21,16 @@ import com.kazforge.jsonapi.fixtures.domainpatch.Article
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatCountedThing
 import com.kazforge.jsonapi.fixtures.domainread.FlatThingWithIgnored
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext
-import com.kazforge.jsonapi.jackson.document.PrimaryDataKind
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter
-import com.kazforge.jsonapi.jackson.patch.PatchChange
-import com.kazforge.jsonapi.jackson.patch.PatchCommand
-import com.kazforge.jsonapi.jackson.patch.StructuredMember
-import com.kazforge.jsonapi.jackson.patch.StructuredMemberState
-import com.kazforge.jsonapi.jackson.patch.StructuredPatch
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.document.DocumentReadContext
+import com.kazforge.jsonapi.document.PrimaryDataKind
+import com.kazforge.jsonapi.mapping.IdentifierConverter
+import com.kazforge.jsonapi.patch.PatchChange
+import com.kazforge.jsonapi.patch.PatchCommand
+import com.kazforge.jsonapi.patch.StructuredMember
+import com.kazforge.jsonapi.patch.StructuredMemberState
+import com.kazforge.jsonapi.patch.StructuredPatch
 import spock.lang.Specification
 import spock.lang.Unroll
 

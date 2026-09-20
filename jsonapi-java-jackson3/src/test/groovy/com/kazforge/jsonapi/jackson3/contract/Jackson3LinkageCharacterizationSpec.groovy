@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson3.contract
 
 import com.kazforge.jsonapi.fixtures.contract.LinkageCharacterizationSpec
-import com.kazforge.jsonapi.jackson.api.JsonApi
+import com.kazforge.jsonapi.api.JsonApi
 import com.kazforge.jsonapi.jackson3.JsonApiJackson3
 import tools.jackson.databind.json.JsonMapper
 

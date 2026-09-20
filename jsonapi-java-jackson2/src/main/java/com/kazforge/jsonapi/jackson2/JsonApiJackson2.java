@@ -1,16 +1,16 @@
 package com.kazforge.jsonapi.jackson2;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.kazforge.jsonapi.api.JsonApi;
 import com.kazforge.jsonapi.core.aggregate.ValidationContext;
-import com.kazforge.jsonapi.jackson.api.JsonApi;
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext;
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
-import com.kazforge.jsonapi.jackson.mapping.ResourceDecoratorRegistry;
-import com.kazforge.jsonapi.jackson.mapping.ResourceTypeRegistry;
+import com.kazforge.jsonapi.document.DocumentReadContext;
 import com.kazforge.jsonapi.jackson2.internal.DomainResourceBinder;
 import com.kazforge.jsonapi.jackson2.internal.DomainResourceWriter;
 import com.kazforge.jsonapi.jackson2.internal.MappingDefinitionCache;
 import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.mapping.IdentifierConverter;
+import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry;
+import com.kazforge.jsonapi.mapping.ResourceTypeRegistry;
 import java.util.Map;
 import java.util.Objects;
 

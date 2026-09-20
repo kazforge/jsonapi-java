@@ -4,17 +4,17 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.kazforge.jsonapi.core.model.DocumentData;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.ResourceObject;
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException;
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.jackson.document.DocumentEnvelope;
-import com.kazforge.jsonapi.jackson.internal.representation.EffectiveRepresentation;
-import com.kazforge.jsonapi.jackson.internal.representation.IncludedResourcesResult;
-import com.kazforge.jsonapi.jackson.mapping.IdentifierConverter;
-import com.kazforge.jsonapi.jackson.mapping.MappedDocument;
-import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy;
-import com.kazforge.jsonapi.jackson.representation.RepresentationSelection;
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
+import com.kazforge.jsonapi.document.DocumentEnvelope;
+import com.kazforge.jsonapi.internal.representation.EffectiveRepresentation;
+import com.kazforge.jsonapi.internal.representation.IncludedResourcesResult;
 import com.kazforge.jsonapi.jackson2.internal.CompoundInclusionEngine;
 import com.kazforge.jsonapi.jackson2.internal.DomainResourceWriter;
+import com.kazforge.jsonapi.mapping.IdentifierConverter;
+import com.kazforge.jsonapi.mapping.MappedDocument;
+import com.kazforge.jsonapi.representation.RepresentationPolicy;
+import com.kazforge.jsonapi.representation.RepresentationSelection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,15 +27,15 @@ import org.jspecify.annotations.Nullable;
  * <p>Construct instances via {@link
  * JsonApiJackson2#resourceMapper(com.fasterxml.jackson.databind.json.JsonMapper)} or its overloads,
  * never directly. The mapper is safe for concurrent use once created. Decorators supplied through a
- * {@link com.kazforge.jsonapi.jackson.mapping.ResourceDecoratorRegistry} are invoked during mapping
- * and may be called concurrently; they must themselves be safe for concurrent invocation when the
- * mapper is shared. Mapping uses Jackson's logical property model and caches resolved definitions
- * by complete declared type on this mapper instance. JSON:API annotations assign semantic roles;
- * configured Jackson owns property discovery, visibility, external naming, mix-ins, creators, and
- * value conversion. Unannotated Jackson-visible properties do not participate, except the
- * conventional identifier whose Jackson external name is {@code id}. {@code @JsonApiId} maps only
- * {@link ResourceObject#id()} and {@code @JsonApiLocalId} maps only {@link ResourceObject#lid()};
- * the two identity roles never fall back to each other.
+ * {@link com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry} are invoked during mapping and may
+ * be called concurrently; they must themselves be safe for concurrent invocation when the mapper is
+ * shared. Mapping uses Jackson's logical property model and caches resolved definitions by complete
+ * declared type on this mapper instance. JSON:API annotations assign semantic roles; configured
+ * Jackson owns property discovery, visibility, external naming, mix-ins, creators, and value
+ * conversion. Unannotated Jackson-visible properties do not participate, except the conventional
+ * identifier whose Jackson external name is {@code id}. {@code @JsonApiId} maps only {@link
+ * ResourceObject#id()} and {@code @JsonApiLocalId} maps only {@link ResourceObject#lid()}; the two
+ * identity roles never fall back to each other.
  *
  * <p>Mapping is write-only: this mapper produces core model objects. Feed them to a {@link
  * JsonApiDocumentWriter} for serialization.

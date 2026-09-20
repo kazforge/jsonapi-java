@@ -37,7 +37,7 @@ owned by [docs/release.md](docs/release.md).
 |--------|--------|---------|
 | [`jsonapi-java-core`](jsonapi-java-core/README.md) | Available | Dependency-free document model and validation |
 | [`jsonapi-java-annotations`](jsonapi-java-annotations/README.md) | Available | Dependency-free domain-mapping role annotations |
-| [`jsonapi-java-jackson-api`](jsonapi-java-jackson-api/README.md) | Available | Backend-independent application and capability contracts currently implemented by configured Jackson |
+| [`jsonapi-java-api`](jsonapi-java-api/README.md) | Available | Backend-independent application and capability contracts currently implemented by configured Jackson |
 | [`jsonapi-java-query`](jsonapi-java-query/README.md) | Available | Neutral query-parameter parsing |
 | [`jsonapi-java-jackson3`](jsonapi-java-jackson3/README.md) | Available | Jackson 3 runtime, codec, mapping, and PATCH binding |
 | [`jsonapi-java-jackson2`](jsonapi-java-jackson2/README.md) | Available | Jackson 2 runtime, codec, mapping, and PATCH binding |

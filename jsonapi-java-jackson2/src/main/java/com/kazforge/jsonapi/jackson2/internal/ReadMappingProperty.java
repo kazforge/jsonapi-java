@@ -3,7 +3,7 @@ package com.kazforge.jsonapi.jackson2.internal;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
-import com.kazforge.jsonapi.jackson.internal.mapping.PropertyRole;
+import com.kazforge.jsonapi.internal.mapping.PropertyRole;
 import org.jspecify.annotations.Nullable;
 
 /**

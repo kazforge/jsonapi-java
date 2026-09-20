@@ -1,13 +1,13 @@
 package com.kazforge.jsonapi.jackson3.internal
 
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.jackson.diagnostic.MappingLocation
-import com.kazforge.jsonapi.jackson.internal.patch.PresenceMarker
-import com.kazforge.jsonapi.jackson.patch.PatchPresence
-import com.kazforge.jsonapi.jackson.patch.StructuredMember
-import com.kazforge.jsonapi.jackson.patch.StructuredMemberState
-import com.kazforge.jsonapi.jackson.patch.StructuredPatch
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.diagnostic.MappingLocation
+import com.kazforge.jsonapi.internal.patch.PresenceMarker
+import com.kazforge.jsonapi.patch.PatchPresence
+import com.kazforge.jsonapi.patch.StructuredMember
+import com.kazforge.jsonapi.patch.StructuredMemberState
+import com.kazforge.jsonapi.patch.StructuredPatch
 import com.kazforge.jsonapi.jackson3.StructuredRecursionFixtures.AddressWithLoudNote
 import com.kazforge.jsonapi.jackson3.StructuredRecursionFixtures.Details
 import com.kazforge.jsonapi.jackson3.StructuredRecursionFixtures.EmailContact

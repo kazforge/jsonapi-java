@@ -2,14 +2,14 @@ package com.kazforge.jsonapi.jackson3
 
 import com.kazforge.jsonapi.core.model.DocumentData
 import com.kazforge.jsonapi.core.model.JsonApiDocument
-import com.kazforge.jsonapi.jackson.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.jackson.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.jackson.mapping.RelationshipLinkage
-import com.kazforge.jsonapi.jackson.representation.IncludePath
-import com.kazforge.jsonapi.jackson.representation.IncludePolicy
-import com.kazforge.jsonapi.jackson.representation.RelationshipAllowance
-import com.kazforge.jsonapi.jackson.representation.RepresentationPolicy
-import com.kazforge.jsonapi.jackson.representation.RepresentationSelection
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.mapping.RelationshipLinkage
+import com.kazforge.jsonapi.representation.IncludePath
+import com.kazforge.jsonapi.representation.IncludePolicy
+import com.kazforge.jsonapi.representation.RelationshipAllowance
+import com.kazforge.jsonapi.representation.RepresentationPolicy
+import com.kazforge.jsonapi.representation.RepresentationSelection
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.fixtures.compoundwrite.AccessCountingArticle
 import com.kazforge.jsonapi.fixtures.compoundwrite.BaseComment

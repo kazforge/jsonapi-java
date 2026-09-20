@@ -1,6 +1,6 @@
 package com.kazforge.jsonapi.jackson2
 
-import com.kazforge.jsonapi.jackson.document.DocumentReadContext
+import com.kazforge.jsonapi.document.DocumentReadContext
 
 import java.lang.reflect.Modifier
 

@@ -27,7 +27,7 @@ class QueryArchitectureSpec extends Specification {
         "org.jspecify.annotations..",
         "com.kazforge.jsonapi.query..",
         "com.kazforge.jsonapi.core.validation..",
-        "com.kazforge.jsonapi.jackson.representation..")
+        "com.kazforge.jsonapi.representation..")
         .check(queryClasses)
   }
 
