@@ -23,5 +23,11 @@ public record MappingPropertyDefinition<T, P>(
     Objects.requireNonNull(jsonapiName, "jsonapiName");
     Objects.requireNonNull(role, "role");
     Objects.requireNonNull(declaredType, "declaredType");
+    if (role == MappingRole.ID && !"id".equals(jsonapiName)) {
+      throw new IllegalArgumentException("JSON:API id property must use wire member 'id'");
+    }
+    if (role == MappingRole.LOCAL_ID && !"lid".equals(jsonapiName)) {
+      throw new IllegalArgumentException("JSON:API local-id property must use wire member 'lid'");
+    }
   }
 }
