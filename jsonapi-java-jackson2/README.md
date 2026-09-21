@@ -49,8 +49,11 @@ from its runtime class. Typed documents use an explicit neutral `ResourceTypeReg
 remain independently bound rather than being injected into relationships. Shared representation,
 meta, identifier, decoration, and PATCH semantics are owned by
 [`jsonapi-java-api`](../jsonapi-java-api/README.md); backend-neutral compound-inclusion traversal and
-inclusion state are owned by [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). Public
-Javadocs and the linked ADRs own the remaining details rather than repeated here.
+inclusion state, and the basic resource-write orchestration for identity, attributes, ordinary
+relationship linkage, fieldsets, and base resource assembly, are owned by
+[`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). This adapter supplies the native
+capability bridges over configured Jackson. Public Javadocs and the linked ADRs own the remaining
+details rather than repeated here.
 
 ## Jackson 2 boundary
 

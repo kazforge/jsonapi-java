@@ -2,6 +2,8 @@ package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.mapping.internal.PropertyRole;
 import java.lang.reflect.Field;
@@ -14,6 +16,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -22,6 +25,24 @@ import org.jspecify.annotations.Nullable;
 final class ResolvedTypeSupport {
 
   private ResolvedTypeSupport() {}
+
+  /**
+   * Resolves the cached full write mapping for a complete declared type, raising the
+   * unresolved-generic diagnostic with the first unresolved property's wire location.
+   */
+  static ResourceMapping requireMapping(MappingDefinitionCache cache, JavaType declaredType) {
+    MappingDefinitionCache.ValidatedMapping validated = cache.resolveValidated(declaredType);
+    Optional<MappingProperty> unresolvedProperty = validated.unresolvedProperty();
+    if (unresolvedProperty.isPresent()) {
+      MappingProperty unresolved = unresolvedProperty.orElseThrow();
+      throw new JsonApiMappingException(
+          MappingDiagnostic.UNRESOLVED_GENERIC_TYPE,
+          declaredType.getRawClass(),
+          location(unresolved),
+          message(unresolved, declaredType));
+    }
+    return validated.mapping();
+  }
 
   static @Nullable MappingProperty findUnresolvedProperty(
       ResourceMapping mapping, JavaType declaredType) {

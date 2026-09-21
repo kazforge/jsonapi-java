@@ -5,25 +5,34 @@ published on the unified release train so backend runtime implementations can co
 is not supported consumer API.
 
 The [`com.kazforge.jsonapi.mapping.internal`](src/main/java/com/kazforge/jsonapi/mapping/internal/package-info.java)
-package owns backend-neutral compound-inclusion semantics for mapped resources: include-path
-validation, breadth-first traversal of intermediate and nested resources, identity aliasing,
-first-encounter order, included deduplication and conflict checks, traversal limits, and
-sparse-fieldset linkage exemptions. It also owns the neutral per-invocation inclusion state and
-effective-representation fieldset lookup used by selective rendering and traversal alike.
+package owns backend-neutral semantics for mapped resources:
 
-It also owns the backend-neutral mapping roles and the per-property semantic metadata that
-adapters compose into their own write and read mapping records: role, logical backend property
-identity, configured backend external name, and JSON:API member name. The adapter-independent
-role/name invariants are enforced when that value is constructed, so identifier roles always name
-`id`/`lid`, resource meta always names `meta`, and attributes and relationships use their backend
-external name. Relationship-meta metadata is valid only in matched form, carrying the target
-relationship's JSON:API name; an unresolved annotation target stays resolver-local.
+- **Compound inclusion.** Include-path validation, breadth-first traversal of intermediate and
+  nested resources, identity aliasing, first-encounter order, included deduplication and conflict
+  checks, traversal limits, and sparse-fieldset linkage exemptions, plus the neutral
+  per-invocation inclusion state and effective-representation fieldset lookup used by selective
+  rendering and traversal alike.
+- **Basic resource write orchestration.** Fieldset validation and filtering, strict versus
+  create-request identity rules, empty-member omission, attribute and member naming, ordinary
+  domain-object to-one/to-many identifier construction, relationship `data` construction, and base
+  `ResourceObject` assembly. Resource and relationship meta, decoration, and the advanced direct
+  and wrapper relationship forms stay with each backend and are applied around this writer.
+- **Mapping roles and naming metadata.** The backend-neutral mapping roles and the per-property
+  semantic metadata that adapters compose into their own write and read mapping records: role,
+  logical backend property identity, configured backend external name, and JSON:API member name.
+  The adapter-independent role/name invariants are enforced when that value is constructed, so
+  identifier roles always name `id`/`lid`, resource meta always names `meta`, and attributes and
+  relationships use their backend external name. Relationship-meta metadata is valid only in
+  matched form, carrying the target relationship's JSON:API name; an unresolved annotation target
+  stays resolver-local.
 
-Native type resolution, property lookup and access, relationship-container handling, identifier
-conversion, and selective resource rendering stay in each backend behind the
-`InclusionBackend` capability bridge. Adapter write and read property records remain backend-owned;
-only the semantic value they compose is shared. This module imports no Jackson-major or
-concrete-adapter package.
+Native type and property models, introspection, mapping lookup, property access, container
+handling, configured conversion, identifier conversion, whole-meta conversion, relationship
+normalization, decoration, and selective rendering stay in each backend behind two narrow
+capability boundaries: `InclusionBackend` for the compound-inclusion engine and
+`WriteResourceBackend` for the basic resource writer. Adapter write and read property records
+remain backend-owned; only the semantic value they compose is shared. This module imports no
+Jackson-major or concrete-adapter package.
 
 ## Boundary
 

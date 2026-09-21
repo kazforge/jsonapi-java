@@ -34,7 +34,7 @@ authorization, query execution, relationship mutation, and application of PATCH 
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable wire model, local invariants, aggregate validation | None |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free semantic mapping roles | None |
 | [`jsonapi-java-api`](../jsonapi-java-api/README.md) | Backend-independent application, document, mapping, representation, diagnostic, and PATCH contracts currently implemented by configured Jackson | Core |
-| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; owns backend-neutral compound-inclusion traversal, identity/order/limit policy, sparse-fieldset linkage exemptions, and neutral mapping-role/per-property naming metadata; published but unsupported consumer API | API |
+| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; owns backend-neutral compound-inclusion traversal, identity/order/limit policy, sparse-fieldset linkage exemptions, basic resource-write orchestration, and neutral mapping-role/per-property naming metadata; published but unsupported consumer API | API |
 | [`jsonapi-java-query`](../jsonapi-java-query/README.md) | Neutral query selection parsing and opaque parameter preservation | Core and neutral Jackson representation contracts |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Native Jackson 3 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
 | [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Native Jackson 2 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
@@ -49,11 +49,15 @@ configured Jackson remains the current property authority, and native type/prope
 introspection, naming, construction, conversion, serializers, deserializers, parser/generator
 mechanics, and wire codecs remain adapter-owned. Backend-neutral compound-inclusion path
 validation, traversal, identity/order/deduplication, limits, and sparse-fieldset omission decisions
-live once in `jsonapi-java-mapping`, together with the neutral mapping roles and per-property name
-metadata each adapter composes into its own write and read mapping records; each adapter supplies
-only a native capability bridge for type resolution, property access, and selective rendering.
-Framework integrations, when added, depend on these lower-layer public contracts; no lower layer
-depends on a framework.
+live once in `jsonapi-java-mapping`, together with backend-neutral basic resource-write
+orchestration (fieldset validation and filtering, strict versus create identity rules, ordinary
+domain-object linkage construction, and base resource assembly) and the neutral mapping roles and
+per-property name metadata each adapter composes into its own write and read mapping records. Each
+adapter supplies only narrow native capability bridges for type resolution, mapping lookup,
+property access, configured conversion, relationship normalization, selective rendering, and
+relationship enrichment; whole-meta phases, decoration, advanced direct/wrapper relationship forms,
+and native diagnostics stay adapter-owned. Framework integrations, when added, depend on these
+lower-layer public contracts; no lower layer depends on a framework.
 
 Within core, aggregate validation depends downward on the model, internal helpers, and validation
 types; the model and internal helpers may depend on validation, but lower responsibilities do not
@@ -94,9 +98,13 @@ flowchart LR
   WRITE --> JSON["Wire JSON"]
 ```
 
-Mapped relationships produce linkage. Compound inclusion requires both operation-scoped selection
-and application-scoped policy; the backend-neutral traversal lives in `jsonapi-java-mapping` behind
-an adapter-supplied native capability bridge. Decoration only adds links to already mapped resources
+Mapped relationships produce linkage. Basic resource mapping — fieldset validation and filtering,
+strict versus create identity, attributes, ordinary relationship linkage, and base resource
+assembly — lives in `jsonapi-java-mapping` behind an adapter-supplied native capability bridge;
+each adapter still validates and applies whole-meta phases, decorates, and owns the advanced direct
+and wrapper relationship forms. Compound inclusion requires both operation-scoped selection and
+application-scoped policy; its backend-neutral traversal lives in the same module behind another
+adapter-supplied native capability bridge. Decoration only adds links to already mapped resources
 and relationships. Sparse-fieldset linkage exemptions remain provenance on `MappedDocument`, which
 the writer composes into validation. Callers do not translate mapping state into validation policy.
 
@@ -117,6 +125,8 @@ owns that boundary.
 | Java property discovery, visibility, external names, mix-ins, creators, serializers, deserializers, and conversion | Caller-configured Jackson |
 | Include paths and fieldsets for one operation | `RepresentationSelection` |
 | Allowed fields/includes and traversal limits | Application/runtime `RepresentationPolicy` |
+| Basic resource write semantics: fieldset validation/filtering, strict versus create identity, empty-member omission, ordinary linkage construction, base resource assembly | `jsonapi-java-mapping` internal basic resource writer |
+| Whole-meta conversion, decoration, and advanced direct/wrapper relationship forms | Each backend's write orchestration |
 | Compound-inclusion traversal order, identity aliasing, deduplication, and limits | `jsonapi-java-mapping` internal engine |
 | Persistence, authorization, HTTP behavior, query execution, and applying updates | Application |
 

@@ -14,10 +14,11 @@ sonar {
         property("sonar.qualitygate.wait", "true")
         // Intentional Jackson 2/Jackson 3 parity duplication: these Jackson 2 production files are
         // adapter-local adaptations of their Jackson 3 counterparts (document codec, read-side,
-        // typed domain envelope, write-side domain mapping engine, inclusion capability bridge,
-        // flat DTO resource binding, and presence-aware PATCH binding), kept adapter-local for
-        // Jackson-major isolation per ADR-007. Jackson-major-neutral implementation bookkeeping and
-        // compound-inclusion traversal are shared in jsonapi-java-mapping; do not exclude whole
+        // typed domain envelope, write-side domain mapping engine, inclusion and basic
+        // resource-write capability bridges, flat DTO resource binding, and presence-aware PATCH
+        // binding), kept adapter-local for Jackson-major isolation per ADR-007.
+        // Jackson-major-neutral implementation bookkeeping, compound-inclusion traversal, and basic
+        // resource-write semantics are shared in jsonapi-java-mapping; do not exclude whole
         // packages.
         // Paths must be repository-root-relative; module-relative `src/main/java/...` at project
         // level is deprecated by SonarCloud.
@@ -53,6 +54,7 @@ sonar {
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MappingConstructionStart.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MappingDefinitionCache.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MappingDefinitionResolver.java,
+            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MappingPropertyAccess.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MappingTypeSupport.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MetaBindingModule.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/PatchMemberConverter.java,
@@ -74,7 +76,9 @@ sonar {
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/WireOpenValues.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/WireTokens.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/WholeMetaTarget.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/WrapperCustomization.java
+            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/WholeMetaValueBuilder.java,
+            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/WrapperCustomization.java,
+            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/Jackson2WriteResourceBackend.java
             """.trimIndent(),
         )
     }

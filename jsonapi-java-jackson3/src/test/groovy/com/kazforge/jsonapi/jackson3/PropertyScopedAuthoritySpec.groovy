@@ -430,6 +430,20 @@ class PropertyScopedAuthoritySpec extends Specification {
     ex.propertyPath() == "/meta"
   }
 
+  def "a meta serializer emitting JSON null is a non-object meta target failure"() {
+    given:
+    def article = new JsonNullSerializedMetaArticle("1", new MetaValue("resource"))
+
+    when:
+    JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.INVALID_META_TARGET
+    ex.propertyPath() == "/meta"
+    ex.message == "Converted meta value is not an object (expected a JSON object, got null)"
+  }
+
   private static IdentifierConverter identifierConverter() {
     new IdentifierConverter() {
           @Override
@@ -540,6 +554,13 @@ class PropertyScopedAuthoritySpec extends Specification {
     @Override
     void serialize(MetaValue value, JsonGenerator generator, SerializationContext context) {
       generator.writeString(value.value)
+    }
+  }
+
+  static class JsonNullMetaSerializer extends ValueSerializer<MetaValue> {
+    @Override
+    void serialize(MetaValue value, JsonGenerator generator, SerializationContext context) {
+      generator.writeNull()
     }
   }
 
@@ -845,6 +866,17 @@ class PropertyScopedAuthoritySpec extends Specification {
     @JsonApiMeta @JsonSerialize(using = ScalarMetaSerializer) MetaValue meta
 
     ScalarSerializedMetaArticle(String id, MetaValue meta) {
+      this.id = id
+      this.meta = meta
+    }
+  }
+
+  @JsonApiResource(type = "articles")
+  static class JsonNullSerializedMetaArticle {
+    @JsonApiId String id
+    @JsonApiMeta @JsonSerialize(using = JsonNullMetaSerializer) MetaValue meta
+
+    JsonNullSerializedMetaArticle(String id, MetaValue meta) {
       this.id = id
       this.meta = meta
     }

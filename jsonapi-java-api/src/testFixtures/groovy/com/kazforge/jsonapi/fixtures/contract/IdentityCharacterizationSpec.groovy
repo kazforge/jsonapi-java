@@ -11,8 +11,9 @@ import spock.lang.Specification
  * Identity characterization contract observed through the Level-1 {@code JsonApi} contract:
  * {@code id} and {@code lid} are independent identity roles that map only to their own JSON:API
  * members, the conventional external name {@code id} supplies the identifier without an explicit
- * annotation, and backend renames of identifier properties never move the wire members. Concrete
- * adapter subclasses supply the configured runtime.
+ * annotation, backend renames of identifier properties never move the wire members, and
+ * create-request authoring keeps lid-only and identity-less primaries absent rather than inventing
+ * an {@code id}. Concrete adapter subclasses supply the configured runtime.
  */
 abstract class IdentityCharacterizationSpec extends Specification {
 
@@ -115,6 +116,29 @@ abstract class IdentityCharacterizationSpec extends Specification {
 
     and:
     api().resources().readOne(json, RenamedKeyArticle) == new RenamedKeyArticle("k1", "Headline")
+  }
+
+  def "authors a lid-only create document without promoting lid to id"() {
+    when:
+    def json = api().resources().writeCreateDocument(new LocalIdentityArticle(null, "tmp-1", "Title"))
+    def document = parse(json)
+
+    then:
+    document.data.type == "articles"
+    !document.data.containsKey("id")
+    document.data.lid == "tmp-1"
+  }
+
+  def "authors an identity-less create document with absent id and lid"() {
+    when:
+    def json = api().resources().writeCreateDocument(new LocalIdentityArticle(null, null, "Title"))
+    def document = parse(json)
+
+    then:
+    document.data.type == "articles"
+    !document.data.containsKey("id")
+    !document.data.containsKey("lid")
+    document.data.attributes == ["title": "Title"]
   }
 
   def "binds wire id and lid members back into their independent roles on read"() {

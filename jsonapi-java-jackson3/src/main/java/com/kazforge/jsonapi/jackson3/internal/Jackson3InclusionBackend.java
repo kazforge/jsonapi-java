@@ -117,9 +117,7 @@ public final class Jackson3InclusionBackend implements InclusionBackend<JavaType
 
   @Override
   public boolean hasIdentity(Object domain, JavaType type) {
-    ResourceMapping mapping = writer.mappingFor(type);
-    return writer.extractId(domain, mapping) != null
-        || writer.extractLocalId(domain, mapping) != null;
+    return writer.hasIdentity(domain, type);
   }
 
   private MappingProperty requireRelationship(JavaType ownerType, String relationshipName) {
