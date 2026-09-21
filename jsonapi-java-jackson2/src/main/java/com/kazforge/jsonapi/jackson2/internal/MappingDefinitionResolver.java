@@ -50,11 +50,9 @@ final class MappingDefinitionResolver {
         classified.resourceMeta,
         rawType);
 
-    MappingProperty identifier =
-        classified.identifiers.isEmpty() ? null : classified.identifiers.getFirst();
-    MappingProperty localId = classified.localIds.isEmpty() ? null : classified.localIds.getFirst();
-    MappingProperty resourceMeta =
-        classified.resourceMeta.isEmpty() ? null : classified.resourceMeta.getFirst();
+    MappingProperty identifier = firstOrNull(classified.identifiers);
+    MappingProperty localId = firstOrNull(classified.localIds);
+    MappingProperty resourceMeta = firstOrNull(classified.resourceMeta);
     return new ResourceMapping(
         resourceType,
         identifier,
@@ -598,6 +596,8 @@ final class MappingDefinitionResolver {
           case ATTRIBUTE -> attributeProperties.add(mappingProperty);
           case RELATIONSHIP -> relationshipProperties.add(mappingProperty);
           case RESOURCE_META -> resourceMetaProperties.add(mappingProperty);
+          case RELATIONSHIP_META ->
+              throw new IllegalStateException("Relationship meta must use the unresolved form");
         }
       }
     }
@@ -611,11 +611,9 @@ final class MappingDefinitionResolver {
         resourceMetaProperties,
         rawType);
 
-    ReadMappingProperty identifier =
-        identifierProperties.isEmpty() ? null : identifierProperties.getFirst();
-    ReadMappingProperty localId = localIdProperties.isEmpty() ? null : localIdProperties.getFirst();
-    ReadMappingProperty resourceMeta =
-        resourceMetaProperties.isEmpty() ? null : resourceMetaProperties.getFirst();
+    ReadMappingProperty identifier = firstOrNull(identifierProperties);
+    ReadMappingProperty localId = firstOrNull(localIdProperties);
+    ReadMappingProperty resourceMeta = firstOrNull(resourceMetaProperties);
     return new ReadResourceMapping(
         resourceType,
         identifier,
@@ -766,6 +764,11 @@ final class MappingDefinitionResolver {
                   target.jsonapiName())));
     }
     return bound;
+  }
+
+  /** The single classified property for a role, or {@code null} when the role is absent. */
+  private static <P> @Nullable P firstOrNull(List<P> properties) {
+    return properties.isEmpty() ? null : properties.getFirst();
   }
 
   private static MappingLocation attributeLocation(String jsonapiName) {
