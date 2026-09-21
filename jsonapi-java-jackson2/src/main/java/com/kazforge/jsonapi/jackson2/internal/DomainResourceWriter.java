@@ -2,7 +2,6 @@ package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.kazforge.jsonapi.core.model.Attributes;
 import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.model.Relationship;
 import com.kazforge.jsonapi.core.model.RelationshipData;
@@ -20,21 +19,25 @@ import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import com.kazforge.jsonapi.mapping.ResourceDecoration;
 import com.kazforge.jsonapi.mapping.ResourceDecorator;
 import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry;
+import com.kazforge.jsonapi.mapping.internal.AttributeConversion;
+import com.kazforge.jsonapi.mapping.internal.BasicResourceWriter;
 import com.kazforge.jsonapi.mapping.internal.EffectiveRepresentation;
 import com.kazforge.jsonapi.mapping.internal.PropertyRole;
-import com.kazforge.jsonapi.representation.FieldPolicy;
+import com.kazforge.jsonapi.mapping.internal.WriteProperty;
+import com.kazforge.jsonapi.mapping.internal.WriteResourceBackend;
+import com.kazforge.jsonapi.mapping.internal.WriteResourceDefinition;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.Nullable;
 
-public final class DomainResourceWriter {
+public final class DomainResourceWriter implements WriteResourceBackend<JavaType, MappingProperty> {
 
   private static final String RESOURCE = "resource";
   private static final String DECLARED_TYPE = "declaredType";
@@ -45,6 +48,9 @@ public final class DomainResourceWriter {
   private final WholeMetaTarget wholeMetaTarget;
   private final PropertyScopedValueConverter propertyScoped;
   private final ResourceDecoratorRegistry decoratorRegistry;
+  private final BasicResourceWriter<JavaType, MappingProperty> basicWriter;
+  private final Map<JavaType, WriteResourceDefinition<MappingProperty>> definitions =
+      new ConcurrentHashMap<>();
 
   @SuppressWarnings("unused")
   public DomainResourceWriter(
@@ -62,6 +68,7 @@ public final class DomainResourceWriter {
     this.decoratorRegistry = Objects.requireNonNull(decoratorRegistry, "decoratorRegistry");
     this.wholeMetaTarget = new WholeMetaTarget(mapper);
     this.propertyScoped = new PropertyScopedValueConverter(mapper);
+    this.basicWriter = new BasicResourceWriter<>(this);
   }
 
   public JavaType inferredType(Object resource) {
@@ -69,6 +76,7 @@ public final class DomainResourceWriter {
     return cache.constructType(resource.getClass());
   }
 
+  @Override
   public JavaType effectiveType(Object resource, JavaType declaredType) {
     Objects.requireNonNull(resource, RESOURCE);
     Objects.requireNonNull(declaredType, DECLARED_TYPE);
@@ -84,20 +92,16 @@ public final class DomainResourceWriter {
     requireAssignable(resource, declaredType);
     ResourceMapping mapping = mappingFor(declaredType);
     validateMetaTargets(mapping, resource.getClass());
-    IdentityValues identity = extractIdentity(resource, mapping);
-    Attributes attributes = buildAttributes(resource, mapping, null);
-    Relationships relationships = buildRelationships(resource, mapping, null);
-    Meta meta = buildResourceMeta(resource, mapping);
     ResourceObject base =
-        buildResourceObject(
-            mapping, identity.id(), identity.localId(), attributes, relationships, meta);
-    return decorateResource(resource, declaredType, mapping, base, null);
+        basicWriter.writeBasic(resource, declaredType, null, false, this::buildRelationships);
+    return decorateResource(
+        resource, declaredType, mapping, withResourceMeta(resource, mapping, base), null);
   }
 
   /**
-   * Selective emission using fieldsets and {@link FieldPolicy} from {@code representation}.
-   * Validates a present fieldset entry for the resource's mapped type before any selective
-   * attribute or relationship reads.
+   * Selective emission using fieldsets and {@link com.kazforge.jsonapi.representation.FieldPolicy}
+   * from {@code representation}. Validates a present fieldset entry for the resource's mapped type
+   * before any selective attribute or relationship reads.
    */
   public ResourceObject toResource(
       Object resource, JavaType declaredType, EffectiveRepresentation representation) {
@@ -108,7 +112,8 @@ public final class DomainResourceWriter {
     ResourceMapping mapping = mappingFor(declaredType);
     List<String> fields = representation.fieldsFor(mapping.resourceType());
     if (fields != null) {
-      validateFieldset(resource.getClass(), mapping, fields, representation.policy().fieldPolicy());
+      basicWriter.validateFieldset(
+          resource, declaredType, fields, representation.policy().fieldPolicy());
     }
     return toResourceSelective(resource, declaredType, mapping, fields);
   }
@@ -128,7 +133,8 @@ public final class DomainResourceWriter {
     ResourceMapping mapping = mappingFor(declaredType);
     List<String> fields = representation.fieldsFor(mapping.resourceType());
     if (fields != null) {
-      validateFieldset(resource.getClass(), mapping, fields, representation.policy().fieldPolicy());
+      basicWriter.validateFieldset(
+          resource, declaredType, fields, representation.policy().fieldPolicy());
     }
     return toResourceSelective(resource, declaredType, mapping, fields, true);
   }
@@ -148,74 +154,31 @@ public final class DomainResourceWriter {
       @Nullable List<String> fields,
       boolean allowAbsentIdentity) {
     validateMetaTargets(mapping, resource.getClass());
-    IdentityValues identity =
-        allowAbsentIdentity
-            ? extractCreateIdentity(resource, mapping)
-            : extractIdentity(resource, mapping);
     Set<String> allowedFields = fields == null ? null : Set.copyOf(fields);
-    Attributes attributes = buildAttributes(resource, mapping, allowedFields);
-    Relationships relationships = buildRelationships(resource, mapping, allowedFields);
-    Meta meta = buildResourceMeta(resource, mapping);
     ResourceObject base =
-        buildResourceObject(
-            mapping, identity.id(), identity.localId(), attributes, relationships, meta);
-    return decorateResource(resource, declaredType, mapping, base, allowedFields);
+        basicWriter.writeBasic(
+            resource, declaredType, allowedFields, allowAbsentIdentity, this::buildRelationships);
+    return decorateResource(
+        resource, declaredType, mapping, withResourceMeta(resource, mapping, base), allowedFields);
   }
 
-  private static void validateFieldset(
-      Class<?> resourceClass,
-      ResourceMapping mapping,
-      List<String> fields,
-      FieldPolicy fieldPolicy) {
-    if (fields.isEmpty()) {
-      return;
+  /** Applies the single mapped resource-meta property after all basic members are built. */
+  @SuppressWarnings("NullAway")
+  private ResourceObject withResourceMeta(
+      Object resource, ResourceMapping mapping, ResourceObject base) {
+    Meta meta = buildResourceMeta(resource, mapping);
+    if (meta == null) {
+      return base;
     }
-    Set<String> mappedNames = new HashSet<>();
-    for (MappingProperty property : mapping.attributes()) {
-      mappedNames.add(property.jsonapiName());
-    }
-    for (MappingProperty property : mapping.relationships()) {
-      mappedNames.add(property.jsonapiName());
-    }
-    for (String name : fields) {
-      if (!mappedNames.contains(name)) {
-        // Fieldset specification failures have no document member location; the offending field
-        // name stays in the message per the mapping-location contract.
-        throw JsonApiMappingException.withoutLocation(
-            MappingDiagnostic.INVALID_FIELDSET_FIELD,
-            resourceClass,
-            "Unknown fieldset field '" + name + "' on " + mapping.resourceType());
-      }
-      if (!fieldPolicy.allows(mapping.resourceType(), name)) {
-        throw JsonApiMappingException.withoutLocation(
-            MappingDiagnostic.DENIED_FIELDSET_FIELD,
-            resourceClass,
-            "Fieldset field denied for " + mapping.resourceType() + "." + name);
-      }
-    }
-  }
-
-  /**
-   * Emits the mapped identity roles into their own core members: the id role becomes {@link
-   * ResourceObject#id()} and the local-id role becomes {@link ResourceObject#lid()}. {@code lid}
-   * never substitutes for a missing {@code id} and vice versa.
-   */
-  private static ResourceObject buildResourceObject(
-      ResourceMapping mapping,
-      @Nullable String id,
-      @Nullable String lid,
-      Attributes attributes,
-      Relationships relationships,
-      @Nullable Meta meta) {
     return new ResourceObject(
-        mapping.resourceType(),
-        id,
-        lid,
-        attributes.isEmpty() ? null : attributes,
-        relationships.isEmpty() ? null : relationships,
-        null,
+        base.type(),
+        base.id(),
+        base.lid(),
+        base.attributes(),
+        base.relationships(),
+        base.links(),
         meta,
-        Map.of());
+        base.additionalMembers());
   }
 
   @SuppressWarnings("NullAway")
@@ -443,107 +406,30 @@ public final class DomainResourceWriter {
   }
 
   /**
-   * Reads the mapped id and local-id roles independently. A null Java value on either role means
-   * that member is absent; only when both roles yield nothing does the resource lack identity and
-   * fail with {@link MappingDiagnostic#MISSING_IDENTIFIER}. A present value that fails conversion
-   * fails at its own role's wire location.
+   * Extracts the JSON:API identity of one mapped domain object through the shared strict identity
+   * rule.
    */
-  private IdentityValues extractIdentity(Object resource, ResourceMapping mapping) {
-    String id = extractId(resource, mapping);
-    String localId = extractLocalId(resource, mapping);
-    if (id == null && localId == null) {
-      MappingProperty idProperty = mapping.identifierProperty();
-      if (idProperty != null) {
-        throw missingIdentifier(
-            resource.getClass(),
-            MappingLocation.of("id"),
-            nullIdentityMessage("Identifier", idProperty.logicalName()));
-      }
-      MappingProperty localIdProperty = Objects.requireNonNull(mapping.localIdProperty());
-      throw missingIdentifier(
-          resource.getClass(),
-          MappingLocation.of("lid"),
-          nullIdentityMessage("Local-id", localIdProperty.logicalName()));
-    }
-    return new IdentityValues(id, localId);
-  }
-
-  /**
-   * Reads the mapped id and local-id roles for create-request authoring. Unlike {@link
-   * #extractIdentity}, a resource with neither role value maps with absent identity instead of
-   * failing; core {@code CREATE_REQUEST} validation owns that leniency. Present values convert and
-   * fail exactly as on the ordinary path.
-   */
-  private IdentityValues extractCreateIdentity(Object resource, ResourceMapping mapping) {
-    String id = extractId(resource, mapping);
-    String localId = extractLocalId(resource, mapping);
-    return new IdentityValues(id, localId);
-  }
-
-  private static String nullIdentityMessage(String roleLabel, String logicalName) {
-    return roleLabel + " property '" + logicalName + "' is null";
-  }
-
-  @Nullable String extractId(Object resource, ResourceMapping mapping) {
-    MappingProperty identifierProperty = mapping.identifierProperty();
-    if (identifierProperty == null) {
-      return null;
-    }
-    Object identifierValue =
-        unwrapOptional(readValue(resource, identifierProperty, PropertyRole.ID));
-    if (identifierValue == null) {
-      return null;
-    }
-    return requireIdentifierString(resource.getClass(), identifierProperty, identifierValue);
-  }
-
-  @Nullable String extractLocalId(Object resource, ResourceMapping mapping) {
-    MappingProperty localIdProperty = mapping.localIdProperty();
-    if (localIdProperty == null) {
-      return null;
-    }
-    Object localIdValue =
-        unwrapOptional(readValue(resource, localIdProperty, PropertyRole.LOCAL_ID));
-    if (localIdValue == null) {
-      return null;
-    }
-    return requireLocalIdString(resource.getClass(), localIdProperty, localIdValue);
-  }
-
-  private String requireIdentifierString(
-      Class<?> type, MappingProperty property, @Nullable Object identifierValue) {
-    // Callers guarantee a present value; null identity state is decided by extractIdentity.
-    String identifierString = identifierConverter.convert(identifierValue);
-    if (identifierString == null) {
-      throw missingIdentifier(
-          type,
-          MappingLocation.of("id"),
-          "Identifier converter returned null for property '" + property.logicalName() + "'");
-    }
-    return identifierString;
-  }
-
-  private String requireLocalIdString(
-      Class<?> type, MappingProperty property, @Nullable Object localIdValue) {
-    // Callers guarantee a present value; null identity state is decided by extractIdentity.
-    String localIdString = identifierConverter.convert(localIdValue);
-    if (localIdString == null) {
-      throw missingIdentifier(
-          type,
-          MappingLocation.of("lid"),
-          "Local-id converter returned null for property '" + property.logicalName() + "'");
-    }
-    return localIdString;
-  }
-
   public ResourceIdentifier extractIdentifier(Object resource, JavaType declaredType) {
     Objects.requireNonNull(resource, RESOURCE);
     Objects.requireNonNull(declaredType, DECLARED_TYPE);
     requireAssignable(resource, declaredType);
-    ResourceMapping mapping = mappingFor(declaredType);
-    IdentityValues identity = extractIdentity(resource, mapping);
-    return new ResourceIdentifier(
-        mapping.resourceType(), identity.id(), identity.localId(), null, Map.of());
+    return basicWriter.identifier(resource, declaredType);
+  }
+
+  /** Reads the mapped id role for inclusion identity checks; not linkage construction. */
+  @Nullable String extractId(Object resource, JavaType declaredType) {
+    return basicWriter.extractId(resource, declaredType);
+  }
+
+  /** Reads the mapped local-id role for inclusion identity checks; not linkage construction. */
+  @Nullable String extractLocalId(Object resource, JavaType declaredType) {
+    return basicWriter.extractLocalId(resource, declaredType);
+  }
+
+  /** Returns whether the domain object currently carries either an id or local-id value. */
+  boolean hasIdentity(Object resource, JavaType declaredType) {
+    return extractId(resource, declaredType) != null
+        || extractLocalId(resource, declaredType) != null;
   }
 
   /** Resolves the cached mapping definition for a complete declared type. */
@@ -634,42 +520,27 @@ public final class DomainResourceWriter {
             message);
   }
 
-  private Attributes buildAttributes(
-      Object resource, ResourceMapping mapping, @Nullable Set<String> allowedFields) {
-    if (mapping.attributes().isEmpty()) {
-      return Attributes.empty();
-    }
-    Map<String, @Nullable Object> attributes = new LinkedHashMap<>();
-    for (MappingProperty property : mapping.attributes()) {
-      if (allowedFields == null || allowedFields.contains(property.jsonapiName())) {
-        Object rawValue = readValue(resource, property, PropertyRole.ATTRIBUTE);
-        if (!(rawValue instanceof Optional<?> optional) || optional.isPresent()) {
-          PropertyScopedValueConverter.SerializationResult converted =
-              convertAttributeValue(resource, mapping, property, rawValue);
-          if (converted.emitted()) {
-            attributes.put(property.jsonapiName(), converted.value());
-          }
-        }
-      }
-    }
-    return Attributes.ofAttributes(attributes);
-  }
-
-  private Relationships buildRelationships(
-      Object resource, ResourceMapping mapping, @Nullable Set<String> allowedFields) {
-    if (mapping.relationships().isEmpty()) {
+  /**
+   * Relationship phase delegated to the shared writer. The shared writer supplies the
+   * fieldset-filtered relationship properties in declaration order; this adapter path keeps the
+   * advanced direct and wrapper forms, their identifier meta, and per-relationship meta for the
+   * later relationship and meta extractions.
+   */
+  Relationships buildRelationships(
+      Object resource,
+      JavaType declaredType,
+      List<WriteProperty<MappingProperty>> selectedRelationships) {
+    if (selectedRelationships.isEmpty()) {
       return Relationships.empty();
     }
+    ResourceMapping mapping = mappingFor(declaredType);
     Map<String, MappingProperty> relationshipMetaByTarget =
         RelationshipMetaSupport.byTarget(mapping.relationshipMetaProperties());
     Map<String, @Nullable Relationship> relationships = new LinkedHashMap<>();
-    for (MappingProperty property : mapping.relationships()) {
-      if (allowedFields != null && !allowedFields.contains(property.jsonapiName())) {
-        continue;
-      }
+    for (WriteProperty<MappingProperty> property : selectedRelationships) {
       relationships.put(
           property.jsonapiName(),
-          buildRelationship(resource, mapping, property, relationshipMetaByTarget));
+          buildRelationship(resource, mapping, property.token(), relationshipMetaByTarget));
     }
     return Relationships.ofRelationships(relationships);
   }
@@ -909,9 +780,8 @@ public final class DomainResourceWriter {
           new RelationshipData.SingleLinkage(resourceIdentifier);
       case RelationshipData relationshipData -> relationshipData;
       default ->
-          new RelationshipData.SingleLinkage(
-              extractIdentifier(
-                  Objects.requireNonNull(value), relationshipTargetType(value, propertyType)));
+          basicWriter.singleLinkage(
+              Objects.requireNonNull(value), relationshipTargetType(value, propertyType));
     };
   }
 
@@ -1028,19 +898,7 @@ public final class DomainResourceWriter {
           "Cannot resolve collection content type");
     }
     checkDeclaredTargetHasResourceMetadata(contentType, relationshipLocation);
-    List<ResourceIdentifier> identifiers = new ArrayList<>(items.size());
-    for (Object item : items) {
-      Object nonNullItem = Objects.requireNonNull(item);
-      JavaType effectiveContentType = effectiveType(nonNullItem, contentType);
-      identifiers.add(extractIdentifier(nonNullItem, effectiveContentType));
-    }
-    return new RelationshipData.IdentifierCollectionLinkage(identifiers);
-  }
-
-  private static JsonApiMappingException missingIdentifier(
-      Class<?> type, MappingLocation location, String message) {
-    return new JsonApiMappingException(
-        MappingDiagnostic.MISSING_IDENTIFIER, type, location, message);
+    return basicWriter.collectionLinkage(items, contentType);
   }
 
   private static JsonApiMappingException mixedToManyElements(
@@ -1098,26 +956,75 @@ public final class DomainResourceWriter {
     };
   }
 
-  private PropertyScopedValueConverter.SerializationResult convertAttributeValue(
-      Object resource,
-      ResourceMapping mapping,
-      MappingProperty property,
-      @Nullable Object rawValue) {
+  @Override
+  public AttributeConversion convertAttribute(
+      Object domain, JavaType declaredType, WriteProperty<MappingProperty> property) {
+    MappingProperty nativeProperty = property.token();
+    Object rawValue = readValue(domain, nativeProperty, PropertyRole.ATTRIBUTE);
+    if (rawValue instanceof Optional<?> optional && optional.isEmpty()) {
+      return AttributeConversion.omitted();
+    }
     try {
-      return propertyScoped.serialize(
-          mapping.domainType(),
-          property.definition().getFullName().getSimpleName(),
-          resource,
-          rawValue,
-          unwrapOptional(rawValue));
+      PropertyScopedValueConverter.SerializationResult converted =
+          propertyScoped.serialize(
+              mappingFor(declaredType).domainType(),
+              nativeProperty.definition().getFullName().getSimpleName(),
+              domain,
+              rawValue,
+              unwrapOptional(rawValue));
+      return converted.emitted()
+          ? AttributeConversion.emitted(converted.value())
+          : AttributeConversion.omitted();
     } catch (RuntimeException e) {
       throw new JsonApiMappingException(
           MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE,
-          resource.getClass(),
-          memberLocation(property, PropertyRole.ATTRIBUTE),
-          "Failed to serialize attribute '" + property.logicalName() + "'",
+          domain.getClass(),
+          memberLocation(nativeProperty, PropertyRole.ATTRIBUTE),
+          "Failed to serialize attribute '" + nativeProperty.logicalName() + "'",
           e);
     }
+  }
+
+  @Override
+  public WriteResourceDefinition<MappingProperty> definition(JavaType declaredType) {
+    // Identity extraction for linked targets revisits one declared type many times per write, so
+    // the immutable neutral view is memoized alongside the adapter mapping cache that owns the
+    // resolved mapping it is built from.
+    return definitions.computeIfAbsent(declaredType, this::buildDefinition);
+  }
+
+  private WriteResourceDefinition<MappingProperty> buildDefinition(JavaType declaredType) {
+    ResourceMapping mapping = mappingFor(declaredType);
+    List<WriteProperty<MappingProperty>> attributes = new ArrayList<>(mapping.attributes().size());
+    for (MappingProperty property : mapping.attributes()) {
+      attributes.add(writeProperty(property));
+    }
+    List<WriteProperty<MappingProperty>> relationships =
+        new ArrayList<>(mapping.relationships().size());
+    for (MappingProperty property : mapping.relationships()) {
+      relationships.add(writeProperty(property));
+    }
+    return new WriteResourceDefinition<>(
+        mapping.resourceType(),
+        writeProperty(mapping.identifierProperty()),
+        writeProperty(mapping.localIdProperty()),
+        attributes,
+        relationships);
+  }
+
+  @Override
+  public @Nullable Object readValue(Object domain, WriteProperty<MappingProperty> property) {
+    return readValue(domain, property.token(), property.role());
+  }
+
+  @Override
+  public @Nullable String convertIdentifier(@Nullable Object value) {
+    return identifierConverter.convert(value);
+  }
+
+  private static @Nullable WriteProperty<MappingProperty> writeProperty(
+      @Nullable MappingProperty property) {
+    return property == null ? null : new WriteProperty<>(property, property.metadata());
   }
 
   /**
@@ -1137,9 +1044,6 @@ public final class DomainResourceWriter {
   }
 
   private sealed interface ToManyClassification permits ResourceIdentifiers, DomainObjects, Mixed {}
-
-  /** Extracted identity-role values; either may be null when its member is absent. */
-  private record IdentityValues(@Nullable String id, @Nullable String localId) {}
 
   private record ResourceIdentifiers(List<ResourceIdentifier> identifiers)
       implements ToManyClassification {}

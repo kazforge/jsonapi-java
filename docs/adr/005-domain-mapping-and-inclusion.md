@@ -42,5 +42,6 @@ recognizes both aliases of a resource without conflating their protocol meanings
   inference.
 - Local identifiers remain document-scoped protocol identity, not inferred persistence state.
 - Detailed mapping mechanics belong to adapter APIs and tests; representation contracts live in the
-  `jsonapi-java-api` package documentation, and backend-neutral compound-inclusion traversal and
-  inclusion state are implemented once in `jsonapi-java-mapping`.
+  `jsonapi-java-api` package documentation, and backend-neutral compound-inclusion traversal,
+  inclusion state, and basic resource-write orchestration are implemented once in
+  `jsonapi-java-mapping`.
