@@ -1,6 +1,7 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
 import com.kazforge.jsonapi.mapping.RelationshipLinkage;
+import com.kazforge.jsonapi.mapping.internal.RelationshipShape;
 import com.kazforge.jsonapi.patch.PatchPresence;
 import java.util.Collection;
 import java.util.List;
@@ -20,6 +21,25 @@ import tools.jackson.databind.type.TypeFactory;
 final class MappingTypeSupport {
 
   private MappingTypeSupport() {}
+
+  /**
+   * Derives the neutral write shape of one mapped relationship property: declared cardinality, the
+   * ordinary declared target token, and — for opt-in {@code RelationshipLinkage} properties — the
+   * wrapper's identifier-meta token with the target's own recursively derived shape. The ordinary
+   * target token is returned unresolved; the shared writer consults it lazily through the backend's
+   * target-resolution callback.
+   */
+  static RelationshipShape<JavaType> relationshipShape(JavaType propertyType) {
+    boolean toMany = isToManyType(propertyType);
+    JavaType linkageType = linkageJavaType(propertyType);
+    if (linkageType == null) {
+      return RelationshipShape.ordinary(
+          toMany, toMany ? resolveContentType(propertyType) : unwrapOptionalType(propertyType));
+    }
+    JavaType target = linkageTargetType(linkageType);
+    return RelationshipShape.wrapper(
+        toMany, linkageMetaType(linkageType), relationshipShape(target));
+  }
 
   static boolean isToManyType(JavaType type) {
     if (type.isArrayType()) {

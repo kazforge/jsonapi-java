@@ -14,9 +14,11 @@ package owns backend-neutral semantics for mapped resources:
   rendering and traversal alike.
 - **Basic resource write orchestration.** Fieldset validation and filtering, strict versus
   create-request identity rules, empty-member omission, attribute and member naming, ordinary
-  domain-object to-one/to-many identifier construction, relationship `data` construction, and base
-  `ResourceObject` assembly. Resource and relationship meta, decoration, and the advanced direct
-  and wrapper relationship forms stay with each backend and are applied around this writer.
+  domain-object to-one/to-many identifier construction, advanced relationship-value normalization
+  (direct identifiers, direct linkage data, `RelationshipLinkage` wrapper occurrence handling,
+  to-many container materialization, null-item skipping, and mixed-value rejection), relationship
+  `data` construction, and base `ResourceObject` assembly. Resource and relationship meta,
+  decoration, and configured conversion stay with each backend and are applied around this writer.
 - **Mapping roles and naming metadata.** The backend-neutral mapping roles and the per-property
   semantic metadata that adapters compose into their own write and read mapping records: role,
   logical backend property identity, configured backend external name, and JSON:API member name.
@@ -26,16 +28,18 @@ package owns backend-neutral semantics for mapped resources:
   matched form, carrying the target relationship's JSON:API name; an unresolved annotation target
   stays resolver-local.
 
-Native type and property models, introspection, mapping lookup, property access, container
-handling, configured conversion, identifier conversion, whole-meta conversion, relationship
-normalization, decoration, and selective rendering stay in each backend. The compound-inclusion
-engine reaches native mechanics through the `InclusionBackend` capability boundary; the basic
-resource writer reaches them through a thin `WriteResourceBackend` boundary limited to mapping
-lookup, property access, identifier and attribute conversion, and native type specialization, plus
-an adapter-supplied `BasicRelationshipWriter` phase that keeps the advanced direct/wrapper forms,
-their identifier meta, and per-relationship meta in the existing adapter path. Adapter write and
-read property records remain backend-owned; only the semantic value they compose is shared. This
-module imports no Jackson-major or concrete-adapter package.
+Native type and property models, introspection, mapping lookup, property access, native container
+type-shape derivation, configured conversion, identifier conversion, whole-meta conversion,
+decoration, and selective rendering stay in each backend. The compound-inclusion engine reaches
+native mechanics through the `InclusionBackend` capability boundary; the basic resource writer
+reaches them through a thin `WriteResourceBackend` boundary limited to mapping lookup, property
+access, identifier and attribute conversion, and native type specialization, plus an
+adapter-supplied `BasicRelationshipWriter` phase for relationship-member orchestration. Advanced
+relationship normalization runs through a neutral declared `RelationshipShape` and two narrow
+adapter callbacks (target resolution and wrapper identifier-meta enrichment) that keep native type
+specialization, unresolved-target validation, and property-scoped meta conversion adapter-owned.
+Adapter write and read property records remain backend-owned; only the semantic value they compose
+is shared. This module imports no Jackson-major or concrete-adapter package.
 
 ## Boundary
 

@@ -9,8 +9,11 @@ import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
+import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import com.kazforge.jsonapi.representation.FieldPolicy;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,13 +25,14 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Backend-neutral writer for basic domain-to-core resource semantics.
+ * Backend-neutral writer for basic and advanced domain-to-core relationship semantics.
  *
  * <p>It owns fieldset validation and filtering, strict versus create identity rules, attribute
- * orchestration, ordinary domain-object to-one/to-many linkage construction, member naming, and
- * base {@link ResourceObject} assembly. Relationship members are delegated to the backend's {@link
- * BasicRelationshipWriter} phase, which keeps the not-yet-extracted advanced forms and meta in
- * their current adapter ownership.
+ * orchestration, ordinary domain-object to-one/to-many linkage construction, advanced
+ * relationship-value normalization (see {@link #relationshipData}), member naming, and base {@link
+ * ResourceObject} assembly. Relationship members are delegated to the backend's {@link
+ * BasicRelationshipWriter} phase; resource and relationship meta, decoration, and configured
+ * conversion stay in the backend's own write orchestration.
  *
  * <p>Write phase order is part of the contract: the backend validates its meta targets before
  * calling {@link #writeBasic}, and the caller applies resource meta and decoration after {@link
@@ -177,6 +181,272 @@ public final class BasicResourceWriter<T, P> {
           identifier(nonNullTarget, backend.effectiveType(nonNullTarget, declaredType)));
     }
     return new RelationshipData.IdentifierCollectionLinkage(identifiers);
+  }
+
+  /**
+   * Normalizes one advanced relationship value into core linkage, owning the runtime normalization
+   * and core-model decisions both adapters previously duplicated: one outer {@link Optional},
+   * {@link List}, object-array, and {@link Iterable} materialization, null/empty linkage states,
+   * direct {@link ResourceIdentifier} pass-through, direct to-one {@link RelationshipData}
+   * pass-through, ordinary target linkage, {@link RelationshipLinkage} target recursion,
+   * per-occurrence ordering, null-item skipping, and direct-identifier/domain-object mixed-value
+   * rejection.
+   *
+   * <p>Declared cardinality and backend-native type tokens come from the {@link RelationshipShape}
+   * and stay opaque. The ordinary target token is never resolved or validated eagerly: {@code
+   * targetResolver} is invoked only when normalization selects the ordinary domain-object branch,
+   * while null/empty, all-null to-many, direct-identifier, and direct-data branches return without
+   * consulting it. Wrapper identifier-meta conversion is requested through {@code metaEnricher},
+   * which keeps property-scoped conversion and its diagnostics in the backend's write path;
+   * occurrences without a meta value are returned without enrichment.
+   *
+   * <p>After a {@link RelationshipLinkage} occurrence's target is mapped, to-one linkage is
+   * required before wrapper meta is considered: explicit-null and collection linkage fail
+   * consistently with {@link MappingDiagnostic#INVALID_IDENTIFIER_META_TARGET} at the occurrence's
+   * identifier-meta location, including when the wrapper meta value is absent. Primitive arrays and
+   * unsupported to-many containers still fail, optional to-many and nested transport shapes gain no
+   * new support, to-one null stays {@code NullLinkage}, null/empty/all-null to-many stays
+   * present-empty collection linkage, and direct identifier collections retain all supplied
+   * members.
+   */
+  public RelationshipData relationshipData(
+      Object resource,
+      WriteProperty<P> property,
+      RelationshipShape<T> shape,
+      @Nullable Object value,
+      RelationshipTargetResolver<T> targetResolver,
+      RelationshipMetaEnricher<T> metaEnricher) {
+    if (shape.toMany()) {
+      return toManyRelationshipData(resource, property, shape, value, targetResolver, metaEnricher);
+    }
+    return toOneRelationshipData(resource, property, shape, value, targetResolver, metaEnricher);
+  }
+
+  private RelationshipData toOneRelationshipData(
+      Object resource,
+      WriteProperty<P> property,
+      RelationshipShape<T> shape,
+      @Nullable Object rawValue,
+      RelationshipTargetResolver<T> targetResolver,
+      RelationshipMetaEnricher<T> metaEnricher) {
+    Object value = unwrapOptional(rawValue);
+    if (shape instanceof RelationshipShape.Wrapped<T> wrapped) {
+      return toOneWrapperLinkage(resource, property, wrapped, value, targetResolver, metaEnricher);
+    }
+    return switch (value) {
+      case null -> RelationshipData.NullLinkage.INSTANCE;
+      case ResourceIdentifier resourceIdentifier ->
+          new RelationshipData.SingleLinkage(resourceIdentifier);
+      case RelationshipData relationshipData -> relationshipData;
+      default ->
+          singleLinkage(
+              Objects.requireNonNull(value),
+              targetResolver.resolveTarget(
+                  value, shape.ordinaryTarget(), relationshipLocation(property)));
+    };
+  }
+
+  private RelationshipData toOneWrapperLinkage(
+      Object resource,
+      WriteProperty<P> property,
+      RelationshipShape.Wrapped<T> wrapped,
+      @Nullable Object value,
+      RelationshipTargetResolver<T> targetResolver,
+      RelationshipMetaEnricher<T> metaEnricher) {
+    if (value == null) {
+      return RelationshipData.NullLinkage.INSTANCE;
+    }
+    if (!(value instanceof RelationshipLinkage<?, ?>(Object target, Object meta))) {
+      throw new JsonApiMappingException(
+          MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
+          value.getClass(),
+          relationshipLocation(property),
+          "Relationship '"
+              + property.logicalName()
+              + "' requires RelationshipLinkage values, got "
+              + value.getClass().getName());
+    }
+    RelationshipData mappedTarget =
+        toOneRelationshipData(
+            resource, property, wrapped.targetShape(), target, targetResolver, metaEnricher);
+    return new RelationshipData.SingleLinkage(
+        requireWrapperSingleIdentifier(
+            resource, property, mappedTarget, meta, wrapped.meta(), -1, metaEnricher));
+  }
+
+  private RelationshipData toManyRelationshipData(
+      Object resource,
+      WriteProperty<P> property,
+      RelationshipShape<T> shape,
+      @Nullable Object value,
+      RelationshipTargetResolver<T> targetResolver,
+      RelationshipMetaEnricher<T> metaEnricher) {
+    if (value == null) {
+      return RelationshipData.IdentifierCollectionLinkage.empty();
+    }
+    List<@Nullable Object> items = materializeToMany(value, relationshipLocation(property));
+    if (shape instanceof RelationshipShape.Wrapped<T> wrapped) {
+      return toManyWrapperLinkage(resource, property, wrapped, items, targetResolver, metaEnricher);
+    }
+    if (items.isEmpty()) {
+      return RelationshipData.IdentifierCollectionLinkage.empty();
+    }
+    boolean hasIdentifier = false;
+    List<ResourceIdentifier> identifiers = new ArrayList<>();
+    List<Object> domainObjects = new ArrayList<>();
+    for (Object item : items) {
+      if (item == null) {
+        continue;
+      }
+      if (item instanceof ResourceIdentifier resourceIdentifier) {
+        hasIdentifier = true;
+        identifiers.add(resourceIdentifier);
+      } else {
+        domainObjects.add(item);
+      }
+    }
+    if (hasIdentifier && !domainObjects.isEmpty()) {
+      throw mixedToManyElements(domainObjects.getFirst(), relationshipLocation(property));
+    }
+    if (hasIdentifier) {
+      return new RelationshipData.IdentifierCollectionLinkage(identifiers);
+    }
+    if (domainObjects.isEmpty()) {
+      return RelationshipData.IdentifierCollectionLinkage.empty();
+    }
+    return collectionLinkage(
+        domainObjects,
+        targetResolver.resolveTarget(
+            domainObjects.getFirst(), shape.ordinaryTarget(), relationshipLocation(property)));
+  }
+
+  private RelationshipData toManyWrapperLinkage(
+      Object resource,
+      WriteProperty<P> property,
+      RelationshipShape.Wrapped<T> wrapped,
+      List<@Nullable Object> items,
+      RelationshipTargetResolver<T> targetResolver,
+      RelationshipMetaEnricher<T> metaEnricher) {
+    if (items.isEmpty()) {
+      return RelationshipData.IdentifierCollectionLinkage.empty();
+    }
+    List<ResourceIdentifier> identifiers = new ArrayList<>();
+    int occurrenceIndex = 0;
+    for (Object item : items) {
+      Object occurrence = unwrapOptional(item);
+      if (occurrence == null) {
+        continue;
+      }
+      if (!(occurrence instanceof RelationshipLinkage<?, ?>(Object target, Object meta))) {
+        throw new JsonApiMappingException(
+            MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
+            occurrence.getClass(),
+            relationshipLocation(property),
+            "To-many RelationshipLinkage collection contains " + occurrence.getClass().getName());
+      }
+      RelationshipData mappedTarget =
+          toOneRelationshipData(
+              resource, property, wrapped.targetShape(), target, targetResolver, metaEnricher);
+      identifiers.add(
+          requireWrapperSingleIdentifier(
+              resource,
+              property,
+              mappedTarget,
+              meta,
+              wrapped.meta(),
+              occurrenceIndex,
+              metaEnricher));
+      occurrenceIndex++;
+    }
+    return new RelationshipData.IdentifierCollectionLinkage(identifiers);
+  }
+
+  /**
+   * Requires to-one linkage for one wrapper occurrence before wrapper meta is considered, then
+   * requests identifier-meta enrichment only when the occurrence carries a meta value.
+   * Explicit-null and collection targets fail consistently at the occurrence's identifier-meta
+   * location, including when the wrapper meta is absent.
+   */
+  private ResourceIdentifier requireWrapperSingleIdentifier(
+      Object resource,
+      WriteProperty<P> property,
+      RelationshipData mappedTarget,
+      @Nullable Object occurrenceMeta,
+      @Nullable T declaredMetaToken,
+      int occurrenceIndex,
+      RelationshipMetaEnricher<T> metaEnricher) {
+    String relationshipName = property.jsonapiName();
+    if (!(mappedTarget instanceof RelationshipData.SingleLinkage(ResourceIdentifier identifier))) {
+      throw new JsonApiMappingException(
+          MappingDiagnostic.INVALID_IDENTIFIER_META_TARGET,
+          resource.getClass(),
+          identifierMetaLocation(relationshipName, occurrenceIndex),
+          "RelationshipLinkage requires a mappable target for relationship '"
+              + relationshipName
+              + "'");
+    }
+    if (occurrenceMeta == null) {
+      return identifier;
+    }
+    Objects.requireNonNull(declaredMetaToken, "declaredMetaToken");
+    return metaEnricher.enrichWrapperMeta(
+        declaredMetaToken,
+        occurrenceMeta,
+        identifier,
+        relationshipName,
+        identifierMetaLocation(relationshipName, occurrenceIndex));
+  }
+
+  private static List<@Nullable Object> materializeToMany(
+      Object value, MappingLocation relationshipLocation) {
+    return switch (value) {
+      case List<?> list -> {
+        List<Object> result = new ArrayList<>(list.size());
+        result.addAll(list);
+        yield result;
+      }
+      case Object[] array -> {
+        List<Object> result = new ArrayList<>(array.length);
+        Collections.addAll(result, array);
+        yield result;
+      }
+      case Iterable<?> iterable -> {
+        List<Object> result = new ArrayList<>();
+        for (Object item : iterable) {
+          result.add(item);
+        }
+        yield result;
+      }
+      default ->
+          throw new JsonApiMappingException(
+              MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
+              value.getClass(),
+              relationshipLocation,
+              "To-many relationship value is not a supported collection type: "
+                  + value.getClass().getName());
+    };
+  }
+
+  private static MappingLocation relationshipLocation(WriteProperty<?> property) {
+    return MappingLocation.of(
+        JsonApiMembers.RELATIONSHIPS, property.jsonapiName(), JsonApiMembers.DATA);
+  }
+
+  private static MappingLocation identifierMetaLocation(
+      String relationshipName, int occurrenceIndex) {
+    return occurrenceIndex < 0
+        ? IdentifierMetaSupport.identifierMetaLocation(relationshipName)
+        : IdentifierMetaSupport.identifierMetaLocation(relationshipName, occurrenceIndex);
+  }
+
+  private static JsonApiMappingException mixedToManyElements(
+      Object firstNonResourceIdentifier, MappingLocation relationshipLocation) {
+    return new JsonApiMappingException(
+        MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
+        firstNonResourceIdentifier.getClass(),
+        relationshipLocation,
+        "Mixed element types in to-many relationship collection: expected ResourceIdentifier, got "
+            + firstNonResourceIdentifier.getClass().getName());
   }
 
   private IdentityValues requireIdentity(Object domain, WriteResourceDefinition<P> definition) {

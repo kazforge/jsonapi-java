@@ -39,6 +39,7 @@ import com.kazforge.jsonapi.fixtures.domainwrite.RelationshipContainerFixtures
 import com.kazforge.jsonapi.fixtures.domainwrite.RelationshipLinkageContainerFixtures
 import com.kazforge.jsonapi.fixtures.domainwrite.SamplePojo
 import com.kazforge.jsonapi.fixtures.domainwrite.Tag
+import com.kazforge.jsonapi.fixtures.domainwrite.WriteDiagnosticsFixtures
 import com.kazforge.jsonapi.fixtures.localid.LocalIdentityArticle
 import spock.lang.Shared
 import spock.lang.Specification
@@ -131,6 +132,8 @@ class ResourceMapperSpec extends Specification {
       null,
       ResourceIdentifier.of(COMMENTS, "1")
     ] as ResourceIdentifier[]) | itemsRelationshipArticle(List.of(ResourceIdentifier.of(COMMENTS, "1")))
+    "broad declared element type short-circuits native validation for an empty collection" | new WriteDiagnosticsFixtures.ObjectElementListRelEntity("1", List.of()) | itemsRelationshipArticle(List.of())
+    "broad declared element type short-circuits native validation for direct identifiers" | new WriteDiagnosticsFixtures.ObjectElementListRelEntity("1", List.of(ResourceIdentifier.of(COMMENTS, "1"))) | itemsRelationshipArticle(List.of(ResourceIdentifier.of(COMMENTS, "1")))
   }
 
 

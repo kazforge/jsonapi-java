@@ -25,9 +25,10 @@ Jackson 2 and Jackson 3 adapters derive observable property semantics through ca
 Jackson (discovery, visibility, external names, construction, and conversion), and native
 type/property handles, introspection, naming, serializers, deserializers, parser/generator
 mechanics, and wire codecs remain adapter-owned. Backend-neutral compound-inclusion traversal,
-inclusion bookkeeping, basic resource-write orchestration, mapping roles, and per-property naming
-metadata are owned by [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). `id` and `lid`
-stay invariant JSON:API role names.
+inclusion bookkeeping, basic and advanced relationship write normalization, mapping roles, and
+per-property naming metadata are owned by
+[`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). `id` and `lid` stay invariant JSON:API
+role names.
 
 ## Level-1 contract
 

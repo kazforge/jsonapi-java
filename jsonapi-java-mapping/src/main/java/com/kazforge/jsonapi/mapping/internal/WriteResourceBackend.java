@@ -7,11 +7,13 @@ import org.jspecify.annotations.Nullable;
  * Thin backend capability boundary required by the shared basic resource writer.
  *
  * <p>Only native mechanics live here: mapping lookup, property access, identifier conversion,
- * configured attribute conversion, and native type specialization. Advanced relationship handling
- * (direct identifiers, linkage data, wrapper forms, container semantics, and identifier meta) and
- * whole-meta conversion stay in the backend's own write orchestration, which the shared writer
- * reaches through {@link BasicRelationshipWriter} rather than reinterpreting those forms itself.
- * Native failures surface as the backend's own {@code JsonApiMappingException} diagnostic.
+ * configured attribute conversion, and native type specialization. Advanced relationship-value
+ * normalization (direct identifiers, linkage data, wrapper forms, container semantics, and
+ * identifier-meta occurrence handling) is shared write semantics reached through {@link
+ * RelationshipShape}, {@link RelationshipTargetResolver}, and {@link RelationshipMetaEnricher}
+ * rather than reinterpreted here; whole-meta conversion stays in the backend's own write
+ * orchestration, which the shared writer reaches through {@link BasicRelationshipWriter}. Native
+ * failures surface as the backend's own {@code JsonApiMappingException} diagnostic.
  *
  * <p>The type token {@code T} and property token {@code P} are deliberately opaque to the shared
  * mapping domain: a backend may use Jackson types or another native representation without leaking

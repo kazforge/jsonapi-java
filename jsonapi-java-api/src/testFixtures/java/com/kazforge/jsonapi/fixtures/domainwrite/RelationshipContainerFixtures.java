@@ -4,6 +4,7 @@ import com.kazforge.jsonapi.annotation.JsonApiAttribute;
 import com.kazforge.jsonapi.annotation.JsonApiId;
 import com.kazforge.jsonapi.annotation.JsonApiRelationship;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
+import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +34,20 @@ public final class RelationshipContainerFixtures {
   @JsonApiResource(type = "articles")
   public record ArticleWithOptionalRelationship(
       @JsonApiId String id, @JsonApiRelationship Optional<Comment> comment) {}
+
+  /** Direct to-one relationship holding a prebuilt {@link ResourceIdentifier}. */
+  @JsonApiResource(type = "articles")
+  public record ArticleWithIdentifierRelationship(
+      @JsonApiId String id,
+      @JsonApiAttribute String title,
+      @JsonApiRelationship @Nullable ResourceIdentifier author) {}
+
+  /** To-one relationship carrying a prebuilt core {@link RelationshipData} linkage value. */
+  @JsonApiResource(type = "articles")
+  public record ArticleWithDirectLinkageData(
+      @JsonApiId String id,
+      @JsonApiAttribute String title,
+      @JsonApiRelationship @Nullable RelationshipData author) {}
 
   @JsonApiResource(type = "articles")
   @SuppressWarnings({"ArrayRecordComponent", "java:S6218"})

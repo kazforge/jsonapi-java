@@ -5,13 +5,13 @@ import java.util.List;
 import org.jspecify.annotations.NullMarked;
 
 /**
- * Backend-owned relationship phase of one basic resource write.
+ * Backend-owned relationship phase of one resource write.
  *
  * <p>The shared writer owns fieldset filtering and supplies the selected relationship properties in
- * declaration order; the backend builds the relationship members, keeping the advanced direct and
- * wrapper forms, their identifier meta, and per-relationship meta in its own write orchestration
- * for later extraction. The returned relationships are assembled into the resource object by the
- * shared writer, including empty-member omission.
+ * declaration order; the backend builds the relationship members through the shared advanced
+ * normalization operation, keeping per-relationship meta and configured conversion in its own write
+ * orchestration for the later write-meta extraction. The returned relationships are assembled into
+ * the resource object by the shared writer, including empty-member omission.
  *
  * <p>This is unsupported implementation detail for backend cooperation, not consumer SPI, and must
  * not appear in supported backend signatures.
