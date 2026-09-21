@@ -13,7 +13,6 @@ import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.RelationshipDecoration;
-import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import com.kazforge.jsonapi.mapping.ResourceDecoration;
 import com.kazforge.jsonapi.mapping.ResourceDecorator;
 import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry;
@@ -21,6 +20,7 @@ import com.kazforge.jsonapi.mapping.internal.AttributeConversion;
 import com.kazforge.jsonapi.mapping.internal.BasicResourceWriter;
 import com.kazforge.jsonapi.mapping.internal.EffectiveRepresentation;
 import com.kazforge.jsonapi.mapping.internal.PropertyRole;
+import com.kazforge.jsonapi.mapping.internal.RelationshipShape;
 import com.kazforge.jsonapi.mapping.internal.WriteProperty;
 import com.kazforge.jsonapi.mapping.internal.WriteResourceBackend;
 import com.kazforge.jsonapi.mapping.internal.WriteResourceDefinition;
@@ -474,12 +474,11 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
   }
 
   /**
-   * Converts an already-read to-many value into a list of elements. Serialization callers supply
-   * the failing relationship's resource-relative location; inclusion traversal, which has no
-   * JSON:API member coordinate for this value, uses {@link #convertToCollection(Object)}.
+   * Converts an already-read to-many value into a list of elements for inclusion traversal, which
+   * has no JSON:API member coordinate for this value; write-side materialization is owned by the
+   * shared relationship normalization operation.
    */
-  static List<Object> convertToCollection(
-      Object value, @Nullable MappingLocation relationshipLocation) {
+  static List<Object> convertToCollection(Object value) {
     return switch (value) {
       case List<?> list -> {
         List<Object> result = new ArrayList<>(list.size());
@@ -498,30 +497,16 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
         }
         yield result;
       }
-      default -> throw relationshipShapeFailure(value, relationshipLocation);
+      default -> throw relationshipShapeFailure(value);
     };
   }
 
-  /**
-   * Locationless variant for callers without a JSON:API member coordinate (inclusion traversal).
-   */
-  static List<Object> convertToCollection(Object value) {
-    return convertToCollection(value, null);
-  }
-
-  private static JsonApiMappingException relationshipShapeFailure(
-      Object value, @Nullable MappingLocation relationshipLocation) {
+  private static JsonApiMappingException relationshipShapeFailure(Object value) {
     String message =
         "To-many relationship value is not a supported collection type: "
             + value.getClass().getName();
-    return relationshipLocation == null
-        ? JsonApiMappingException.withoutLocation(
-            MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE, value.getClass(), message)
-        : new JsonApiMappingException(
-            MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
-            value.getClass(),
-            relationshipLocation,
-            message);
+    return JsonApiMappingException.withoutLocation(
+        MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE, value.getClass(), message);
   }
 
   /**
@@ -544,7 +529,7 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
     for (WriteProperty<MappingProperty> property : selectedRelationships) {
       relationships.put(
           property.jsonapiName(),
-          buildRelationship(resource, mapping, property.token(), relationshipMetaByTarget));
+          buildRelationship(resource, mapping, property, relationshipMetaByTarget));
     }
     return Relationships.ofRelationships(relationships);
   }
@@ -552,16 +537,31 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
   private Relationship buildRelationship(
       Object resource,
       ResourceMapping mapping,
-      MappingProperty property,
+      WriteProperty<MappingProperty> property,
       Map<String, MappingProperty> relationshipMetaByTarget) {
-    Object value = readValue(resource, property, PropertyRole.RELATIONSHIP);
-    JavaType propertyType = property.accessor().getType();
-    MappingLocation relationshipLocation = RelationshipMetaSupport.relationshipLocation(property);
+    MappingProperty nativeProperty = property.token();
+    Object value = readValue(resource, nativeProperty, PropertyRole.RELATIONSHIP);
+    JavaType propertyType = nativeProperty.accessor().getType();
     boolean toMany = MappingTypeSupport.isToManyType(propertyType);
+    RelationshipShape<JavaType> shape = MappingTypeSupport.relationshipShape(propertyType);
     RelationshipData linkage =
-        toMany
-            ? extractToManyLinkage(resource, property, value, propertyType, relationshipLocation)
-            : extractToOneLinkage(resource, property, value, propertyType);
+        basicWriter.relationshipData(
+            resource,
+            property,
+            shape,
+            value,
+            toMany
+                ? (target, declaredTarget, location) ->
+                    resolveToManyDeclaredTarget(declaredTarget, location)
+                : (target, declaredTarget, location) -> resolveToOneTarget(target, declaredTarget),
+            (metaType, metaValue, identifier, relationshipName, identifierMetaLocation) ->
+                applyWrapperMeta(
+                    resource,
+                    metaType,
+                    metaValue,
+                    identifier,
+                    relationshipName,
+                    identifierMetaLocation));
     Meta meta = null;
     MappingProperty metaProperty = relationshipMetaByTarget.get(property.jsonapiName());
     if (metaProperty != null) {
@@ -674,58 +674,68 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
   }
 
   /**
-   * Overlay wrapper {@code meta} onto constructed linkage. {@code meta == null} supplies no new
-   * identifier meta and leaves any {@link ResourceIdentifier#meta()} already on the target in
-   * place. A non-null meta value is authoritative. Unrelated identifier members are preserved.
+   * Applies one wrapper occurrence's {@code meta} onto the mapped to-one linkage. The shared
+   * relationship writer guarantees to-one linkage and a present meta value, so conversion state and
+   * overlay stay adapter-owned: non-emission leaves the identifier's own meta in place, and
+   * conversion failures keep the stable identifier-meta diagnostics at the occurrence's location.
    */
-  private RelationshipData applyWrapperMeta(
+  private ResourceIdentifier applyWrapperMeta(
       Object resource,
       JavaType metaType,
       @Nullable Object metaValue,
-      RelationshipData linkage,
+      ResourceIdentifier identifier,
       String relationshipName,
-      int index) {
-    MappingLocation metaLocation =
-        index < 0
-            ? IdentifierMetaSupport.identifierMetaLocation(relationshipName)
-            : IdentifierMetaSupport.identifierMetaLocation(relationshipName, index);
-    if (linkage instanceof RelationshipData.NullLinkage) {
-      throw new JsonApiMappingException(
-          MappingDiagnostic.INVALID_IDENTIFIER_META_TARGET,
-          resource.getClass(),
-          metaLocation,
-          "RelationshipLinkage requires a mappable target for relationship '"
-              + relationshipName
-              + "'");
-    }
-    if (metaValue == null) {
-      return linkage;
-    }
+      MappingLocation identifierMetaLocation) {
     Object converted;
     try {
       PropertyScopedValueConverter.SerializationResult serialized =
-          propertyScoped.serializeDeclared(metaType, metaValue);
+          propertyScoped.serializeDeclared(metaType, Objects.requireNonNull(metaValue));
       if (!serialized.emitted()) {
-        return linkage;
+        return identifier;
       }
       converted = serialized.value();
     } catch (RuntimeException e) {
       throw new JsonApiMappingException(
           MappingDiagnostic.INVALID_META_TARGET,
           resource.getClass(),
-          metaLocation,
+          identifierMetaLocation,
           "Failed to convert identifier meta for relationship '" + relationshipName + "'",
           e);
     }
-    Meta meta = metaFromConverted(converted, resource, metaLocation);
-    if (linkage instanceof RelationshipData.SingleLinkage(ResourceIdentifier identifier)) {
-      return new RelationshipData.SingleLinkage(IdentifierMetaSupport.withMeta(identifier, meta));
+    Meta meta = metaFromConverted(converted, resource, identifierMetaLocation);
+    return IdentifierMetaSupport.withMeta(identifier, meta);
+  }
+
+  /**
+   * Resolves the declared element-type token for one ordinary to-many branch: the declared element
+   * type must carry resource metadata as the configured mapper sees it (including class-level
+   * mix-ins), and an unresolvable content type keeps the stable collection diagnostic. The shared
+   * relationship writer consults this only from that lazy branch.
+   */
+  private JavaType resolveToManyDeclaredTarget(
+      @Nullable JavaType declaredTarget, MappingLocation location) {
+    if (declaredTarget == null) {
+      throw new JsonApiMappingException(
+          MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_COLLECTION_TYPE,
+          null,
+          location,
+          "Cannot resolve collection content type");
     }
-    throw new JsonApiMappingException(
-        MappingDiagnostic.INVALID_IDENTIFIER_META_TARGET,
-        resource.getClass(),
-        metaLocation,
-        "Identifier meta requires to-one linkage for relationship '" + relationshipName + "'");
+    checkDeclaredTargetHasResourceMetadata(declaredTarget, location);
+    return declaredTarget;
+  }
+
+  /**
+   * Resolves the declared target token for one ordinary to-one branch: untyped declared targets
+   * fall back to the runtime type, otherwise the target specializes through configured Jackson.
+   */
+  private JavaType resolveToOneTarget(@Nullable Object target, @Nullable JavaType declaredTarget) {
+    JavaType declared = Objects.requireNonNull(declaredTarget, "declaredTarget");
+    if (declared.getRawClass() == Object.class
+        || (declared.getRawClass() == Optional.class && declared.containedTypeCount() == 0)) {
+      return inferredType(Objects.requireNonNull(target));
+    }
+    return effectiveType(Objects.requireNonNull(target), declared);
   }
 
   private @Nullable Meta metaFromConverted(
@@ -747,172 +757,6 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
     } catch (JsonApiValidationException e) {
       throw metaValueFailure(resource, metaLocation, "Invalid identifier meta members", e);
     }
-  }
-
-  private RelationshipData extractToOneLinkage(
-      Object resource, MappingProperty property, @Nullable Object value, JavaType propertyType) {
-    value = unwrapOptional(value);
-    JavaType linkageType = MappingTypeSupport.linkageJavaType(propertyType);
-    if (linkageType != null) {
-      if (value == null) {
-        return RelationshipData.NullLinkage.INSTANCE;
-      }
-      if (!(value instanceof RelationshipLinkage<?, ?>(Object target, Object meta))) {
-        throw new JsonApiMappingException(
-            MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
-            value.getClass(),
-            RelationshipMetaSupport.relationshipLocation(property),
-            "Relationship '"
-                + property.logicalName()
-                + "' requires RelationshipLinkage values, got "
-                + value.getClass().getName());
-      }
-      RelationshipData data =
-          extractToOneLinkage(
-              resource, property, target, MappingTypeSupport.linkageTargetType(linkageType));
-      return applyWrapperMeta(
-          resource,
-          MappingTypeSupport.linkageMetaType(linkageType),
-          meta,
-          data,
-          property.jsonapiName(),
-          -1);
-    }
-    return switch (value) {
-      case null -> RelationshipData.NullLinkage.INSTANCE;
-      case ResourceIdentifier resourceIdentifier ->
-          new RelationshipData.SingleLinkage(resourceIdentifier);
-      case RelationshipData relationshipData -> relationshipData;
-      default ->
-          basicWriter.singleLinkage(
-              Objects.requireNonNull(value), relationshipTargetType(value, propertyType));
-    };
-  }
-
-  private JavaType relationshipTargetType(Object value, JavaType propertyType) {
-    JavaType unwrapped = MappingTypeSupport.unwrapOptionalType(propertyType);
-    if (unwrapped.getRawClass() == Object.class
-        || (unwrapped.getRawClass() == Optional.class && unwrapped.containedTypeCount() == 0)) {
-      return inferredType(value);
-    }
-    return effectiveType(value, unwrapped);
-  }
-
-  private RelationshipData extractToManyLinkage(
-      Object resource,
-      MappingProperty property,
-      @Nullable Object value,
-      JavaType propType,
-      MappingLocation relationshipLocation) {
-    if (value == null) {
-      return RelationshipData.IdentifierCollectionLinkage.empty();
-    }
-    JavaType linkageType = MappingTypeSupport.linkageJavaType(propType);
-    if (linkageType != null) {
-      List<Object> items = convertToCollection(value, relationshipLocation);
-      return toManyWrappedLinkage(resource, property, items, linkageType, relationshipLocation);
-    }
-    List<Object> items = convertToCollection(value, relationshipLocation);
-    if (items.isEmpty()) {
-      return RelationshipData.IdentifierCollectionLinkage.empty();
-    }
-    return switch (classifyToManyItems(items)) {
-      case ResourceIdentifiers(List<ResourceIdentifier> identifiers) ->
-          new RelationshipData.IdentifierCollectionLinkage(identifiers);
-      case DomainObjects(List<?> domainItems) ->
-          toManyLinkageFromDomainObjects(domainItems, propType, relationshipLocation);
-      case Mixed(Object firstNonResourceIdentifier) ->
-          throw mixedToManyElements(firstNonResourceIdentifier, relationshipLocation);
-    };
-  }
-
-  private RelationshipData toManyWrappedLinkage(
-      Object resource,
-      MappingProperty property,
-      List<Object> items,
-      JavaType linkageType,
-      MappingLocation relationshipLocation) {
-    if (items.isEmpty()) {
-      return RelationshipData.IdentifierCollectionLinkage.empty();
-    }
-    JavaType targetType = MappingTypeSupport.linkageTargetType(linkageType);
-    JavaType metaType = MappingTypeSupport.linkageMetaType(linkageType);
-    List<ResourceIdentifier> identifiers = new ArrayList<>();
-    int index = 0;
-    for (Object item : items) {
-      Object unwrappedItem = unwrapOptional(item);
-      if (unwrappedItem == null) {
-        continue;
-      }
-      if (!(unwrappedItem instanceof RelationshipLinkage<?, ?>(Object target, Object meta))) {
-        throw new JsonApiMappingException(
-            MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
-            unwrappedItem.getClass(),
-            relationshipLocation,
-            "To-many RelationshipLinkage collection contains "
-                + unwrappedItem.getClass().getName());
-      }
-      RelationshipData data = extractToOneLinkage(resource, property, target, targetType);
-      RelationshipData overlaid =
-          applyWrapperMeta(resource, metaType, meta, data, property.jsonapiName(), index);
-      if (overlaid instanceof RelationshipData.SingleLinkage(ResourceIdentifier identifier)) {
-        identifiers.add(identifier);
-        index++;
-      }
-    }
-    return new RelationshipData.IdentifierCollectionLinkage(identifiers);
-  }
-
-  private static ToManyClassification classifyToManyItems(List<?> items) {
-    boolean hasResourceIdentifier = false;
-    Object firstNonResourceIdentifier = null;
-    List<ResourceIdentifier> identifiers = new ArrayList<>();
-    List<Object> domainItems = new ArrayList<>();
-    for (Object item : items) {
-      if (item == null) {
-        continue;
-      }
-      if (item instanceof ResourceIdentifier resourceIdentifier) {
-        hasResourceIdentifier = true;
-        identifiers.add(resourceIdentifier);
-      } else {
-        if (firstNonResourceIdentifier == null) {
-          firstNonResourceIdentifier = item;
-        }
-        domainItems.add(item);
-      }
-    }
-    if (hasResourceIdentifier && firstNonResourceIdentifier != null) {
-      return new Mixed(firstNonResourceIdentifier);
-    }
-    if (hasResourceIdentifier) {
-      return new ResourceIdentifiers(identifiers);
-    }
-    return new DomainObjects(domainItems);
-  }
-
-  private RelationshipData toManyLinkageFromDomainObjects(
-      List<?> items, JavaType propType, MappingLocation relationshipLocation) {
-    JavaType contentType = MappingTypeSupport.resolveContentType(propType);
-    if (contentType == null) {
-      throw new JsonApiMappingException(
-          MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_COLLECTION_TYPE,
-          null,
-          relationshipLocation,
-          "Cannot resolve collection content type");
-    }
-    checkDeclaredTargetHasResourceMetadata(contentType, relationshipLocation);
-    return basicWriter.collectionLinkage(items, contentType);
-  }
-
-  private static JsonApiMappingException mixedToManyElements(
-      Object firstNonResourceIdentifier, MappingLocation relationshipLocation) {
-    return new JsonApiMappingException(
-        MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
-        firstNonResourceIdentifier.getClass(),
-        relationshipLocation,
-        "Mixed element types in to-many relationship collection: expected ResourceIdentifier, got "
-            + firstNonResourceIdentifier.getClass().getName());
   }
 
   private static @Nullable Object readValue(
@@ -1046,13 +890,4 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
           "Collection element type " + targetType.toCanonical() + " lacks @JsonApiResource");
     }
   }
-
-  private sealed interface ToManyClassification permits ResourceIdentifiers, DomainObjects, Mixed {}
-
-  private record ResourceIdentifiers(List<ResourceIdentifier> identifiers)
-      implements ToManyClassification {}
-
-  private record DomainObjects(List<?> items) implements ToManyClassification {}
-
-  private record Mixed(Object firstNonResourceIdentifier) implements ToManyClassification {}
 }

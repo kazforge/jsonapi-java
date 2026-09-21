@@ -75,6 +75,24 @@ handling, the advanced direct and `RelationshipLinkage` forms, whole-meta conver
 and per-relationship enrichment stay in the existing adapter write path for later extractions
 rather than moving into a duplicated backend abstraction.
 
+The advanced relationship-value normalization then moved to the same writer, so the duplicated
+`extractToOneLinkage`/`extractToManyLinkage` orchestration left both adapters. The shared writer now
+owns one outer `Optional` unwrap, to-many `List`/array/`Iterable` materialization, null/empty
+linkage states, direct `ResourceIdentifier` and to-one `RelationshipData` pass-through, ordinary
+target linkage, `RelationshipLinkage` target recursion, per-occurrence ordering, null-item
+skipping, direct-identifier/domain-object mixed-value rejection, and one standardized wrapper edge:
+a `RelationshipLinkage` target that maps to explicit-null or collection linkage fails consistently
+with `INVALID_IDENTIFIER_META_TARGET` at the occurrence's identifier-meta location, including when
+wrapper meta is absent. Type shape derivation stays Jackson-native: each adapter derives a neutral
+`com.kazforge.jsonapi.mapping.internal.RelationshipShape` through its own `MappingTypeSupport`, and
+the shared writer consults it only lazily — null/empty, direct-identifier, and direct-data branches
+never consult the ordinary target token. Two narrow adapter callbacks keep the remaining native
+mechanics adapter-owned: target resolution (runtime specialization plus declared element-type
+validation) and wrapper identifier-meta enrichment (property-scoped conversion, object-shape
+validation, overlay, and their current stable diagnostics). Whole-meta conversion, decoration, and
+relationship-level meta stay in the existing adapter write path for the later write-meta
+extraction.
+
 The remaining helpers listed in the Decision (wire member classification and pointers,
 identifier-meta copies, and supplied PATCH markers) stay in the API artifact under
 `com.kazforge.jsonapi.internal` until a later extraction moves them.
