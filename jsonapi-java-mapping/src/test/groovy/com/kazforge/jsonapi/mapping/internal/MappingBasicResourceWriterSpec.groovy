@@ -6,7 +6,7 @@ import static com.kazforge.jsonapi.mapping.internal.PropertyRole.ID
 import static com.kazforge.jsonapi.mapping.internal.PropertyRole.LOCAL_ID
 import static com.kazforge.jsonapi.mapping.internal.PropertyRole.RELATIONSHIP
 
-import com.kazforge.jsonapi.core.model.Meta
+import com.kazforge.jsonapi.core.model.Relationship
 import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
@@ -25,7 +25,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     def domain = domain('id': '1', 'localId': 'tmp-1', 'title': 'T')
 
     when:
-    def resource = writer.writeBasic(domain, 'articles', null, false)
+    def resource = writer.writeBasic(domain, 'articles', null, false, relationshipPhase())
 
     then:
     resource.type() == 'articles'
@@ -38,7 +38,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     articlesWithIdentity()
 
     when:
-    writer.writeBasic(domain('title': 'T'), 'articles', null, false)
+    writer.writeBasic(domain('title': 'T'), 'articles', null, false, relationshipPhase())
 
     then:
     def failure = thrown(JsonApiMappingException)
@@ -52,7 +52,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     backend.define('articles', property(LOCAL_ID, 'localId', 'localId', 'lid'))
 
     when:
-    writer.writeBasic(domain([:]), 'articles', null, false)
+    writer.writeBasic(domain([:]), 'articles', null, false, relationshipPhase())
 
     then:
     def failure = thrown(JsonApiMappingException)
@@ -66,7 +66,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     articlesWithIdentity()
 
     when:
-    def resource = writer.writeBasic(domain('title': 'T'), 'articles', null, true)
+    def resource = writer.writeBasic(domain('title': 'T'), 'articles', null, true, relationshipPhase())
 
     then:
     resource.type() == 'articles'
@@ -78,10 +78,10 @@ class MappingBasicResourceWriterSpec extends Specification {
   def "reports a present identity value that converts to no wire string at its own role"() {
     given:
     articlesWithIdentity()
-    backend.unconvertibleIdentity('localId')
+    backend.unconvertibleIdentity('tmp-1')
 
     when:
-    writer.writeBasic(domain('id': '1', 'localId': 'tmp-1'), 'articles', null, false)
+    writer.writeBasic(domain('id': '1', 'localId': 'tmp-1'), 'articles', null, false, relationshipPhase())
 
     then:
     def failure = thrown(JsonApiMappingException)
@@ -100,7 +100,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     def domain = domain('id': '1', 'headline': 'H', 'body': 'B')
 
     when:
-    def resource = writer.writeBasic(domain, 'articles', null, false)
+    def resource = writer.writeBasic(domain, 'articles', null, false, relationshipPhase())
 
     then:
     resource.attributes().attributes() == ['wire-headline': 'converted:H', body: 'converted:B']
@@ -117,7 +117,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     def domain = domain('id': '1', 'title': null, 'secret': 'hidden')
 
     when:
-    def resource = writer.writeBasic(domain, 'articles', null, false)
+    def resource = writer.writeBasic(domain, 'articles', null, false, relationshipPhase())
 
     then:
     resource.attributes().attributes() == [title: null]
@@ -128,32 +128,33 @@ class MappingBasicResourceWriterSpec extends Specification {
     backend.define('articles', property(ID, 'id', 'id', 'id'))
 
     when:
-    def resource = writer.writeBasic(domain('id': '1'), 'articles', null, false)
+    def resource = writer.writeBasic(domain('id': '1'), 'articles', null, false, relationshipPhase())
 
     then:
     resource.attributes() == null
     resource.relationships() == null
   }
 
-  def "filters attributes and relationships by the selected fields"() {
+  def "filters attributes and passes only selected relationships to the phase in order"() {
     given:
     backend.define(
         'articles',
         property(ID, 'id', 'id', 'id'),
         property(ATTRIBUTE, 'title', 'title', 'title'),
         property(ATTRIBUTE, 'body', 'body', 'body'),
-        property(RELATIONSHIP, 'author', 'author', 'author'))
-    backend.relationshipTarget('author', 'people')
-    backend.define('people', property(ID, 'id', 'id', 'id'))
-    def domain = domain('id': '1', 'title': 'T', 'body': 'B', 'author': domain('id': 'p1'))
+        property(RELATIONSHIP, 'author', 'author', 'author'),
+        property(RELATIONSHIP, 'editor', 'editor', 'editor'))
+    backend.relationshipMember('author', relationship('people', 'p1'))
+    backend.relationshipMember('editor', relationship('people', 'p2'))
+    def domain = domain('id': '1', 'title': 'T', 'body': 'B')
 
     when:
-    def resource = writer.writeBasic(domain, 'articles', ['body', 'author'] as Set, false)
+    def resource = writer.writeBasic(domain, 'articles', ['body', 'editor', 'author'] as Set, false, relationshipPhase())
 
     then:
     resource.attributes().attributes() == [body: 'converted:B']
-    resource.relationships().relationships().keySet() == ['author'] as Set
-    backend.enrichmentOrder == ['author']
+    backend.relationshipPhaseOrder == ['author', 'editor']
+    resource.relationships().relationships().keySet() == ['author', 'editor'] as Set
   }
 
   def "validates an unknown fieldset field before any selective read"() {
@@ -191,101 +192,51 @@ class MappingBasicResourceWriterSpec extends Specification {
     noExceptionThrown()
   }
 
-  def "writes null and present to-one linkage from the declared target type"() {
+  def "builds single linkage through the declared target type"() {
     given:
-    relationshipArticle()
-    def absent = domain('id': '1', 'author': null)
-    def present = domain('id': '1', 'author': domain('id': 'p1'))
+    backend.define('articles', property(ID, 'id', 'id', 'id'))
+    backend.define('people', property(ID, 'id', 'id', 'id'))
+    def target = domain('id': 'p1')
 
     when:
-    def absentLinkage = writer.writeBasic(absent, 'articles', null, false).relationships().relationships()
-    def presentLinkage = writer.writeBasic(present, 'articles', null, false).relationships().relationships()
+    def linkage = writer.singleLinkage(target, 'people')
 
     then:
-    absentLinkage.author.data() == RelationshipData.NullLinkage.INSTANCE
-    presentLinkage.author.data() instanceof RelationshipData.SingleLinkage
-    (presentLinkage.author.data() as RelationshipData.SingleLinkage).identifier() ==
-        ResourceIdentifier.of('people', 'p1')
+    linkage instanceof RelationshipData.SingleLinkage
+    (linkage as RelationshipData.SingleLinkage).identifier() == ResourceIdentifier.of('people', 'p1')
   }
 
   def "resolves each ordinary target through the backend effective type"() {
     given:
-    relationshipArticle()
+    backend.define('people', property(ID, 'id', 'id', 'id'))
     backend.define('authors', property(ID, 'id', 'id', 'id'))
     def author = domain('id': 'p1')
     backend.mapEffectiveType(author, 'authors')
 
     when:
-    def linkage = writer
-        .writeBasic(domain('id': '1', 'author': author), 'articles', null, false)
-        .relationships()
-        .relationships()
+    def linkage = writer.singleLinkage(author, 'people')
 
     then:
-    (linkage.author.data() as RelationshipData.SingleLinkage).identifier().type() == 'authors'
+    (linkage as RelationshipData.SingleLinkage).identifier().type() == 'authors'
   }
 
-  def "writes null, empty, and populated to-many linkage in value order"() {
+  def "builds collection linkage in value order and keeps the empty state"() {
     given:
-    relationshipArticle()
-    backend.toMany('comments')
-    def nullComments = domain('id': '1')
-    def emptyComments = domain('id': '1', 'comments': [])
-    def populated = domain('id': '1', 'comments': [
-      domain('id': 'c1'),
-      domain('id': 'c2')
-    ])
+    backend.define('comments', property(ID, 'id', 'id', 'id'))
+    def first = domain('id': 'c1')
+    def second = domain('id': 'c2')
 
     when:
-    def nullLinkage = writer.writeBasic(nullComments, 'articles', null, false).relationships().relationships()
-    def emptyLinkage = writer.writeBasic(emptyComments, 'articles', null, false).relationships().relationships()
-    def populatedLinkage = writer.writeBasic(populated, 'articles', null, false).relationships().relationships()
+    def populated = writer.collectionLinkage([first, second], 'comments')
+    def empty = writer.collectionLinkage([], 'comments')
 
     then:
-    (nullLinkage.comments.data() as RelationshipData.IdentifierCollectionLinkage).identifiers() == []
-    (emptyLinkage.comments.data() as RelationshipData.IdentifierCollectionLinkage).identifiers() == []
-    (populatedLinkage.comments.data() as RelationshipData.IdentifierCollectionLinkage).identifiers() ==
+    (populated as RelationshipData.IdentifierCollectionLinkage).identifiers() ==
         [
           ResourceIdentifier.of('comments', 'c1'),
           ResourceIdentifier.of('comments', 'c2')
         ]
-  }
-
-  def "passes adapter-owned prebuilt linkage through unchanged"() {
-    given:
-    relationshipArticle()
-    def identifier = ResourceIdentifier.of('people', 'p1')
-    def prebuilt = new RelationshipData.SingleLinkage(identifier)
-
-    when:
-    def resource = writer
-        .writeBasic(domain('id': '1', 'author': prebuilt), 'articles', null, false)
-
-    then:
-    resource.relationships().relationships().author.data().is(prebuilt)
-  }
-
-  def "enriches each selected relationship immediately after its linkage in declaration order"() {
-    given:
-    backend.define(
-        'articles',
-        property(ID, 'id', 'id', 'id'),
-        property(RELATIONSHIP, 'author', 'author', 'author'),
-        property(RELATIONSHIP, 'editor', 'editor', 'editor'))
-    backend.relationshipTarget('author', 'people')
-    backend.relationshipTarget('editor', 'people')
-    backend.define('people', property(ID, 'id', 'id', 'id'))
-    backend.relationshipMeta('author', Meta.of([note: 'first']))
-    backend.relationshipMeta('editor', Meta.of([note: 'second']))
-    def domain = domain('id': '1', 'author': domain('id': 'p1'), 'editor': domain('id': 'p2'))
-
-    when:
-    def relationships = writer.writeBasic(domain, 'articles', null, false).relationships().relationships()
-
-    then:
-    backend.enrichmentOrder == ['author', 'editor']
-    relationships.author.meta() == Meta.of([note: 'first'])
-    relationships.editor.meta() == Meta.of([note: 'second'])
+    (empty as RelationshipData.IdentifierCollectionLinkage).identifiers() == []
   }
 
   def "extracts a strict identifier for one mapped domain object"() {
@@ -305,25 +256,30 @@ class MappingBasicResourceWriterSpec extends Specification {
     thrown(JsonApiMappingException)
   }
 
+  def "reads the independent identity roles for identity checks"() {
+    given:
+    articlesWithIdentity()
+    def domain = domain('id': '1', 'localId': 'tmp-1')
+
+    expect:
+    writer.extractId(domain, 'articles') == '1'
+    writer.extractLocalId(domain, 'articles') == 'tmp-1'
+  }
+
+  private BasicRelationshipWriter<String, String> relationshipPhase() {
+    backend.&writeRelationships as BasicRelationshipWriter
+  }
+
+  private static Relationship relationship(String type, String id) {
+    new Relationship(new RelationshipData.SingleLinkage(ResourceIdentifier.of(type, id)), null, null, [:])
+  }
+
   private void articlesWithIdentity() {
     backend.define(
         'articles',
         property(ID, 'id', 'id', 'id'),
         property(LOCAL_ID, 'localId', 'localId', 'lid'),
         property(ATTRIBUTE, 'title', 'title', 'title'))
-  }
-
-  private void relationshipArticle() {
-    backend.define(
-        'articles',
-        property(ID, 'id', 'id', 'id'),
-        property(RELATIONSHIP, 'author', 'author', 'author'),
-        property(RELATIONSHIP, 'comments', 'comments', 'comments'))
-    backend.relationshipTarget('author', 'people')
-    backend.relationshipTarget('comments', 'comments')
-    backend.toMany('comments')
-    backend.define('people', property(ID, 'id', 'id', 'id'))
-    backend.define('comments', property(ID, 'id', 'id', 'id'))
   }
 
   private Map<String, Object> domain(Map<String, Object> propertyValues) {

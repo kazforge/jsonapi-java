@@ -28,11 +28,14 @@ package owns backend-neutral semantics for mapped resources:
 
 Native type and property models, introspection, mapping lookup, property access, container
 handling, configured conversion, identifier conversion, whole-meta conversion, relationship
-normalization, decoration, and selective rendering stay in each backend behind two narrow
-capability boundaries: `InclusionBackend` for the compound-inclusion engine and
-`WriteResourceBackend` for the basic resource writer. Adapter write and read property records
-remain backend-owned; only the semantic value they compose is shared. This module imports no
-Jackson-major or concrete-adapter package.
+normalization, decoration, and selective rendering stay in each backend. The compound-inclusion
+engine reaches native mechanics through the `InclusionBackend` capability boundary; the basic
+resource writer reaches them through a thin `WriteResourceBackend` boundary limited to mapping
+lookup, property access, identifier and attribute conversion, and native type specialization, plus
+an adapter-supplied `BasicRelationshipWriter` phase that keeps the advanced direct/wrapper forms,
+their identifier meta, and per-relationship meta in the existing adapter path. Adapter write and
+read property records remain backend-owned; only the semantic value they compose is shared. This
+module imports no Jackson-major or concrete-adapter package.
 
 ## Boundary
 

@@ -1,22 +1,20 @@
 package com.kazforge.jsonapi.mapping.internal;
 
-import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.model.Relationship;
-import com.kazforge.jsonapi.core.model.RelationshipData;
+import com.kazforge.jsonapi.core.model.Relationships;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Mapping-local test double for {@link WriteResourceBackend} over string type and property tokens.
- * Test code configures definitions, domain values, and per-property behavior directly; no write
- * semantics beyond that configuration are simulated.
+ * Mapping-local test double for {@link WriteResourceBackend} and the relationship phase over string
+ * type and property tokens. Test code configures definitions, domain values, and per-property
+ * behavior directly; no write semantics beyond that configuration are simulated.
  */
 @NullMarked
 final class MappingFakeWriteResourceBackend implements WriteResourceBackend<String, String> {
@@ -24,14 +22,14 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
   final Map<String, WriteResourceDefinition<String>> definitions = new LinkedHashMap<>();
   final Map<Object, Map<String, @Nullable Object>> values = new LinkedHashMap<>();
   final Map<Object, String> effectiveTypes = new LinkedHashMap<>();
-  final Map<String, String> relationshipTargetTypes = new LinkedHashMap<>();
-  final Set<String> toManyRelationships = new LinkedHashSet<>();
   final Set<String> omittedAttributes = new LinkedHashSet<>();
-  final Set<String> unconvertibleIdentities = new LinkedHashSet<>();
-  final Map<String, Meta> relationshipMeta = new LinkedHashMap<>();
+  final Set<Object> unconvertibleValues = new LinkedHashSet<>();
 
-  /** JSON:API names of relationships enriched, in call order. */
-  final List<String> enrichmentOrder = new ArrayList<>();
+  /** Relationship members returned by the phase, by relationship property token. */
+  final Map<String, Relationship> relationshipMembers = new LinkedHashMap<>();
+
+  /** JSON:API names passed to the phase, in call order. */
+  final List<String> relationshipPhaseOrder = new ArrayList<>();
 
   static WriteProperty<String> property(
       PropertyRole role, String logicalName, String externalName, String jsonapiName) {
@@ -71,24 +69,29 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
     effectiveTypes.put(domain, type);
   }
 
-  void relationshipTarget(String propertyToken, String targetType) {
-    relationshipTargetTypes.put(propertyToken, targetType);
-  }
-
-  void toMany(String propertyToken) {
-    toManyRelationships.add(propertyToken);
-  }
-
   void omitAttribute(String propertyToken) {
     omittedAttributes.add(propertyToken);
   }
 
-  void unconvertibleIdentity(String propertyToken) {
-    unconvertibleIdentities.add(propertyToken);
+  /** Configures a raw value whose identifier conversion yields no wire string. */
+  void unconvertibleIdentity(Object value) {
+    unconvertibleValues.add(value);
   }
 
-  void relationshipMeta(String propertyToken, Meta meta) {
-    relationshipMeta.put(propertyToken, meta);
+  void relationshipMember(String propertyToken, Relationship relationship) {
+    relationshipMembers.put(propertyToken, relationship);
+  }
+
+  /** Relationship phase double: returns the configured members for the selected properties. */
+  @SuppressWarnings("unused")
+  Relationships writeRelationships(
+      Object resource, String declaredType, List<WriteProperty<String>> selectedRelationships) {
+    Map<String, @Nullable Relationship> members = new LinkedHashMap<>();
+    for (WriteProperty<String> property : selectedRelationships) {
+      relationshipPhaseOrder.add(property.jsonapiName());
+      members.put(property.jsonapiName(), relationshipMembers.get(property.token()));
+    }
+    return Relationships.ofRelationships(members);
   }
 
   @Override
@@ -101,23 +104,21 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
   }
 
   @Override
-  public IdentityRead identity(Object domain, WriteProperty<String> property) {
+  public @Nullable Object readValue(Object domain, WriteProperty<String> property) {
     Map<String, @Nullable Object> domainValues = values.get(domain);
-    if (domainValues == null || !domainValues.containsKey(property.token())) {
-      return IdentityRead.absent();
-    }
-    Object raw = domainValues.get(property.token());
-    if (raw == null) {
-      return IdentityRead.absent();
-    }
-    if (unconvertibleIdentities.contains(property.token())) {
-      return IdentityRead.of(null);
-    }
-    return IdentityRead.of(String.valueOf(raw));
+    return domainValues == null ? null : domainValues.get(property.token());
   }
 
   @Override
-  public AttributeConversion attribute(
+  public @Nullable String convertIdentifier(@Nullable Object value) {
+    if (value == null || unconvertibleValues.contains(value)) {
+      return null;
+    }
+    return String.valueOf(value);
+  }
+
+  @Override
+  public AttributeConversion convertAttribute(
       Object domain, String declaredType, WriteProperty<String> property) {
     Map<String, @Nullable Object> domainValues = values.get(domain);
     if (domainValues == null || !domainValues.containsKey(property.token())) {
@@ -127,61 +128,11 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
       return AttributeConversion.omitted();
     }
     Object raw = domainValues.get(property.token());
-    return raw == null
-        ? AttributeConversion.emitted(null)
-        : AttributeConversion.emitted("converted:" + raw);
-  }
-
-  @Override
-  public RelationshipValue<String> normalizeRelationship(
-      Object domain, String declaredType, WriteProperty<String> property) {
-    Object raw = domainValue(domain, property.token());
-    return switch (raw) {
-      case null ->
-          toManyRelationships.contains(property.token())
-              ? new RelationshipValue.ToMany<>(List.of(), null)
-              : new RelationshipValue.ToOne<>(null, null);
-      case RelationshipData data -> new RelationshipValue.Linkage<>(data);
-      case List<?> targets ->
-          new RelationshipValue.ToMany<>(
-              nonNullTargets(targets),
-              Objects.requireNonNull(relationshipTargetTypes.get(property.token())));
-      default ->
-          new RelationshipValue.ToOne<>(
-              raw, Objects.requireNonNull(relationshipTargetTypes.get(property.token())));
-    };
-  }
-
-  private static List<Object> nonNullTargets(List<?> targets) {
-    List<Object> domainTargets = new ArrayList<>();
-    for (Object target : targets) {
-      if (target != null) {
-        domainTargets.add(target);
-      }
-    }
-    return domainTargets;
+    return AttributeConversion.emitted(raw == null ? null : "converted:" + raw);
   }
 
   @Override
   public String effectiveType(Object domain, String declaredType) {
     return effectiveTypes.getOrDefault(domain, declaredType);
-  }
-
-  @Override
-  public Relationship enrichRelationship(
-      Object domain,
-      String declaredType,
-      WriteProperty<String> property,
-      RelationshipData linkage) {
-    enrichmentOrder.add(property.jsonapiName());
-    return new Relationship(linkage, null, relationshipMeta.get(property.token()), Map.of());
-  }
-
-  private @Nullable Object domainValue(Object domain, String propertyToken) {
-    Map<String, @Nullable Object> domainValues = values.get(domain);
-    if (domainValues == null || !domainValues.containsKey(propertyToken)) {
-      return null;
-    }
-    return domainValues.get(propertyToken);
   }
 }

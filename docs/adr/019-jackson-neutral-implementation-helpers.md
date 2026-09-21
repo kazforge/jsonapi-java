@@ -65,14 +65,15 @@ them; relationship-meta metadata exists only in matched form.
 A further extraction moved backend-neutral basic resource-write orchestration to
 `jsonapi-java-mapping`: fieldset validation and filtering, strict versus create-request identity
 rules, empty-member omission, attribute and member naming, ordinary domain-object to-one/to-many
-identifier construction, relationship `data` construction, and base `ResourceObject` assembly. Each
-adapter composes that writer through a second narrow unsupported capability interface,
-`com.kazforge.jsonapi.mapping.internal.WriteResourceBackend`, implemented over its native type and
-property tokens, mapping lookup, property access, identifier and attribute conversion, declared
-cardinality and target resolution, ordinary relationship normalization, effective native types,
-and per-relationship enrichment. Whole-meta conversion, decoration, and the advanced direct and
-`RelationshipLinkage` forms remain adapter-owned and are applied around the shared writer rather
-than folded into it.
+identifier construction, and base `ResourceObject` assembly. Each adapter composes that writer
+through a second unsupported capability interface,
+`com.kazforge.jsonapi.mapping.internal.WriteResourceBackend`, deliberately limited to native
+mechanics: mapping lookup, property access, identifier and attribute conversion, and effective
+native types. Relationship members are built by an adapter-supplied
+`com.kazforge.jsonapi.mapping.internal.BasicRelationshipWriter` phase, so relationship-container
+handling, the advanced direct and `RelationshipLinkage` forms, whole-meta conversion, decoration,
+and per-relationship enrichment stay in the existing adapter write path for later extractions
+rather than moving into a duplicated backend abstraction.
 
 The remaining helpers listed in the Decision (wire member classification and pointers,
 identifier-meta copies, and supplied PATCH markers) stay in the API artifact under

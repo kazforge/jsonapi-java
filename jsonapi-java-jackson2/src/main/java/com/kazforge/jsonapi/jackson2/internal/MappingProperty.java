@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.kazforge.jsonapi.mapping.internal.SemanticProperty;
 
-record MappingProperty(
+public record MappingProperty(
     BeanPropertyDefinition definition, AnnotatedMember accessor, SemanticProperty metadata)
     implements MappingPropertyView {
 

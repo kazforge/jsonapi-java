@@ -17,9 +17,12 @@
  *
  * <p>Native type resolution, mapping lookup, property lookup and access, relationship-container
  * handling, identifier conversion, configured conversion, relationship normalization, whole-meta
- * conversion, and resource rendering stay in each backend behind the {@link
- * com.kazforge.jsonapi.mapping.internal.InclusionBackend} and {@link
- * com.kazforge.jsonapi.mapping.internal.WriteResourceBackend} capability boundaries.
+ * conversion, and resource rendering stay in each backend. The inclusion engine reaches them
+ * through {@link com.kazforge.jsonapi.mapping.internal.InclusionBackend}; the basic writer reaches
+ * a thin {@link com.kazforge.jsonapi.mapping.internal.WriteResourceBackend} native-mechanics
+ * boundary and an adapter-supplied {@link
+ * com.kazforge.jsonapi.mapping.internal.BasicRelationshipWriter} relationship phase that keeps the
+ * advanced relationship forms and meta in their current adapter ownership.
  *
  * <p>This package is not consumer SPI. Its Java-public types exist only so backend artifacts can
  * cooperate on neutral mapping implementation. Application code must not depend on it, and backend

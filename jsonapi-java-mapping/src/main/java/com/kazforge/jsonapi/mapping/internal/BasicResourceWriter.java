@@ -2,7 +2,6 @@ package com.kazforge.jsonapi.mapping.internal;
 
 import com.kazforge.jsonapi.core.model.Attributes;
 import com.kazforge.jsonapi.core.model.JsonApiMembers;
-import com.kazforge.jsonapi.core.model.Relationship;
 import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.core.model.Relationships;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
@@ -17,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -24,16 +24,15 @@ import org.jspecify.annotations.Nullable;
 /**
  * Backend-neutral writer for basic domain-to-core resource semantics.
  *
- * <p>It owns fieldset validation and filtering, strict versus create identity rules, empty-member
- * omission, attribute and member naming, ordinary domain-object to-one/to-many identifier
- * construction, relationship {@code data} construction, and base {@link ResourceObject} assembly.
- * Native type resolution, property access, configured conversion, identifiers, relationship
- * normalization, and enrichment stay behind {@link WriteResourceBackend}; resource meta and
- * decoration are applied by the backend around this writer, not by it.
+ * <p>It owns fieldset validation and filtering, strict versus create identity rules, attribute
+ * orchestration, ordinary domain-object to-one/to-many linkage construction, member naming, and
+ * base {@link ResourceObject} assembly. Relationship members are delegated to the backend's {@link
+ * BasicRelationshipWriter} phase, which keeps the not-yet-extracted advanced forms and meta in
+ * their current adapter ownership.
  *
  * <p>Write phase order is part of the contract: the backend validates its meta targets before
- * calling {@link #writeBasic}, each selected relationship's linkage is enriched immediately after
- * it is built, and the caller applies resource meta after {@link #writeBasic} returns.
+ * calling {@link #writeBasic}, and the caller applies resource meta and decoration after {@link
+ * #writeBasic} returns.
  *
  * @param <T> opaque backend-native type token
  * @param <P> opaque backend-native property token
@@ -100,9 +99,11 @@ public final class BasicResourceWriter<T, P> {
       Object resource,
       T declaredType,
       @Nullable Set<String> allowedFields,
-      boolean allowAbsentIdentity) {
+      boolean allowAbsentIdentity,
+      BasicRelationshipWriter<T, P> relationshipWriter) {
     Objects.requireNonNull(resource, RESOURCE);
     Objects.requireNonNull(declaredType, DECLARED_TYPE);
+    Objects.requireNonNull(relationshipWriter, "relationshipWriter");
     WriteResourceDefinition<P> definition = backend.definition(declaredType);
     IdentityValues identity =
         allowAbsentIdentity
@@ -112,7 +113,7 @@ public final class BasicResourceWriter<T, P> {
             : requireIdentity(resource, definition);
     Attributes attributes = buildAttributes(resource, declaredType, definition, allowedFields);
     Relationships relationships =
-        buildRelationships(resource, declaredType, definition, allowedFields);
+        buildRelationships(resource, declaredType, definition, allowedFields, relationshipWriter);
     return new ResourceObject(
         definition.resourceType(),
         identity.id(),
@@ -151,6 +152,33 @@ public final class BasicResourceWriter<T, P> {
     return extractLocalIdValue(domain, backend.definition(declaredType).localId());
   }
 
+  /**
+   * Builds ordinary to-one linkage for one domain target, resolving its effective type and strict
+   * identity through the backend.
+   */
+  public RelationshipData singleLinkage(Object target, T declaredType) {
+    return new RelationshipData.SingleLinkage(
+        identifier(target, backend.effectiveType(target, declaredType)));
+  }
+
+  /**
+   * Builds ordinary to-many linkage for domain targets in value order, resolving each target's
+   * effective type and strict identity through the backend. An empty list stays present-empty
+   * to-many linkage.
+   */
+  public RelationshipData collectionLinkage(List<?> targets, T declaredType) {
+    if (targets.isEmpty()) {
+      return RelationshipData.IdentifierCollectionLinkage.empty();
+    }
+    List<ResourceIdentifier> identifiers = new ArrayList<>(targets.size());
+    for (Object target : targets) {
+      Object nonNullTarget = Objects.requireNonNull(target);
+      identifiers.add(
+          identifier(nonNullTarget, backend.effectiveType(nonNullTarget, declaredType)));
+    }
+    return new RelationshipData.IdentifierCollectionLinkage(identifiers);
+  }
+
   private IdentityValues requireIdentity(Object domain, WriteResourceDefinition<P> definition) {
     String id = extractIdValue(domain, definition.identifier());
     String localId = extractLocalIdValue(domain, definition.localId());
@@ -179,16 +207,23 @@ public final class BasicResourceWriter<T, P> {
     if (property == null) {
       return null;
     }
-    IdentityRead read = backend.identity(domain, property);
-    if (!read.present()) {
+    Object value = unwrapOptional(backend.readValue(domain, property));
+    if (value == null) {
       return null;
     }
-    String value = read.value();
-    if (value == null) {
+    String converted = backend.convertIdentifier(value);
+    if (converted == null) {
       throw missingIdentifier(
           domain.getClass(),
           MappingLocation.of(wireName),
           roleLabel + " converter returned null for property '" + property.logicalName() + "'");
+    }
+    return converted;
+  }
+
+  private static @Nullable Object unwrapOptional(@Nullable Object value) {
+    if (value instanceof Optional<?> optional) {
+      return optional.orElse(null);
     }
     return value;
   }
@@ -227,7 +262,7 @@ public final class BasicResourceWriter<T, P> {
     Map<String, @Nullable Object> attributes = new LinkedHashMap<>();
     for (WriteProperty<P> property : definition.attributes()) {
       if (allowedFields == null || allowedFields.contains(property.jsonapiName())) {
-        AttributeConversion converted = backend.attribute(resource, declaredType, property);
+        AttributeConversion converted = backend.convertAttribute(resource, declaredType, property);
         if (converted.emitted()) {
           attributes.put(property.jsonapiName(), converted.value());
         }
@@ -236,58 +271,29 @@ public final class BasicResourceWriter<T, P> {
     return Attributes.ofAttributes(attributes);
   }
 
+  /**
+   * Filters the mapped relationships by the selected fields, then delegates the selected properties
+   * to the backend's relationship phase in declaration order.
+   */
   private Relationships buildRelationships(
       Object resource,
       T declaredType,
       WriteResourceDefinition<P> definition,
-      @Nullable Set<String> allowedFields) {
+      @Nullable Set<String> allowedFields,
+      BasicRelationshipWriter<T, P> relationshipWriter) {
     if (definition.relationships().isEmpty()) {
       return Relationships.empty();
     }
-    Map<String, @Nullable Relationship> relationships = new LinkedHashMap<>();
+    List<WriteProperty<P>> selected = new ArrayList<>();
     for (WriteProperty<P> property : definition.relationships()) {
-      if (allowedFields != null && !allowedFields.contains(property.jsonapiName())) {
-        continue;
+      if (allowedFields == null || allowedFields.contains(property.jsonapiName())) {
+        selected.add(property);
       }
-      RelationshipData linkage = buildLinkage(resource, declaredType, property);
-      relationships.put(
-          property.jsonapiName(),
-          backend.enrichRelationship(resource, declaredType, property, linkage));
     }
-    return Relationships.ofRelationships(relationships);
-  }
-
-  private RelationshipData buildLinkage(
-      Object resource, T declaredType, WriteProperty<P> property) {
-    RelationshipValue<T> normalized =
-        backend.normalizeRelationship(resource, declaredType, property);
-    return switch (normalized) {
-      case RelationshipValue.ToOne<T>(Object target, T targetType) ->
-          target == null
-              ? RelationshipData.NullLinkage.INSTANCE
-              : new RelationshipData.SingleLinkage(
-                  identifier(target, effectiveType(target, targetType)));
-      case RelationshipValue.ToMany<T>(List<Object> targets, T targetType) ->
-          buildToManyLinkage(targets, targetType);
-      case RelationshipValue.Linkage<T>(RelationshipData data) -> data;
-    };
-  }
-
-  private RelationshipData buildToManyLinkage(
-      List<Object> targets, @Nullable T declaredTargetType) {
-    if (targets.isEmpty()) {
-      return RelationshipData.IdentifierCollectionLinkage.empty();
+    if (selected.isEmpty()) {
+      return Relationships.empty();
     }
-    T targetType = Objects.requireNonNull(declaredTargetType, "declaredTargetType");
-    List<ResourceIdentifier> identifiers = new ArrayList<>(targets.size());
-    for (Object target : targets) {
-      identifiers.add(identifier(target, effectiveType(target, targetType)));
-    }
-    return new RelationshipData.IdentifierCollectionLinkage(identifiers);
-  }
-
-  private T effectiveType(Object domain, @Nullable T declaredType) {
-    return backend.effectiveType(domain, Objects.requireNonNull(declaredType, DECLARED_TYPE));
+    return relationshipWriter.buildRelationships(resource, declaredType, List.copyOf(selected));
   }
 
   /** Extracted identity-role values; either may be null when its member is absent. */

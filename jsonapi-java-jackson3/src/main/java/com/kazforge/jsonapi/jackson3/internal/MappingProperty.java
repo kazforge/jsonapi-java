@@ -4,7 +4,7 @@ import com.kazforge.jsonapi.mapping.internal.SemanticProperty;
 import tools.jackson.databind.introspect.AnnotatedMember;
 import tools.jackson.databind.introspect.BeanPropertyDefinition;
 
-record MappingProperty(
+public record MappingProperty(
     BeanPropertyDefinition definition, AnnotatedMember accessor, SemanticProperty metadata)
     implements MappingPropertyView {
 

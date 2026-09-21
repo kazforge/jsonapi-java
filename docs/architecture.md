@@ -54,10 +54,10 @@ orchestration (fieldset validation and filtering, strict versus create identity 
 domain-object linkage construction, and base resource assembly) and the neutral mapping roles and
 per-property name metadata each adapter composes into its own write and read mapping records. Each
 adapter supplies only narrow native capability bridges for type resolution, mapping lookup,
-property access, configured conversion, relationship normalization, selective rendering, and
-relationship enrichment; whole-meta phases, decoration, advanced direct/wrapper relationship forms,
-and native diagnostics stay adapter-owned. Framework integrations, when added, depend on these
-lower-layer public contracts; no lower layer depends on a framework.
+property access, configured conversion, and selective rendering, plus a relationship phase that
+keeps whole-meta phases, decoration, the advanced direct/wrapper relationship forms, and native
+diagnostics adapter-owned. Framework integrations, when added, depend on these lower-layer public
+contracts; no lower layer depends on a framework.
 
 Within core, aggregate validation depends downward on the model, internal helpers, and validation
 types; the model and internal helpers may depend on validation, but lower responsibilities do not
