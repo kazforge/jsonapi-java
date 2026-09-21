@@ -3,7 +3,7 @@ package com.kazforge.jsonapi.jackson2.internal;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
-import com.kazforge.jsonapi.internal.mapping.PropertyRole;
+import com.kazforge.jsonapi.mapping.internal.SemanticProperty;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -18,9 +18,7 @@ record ReadMappingProperty(
     @Nullable AnnotatedMember serializationMember,
     @Nullable AnnotatedMember deserializationMember,
     @Nullable JavaType deserializationType,
-    String logicalName,
-    String jsonapiName,
-    PropertyRole role)
+    SemanticProperty metadata)
     implements MappingPropertyView {
 
   boolean deserializable() {

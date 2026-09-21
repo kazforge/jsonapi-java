@@ -32,17 +32,17 @@ record ResourceMapping(
     Map<String, MappingConstructionStart> starts = new LinkedHashMap<>();
     if (identifierProperty != null && idLocation != null) {
       starts.put(
-          identifierProperty.jacksonName(),
+          identifierProperty.externalName(),
           new MappingConstructionStart(idLocation, identifierProperty.accessor().getType()));
     }
     if (localIdProperty != null && lidLocation != null) {
       starts.put(
-          localIdProperty.jacksonName(),
+          localIdProperty.externalName(),
           new MappingConstructionStart(lidLocation, localIdProperty.accessor().getType()));
     }
     for (MappingProperty property : attributes) {
       starts.put(
-          property.jacksonName(),
+          property.externalName(),
           new MappingConstructionStart(
               com.kazforge.jsonapi.diagnostic.MappingLocation.of(
                   "attributes", property.jsonapiName()),
@@ -50,20 +50,20 @@ record ResourceMapping(
     }
     for (MappingProperty property : relationships) {
       starts.put(
-          property.jacksonName(),
+          property.externalName(),
           new MappingConstructionStart(
               RelationshipMetaSupport.relationshipLocation(property),
               property.accessor().getType()));
     }
     if (resourceMeta != null) {
       starts.put(
-          resourceMeta.jacksonName(),
+          resourceMeta.externalName(),
           new MappingConstructionStart(
               RelationshipMetaSupport.resourceMetaLocation(), resourceMeta.accessor().getType()));
     }
     for (MappingProperty property : relationshipMetaProperties) {
       starts.put(
-          property.jacksonName(),
+          property.externalName(),
           new MappingConstructionStart(
               RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()),
               property.accessor().getType()));

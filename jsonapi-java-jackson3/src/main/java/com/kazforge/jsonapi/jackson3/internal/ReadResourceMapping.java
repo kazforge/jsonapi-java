@@ -36,35 +36,35 @@ record ReadResourceMapping(
     Map<String, MappingConstructionStart> starts = new LinkedHashMap<>();
     if (identifierProperty != null && idLocation != null) {
       starts.put(
-          identifierProperty.jacksonName(),
+          identifierProperty.externalName(),
           new MappingConstructionStart(idLocation, identifierProperty.type()));
     }
     if (localIdProperty != null && lidLocation != null) {
       starts.put(
-          localIdProperty.jacksonName(),
+          localIdProperty.externalName(),
           new MappingConstructionStart(lidLocation, localIdProperty.type()));
     }
     for (ReadMappingProperty property : attributes) {
       starts.put(
-          property.jacksonName(),
+          property.externalName(),
           new MappingConstructionStart(
               MappingLocation.of("attributes", property.jsonapiName()), property.type()));
     }
     for (ReadMappingProperty property : relationships) {
       starts.put(
-          property.jacksonName(),
+          property.externalName(),
           new MappingConstructionStart(
               RelationshipMetaSupport.relationshipLocation(property), property.type()));
     }
     if (resourceMeta != null) {
       starts.put(
-          resourceMeta.jacksonName(),
+          resourceMeta.externalName(),
           new MappingConstructionStart(
               RelationshipMetaSupport.resourceMetaLocation(), resourceMeta.type()));
     }
     for (ReadMappingProperty property : relationshipMetaProperties) {
       starts.put(
-          property.jacksonName(),
+          property.externalName(),
           new MappingConstructionStart(
               RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()),
               property.type()));

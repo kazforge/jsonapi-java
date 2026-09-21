@@ -1,15 +1,11 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import com.kazforge.jsonapi.internal.mapping.PropertyRole;
+import com.kazforge.jsonapi.mapping.internal.SemanticProperty;
 import tools.jackson.databind.introspect.AnnotatedMember;
 import tools.jackson.databind.introspect.BeanPropertyDefinition;
 
 record MappingProperty(
-    BeanPropertyDefinition definition,
-    AnnotatedMember accessor,
-    String logicalName,
-    String jsonapiName,
-    PropertyRole role)
+    BeanPropertyDefinition definition, AnnotatedMember accessor, SemanticProperty metadata)
     implements MappingPropertyView {
 
   @Override

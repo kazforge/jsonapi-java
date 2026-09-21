@@ -11,10 +11,19 @@ first-encounter order, included deduplication and conflict checks, traversal lim
 sparse-fieldset linkage exemptions. It also owns the neutral per-invocation inclusion state and
 effective-representation fieldset lookup used by selective rendering and traversal alike.
 
+It also owns the backend-neutral mapping roles and the per-property semantic metadata that
+adapters compose into their own write and read mapping records: role, logical backend property
+identity, configured backend external name, and JSON:API member name. The adapter-independent
+role/name invariants are enforced when that value is constructed, so identifier roles always name
+`id`/`lid`, resource meta always names `meta`, and attributes and relationships use their backend
+external name. Relationship-meta metadata is valid only in matched form, carrying the target
+relationship's JSON:API name; an unresolved annotation target stays resolver-local.
+
 Native type resolution, property lookup and access, relationship-container handling, identifier
 conversion, and selective resource rendering stay in each backend behind the
-`InclusionBackend` capability bridge. This module imports no Jackson-major or concrete-adapter
-package.
+`InclusionBackend` capability bridge. Adapter write and read property records remain backend-owned;
+only the semantic value they compose is shared. This module imports no Jackson-major or
+concrete-adapter package.
 
 ## Boundary
 

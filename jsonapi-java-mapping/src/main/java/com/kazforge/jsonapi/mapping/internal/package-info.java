@@ -3,9 +3,15 @@
  *
  * <p>This package owns backend-neutral compound-inclusion semantics: include-path validation,
  * breadth-first traversal, identity aliasing, first-encounter order, deduplication and conflict
- * checks, traversal limits, and sparse-fieldset linkage exemptions. Native type resolution,
- * property lookup and access, relationship-container handling, identifier conversion, and resource
- * rendering stay in each backend behind the {@link
+ * checks, traversal limits, and sparse-fieldset linkage exemptions. It also owns the neutral {@link
+ * com.kazforge.jsonapi.mapping.internal.PropertyRole} enum and the {@link
+ * com.kazforge.jsonapi.mapping.internal.SemanticProperty} value that adapters compose into their
+ * own write and read mapping records: role, logical backend property identity, configured backend
+ * external name, and JSON:API member name, with the adapter-independent role and name invariants
+ * enforced on construction.
+ *
+ * <p>Native type resolution, property lookup and access, relationship-container handling,
+ * identifier conversion, and resource rendering stay in each backend behind the {@link
  * com.kazforge.jsonapi.mapping.internal.InclusionBackend} capability boundary.
  *
  * <p>This package is not consumer SPI. Its Java-public types exist only so backend artifacts can

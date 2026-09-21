@@ -15,7 +15,7 @@ runtime.
 | [`com.kazforge.jsonapi.patch`](src/main/java/com/kazforge/jsonapi/patch/package-info.java) | Presence, command, change, and structured PATCH contracts |
 | [`com.kazforge.jsonapi.representation`](src/main/java/com/kazforge/jsonapi/representation/package-info.java) | Include/fieldset selection and application policy |
 | [`com.kazforge.jsonapi.diagnostic`](src/main/java/com/kazforge/jsonapi/diagnostic/package-info.java) | Stable codec/mapping diagnostics and locations |
-| `com.kazforge.jsonapi.internal.mapping` | Unsupported shared mapping bookkeeping used only for adapter cooperation |
+| `com.kazforge.jsonapi.internal.mapping` | Unsupported shared identifier-meta and resource-type bookkeeping used only for adapter cooperation |
 | `com.kazforge.jsonapi.internal.patch` | Unsupported shared typed-PATCH bridge state used only for adapter cooperation |
 | `com.kazforge.jsonapi.internal.wire` | Unsupported shared wire-reading support used only for adapter cooperation |
 
@@ -24,9 +24,10 @@ properties, JSON:API member names, document envelopes, selections, and diagnosti
 Jackson 2 and Jackson 3 adapters derive observable property semantics through caller-configured
 Jackson (discovery, visibility, external names, construction, and conversion), and native
 type/property handles, introspection, naming, serializers, deserializers, parser/generator
-mechanics, and wire codecs remain adapter-owned. Backend-neutral compound-inclusion traversal and
-inclusion bookkeeping are owned by [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md).
-`id` and `lid` stay invariant JSON:API role names.
+mechanics, and wire codecs remain adapter-owned. Backend-neutral compound-inclusion traversal,
+inclusion bookkeeping, mapping roles, and per-property naming metadata are owned by
+[`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). `id` and `lid` stay invariant JSON:API
+role names.
 
 ## Level-1 contract
 

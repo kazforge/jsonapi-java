@@ -10,7 +10,6 @@ import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.diagnostic.SourceLocation
 import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport
-import com.kazforge.jsonapi.internal.mapping.PropertyRole
 import com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch
 import com.kazforge.jsonapi.internal.patch.PresenceMarker
 import com.kazforge.jsonapi.internal.wire.JsonPointerAccumulator
@@ -209,16 +208,8 @@ class JacksonInternalHelpersSpec extends Specification {
     overlaid.additionalMembers() == ['ext:member': 'value']
   }
 
-  def "mapping roles and supplied presence state remain neutral values"() {
+  def "supplied presence state remains a neutral value"() {
     expect:
-    PropertyRole.values()*.name() == [
-      'ID',
-      'LOCAL_ID',
-      'ATTRIBUTE',
-      'RELATIONSHIP',
-      'RESOURCE_META',
-      'RELATIONSHIP_META'
-    ]
     new PresenceMarker(false, null) == new PresenceMarker(false, null)
     new PresenceMarker(true, 'value').present()
     new PresenceMarker(true, 'value').value() == 'value'
