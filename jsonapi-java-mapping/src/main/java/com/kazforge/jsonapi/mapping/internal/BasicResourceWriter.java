@@ -292,7 +292,6 @@ public final class BasicResourceWriter<T, P> {
       return RelationshipData.IdentifierCollectionLinkage.empty();
     }
     boolean hasIdentifier = false;
-    Object firstNonIdentifier = null;
     List<ResourceIdentifier> identifiers = new ArrayList<>();
     List<Object> domainObjects = new ArrayList<>();
     for (Object item : items) {
@@ -303,14 +302,11 @@ public final class BasicResourceWriter<T, P> {
         hasIdentifier = true;
         identifiers.add(resourceIdentifier);
       } else {
-        if (firstNonIdentifier == null) {
-          firstNonIdentifier = item;
-        }
         domainObjects.add(item);
       }
     }
-    if (hasIdentifier && firstNonIdentifier != null) {
-      throw mixedToManyElements(firstNonIdentifier, relationshipLocation(property));
+    if (hasIdentifier && !domainObjects.isEmpty()) {
+      throw mixedToManyElements(domainObjects.getFirst(), relationshipLocation(property));
     }
     if (hasIdentifier) {
       return new RelationshipData.IdentifierCollectionLinkage(identifiers);
@@ -321,7 +317,7 @@ public final class BasicResourceWriter<T, P> {
     return collectionLinkage(
         domainObjects,
         targetResolver.resolveTarget(
-            firstNonIdentifier, shape.ordinaryTarget(), relationshipLocation(property)));
+            domainObjects.getFirst(), shape.ordinaryTarget(), relationshipLocation(property)));
   }
 
   private RelationshipData toManyWrapperLinkage(
