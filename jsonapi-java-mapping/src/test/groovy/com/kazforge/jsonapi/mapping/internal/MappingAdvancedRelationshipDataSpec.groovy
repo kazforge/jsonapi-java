@@ -90,7 +90,7 @@ class MappingAdvancedRelationshipDataSpec extends Specification {
     backend.define('articles', property(ID, 'id', 'id', 'id'))
     backend.define('people', property(ID, 'id', 'id', 'id'))
     def target = domain('id': 'p1')
-    def shape = RelationshipShape.wrapper(false, 'people', 'authorMeta', RelationshipShape.ordinary(false, 'people'))
+    def shape = RelationshipShape.wrapper(false, 'authorMeta', RelationshipShape.ordinary(false, 'people'))
 
     when:
     def linkage = writer.relationshipData(domain(), authorProperty(), shape, new RelationshipLinkage<>(target, null), backend.observingTargetResolver(), backend.observingMetaEnricher())
@@ -110,7 +110,7 @@ class MappingAdvancedRelationshipDataSpec extends Specification {
     backend.define('articles', property(ID, 'id', 'id', 'id'))
     backend.define('people', property(ID, 'id', 'id', 'id'))
     def target = domain('id': 'p1')
-    def shape = RelationshipShape.wrapper(false, 'people', 'authorMeta', RelationshipShape.ordinary(false, 'people'))
+    def shape = RelationshipShape.wrapper(false, 'authorMeta', RelationshipShape.ordinary(false, 'people'))
 
     when:
     def linkage = writer.relationshipData(domain(), authorProperty(), shape, new RelationshipLinkage<>(target, 'editor'), backend.observingTargetResolver(), backend.observingMetaEnricher())
@@ -282,7 +282,7 @@ class MappingAdvancedRelationshipDataSpec extends Specification {
     backend.define('comments', property(ID, 'id', 'id', 'id'))
     def first = domain('id': 'c1')
     def second = domain('id': 'c2')
-    def shape = RelationshipShape.wrapper(true, 'comments', 'commentMeta', RelationshipShape.ordinary(false, 'comments'))
+    def shape = RelationshipShape.wrapper(true, 'commentMeta', RelationshipShape.ordinary(false, 'comments'))
 
     when:
     def linkage = writer.relationshipData(
@@ -312,7 +312,7 @@ class MappingAdvancedRelationshipDataSpec extends Specification {
 
   def "rejects a to-many wrapper item that is not a RelationshipLinkage"() {
     given:
-    def shape = RelationshipShape.wrapper(true, 'comments', 'commentMeta', RelationshipShape.ordinary(false, 'comments'))
+    def shape = RelationshipShape.wrapper(true, 'commentMeta', RelationshipShape.ordinary(false, 'comments'))
 
     when:
     writer.relationshipData(domain(), commentsProperty(), shape, nullableList('not a wrapper'), backend.observingTargetResolver(), backend.observingMetaEnricher())
@@ -328,7 +328,7 @@ class MappingAdvancedRelationshipDataSpec extends Specification {
 
   def "fails a to-one wrapper occurrence whose target maps to explicit-null linkage"() {
     given:
-    def shape = RelationshipShape.wrapper(false, 'people', 'authorMeta', RelationshipShape.ordinary(false, 'people'))
+    def shape = RelationshipShape.wrapper(false, 'authorMeta', RelationshipShape.ordinary(false, 'people'))
 
     when:
     writer.relationshipData(domain(), authorProperty(), shape, new RelationshipLinkage<>(Optional.empty(), null), backend.observingTargetResolver(), backend.observingMetaEnricher())
@@ -350,7 +350,7 @@ class MappingAdvancedRelationshipDataSpec extends Specification {
         new RelationshipData.IdentifierCollectionLinkage([
           ResourceIdentifier.of('comments', 'c1')
         ])
-    def shape = RelationshipShape.wrapper(false, 'people', 'authorMeta', RelationshipShape.ordinary(false, 'people'))
+    def shape = RelationshipShape.wrapper(false, 'authorMeta', RelationshipShape.ordinary(false, 'people'))
 
     when:
     writer.relationshipData(domain(), authorProperty(), shape, new RelationshipLinkage<>(collectionTarget, null), backend.observingTargetResolver(), backend.observingMetaEnricher())
@@ -375,7 +375,7 @@ class MappingAdvancedRelationshipDataSpec extends Specification {
 
   def "rejects a wrapper-declared to-one value that is not a RelationshipLinkage"() {
     given:
-    def shape = RelationshipShape.wrapper(false, 'people', 'authorMeta', RelationshipShape.ordinary(false, 'people'))
+    def shape = RelationshipShape.wrapper(false, 'authorMeta', RelationshipShape.ordinary(false, 'people'))
 
     when:
     writer.relationshipData(domain(), authorProperty(), shape, domain('id': 'p1'), backend.observingTargetResolver(), backend.observingMetaEnricher())

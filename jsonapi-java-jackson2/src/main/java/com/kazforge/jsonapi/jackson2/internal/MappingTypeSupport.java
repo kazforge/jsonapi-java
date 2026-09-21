@@ -25,7 +25,7 @@ final class MappingTypeSupport {
   /**
    * Derives the neutral write shape of one mapped relationship property: declared cardinality, the
    * ordinary declared target token, and — for opt-in {@code RelationshipLinkage} properties — the
-   * wrapper's target/meta tokens with the target's own recursively derived shape. The ordinary
+   * wrapper's identifier-meta token with the target's own recursively derived shape. The ordinary
    * target token is returned unresolved; the shared writer consults it lazily through the backend's
    * target-resolution callback.
    */
@@ -38,7 +38,7 @@ final class MappingTypeSupport {
     }
     JavaType target = linkageTargetType(linkageType);
     return RelationshipShape.wrapper(
-        toMany, target, linkageMetaType(linkageType), relationshipShape(target));
+        toMany, linkageMetaType(linkageType), relationshipShape(target));
   }
 
   static boolean isToManyType(JavaType type) {

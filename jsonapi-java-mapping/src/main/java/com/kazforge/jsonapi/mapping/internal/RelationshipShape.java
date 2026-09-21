@@ -11,10 +11,10 @@ import org.jspecify.annotations.Nullable;
  * <p>The shape carries the declared to-one/to-many cardinality and the backend-native type tokens
  * the shared writer cannot introspect. An {@link Ordinary} relationship carries the ordinary
  * declared target token, which may be unresolvable and stays nullable; a {@link Wrapped}
- * relationship declares the opt-in {@code RelationshipLinkage<T, M>} wrapper with its target and
- * identifier-meta tokens plus the target's own recursively derived shape. Tokens are never resolved
+ * relationship declares the opt-in {@code RelationshipLinkage<T, M>} wrapper with its
+ * identifier-meta token plus the target's own recursively derived shape. Tokens are never resolved
  * or validated eagerly: the shared writer consults the ordinary target token only after
- * normalization selects the ordinary domain-object branch, and the wrapper tokens only inside
+ * normalization selects the ordinary domain-object branch, and the wrapper meta token only inside
  * wrapper occurrence handling.
  *
  * <p>Tokens are deliberately opaque to the shared mapping domain: a backend may use Jackson types
@@ -39,12 +39,11 @@ public sealed interface RelationshipShape<T>
     return null;
   }
 
-  /** Declared wrapper target and identifier-meta tokens plus the target's own shape. */
-  record Wrapped<T>(boolean toMany, T target, @Nullable T meta, RelationshipShape<T> targetShape)
+  /** Declared wrapper identifier-meta token plus the target's own shape. */
+  record Wrapped<T>(boolean toMany, @Nullable T meta, RelationshipShape<T> targetShape)
       implements RelationshipShape<T> {
 
     public Wrapped {
-      Objects.requireNonNull(target, "target");
       Objects.requireNonNull(targetShape, "targetShape");
     }
   }
@@ -69,10 +68,7 @@ public sealed interface RelationshipShape<T>
    * applied when a wrapper occurrence's target is mapped.
    */
   static <T> RelationshipShape<T> wrapper(
-      boolean toMany,
-      T declaredTarget,
-      @Nullable T declaredMeta,
-      RelationshipShape<T> targetShape) {
-    return new RelationshipShape.Wrapped<>(toMany, declaredTarget, declaredMeta, targetShape);
+      boolean toMany, @Nullable T declaredMeta, RelationshipShape<T> targetShape) {
+    return new RelationshipShape.Wrapped<>(toMany, declaredMeta, targetShape);
   }
 }
