@@ -11,7 +11,6 @@ import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import com.kazforge.jsonapi.mapping.internal.MappingFakeWriteResourceBackend.MetaEnrichment
-import com.kazforge.jsonapi.mapping.internal.MappingFakeWriteResourceBackend.TargetResolution
 import spock.lang.Specification
 
 class MappingAdvancedRelationshipDataSpec extends Specification {
