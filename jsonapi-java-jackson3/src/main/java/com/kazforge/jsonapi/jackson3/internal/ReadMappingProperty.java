@@ -1,6 +1,6 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import com.kazforge.jsonapi.internal.mapping.PropertyRole;
+import com.kazforge.jsonapi.mapping.internal.SemanticProperty;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.introspect.AnnotatedMember;
@@ -18,9 +18,7 @@ record ReadMappingProperty(
     @Nullable AnnotatedMember serializationMember,
     @Nullable AnnotatedMember deserializationMember,
     @Nullable JavaType deserializationType,
-    String logicalName,
-    String jsonapiName,
-    PropertyRole role)
+    SemanticProperty metadata)
     implements MappingPropertyView {
 
   boolean deserializable() {

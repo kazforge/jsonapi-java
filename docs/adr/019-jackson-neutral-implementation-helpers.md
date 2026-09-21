@@ -54,6 +54,14 @@ implementation detail for backend cooperation, not a public facade, consumer SPI
 mapper, or general traversal SPI; supported backend signatures must not expose it. The
 no-new-artifact and unchanged-dependency-direction conclusions above therefore no longer apply.
 
-The remaining helpers listed in the Decision (wire member classification and pointers, mapping
-roles and identifier-meta copies, and supplied PATCH markers) stay in the API artifact under
+A later extraction moved the neutral mapping-role enum and added backend-neutral per-property
+semantic metadata to `jsonapi-java-mapping`: role, logical backend property identity, configured
+backend external name, and JSON:API member name, with the adapter-independent role and name
+invariants enforced on construction. The API artifact no longer carries
+`com.kazforge.jsonapi.internal.mapping.PropertyRole`. Each adapter still owns its write and read
+property records, native handles, and type models, and composes the shared semantic value into
+them; relationship-meta metadata exists only in matched form.
+
+The remaining helpers listed in the Decision (wire member classification and pointers,
+identifier-meta copies, and supplied PATCH markers) stay in the API artifact under
 `com.kazforge.jsonapi.internal` until a later extraction moves them.
