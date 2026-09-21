@@ -58,6 +58,28 @@ abstract class InclusionFieldsetCharacterizationSpec extends Specification {
     included[0].attributes == ["body": "Nice"]
   }
 
+  def "writes nested include intermediates before the resources reached through them"() {
+    given:
+    def linkedComments = List.of(
+        new Comment("c1", "Nice", new Person("p1", "Ann")),
+        new Comment("c2", "Also", new Person("p2", "Bea")))
+    def selection = RepresentationSelection.builder().include("comments.author").build()
+    def json = api().resources().writeOne(
+        new Article("1", "T", "B", linkedComments, null),
+        ResourceWriteOptions.defaults().withSelection(selection))
+    def document = parse(json)
+
+    expect:
+    def included = document.included as List
+    included*.type == [
+      "comments",
+      "comments",
+      "people",
+      "people"
+    ]
+    included*.id == ["c1", "c2", "p1", "p2"]
+  }
+
   def "writes an explicit include request that resolves to no resources as an empty included member"() {
     given:
     def selection = RepresentationSelection.builder().includeRequested().build()

@@ -13,13 +13,13 @@ import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
 import com.kazforge.jsonapi.internal.mapping.PropertyRole;
-import com.kazforge.jsonapi.internal.representation.EffectiveRepresentation;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.RelationshipDecoration;
 import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import com.kazforge.jsonapi.mapping.ResourceDecoration;
 import com.kazforge.jsonapi.mapping.ResourceDecorator;
 import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry;
+import com.kazforge.jsonapi.mapping.internal.EffectiveRepresentation;
 import com.kazforge.jsonapi.representation.FieldPolicy;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -106,7 +106,7 @@ public final class DomainResourceWriter {
     Objects.requireNonNull(representation, REPRESENTATION);
     requireAssignable(resource, declaredType);
     ResourceMapping mapping = mappingFor(declaredType);
-    List<String> fields = fieldsFor(representation, mapping.resourceType());
+    List<String> fields = representation.fieldsFor(mapping.resourceType());
     if (fields != null) {
       validateFieldset(resource.getClass(), mapping, fields, representation.policy().fieldPolicy());
     }
@@ -126,7 +126,7 @@ public final class DomainResourceWriter {
     Objects.requireNonNull(representation, REPRESENTATION);
     requireAssignable(resource, declaredType);
     ResourceMapping mapping = mappingFor(declaredType);
-    List<String> fields = fieldsFor(representation, mapping.resourceType());
+    List<String> fields = representation.fieldsFor(mapping.resourceType());
     if (fields != null) {
       validateFieldset(resource.getClass(), mapping, fields, representation.policy().fieldPolicy());
     }
@@ -160,22 +160,6 @@ public final class DomainResourceWriter {
         buildResourceObject(
             mapping, identity.id(), identity.localId(), attributes, relationships, meta);
     return decorateResource(resource, declaredType, mapping, base, allowedFields);
-  }
-
-  /**
-   * Resolves the fieldset list for {@code resourceType}: {@code null} when the type key is absent
-   * (unrestricted), otherwise the stored list (possibly empty, selecting no
-   * attributes/relationships).
-   */
-  public static @Nullable List<String> fieldsFor(
-      EffectiveRepresentation representation, String resourceType) {
-    Objects.requireNonNull(representation, REPRESENTATION);
-    Objects.requireNonNull(resourceType, "resourceType");
-    Map<String, List<String>> fieldsets = representation.selection().fieldsets();
-    if (!fieldsets.containsKey(resourceType)) {
-      return null;
-    }
-    return fieldsets.get(resourceType);
   }
 
   private static void validateFieldset(

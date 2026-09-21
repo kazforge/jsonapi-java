@@ -5,9 +5,16 @@ published on the unified release train so backend runtime implementations can co
 is not supported consumer API.
 
 The [`com.kazforge.jsonapi.mapping.internal`](src/main/java/com/kazforge/jsonapi/mapping/internal/package-info.java)
-package owns no mapping behavior yet: no descriptor, writer, binder, token abstraction, interface,
-or marker type. Existing `com.kazforge.jsonapi.internal` helpers stay in `jsonapi-java-api` until
-a later extraction moves them.
+package owns backend-neutral compound-inclusion semantics for mapped resources: include-path
+validation, breadth-first traversal of intermediate and nested resources, identity aliasing,
+first-encounter order, included deduplication and conflict checks, traversal limits, and
+sparse-fieldset linkage exemptions. It also owns the neutral per-invocation inclusion state and
+effective-representation fieldset lookup used by selective rendering and traversal alike.
+
+Native type resolution, property lookup and access, relationship-container handling, identifier
+conversion, and selective resource rendering stay in each backend behind the
+`InclusionBackend` capability bridge. This module imports no Jackson-major or concrete-adapter
+package.
 
 ## Boundary
 
@@ -17,5 +24,6 @@ a later extraction moves them.
 - Application code must not depend on this package.
 
 See the [architecture overview](../docs/architecture.md),
+[ADR-005](../docs/adr/005-domain-mapping-and-inclusion.md),
 [ADR-007](../docs/adr/007-module-boundaries.md), and
 [ADR-019](../docs/adr/019-jackson-neutral-implementation-helpers.md).

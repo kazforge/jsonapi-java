@@ -19,8 +19,9 @@ Keep these responsibility boundaries:
   representation, diagnostic, and PATCH contracts. It contains no Jackson mechanics or runtime
   dependency; [ADR-018](018-level-one-application-api-contract.md) owns its Level-1 operation seam.
 - `jsonapi-java-mapping` owns the internal cross-artifact mapping implementation namespace
-  consumed by backend runtimes. It depends on the neutral API and is published on the unified
-  release train, but it is unsupported consumer API and currently carries no mapping behavior.
+  consumed by backend runtimes, including backend-neutral compound-inclusion traversal and
+  inclusion state. It depends on the neutral API and is published on the unified release train,
+  but it is unsupported consumer API.
 - `jsonapi-java-jackson3` and `jsonapi-java-jackson2` are separately compiled native-major
   implementations of those contracts. They do not share a runtime artifact or detect a major at
   runtime. Each backend depends on mapping while retaining its direct API, annotations, and core
