@@ -6,12 +6,13 @@ import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.document.DocumentEnvelope;
-import com.kazforge.jsonapi.internal.representation.EffectiveRepresentation;
-import com.kazforge.jsonapi.internal.representation.IncludedResourcesResult;
-import com.kazforge.jsonapi.jackson3.internal.CompoundInclusionEngine;
 import com.kazforge.jsonapi.jackson3.internal.DomainResourceWriter;
+import com.kazforge.jsonapi.jackson3.internal.Jackson3InclusionBackend;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.MappedDocument;
+import com.kazforge.jsonapi.mapping.internal.CompoundInclusionEngine;
+import com.kazforge.jsonapi.mapping.internal.EffectiveRepresentation;
+import com.kazforge.jsonapi.mapping.internal.IncludedResourcesResult;
 import com.kazforge.jsonapi.representation.RepresentationPolicy;
 import com.kazforge.jsonapi.representation.RepresentationSelection;
 import java.util.ArrayList;
@@ -73,11 +74,11 @@ public final class JsonApiResourceMapper {
   private static final String RESOURCE_TYPE = "resourceType";
 
   private final DomainResourceWriter writer;
-  private final CompoundInclusionEngine inclusionEngine;
+  private final CompoundInclusionEngine<JavaType> inclusionEngine;
 
   JsonApiResourceMapper(DomainResourceWriter writer) {
     this.writer = Objects.requireNonNull(writer, "writer");
-    this.inclusionEngine = new CompoundInclusionEngine(writer);
+    this.inclusionEngine = new CompoundInclusionEngine<>(new Jackson3InclusionBackend(writer));
   }
 
   /** Maps a domain object using a Jackson type inferred from its concrete runtime class. */

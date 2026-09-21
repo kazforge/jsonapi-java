@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.internal.representation;
+package com.kazforge.jsonapi.mapping.internal;
 
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceIdentity;
@@ -17,11 +17,11 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Jackson-free state for one compound-inclusion collection operation.
+ * Backend-free state for one compound-inclusion collection operation.
  *
- * <p>The adapters retain include-path validation and traversal. This state owns only identity alias
- * recognition, included-resource ordering and deduplication, sparse-fieldset exemptions, and the
- * count/conflict diagnostics needed while traversal offers already-rendered resources.
+ * <p>The shared engine owns include-path validation and traversal. This state owns only identity
+ * alias recognition, included-resource ordering and deduplication, sparse-fieldset exemptions, and
+ * the count/conflict diagnostics needed while traversal offers already-rendered resources.
  */
 public final class CompoundInclusionState {
 

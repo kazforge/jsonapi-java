@@ -12,24 +12,13 @@ sonar {
         property("sonar.organization", "kazemek")
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.qualitygate.wait", "true")
-        // The mapping foundation module intentionally ships only its documented
-        // package-info namespace anchor until the first extraction moves behavior there;
-        // a package-info-only package is the deliverable, not clutter.
-        property("sonar.issue.ignore.multicriteria", "mapping-foundation-package-info")
-        property(
-            "sonar.issue.ignore.multicriteria.mapping-foundation-package-info.ruleKey",
-            "java:S4032",
-        )
-        property(
-            "sonar.issue.ignore.multicriteria.mapping-foundation-package-info.resourceKey",
-            "jsonapi-java-mapping/src/main/java/com/kazforge/jsonapi/mapping/internal/package-info.java",
-        )
         // Intentional Jackson 2/Jackson 3 parity duplication: these Jackson 2 production files are
         // adapter-local adaptations of their Jackson 3 counterparts (document codec, read-side,
-        // typed domain envelope, write-side domain mapping engine, flat DTO resource binding, and
-        // presence-aware PATCH binding), kept adapter-local for Jackson-major isolation per ADR-007.
-        // Jackson-major-neutral implementation bookkeeping is shared in jsonapi-java-api; do not exclude
-        // whole packages.
+        // typed domain envelope, write-side domain mapping engine, inclusion capability bridge,
+        // flat DTO resource binding, and presence-aware PATCH binding), kept adapter-local for
+        // Jackson-major isolation per ADR-007. Jackson-major-neutral implementation bookkeeping and
+        // compound-inclusion traversal are shared in jsonapi-java-mapping; do not exclude whole
+        // packages.
         // Paths must be repository-root-relative; module-relative `src/main/java/...` at project
         // level is deprecated by SonarCloud.
         property(
@@ -51,7 +40,7 @@ sonar {
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/mapping/RelationshipLinkageMapper.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/BeanConstruction.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/BinderMetaConverter.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/CompoundInclusionEngine.java,
+            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/Jackson2InclusionBackend.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/DocumentWireReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/DomainPatchBinder.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/DomainPatchDtoBinder.java,

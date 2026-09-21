@@ -34,7 +34,7 @@ authorization, query execution, relationship mutation, and application of PATCH 
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable wire model, local invariants, aggregate validation | None |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free semantic mapping roles | None |
 | [`jsonapi-java-api`](../jsonapi-java-api/README.md) | Backend-independent application, document, mapping, representation, diagnostic, and PATCH contracts currently implemented by configured Jackson | Core |
-| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; published but unsupported consumer API | API |
+| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; owns backend-neutral compound-inclusion traversal, identity/order/limit policy, and sparse-fieldset linkage exemptions; published but unsupported consumer API | API |
 | [`jsonapi-java-query`](../jsonapi-java-query/README.md) | Neutral query selection parsing and opaque parameter preservation | Core and neutral Jackson representation contracts |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Native Jackson 3 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
 | [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Native Jackson 2 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
@@ -47,7 +47,10 @@ separately compiled native-major integrations. There is no runtime-major detecti
 lowest-common-denominator Jackson abstraction. The neutral API contains no Jackson-major imports;
 configured Jackson remains the current property authority, and native type/property handles,
 introspection, naming, construction, conversion, serializers, deserializers, parser/generator
-mechanics, and wire codecs remain adapter-owned. Framework integrations, when added, depend on
+mechanics, and wire codecs remain adapter-owned. Backend-neutral compound-inclusion path
+validation, traversal, identity/order/deduplication, limits, and sparse-fieldset omission decisions
+live once in `jsonapi-java-mapping`; each adapter supplies only a native capability bridge for type
+resolution, property access, and selective rendering. Framework integrations, when added, depend on
 these lower-layer public contracts; no lower layer depends on a framework.
 
 Within core, aggregate validation depends downward on the model, internal helpers, and validation
@@ -90,9 +93,10 @@ flowchart LR
 ```
 
 Mapped relationships produce linkage. Compound inclusion requires both operation-scoped selection
-and application-scoped policy; decoration only adds links to already mapped resources and
-relationships. Sparse-fieldset linkage exemptions remain provenance on `MappedDocument`, which the
-writer composes into validation. Callers do not translate mapping state into validation policy.
+and application-scoped policy; the backend-neutral traversal lives in `jsonapi-java-mapping` behind
+an adapter-supplied native capability bridge. Decoration only adds links to already mapped resources
+and relationships. Sparse-fieldset linkage exemptions remain provenance on `MappedDocument`, which
+the writer composes into validation. Callers do not translate mapping state into validation policy.
 
 The neutral Level-1 `JsonApi` contract coordinates common resource, relationship, document, and
 PATCH operations. Major-specific capability APIs remain public for explicit codec, mapping,
@@ -110,6 +114,7 @@ owns that boundary.
 | Java property discovery, visibility, external names, mix-ins, creators, serializers, deserializers, and conversion | Caller-configured Jackson |
 | Include paths and fieldsets for one operation | `RepresentationSelection` |
 | Allowed fields/includes and traversal limits | Application/runtime `RepresentationPolicy` |
+| Compound-inclusion traversal order, identity aliasing, deduplication, and limits | `jsonapi-java-mapping` internal engine |
 | Persistence, authorization, HTTP behavior, query execution, and applying updates | Application |
 
 Adapters are constructed from configured mapper instances and never mutate the caller's mapper.

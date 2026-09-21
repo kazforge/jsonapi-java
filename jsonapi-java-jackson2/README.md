@@ -48,8 +48,9 @@ Advanced mapping accepts a complete Jackson `JavaType` when a parameterized root
 from its runtime class. Typed documents use an explicit neutral `ResourceTypeRegistry`; included DTOs
 remain independently bound rather than being injected into relationships. Shared representation,
 meta, identifier, decoration, and PATCH semantics are owned by
-[`jsonapi-java-api`](../jsonapi-java-api/README.md), public Javadocs, and the linked
-ADRs rather than repeated here.
+[`jsonapi-java-api`](../jsonapi-java-api/README.md); backend-neutral compound-inclusion traversal and
+inclusion state are owned by [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). Public
+Javadocs and the linked ADRs own the remaining details rather than repeated here.
 
 ## Jackson 2 boundary
 

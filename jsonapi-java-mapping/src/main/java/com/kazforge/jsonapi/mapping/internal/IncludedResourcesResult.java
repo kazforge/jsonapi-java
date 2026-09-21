@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.internal.representation;
+package com.kazforge.jsonapi.mapping.internal;
 
 import com.kazforge.jsonapi.core.model.ResourceIdentity;
 import com.kazforge.jsonapi.core.model.ResourceObject;

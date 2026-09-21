@@ -5,5 +5,6 @@ plugins {
 
 dependencies {
     implementation(project(":jsonapi-java-api"))
+    testCompileOnly(libs.jspecify)
     testImplementation(libs.archunit)
 }

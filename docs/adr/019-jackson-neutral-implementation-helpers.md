@@ -41,7 +41,19 @@ being redeclared.
 
 ## Partial supersession
 
-The published-but-unsupported `jsonapi-java-mapping` artifact now exists as the future home for
-this shared boundary, so the no-new-artifact and unchanged-dependency-direction conclusions above
-no longer apply. Existing helper ownership is unchanged: the helpers listed in this record remain
-in the API artifact under `com.kazforge.jsonapi.internal` until a later extraction moves them.
+The published-but-unsupported `jsonapi-java-mapping` artifact now owns the first extraction from
+this shared boundary. Compound-inclusion path validation, traversal, identity, order, count,
+conflict, and sparse-fieldset-exemption behavior moved there together with the neutral
+per-invocation inclusion state and effective-representation fieldset lookup; the API artifact no
+longer carries `com.kazforge.jsonapi.internal.representation`.
+
+That extraction introduces one narrow unsupported capability interface,
+`com.kazforge.jsonapi.mapping.internal.InclusionBackend`, which each backend implements over its
+native type tokens, mapping definitions, property access, and selective rendering. It is
+implementation detail for backend cooperation, not a public facade, consumer SPI, neutral parser or
+mapper, or general traversal SPI; supported backend signatures must not expose it. The
+no-new-artifact and unchanged-dependency-direction conclusions above therefore no longer apply.
+
+The remaining helpers listed in the Decision (wire member classification and pointers, mapping
+roles and identifier-meta copies, and supplied PATCH markers) stay in the API artifact under
+`com.kazforge.jsonapi.internal` until a later extraction moves them.

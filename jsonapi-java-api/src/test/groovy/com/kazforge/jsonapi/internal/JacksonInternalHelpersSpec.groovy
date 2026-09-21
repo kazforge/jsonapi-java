@@ -1,9 +1,7 @@
 package com.kazforge.jsonapi.internal
 
-import com.kazforge.jsonapi.core.model.Attributes
 import com.kazforge.jsonapi.core.model.Meta
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
-import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException
 import com.kazforge.jsonapi.core.validation.LinksContext
@@ -15,17 +13,11 @@ import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport
 import com.kazforge.jsonapi.internal.mapping.PropertyRole
 import com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch
 import com.kazforge.jsonapi.internal.patch.PresenceMarker
-import com.kazforge.jsonapi.internal.representation.CompoundInclusionState
-import com.kazforge.jsonapi.internal.representation.EffectiveRepresentation
-import com.kazforge.jsonapi.internal.representation.IncludedResourcesResult
 import com.kazforge.jsonapi.internal.wire.JsonPointerAccumulator
 import com.kazforge.jsonapi.internal.wire.MemberClassifier
 import com.kazforge.jsonapi.internal.wire.PointerEscapes
 import com.kazforge.jsonapi.internal.wire.ReadLocationIndex
 import com.kazforge.jsonapi.internal.wire.ValidationPointers
-import com.kazforge.jsonapi.representation.RepresentationPolicy
-import com.kazforge.jsonapi.representation.RepresentationSelection
-import java.util.LinkedHashSet
 import java.util.function.Supplier
 import spock.lang.Specification
 
@@ -230,129 +222,5 @@ class JacksonInternalHelpersSpec extends Specification {
     new PresenceMarker(false, null) == new PresenceMarker(false, null)
     new PresenceMarker(true, 'value').present()
     new PresenceMarker(true, 'value').value() == 'value'
-  }
-
-  def "effective representation and included result retain their value contracts"() {
-    given:
-    def selection = RepresentationSelection.none()
-    def policy = RepresentationPolicy.defaults()
-    def resource = ResourceObject.of('people', '1')
-    def identities = new LinkedHashSet<ResourceIdentity>([
-      ResourceIdentity.ofId('people', '1')
-    ])
-
-    when:
-    def effective = new EffectiveRepresentation(selection, policy)
-    def result = new IncludedResourcesResult([resource], identities)
-    identities.add(ResourceIdentity.ofId('people', '2'))
-
-    then:
-    effective.selection().is(selection)
-    effective.policy().is(policy)
-    result.included() == [resource]
-    result.sparseFieldsetLinkageExemptions() ==
-        [
-          ResourceIdentity.ofId('people', '1')
-        ] as Set
-
-    when:
-    result.sparseFieldsetLinkageExemptions().add(ResourceIdentity.ofId('people', '3'))
-
-    then:
-    thrown(UnsupportedOperationException)
-
-    when:
-    new EffectiveRepresentation(null, policy)
-
-    then:
-    thrown(NullPointerException)
-
-    when:
-    new EffectiveRepresentation(selection, null)
-
-    then:
-    thrown(NullPointerException)
-
-    when:
-    new IncludedResourcesResult([], null)
-
-    then:
-    thrown(NullPointerException)
-  }
-
-  def "compound state recognizes aliases and records fieldset exemptions"() {
-    given:
-    def state = new CompoundInclusionState(RepresentationPolicy.defaults())
-    def primary = new ResourceObject(
-        'articles', 'a1', 'local-a1', null, null, null, null, Map.of())
-    def id = ResourceIdentifier.of('articles', 'a1')
-    def lid = ResourceIdentifier.withLid('articles', 'local-a1')
-
-    when:
-    state.registerPrimary(primary)
-    state.addLinkageExemption(lid)
-
-    then:
-    state.matchesPrimary(id)
-    state.matchesPrimary(lid)
-    !state.matchesPrimary(ResourceIdentifier.of('articles', 'other'))
-    state.preferredIdentity(id) == ResourceIdentity.ofId('articles', 'a1')
-    state.preferredIdentity(lid) == ResourceIdentity.ofLid('articles', 'local-a1')
-    state.result().sparseFieldsetLinkageExemptions() ==
-        [
-          ResourceIdentity.ofLid('articles', 'local-a1')
-        ] as Set
-  }
-
-  def "compound state preserves first order and deduplicates equivalent representations"() {
-    given:
-    def state = new CompoundInclusionState(RepresentationPolicy.defaults())
-    def first = includedResource('p1', 'Ada')
-    def second = includedResource('p2', 'Bea')
-
-    when:
-    state.offerIncluded(first, 'author')
-    state.offerIncluded(first, 'reviewer')
-    state.offerIncluded(second, 'author')
-    state.offerIncluded(ResourceObject.ofType('people'), 'empty')
-
-    then:
-    state.result().included() == [first, second]
-  }
-
-  def "compound state reports conflicting representations"() {
-    given:
-    def state = new CompoundInclusionState(RepresentationPolicy.defaults())
-    state.offerIncluded(includedResource('p1', 'Ada'), 'author')
-
-    when:
-    state.offerIncluded(includedResource('p1', 'Different'), 'reviewer')
-
-    then:
-    def exception = thrown(RuntimeException)
-    exception.diagnostic() == MappingDiagnostic.CONFLICTING_INCLUDED_REPRESENTATION
-    exception.propertyPath() == null
-    exception.message.contains("include path 'reviewer'")
-  }
-
-  def "compound state enforces the included-resource count limit"() {
-    given:
-    def state = new CompoundInclusionState(
-        RepresentationPolicy.defaults().withMaxIncludedResources(1))
-    state.offerIncluded(includedResource('p1', 'Ada'), 'author')
-
-    when:
-    state.offerIncluded(includedResource('p2', 'Bea'), 'reviewer')
-
-    then:
-    def exception = thrown(RuntimeException)
-    exception.diagnostic() == MappingDiagnostic.INCLUDE_COUNT_EXCEEDED
-    exception.propertyPath() == null
-    exception.message.contains('maxIncludedResources 1')
-  }
-
-  private static ResourceObject includedResource(String id, String name) {
-    new ResourceObject(
-        'people', id, null, Attributes.ofAttributes([name: name]), null, null, null, Map.of())
   }
 }
