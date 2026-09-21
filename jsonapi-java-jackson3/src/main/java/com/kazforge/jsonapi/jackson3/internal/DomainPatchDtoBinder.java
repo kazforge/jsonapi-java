@@ -219,7 +219,7 @@ public final class DomainPatchDtoBinder {
           "Resource update identity requires a non-null id at '" + ID_LOCATION + "'");
     }
     Object identity = converter.parseIdentity(Objects.requireNonNull(resource.id()), rawType);
-    properties.put(identifierProperty.jacksonName(), identity);
+    properties.put(identifierProperty.externalName(), identity);
   }
 
   private static boolean isIdentifierConstructionFailure(
@@ -256,9 +256,9 @@ public final class DomainPatchDtoBinder {
                 property.accessor().getType(),
                 attributeLocation(property),
                 rawType);
-        properties.put(property.jacksonName(), new PresenceMarker(true, value));
+        properties.put(property.externalName(), new PresenceMarker(true, value));
       } else {
-        properties.put(property.jacksonName(), new PresenceMarker(false, null));
+        properties.put(property.externalName(), new PresenceMarker(false, null));
       }
     }
   }
@@ -287,11 +287,11 @@ public final class DomainPatchDtoBinder {
       if (data == null) {
         // Omitted, or a supplied mapped relationship lacking data (only reachable on the
         // non-revalidating fromDocument path): bind as Omitted, mirroring the low-level skip.
-        properties.put(property.jacksonName(), new PresenceMarker(false, null));
+        properties.put(property.externalName(), new PresenceMarker(false, null));
         continue;
       }
       Object value = converter.convertRelationshipForPatchDto(property, data, innerType(property));
-      properties.put(property.jacksonName(), new PresenceMarker(true, value));
+      properties.put(property.externalName(), new PresenceMarker(true, value));
     }
   }
 
@@ -322,7 +322,7 @@ public final class DomainPatchDtoBinder {
       return;
     }
     if (resource.meta() == null) {
-      properties.put(property.jacksonName(), new PresenceMarker(false, null));
+      properties.put(property.externalName(), new PresenceMarker(false, null));
       return;
     }
     Object value =
@@ -331,7 +331,7 @@ public final class DomainPatchDtoBinder {
             property.accessor().getType(),
             RelationshipMetaSupport.resourceMetaLocation(),
             rawType);
-    properties.put(property.jacksonName(), new PresenceMarker(true, value));
+    properties.put(property.externalName(), new PresenceMarker(true, value));
   }
 
   /**
@@ -367,7 +367,7 @@ public final class DomainPatchDtoBinder {
     for (MappingProperty property : mapping.relationshipMetaProperties()) {
       Relationship relationship = supplied == null ? null : supplied.get(property.jsonapiName());
       if (relationship == null || relationship.data() == null || relationship.meta() == null) {
-        properties.put(property.jacksonName(), new PresenceMarker(false, null));
+        properties.put(property.externalName(), new PresenceMarker(false, null));
         continue;
       }
       MappingLocation location =
@@ -375,7 +375,7 @@ public final class DomainPatchDtoBinder {
       Object value =
           structuredBinder.typedMemberValue(
               relationship.meta().members(), property.accessor().getType(), location, rawType);
-      properties.put(property.jacksonName(), new PresenceMarker(true, value));
+      properties.put(property.externalName(), new PresenceMarker(true, value));
     }
   }
 

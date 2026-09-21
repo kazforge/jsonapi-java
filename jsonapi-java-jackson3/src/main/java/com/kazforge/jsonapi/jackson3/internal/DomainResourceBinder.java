@@ -126,7 +126,7 @@ public final class DomainResourceBinder {
     // Keep the parsed JSON:API intermediate in the synthetic property map. The final bean
     // construction then applies the target property's fully contextualized Jackson deserializer
     // exactly once, rather than converting the detached identifier as a root value first.
-    properties.put(identifierProperty.jacksonName(), parsed);
+    properties.put(identifierProperty.externalName(), parsed);
   }
 
   private JsonApiMappingException identifierConversionFailed(
@@ -174,7 +174,7 @@ public final class DomainResourceBinder {
       }
       requireDeserializable(
           property, MappingLocation.of("attributes", property.jsonapiName()), rawType);
-      properties.put(property.jacksonName(), members.get(property.jsonapiName()));
+      properties.put(property.externalName(), members.get(property.jsonapiName()));
     }
   }
 
@@ -217,7 +217,7 @@ public final class DomainResourceBinder {
     }
     requireDeserializable(
         resourceMetaProperty, RelationshipMetaSupport.resourceMetaLocation(), rawType);
-    properties.put(resourceMetaProperty.jacksonName(), resource.meta().members());
+    properties.put(resourceMetaProperty.externalName(), resource.meta().members());
   }
 
   /**
@@ -247,7 +247,7 @@ public final class DomainResourceBinder {
           property,
           RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()),
           rawType);
-      properties.put(property.jacksonName(), relationship.meta().members());
+      properties.put(property.externalName(), relationship.meta().members());
     }
   }
 
@@ -270,7 +270,7 @@ public final class DomainResourceBinder {
     RelationshipLinkageMapper linkageMapper =
         RelationshipLinkageSupport.selectLinkageMapper(propertyType, property, linkageMappers);
     properties.put(
-        property.jacksonName(),
+        property.externalName(),
         RelationshipLinkageSupport.convertLinkage(
             property, data, linkageMapper, mappingType, mapper));
   }
