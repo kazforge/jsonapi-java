@@ -28,18 +28,18 @@ package owns backend-neutral semantics for mapped resources:
   matched form, carrying the target relationship's JSON:API name; an unresolved annotation target
   stays resolver-local.
 
-Native type and property models, introspection, mapping lookup, property access, container
-handling, configured conversion, identifier conversion, whole-meta conversion, decoration, and
-selective rendering stay in each backend. The compound-inclusion engine reaches native mechanics
-through the `InclusionBackend` capability boundary; the basic resource writer reaches them through
-a thin `WriteResourceBackend` boundary limited to mapping lookup, property access, identifier and
-attribute conversion, and native type specialization, plus an adapter-supplied
-`BasicRelationshipWriter` phase for relationship-member orchestration. Advanced relationship
-normalization runs through a neutral declared `RelationshipShape` and two narrow adapter callbacks
-(target resolution and wrapper identifier-meta enrichment) that keep native type specialization,
-unresolved-target validation, and property-scoped meta conversion adapter-owned. Adapter write and
-read property records remain backend-owned; only the semantic value they compose is shared. This
-module imports no Jackson-major or concrete-adapter package.
+Native type and property models, introspection, mapping lookup, property access, native container
+type-shape derivation, configured conversion, identifier conversion, whole-meta conversion,
+decoration, and selective rendering stay in each backend. The compound-inclusion engine reaches
+native mechanics through the `InclusionBackend` capability boundary; the basic resource writer
+reaches them through a thin `WriteResourceBackend` boundary limited to mapping lookup, property
+access, identifier and attribute conversion, and native type specialization, plus an
+adapter-supplied `BasicRelationshipWriter` phase for relationship-member orchestration. Advanced
+relationship normalization runs through a neutral declared `RelationshipShape` and two narrow
+adapter callbacks (target resolution and wrapper identifier-meta enrichment) that keep native type
+specialization, unresolved-target validation, and property-scoped meta conversion adapter-owned.
+Adapter write and read property records remain backend-owned; only the semantic value they compose
+is shared. This module imports no Jackson-major or concrete-adapter package.
 
 ## Boundary
 

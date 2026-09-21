@@ -173,6 +173,19 @@ class MappingAdvancedRelationshipDataSpec extends Specification {
     backend.metaEnrichments.isEmpty()
   }
 
+  def "writes an all-null to-many value as present-empty linkage without resolving a target"() {
+    given:
+    def shape = RelationshipShape.ordinary(true, 'comments')
+
+    when:
+    def linkage = writer.relationshipData(domain(), commentsProperty(), shape, nullableList(null, null), backend.observingTargetResolver(), backend.observingMetaEnricher())
+
+    then:
+    linkage == RelationshipData.IdentifierCollectionLinkage.empty()
+    backend.targetResolutions.isEmpty()
+    backend.metaEnrichments.isEmpty()
+  }
+
   def "writes to-many list, array, and iterable containers as ordered collection linkage"() {
     given:
     backend.define('articles', property(ID, 'id', 'id', 'id'))

@@ -17,9 +17,9 @@
  * configured backend external name, and JSON:API member name, with the adapter-independent role and
  * name invariants enforced on construction.
  *
- * <p>Native type resolution, mapping lookup, property lookup and access, container handling,
- * identifier conversion, configured conversion, whole-meta conversion, and resource rendering stay
- * in each backend. The inclusion engine reaches them through {@link
+ * <p>Native type resolution, mapping lookup, property lookup and access, native container
+ * type-shape derivation, identifier conversion, configured conversion, whole-meta conversion, and
+ * resource rendering stay in each backend. The inclusion engine reaches them through {@link
  * com.kazforge.jsonapi.mapping.internal.InclusionBackend}; the writer reaches a thin {@link
  * com.kazforge.jsonapi.mapping.internal.WriteResourceBackend} native-mechanics boundary and an
  * adapter-supplied {@link com.kazforge.jsonapi.mapping.internal.BasicRelationshipWriter}

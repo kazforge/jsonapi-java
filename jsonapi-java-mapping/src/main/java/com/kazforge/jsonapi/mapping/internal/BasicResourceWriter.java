@@ -195,18 +195,19 @@ public final class BasicResourceWriter<T, P> {
    * <p>Declared cardinality and backend-native type tokens come from the {@link RelationshipShape}
    * and stay opaque. The ordinary target token is never resolved or validated eagerly: {@code
    * targetResolver} is invoked only when normalization selects the ordinary domain-object branch,
-   * while null/empty, direct-identifier, and direct-data branches return without consulting it.
-   * Wrapper identifier-meta conversion is requested through {@code metaEnricher}, which keeps
-   * property-scoped conversion and its diagnostics in the backend's write path; occurrences without
-   * a meta value are returned without enrichment.
+   * while null/empty, all-null to-many, direct-identifier, and direct-data branches return without
+   * consulting it. Wrapper identifier-meta conversion is requested through {@code metaEnricher},
+   * which keeps property-scoped conversion and its diagnostics in the backend's write path;
+   * occurrences without a meta value are returned without enrichment.
    *
    * <p>After a {@link RelationshipLinkage} occurrence's target is mapped, to-one linkage is
    * required before wrapper meta is considered: explicit-null and collection linkage fail
    * consistently with {@link MappingDiagnostic#INVALID_IDENTIFIER_META_TARGET} at the occurrence's
    * identifier-meta location, including when the wrapper meta value is absent. Primitive arrays and
    * unsupported to-many containers still fail, optional to-many and nested transport shapes gain no
-   * new support, to-one null stays {@code NullLinkage}, null/empty to-many stays present-empty
-   * collection linkage, and direct identifier collections retain all supplied members.
+   * new support, to-one null stays {@code NullLinkage}, null/empty/all-null to-many stays
+   * present-empty collection linkage, and direct identifier collections retain all supplied
+   * members.
    */
   public RelationshipData relationshipData(
       Object resource,
@@ -313,6 +314,9 @@ public final class BasicResourceWriter<T, P> {
     }
     if (hasIdentifier) {
       return new RelationshipData.IdentifierCollectionLinkage(identifiers);
+    }
+    if (domainObjects.isEmpty()) {
+      return RelationshipData.IdentifierCollectionLinkage.empty();
     }
     return collectionLinkage(
         domainObjects,
