@@ -584,23 +584,21 @@ final class MappingDefinitionResolver {
                 logicalName,
                 externalName,
                 jsonapiName));
-        continue;
-      }
-      ReadMappingProperty mappingProperty =
-          new ReadMappingProperty(
-              propertyDefinition,
-              serializationMember,
-              deserializationMember,
-              deserializationType,
-              new SemanticProperty(role, logicalName, externalName, jsonapiName));
-      switch (role) {
-        case ID -> identifierProperties.add(mappingProperty);
-        case LOCAL_ID -> localIdProperties.add(mappingProperty);
-        case ATTRIBUTE -> attributeProperties.add(mappingProperty);
-        case RELATIONSHIP -> relationshipProperties.add(mappingProperty);
-        case RESOURCE_META -> resourceMetaProperties.add(mappingProperty);
-        case RELATIONSHIP_META ->
-            throw new IllegalStateException("Relationship meta must use the unresolved form");
+      } else {
+        ReadMappingProperty mappingProperty =
+            new ReadMappingProperty(
+                propertyDefinition,
+                serializationMember,
+                deserializationMember,
+                deserializationType,
+                new SemanticProperty(role, logicalName, externalName, jsonapiName));
+        switch (role) {
+          case ID -> identifierProperties.add(mappingProperty);
+          case LOCAL_ID -> localIdProperties.add(mappingProperty);
+          case ATTRIBUTE -> attributeProperties.add(mappingProperty);
+          case RELATIONSHIP -> relationshipProperties.add(mappingProperty);
+          case RESOURCE_META -> resourceMetaProperties.add(mappingProperty);
+        }
       }
     }
     List<ReadMappingProperty> boundRelationshipMeta =
