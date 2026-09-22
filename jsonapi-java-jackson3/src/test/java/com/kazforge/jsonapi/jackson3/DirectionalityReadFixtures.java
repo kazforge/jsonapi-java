@@ -9,7 +9,12 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.OptBoolean;
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
 import com.kazforge.jsonapi.annotation.JsonApiId;
+import com.kazforge.jsonapi.annotation.JsonApiRelationship;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
+import com.kazforge.jsonapi.core.model.ResourceIdentifier;
+import tools.jackson.databind.PropertyNamingStrategy;
+import tools.jackson.databind.cfg.MapperConfig;
+import tools.jackson.databind.introspect.AnnotatedMethod;
 
 /**
  * DTO shapes used to prove the ordinary flat-read directionality contract through the resource
@@ -113,6 +118,73 @@ public final class DirectionalityReadFixtures {
 
     public String titleValue() {
       return title;
+    }
+  }
+
+  /**
+   * Direction-specific names intentionally cross between two logical properties. This proves that
+   * read mapping pairs serialization annotations with the matching logical deserialization property
+   * rather than the first property sharing an external name.
+   */
+  @JsonApiResource(type = "crossed-names")
+  public static final class CrossedNames {
+
+    @JsonApiId public String id;
+
+    private String attribute;
+    private ResourceIdentifier relationship;
+
+    @JsonApiAttribute
+    public String getAttribute() {
+      return attribute;
+    }
+
+    public void setAttribute(String attribute) {
+      this.attribute = attribute;
+    }
+
+    @JsonApiRelationship
+    public ResourceIdentifier getRelationship() {
+      return relationship;
+    }
+
+    public void setRelationship(ResourceIdentifier relationship) {
+      this.relationship = relationship;
+    }
+
+    public String attributeValue() {
+      return attribute;
+    }
+
+    public ResourceIdentifier relationshipValue() {
+      return relationship;
+    }
+  }
+
+  /**
+   * Assigns crossed external names to read and write accessors while preserving each property's
+   * Java logical identity.
+   */
+  public static final class CrossedDirectionPropertyNamingStrategy extends PropertyNamingStrategy {
+
+    @Override
+    public String nameForGetterMethod(
+        MapperConfig<?> config, AnnotatedMethod method, String defaultName) {
+      return switch (defaultName) {
+        case "attribute" -> "relationship-wire";
+        case "relationship" -> "attribute-wire";
+        default -> defaultName;
+      };
+    }
+
+    @Override
+    public String nameForSetterMethod(
+        MapperConfig<?> config, AnnotatedMethod method, String defaultName) {
+      return switch (defaultName) {
+        case "attribute" -> "attribute-wire";
+        case "relationship" -> "relationship-wire";
+        default -> defaultName;
+      };
     }
   }
 

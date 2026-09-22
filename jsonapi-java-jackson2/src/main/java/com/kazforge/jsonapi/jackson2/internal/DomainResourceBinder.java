@@ -12,6 +12,7 @@ import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.internal.BasicReadResult;
 import com.kazforge.jsonapi.mapping.internal.BasicResourceReader;
+import com.kazforge.jsonapi.mapping.internal.ReadConstructionStart;
 import com.kazforge.jsonapi.mapping.internal.ReadProperty;
 import com.kazforge.jsonapi.mapping.internal.ReadRelationshipShape;
 import com.kazforge.jsonapi.mapping.internal.ReadResourceBackend;
@@ -88,11 +89,14 @@ public final class DomainResourceBinder
     // Whole-meta declared-target validation for the read/write domain-mapping role.
     wholeMetaTarget.validateReadWriteTargets(mapping, rawType);
     BasicReadResult result = reader.readBasic(resource, definition, rawType);
+    Map<String, ReadConstructionStart<ReadMappingProperty>> constructionStarts =
+        definition.constructionStarts(result.identifierLocation(), result.localIdLocation());
     return convertBean(
         result.properties(),
         targetType,
         rawType,
         mapping,
+        constructionStarts,
         result.identifierLocation(),
         result.localIdLocation());
   }
@@ -136,10 +140,9 @@ public final class DomainResourceBinder
       JavaType targetType,
       Class<?> rawType,
       ReadResourceMapping mapping,
+      Map<String, ReadConstructionStart<ReadMappingProperty>> constructionStarts,
       @Nullable MappingLocation idLocation,
       @Nullable MappingLocation lidLocation) {
-    Map<String, MappingConstructionStart> startsByJacksonName =
-        mapping.constructionStartsByJacksonName(idLocation, lidLocation);
     try {
       return BeanConstruction.convertBean(
           mapper,
@@ -148,7 +151,7 @@ public final class DomainResourceBinder
           rawType,
           (failure, ignored) ->
               constructionPaths.translateConstructionPath(
-                  BeanConstruction.pathNames(failure), startsByJacksonName),
+                  BeanConstruction.pathNames(failure), constructionStarts),
           mapping.creatorPropertyNames());
     } catch (JsonApiMappingException e) {
       ReadMappingProperty identifierProperty = mapping.identifierProperty();

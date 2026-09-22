@@ -25,7 +25,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.BeanDescription;
-import tools.jackson.databind.JavaType;
+import tools.jackson.databind.deser.SettableBeanProperty;
 import tools.jackson.databind.introspect.AnnotatedClass;
 import tools.jackson.databind.introspect.AnnotatedMember;
 import tools.jackson.databind.introspect.BeanPropertyDefinition;
@@ -78,7 +78,7 @@ final class MappingDefinitionResolver {
       BeanDescription serializationDescription,
       Class<?> rawType,
       AnnotatedClass resourceMetadata,
-      Map<String, JavaType> deserializationTypes) {
+      Map<String, SettableBeanProperty> effectiveProperties) {
     String resourceType = validateResourceTypeName(resourceTypeName(resourceMetadata), rawType);
     List<ReadMappingProperty> identifierProperties = new ArrayList<>();
     List<ReadMappingProperty> localIdProperties = new ArrayList<>();
@@ -102,16 +102,13 @@ final class MappingDefinitionResolver {
       validateJsonApiName(jsonapiName, role, logicalName, rawType);
       AnnotatedMember serializationMember =
           pair.serialization() == null ? null : pair.serialization().getAccessor();
-      AnnotatedMember deserializationMember =
-          pair.deserialization() == null ? null : pair.deserialization().getMutator();
-      JavaType deserializationType = deserializationTypes.get(externalName);
+      SettableBeanProperty effectiveProperty = effectiveProperties.get(externalName);
       if (role == PropertyRole.RELATIONSHIP_META) {
         relationshipMetaProperties.add(
             new UnresolvedReadRelationshipMeta(
                 propertyDefinition,
                 serializationMember,
-                deserializationMember,
-                deserializationType,
+                effectiveProperty,
                 logicalName,
                 externalName,
                 jsonapiName));
@@ -120,8 +117,7 @@ final class MappingDefinitionResolver {
             new ReadMappingProperty(
                 propertyDefinition,
                 serializationMember,
-                deserializationMember,
-                deserializationType,
+                effectiveProperty,
                 new SemanticProperty(role, logicalName, externalName, jsonapiName));
         switch (role) {
           case ID -> identifierProperties.add(mappingProperty);
@@ -544,8 +540,7 @@ final class MappingDefinitionResolver {
   private record UnresolvedReadRelationshipMeta(
       BeanPropertyDefinition definition,
       @Nullable AnnotatedMember serializationMember,
-      @Nullable AnnotatedMember deserializationMember,
-      @Nullable JavaType deserializationType,
+      @Nullable SettableBeanProperty effectiveProperty,
       String logicalName,
       String externalName,
       String targetIdentity) {}
@@ -568,8 +563,7 @@ final class MappingDefinitionResolver {
           new ReadMappingProperty(
               property.definition(),
               property.serializationMember(),
-              property.deserializationMember(),
-              property.deserializationType(),
+              property.effectiveProperty(),
               new SemanticProperty(
                   PropertyRole.RELATIONSHIP_META,
                   property.logicalName(),
@@ -728,10 +722,6 @@ final class MappingDefinitionResolver {
         @Nullable BeanPropertyDefinition serialization) {
       this.deserialization = deserialization;
       this.serialization = serialization;
-    }
-
-    @Nullable BeanPropertyDefinition deserialization() {
-      return deserialization;
     }
 
     @Nullable BeanPropertyDefinition serialization() {

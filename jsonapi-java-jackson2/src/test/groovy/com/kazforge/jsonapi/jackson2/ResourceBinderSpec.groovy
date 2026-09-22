@@ -602,6 +602,19 @@ class ResourceBinderSpec extends Specification {
     ex.resourceClass() == FlatNestedThing
   }
 
+  def "nested construction path walking uses the effective deserialization type, not the declared type"() {
+    when:
+    binder.fromResource(
+        resource("refined-nested", "1", [profile: [geo: [lon: "boom"]]], null),
+        FlatRefinedNestedThing)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    ex.propertyPath() == "/attributes/profile/geo/lon"
+    ex.resourceClass() == FlatRefinedNestedThing
+  }
+
   def "property null provider applies to the explicitly bound null value"() {
     when:
     def thing = binder.fromResource(
@@ -995,6 +1008,25 @@ class ResourceBinderSpec extends Specification {
     void setY(int y) {
       this.y = y
     }
+  }
+
+  @JsonApiResource(type = "refined-nested")
+  static class FlatRefinedNestedThing {
+    @JsonApiId String id
+    @JsonApiAttribute FlatProfile profile
+  }
+
+  static class FlatProfile {
+    @JsonDeserialize(as = FlatSubGeo.class)
+    FlatGeo geo
+  }
+
+  static class FlatGeo {
+    int lat
+  }
+
+  static class FlatSubGeo extends FlatGeo {
+    int lon
   }
 
   @JsonApiResource(type = "null-provider-things")

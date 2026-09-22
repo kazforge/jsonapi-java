@@ -28,6 +28,14 @@
  * identifier-meta conversion, and final bean construction through the thin {@link
  * com.kazforge.jsonapi.mapping.internal.ReadResourceBackend} native-mechanics boundary.
  *
+ * <p>{@link com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition#constructionStarts(
+ * com.kazforge.jsonapi.diagnostic.MappingLocation,
+ * com.kazforge.jsonapi.diagnostic.MappingLocation)} owns the neutral top-level construction-start
+ * translation: each bindable read property's backend external name maps to its resource-relative
+ * JSON:API start location, paired with the same opaque property token, so adapters do not duplicate
+ * that translation. Nested shape walking, effective native types, configured deserialization,
+ * native failure-path extraction, and the single final bean construction remain adapter-owned.
+ *
  * <p>It additionally owns the neutral {@link com.kazforge.jsonapi.mapping.internal.PropertyRole}
  * enum and the {@link com.kazforge.jsonapi.mapping.internal.SemanticProperty} value that adapters
  * compose into their own write and read mapping records: role, logical backend property identity,

@@ -3,30 +3,38 @@ package com.kazforge.jsonapi.jackson3.internal;
 import com.kazforge.jsonapi.mapping.internal.SemanticProperty;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JavaType;
+import tools.jackson.databind.deser.SettableBeanProperty;
 import tools.jackson.databind.introspect.AnnotatedMember;
 import tools.jackson.databind.introspect.BeanPropertyDefinition;
 
 /**
- * One JSON:API-mapped property from Jackson's deserialization-oriented view.
+ * One JSON:API-mapped property from Jackson's effective deserialization view.
  *
- * <p>{@code deserializationType} is present only when the configured mapper has an effective
- * deserialization property for the logical name. A serialization-only declaration may therefore
- * remain in the read mapping for supplied-member diagnostics without becoming bindable.
+ * <p>{@code effectiveProperty} is present only when the configured mapper's bean deserializer has a
+ * bindable property for the logical name; it is the single authority for the effective
+ * deserialization type, creator participation, injection-only exclusion, and active-view
+ * visibility. A serialization-only declaration may therefore remain in the read mapping for
+ * supplied-member diagnostics without becoming bindable, and its serialization-side primary type is
+ * never used as a construction-path fallback.
  */
 public record ReadMappingProperty(
     BeanPropertyDefinition definition,
     @Nullable AnnotatedMember serializationMember,
-    @Nullable AnnotatedMember deserializationMember,
-    @Nullable JavaType deserializationType,
+    @Nullable SettableBeanProperty effectiveProperty,
     SemanticProperty metadata)
     implements MappingPropertyView {
 
   boolean deserializable() {
-    return deserializationType != null;
+    return effectiveProperty != null;
+  }
+
+  /** Whether this mapped property participates as an effective creator property. */
+  boolean creatorProperty() {
+    return effectiveProperty != null && effectiveProperty.isCreatorProperty();
   }
 
   @Override
   public JavaType type() {
-    return deserializationType != null ? deserializationType : definition.getPrimaryType();
+    return effectiveProperty != null ? effectiveProperty.getType() : definition.getPrimaryType();
   }
 }

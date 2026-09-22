@@ -133,7 +133,7 @@ public final class MappingDefinitionCache {
         serializationDescription,
         javaType.getRawClass(),
         view.resourceMetadata(),
-        effectiveDeserializationTypes(javaType, view.description()));
+        effectiveDeserializationProperties(javaType, view.description()));
   }
 
   private record DeserializationView(
@@ -154,13 +154,15 @@ public final class MappingDefinitionCache {
   }
 
   /**
-   * Resolves property types from the actual configured bean deserializer. In particular, this keeps
-   * creator parameters, setter-only properties, write-only properties, generic bindings, and
-   * property-level type refinement on the deserialization side instead of guessing from a getter.
+   * Resolves the effective bindable properties from the actual configured bean deserializer. In
+   * particular, this keeps creator parameters, setter-only properties, write-only properties,
+   * generic bindings, and property-level type refinement on the deserialization side instead of
+   * guessing from a getter. Injection-only and view-excluded properties are absent, so a supplied
+   * member for which the configured mapper has no effective deserialization target is not bindable.
    */
-  private Map<String, JavaType> effectiveDeserializationTypes(
+  private Map<String, SettableBeanProperty> effectiveDeserializationProperties(
       JavaType javaType, BeanDescription description) {
-    Map<String, JavaType> targets = new LinkedHashMap<>();
+    Map<String, SettableBeanProperty> targets = new LinkedHashMap<>();
     DeserializationConfig config = mapper.getDeserializationConfig();
     DefaultDeserializationContext context =
         ((DefaultDeserializationContext) mapper.getDeserializationContext())
@@ -180,7 +182,7 @@ public final class MappingDefinitionCache {
       if (property != null
           && !property.isInjectionOnly()
           && (activeView == null || property.visibleInView(activeView))) {
-        targets.put(definition.getName(), property.getType());
+        targets.put(definition.getName(), property);
       }
     }
     return targets;

@@ -164,3 +164,26 @@ identifier-meta copies, and supplied PATCH markers) stay in the API artifact und
 continues to live there: its identifier-meta locations and `ResourceIdentifier` copy are shared by
 the neutral writer, the neutral reader, and PATCH alike, and the extraction demonstrated no concrete
 dependency or ownership problem that would justify relocating it.
+
+A later hardening increment moved the neutral top-level construction-start translation to the shared
+read definition. `ReadResourceDefinition#constructionStarts(...)` now maps each bindable read
+property's backend external name to its resource-relative JSON:API start location — supplied
+`/id` and `/lid`, `/attributes/<jsonApiName>`, `/relationships/<jsonApiName>/data`, `/meta`, and
+`/relationships/<targetJsonApiName>/meta` — paired with the same opaque property token the
+definition already carries, so the two adapters cannot drift in backend-name to JSON:API-location
+translation and each adapter's nested walker needs no second lookup or separately supplied
+effective-type token. Identity starts are emitted only when the wire member was supplied, and
+non-bindable properties contribute no start. The duplicated adapter-local
+`ReadResourceMapping.constructionStartsByJacksonName(...)` implementations were removed; the
+write-oriented `ResourceMapping.constructionStartsByJacksonName(...)` and the adapter-local
+`MappingConstructionStart` record remain scoped to typed PATCH construction. Effective property
+discovery, nested bean-shape walking, effective native types, configured deserialization, native
+failure-path extraction, Optional/type unwrapping, and the single final bean construction remain
+adapter-owned: each adapter's read mapping now carries the configured bean deserializer's effective
+`SettableBeanProperty`, which is the single authority for effective type, creator participation,
+injection-only exclusion, and active-view visibility, and each adapter's nested path walker recurses
+through those effective properties instead of a serialization-side `BeanPropertyDefinition` primary
+type. Jackson 3 ordinary flat reads classify a missing creator input from the effective creator
+property names through an explicit `BeanConstruction` seam; the typed PATCH DTO binder keeps its
+existing default classifier.
+

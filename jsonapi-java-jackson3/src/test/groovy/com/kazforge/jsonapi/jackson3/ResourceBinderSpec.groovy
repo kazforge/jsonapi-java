@@ -505,6 +505,77 @@ class ResourceBinderSpec extends Specification {
     ex.resourceClass() == DirectionalityReadFixtures.ViewRestricted
   }
 
+  def "crossed direction-specific names retain their logical read mappings"() {
+    given:
+    def namingStrategy = new DirectionalityReadFixtures.CrossedDirectionPropertyNamingStrategy()
+    def mapper = JsonMapper.builder().propertyNamingStrategy(namingStrategy).build()
+    def localBinder = JsonApiJackson3.resourceBinder(mapper)
+    def resource = resource(
+        "crossed-names",
+        "1",
+        ["attribute-wire": "bound"],
+        rels("relationship-wire", single(PEOPLE, "p1")))
+
+    when:
+    def dto = localBinder.fromResource(resource, DirectionalityReadFixtures.CrossedNames)
+
+    then:
+    dto.id == "1"
+    dto.attributeValue() == "bound"
+    dto.relationshipValue() == ResourceIdentifier.of(PEOPLE, "p1")
+  }
+
+  def "a construction failure whose Jackson path starts at the supplied id reclassifies as identifier conversion failure"() {
+    given:
+    // The converter parses successfully, but the returned value cannot coerce into the id
+    // property's type during whole-bean construction.
+    def converter = new IdentifierConverter() {
+          @Override
+          String convert(Object idValue) {
+            idValue.toString()
+          }
+
+          @Override
+          Object parse(String wireIdentifier) {
+            Map.of("type", wireIdentifier)
+          }
+        }
+    def localBinder = JsonApiJackson3.resourceBinder(JsonMapper.builder().build(), converter)
+
+    when:
+    localBinder.fromResource(resource(ARTICLES, "42", null, null), FlatIntIdArticle)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED
+    ex.propertyPath() == "/id"
+    ex.resourceClass() == FlatIntIdArticle
+  }
+
+  def "nested construction failure path translates through the nested attribute shape"() {
+    when:
+    binder.fromResource(resource("nested-things", "1", [point: [x: "boom"]], null), FlatNestedThing)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    ex.propertyPath() == "/attributes/point/x"
+    ex.resourceClass() == FlatNestedThing
+  }
+
+  def "nested construction path walking uses the effective deserialization type, not the declared type"() {
+    when:
+    binder.fromResource(
+        resource("refined-nested", "1", [profile: [geo: [lon: "boom"]]], null),
+        FlatRefinedNestedThing)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    ex.propertyPath() == "/attributes/profile/geo/lon"
+    ex.resourceClass() == FlatRefinedNestedThing
+  }
+
   def "JavaType entry points bind resource and collection"() {
     given:
     def localBinder = JsonApiJackson3.resourceBinder(JsonMapper.builder().build())
@@ -818,6 +889,36 @@ class ResourceBinderSpec extends Specification {
     @JsonApiId String id
     @JsonApiAttribute int longFieldName
     @JsonApiAttribute int otherValue
+  }
+
+  @JsonApiResource(type = "nested-things")
+  static class FlatNestedThing {
+    @JsonApiId String id
+    @JsonApiAttribute NestedPoint point
+  }
+
+  static class NestedPoint {
+    int x
+    int y
+  }
+
+  @JsonApiResource(type = "refined-nested")
+  static class FlatRefinedNestedThing {
+    @JsonApiId String id
+    @JsonApiAttribute FlatProfile profile
+  }
+
+  static class FlatProfile {
+    @JsonDeserialize(as = FlatSubGeo)
+    FlatGeo geo
+  }
+
+  static class FlatGeo {
+    int lat
+  }
+
+  static class FlatSubGeo extends FlatGeo {
+    int lon
   }
 
   @JsonApiResource(type = "named")

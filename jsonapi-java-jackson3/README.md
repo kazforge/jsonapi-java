@@ -55,14 +55,15 @@ resource/relationship/identifier meta application, and additive resource/relatio
 decoration, and the basic and advanced resource read semantics for resource-type matching,
 identity-role selection, attribute/relationship presence and order, synthetic-input assembly
 preserving absent-versus-explicit-null, relationship cardinality, null/empty short-circuiting,
-direct-identifier copying, `RelationshipLinkage` occurrence pairing, and resource/relationship meta
-binding, are owned by
+direct-identifier copying, `RelationshipLinkage` occurrence pairing, resource/relationship meta
+binding, and top-level construction-start backend-name to JSON:API location translation, are owned by
 [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). This adapter supplies the native
 capability bridges over configured Jackson, including declared write relationship-shape and target
 resolution, lazy read relationship-shape resolution with configured linkage-mapper selection and
 invocation, property-scoped whole-meta and declared-type identifier-meta conversion, the
 effective-type resolution that decoration looks up, configured wire-identifier parsing,
-and the configured decoration registry. Public
+effective deserialization property discovery, nested construction-path walking, native
+failure-path extraction, and the configured decoration registry. Public
 Javadocs and the linked ADRs own the remaining details rather than repeated here.
 
 ## Jackson 3 boundary
