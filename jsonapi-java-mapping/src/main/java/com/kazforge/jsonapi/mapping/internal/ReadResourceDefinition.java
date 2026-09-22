@@ -7,15 +7,17 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Backend-neutral view of one adapter-resolved read mapping: the JSON:API resource type plus the
- * mapped identity and ordered attribute/relationship properties.
+ * mapped identity, ordered attribute/relationship, resource-meta, and matched relationship-meta
+ * properties.
  *
- * <p>Only the basic read surface is carried here. Whole-object meta and relationship-meta binding
- * stay adapter-owned in this extraction slice, so those properties do not appear in the neutral
- * view. Identity roles stay separate and independent: {@code identifier} maps only the {@code id}
- * member and {@code localId} only the {@code lid} member. Attribute and relationship properties
- * keep their mapping order, which is part of the read phase contract. Lists are defensively copied
- * so a definition is an immutable snapshot for the duration of one read. This is unsupported
- * implementation detail for backend cooperation, not consumer SPI.
+ * <p>Identity roles stay separate and independent: {@code identifier} maps only the {@code id}
+ * member and {@code localId} only the {@code lid} member. Attribute, relationship, and
+ * relationship-meta properties keep their mapping order, which is part of the read phase contract.
+ * {@code resourceMeta} is the single mapped whole-object {@code meta} property and may be absent.
+ * Each relationship-meta property carries the matched target relationship's JSON:API name in its
+ * semantic metadata, so its wire location is the referenced relationship's {@code meta} member.
+ * Lists are defensively copied so a definition is an immutable snapshot for the duration of one
+ * read. This is unsupported implementation detail for backend cooperation, not consumer SPI.
  *
  * @param <P> opaque backend-native property token
  */
@@ -25,13 +27,17 @@ public record ReadResourceDefinition<P>(
     @Nullable ReadProperty<P> identifier,
     @Nullable ReadProperty<P> localId,
     List<ReadProperty<P>> attributes,
-    List<ReadProperty<P>> relationships) {
+    List<ReadProperty<P>> relationships,
+    @Nullable ReadProperty<P> resourceMeta,
+    List<ReadProperty<P>> relationshipMetaProperties) {
 
   public ReadResourceDefinition {
     Objects.requireNonNull(resourceType, "resourceType");
     Objects.requireNonNull(attributes, "attributes");
     Objects.requireNonNull(relationships, "relationships");
+    Objects.requireNonNull(relationshipMetaProperties, "relationshipMetaProperties");
     attributes = List.copyOf(attributes);
     relationships = List.copyOf(relationships);
+    relationshipMetaProperties = List.copyOf(relationshipMetaProperties);
   }
 }

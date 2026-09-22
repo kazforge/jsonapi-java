@@ -1,8 +1,7 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import com.kazforge.jsonapi.core.model.Relationship;
+import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.model.RelationshipData;
-import com.kazforge.jsonapi.core.model.Relationships;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
@@ -12,9 +11,9 @@ import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.internal.BasicReadResult;
 import com.kazforge.jsonapi.mapping.internal.BasicResourceReader;
 import com.kazforge.jsonapi.mapping.internal.ReadProperty;
+import com.kazforge.jsonapi.mapping.internal.ReadRelationshipShape;
 import com.kazforge.jsonapi.mapping.internal.ReadResourceBackend;
 import com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -24,13 +23,15 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * Binds validated {@link ResourceObject} values to annotated flat DTO types.
  *
- * <p>The basic Core-to-application read semantics are owned by the shared {@link
- * BasicResourceReader}: resource-type matching, strict and independent identity-role selection,
- * wire-member presence, attribute and relationship order, the synthetic input map, and the
- * member-relative diagnostics. This adapter supplies the native edges through {@link
- * ReadResourceBackend} (configured wire identifier parsing and configured relationship-linkage
- * conversion) and keeps whole-object meta and relationship-meta binding plus the single configured
- * bean construction.
+ * <p>The Core-to-application read semantics are owned by the shared {@link BasicResourceReader}:
+ * resource-type matching, strict and independent identity-role selection, wire-member presence,
+ * attribute, relationship and meta order, the synthetic input map, cardinality validation,
+ * null/empty short-circuiting, direct identifier copying, wrapper occurrence orchestration,
+ * identifier-meta sequencing, resource/relationship meta binding, and the member-relative
+ * diagnostics. This adapter supplies only the native edges through {@link ReadResourceBackend}:
+ * configured wire identifier parsing, lazy relationship-shape resolution (native target/type
+ * resolution plus configured-mapper selection), configured linkage-mapper invocation, declared
+ * identifier-meta conversion, and the single configured bean construction.
  *
  * <p>Identifier, attribute, relationship, and meta values are placed into a synthetic property map
  * keyed by Jackson logical property names, then the bean is constructed with a single {@link
@@ -51,7 +52,8 @@ import tools.jackson.databind.json.JsonMapper;
  * Bean-construction failures translate their Jackson failure paths through this mapping; unmappable
  * paths carry an absent location instead of a logical property name.
  */
-public final class DomainResourceBinder implements ReadResourceBackend<ReadMappingProperty> {
+public final class DomainResourceBinder
+    implements ReadResourceBackend<JavaType, ReadMappingProperty> {
 
   private final JsonMapper mapper;
   private final IdentifierConverter identifierConverter;
@@ -59,7 +61,7 @@ public final class DomainResourceBinder implements ReadResourceBackend<ReadMappi
   private final Map<Class<?>, RelationshipLinkageMapper> linkageMappers;
   private final WholeMetaTarget wholeMetaTarget;
   private final FlatConstructionPaths constructionPaths;
-  private final BasicResourceReader<ReadMappingProperty> reader;
+  private final BasicResourceReader<JavaType, ReadMappingProperty> reader;
 
   public DomainResourceBinder(
       JsonMapper mapper,
@@ -86,11 +88,8 @@ public final class DomainResourceBinder implements ReadResourceBackend<ReadMappi
     // Whole-meta declared-target validation for the read/write domain-mapping role.
     wholeMetaTarget.validateReadWriteTargets(mapping, rawType);
     BasicReadResult result = reader.readBasic(resource, definition, rawType);
-    Map<String, @Nullable Object> properties = new LinkedHashMap<>(result.properties());
-    bindResourceMeta(resource, mapping, properties, rawType);
-    bindRelationshipMeta(resource, mapping, properties, rawType);
     return convertBean(
-        properties,
+        result.properties(),
         targetType,
         rawType,
         mapping,
@@ -109,84 +108,27 @@ public final class DomainResourceBinder implements ReadResourceBackend<ReadMappi
   }
 
   @Override
-  public @Nullable Object convertRelationship(
-      ReadProperty<ReadMappingProperty> property, RelationshipData data) {
+  public ReadRelationshipShape<JavaType> readRelationshipShape(
+      ReadProperty<ReadMappingProperty> property) {
     ReadMappingProperty nativeProperty = property.token();
-    JavaType propertyType = nativeProperty.type();
-    JavaType mappingType =
-        MappingTypeSupport.targetMappingType(propertyType, mapper.getTypeFactory());
-    RelationshipLinkageMapper linkageMapper =
-        RelationshipLinkageSupport.selectLinkageMapper(
-            propertyType, nativeProperty, linkageMappers);
-    return RelationshipLinkageSupport.convertLinkage(
-        nativeProperty, data, linkageMapper, mappingType, mapper);
+    return RelationshipLinkageSupport.readRelationshipShape(
+        nativeProperty.type(), nativeProperty, linkageMappers, mapper.getTypeFactory());
   }
 
-  /**
-   * Binds the resource-side {@code meta} members under the mapped resource-meta property's
-   * configured Jackson external name when the resource carries meta. Absent meta leaves the
-   * property absent.
-   */
-  private void bindResourceMeta(
-      ResourceObject resource,
-      ReadResourceMapping mapping,
-      Map<String, @Nullable Object> properties,
-      Class<?> rawType) {
-    ReadMappingProperty resourceMetaProperty = mapping.resourceMeta();
-    if (resourceMetaProperty == null || resource.meta() == null) {
-      return;
-    }
-    requireDeserializable(
-        resourceMetaProperty, RelationshipMetaSupport.resourceMetaLocation(), rawType);
-    properties.put(resourceMetaProperty.externalName(), resource.meta().members());
+  @Override
+  public @Nullable Object mapLinkage(
+      ReadProperty<ReadMappingProperty> property, RelationshipData data, JavaType target) {
+    return RelationshipLinkageSupport.mapLinkage(data, target, property.token(), linkageMappers);
   }
 
-  /**
-   * Binds relationship {@code meta} members under each mapped relationship-meta property's
-   * configured Jackson external name when the referenced relationship is present and carries meta.
-   * Absent relationship or absent meta leaves the property absent. A valid meta-only relationship
-   * representation binds its meta here (read side); PATCH additionally requires {@code data}.
-   */
-  private void bindRelationshipMeta(
-      ResourceObject resource,
-      ReadResourceMapping mapping,
-      Map<String, @Nullable Object> properties,
-      Class<?> rawType) {
-    if (mapping.relationshipMetaProperties().isEmpty()) {
-      return;
-    }
-    Relationships relationships = resource.relationships();
-    if (relationships == null) {
-      return;
-    }
-    for (ReadMappingProperty property : mapping.relationshipMetaProperties()) {
-      Relationship relationship = relationships.relationships().get(property.jsonapiName());
-      if (relationship == null || relationship.meta() == null) {
-        continue;
-      }
-      requireDeserializable(
-          property,
-          RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()),
-          rawType);
-      properties.put(property.externalName(), relationship.meta().members());
-    }
-  }
-
-  private static void requireDeserializable(
-      ReadMappingProperty property, MappingLocation location, Class<?> rawType) {
-    if (property.deserializable()) {
-      return;
-    }
-    throw new JsonApiMappingException(
-        MappingDiagnostic.NON_DESERIALIZABLE_PROPERTY,
-        rawType,
-        location,
-        "Supplied JSON:API member at '"
-            + location
-            + "' targets property '"
-            + property.logicalName()
-            + "' without an effective deserialization target on "
-            + rawType.getName());
+  @Override
+  public @Nullable Object convertIdentifierMeta(
+      ReadProperty<ReadMappingProperty> property,
+      Meta meta,
+      JavaType metaToken,
+      int occurrenceIndex) {
+    return RelationshipLinkageSupport.convertIdentifierMeta(
+        meta, metaToken, mapper, property.token(), occurrenceIndex);
   }
 
   private Object convertBean(

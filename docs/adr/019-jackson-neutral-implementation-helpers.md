@@ -135,6 +135,32 @@ Whole-object meta and relationship-meta binding, declared meta-target validation
 metadata, and the single configured bean construction stay in each adapter's `DomainResourceBinder`,
 so those concerns remain adapter-owned for a later extraction.
 
+A later extraction moved backend-neutral advanced relationship and Meta read orchestration to the
+same shared reader, so the duplicated relationship-linkage and meta loops left both adapters. The
+neutral `com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition` now carries the optional
+resource-meta property and the matched relationship-meta properties alongside the identity,
+attribute, and relationship properties, and `BasicResourceReader` additionally owns relationship
+cardinality validation, null/empty short-circuiting, direct `ResourceIdentifier` copies that
+preserve identifier meta and drop additional members, opt-in `RelationshipLinkage` occurrence
+orchestration with per-occurrence target and identifier-meta pairing, and resource/relationship meta
+presence, bindability, wire locations, and raw-member binding. Each adapter derives a neutral
+`com.kazforge.jsonapi.mapping.internal.ReadRelationshipShape` through its own `MappingTypeSupport`,
+distinguishing direct versus mapped targets, to-one versus to-many, the ordinary mapper target
+token, and wrapped occurrence target and identifier-meta tokens. Shape resolution stays lazy and
+happens only after supplied relationship `data` is present and bindable, so an unsupported or
+unresolvable target still fails before the shared cardinality and short-circuit checks and no mapper
+is invoked for empty linkage. The `ReadResourceBackend` capability interface now carries a native
+type token and a property token and is limited to a mapped property's diagnostic raw class,
+configured wire-identifier parsing, lazy relationship-shape resolution (native target/type
+resolution plus configured-mapper selection), configured linkage-mapper invocation, and declared
+identifier-meta conversion. Declared meta-target validation, native `JavaType` specialization,
+configured conversion, and the single configured bean construction remain adapter-owned, as does the
+adapter-local relationship-linkage code still used by PATCH. This supersedes the earlier statements
+above that whole-object meta and relationship-meta binding stay in each adapter.
+
 The remaining helpers listed in the Decision (wire member classification and pointers,
 identifier-meta copies, and supplied PATCH markers) stay in the API artifact under
-`com.kazforge.jsonapi.internal` until a later extraction moves them.
+`com.kazforge.jsonapi.internal` until a later extraction moves them. `IdentifierMetaSupport`
+continues to live there: its identifier-meta locations and `ResourceIdentifier` copy are shared by
+the neutral writer, the neutral reader, and PATCH alike, and the extraction demonstrated no concrete
+dependency or ownership problem that would justify relocating it.

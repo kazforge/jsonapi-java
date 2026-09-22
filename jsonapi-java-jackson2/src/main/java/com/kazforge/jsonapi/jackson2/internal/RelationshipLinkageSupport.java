@@ -2,6 +2,7 @@ package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.kazforge.jsonapi.core.model.JsonApiMembers;
 import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.model.RelationshipData;
@@ -12,15 +13,25 @@ import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
 import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
 import com.kazforge.jsonapi.mapping.RelationshipLinkage;
+import com.kazforge.jsonapi.mapping.internal.ReadRelationshipShape;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Shared relationship linkage rules for flat DTO binding and the write mapping: cardinality checks,
- * target-class resolution, opt-in {@link RelationshipLinkage} unwrap/wrap, built-in {@link
- * ResourceIdentifier} conversion that preserves identifier meta, and custom linkage mappers.
+ * Adapter-local native relationship-linkage support: declared-shape resolution and
+ * configured-mapper selection, configured mapper invocation, and identifier-meta conversion for
+ * flat read binding, plus the cardinality checks, opt-in {@link RelationshipLinkage} unwrap/wrap,
+ * and built-in {@link ResourceIdentifier} conversion still used by presence-aware PATCH.
+ *
+ * <p>Flat read binding no longer owns cardinality, null/empty short-circuiting, wrapper occurrence
+ * orchestration, or identifier-meta sequencing; those live once in the shared {@code
+ * com.kazforge.jsonapi.mapping.internal.BasicResourceReader}, and this class is reached only for
+ * the native operations above. The PATCH path still uses its own {@link #convertLinkage}
+ * orchestration, so those read-shaped rules remain duplicated here until a later PATCH extraction
+ * collapses them; the duplication is intentional and this class must not gain new read callers.
  */
 final class RelationshipLinkageSupport {
 
@@ -68,6 +79,62 @@ final class RelationshipLinkageSupport {
       throw unsupportedRelationshipTarget(property, targetClass);
     }
     return mapper;
+  }
+
+  /**
+   * Resolves the neutral read shape of one mapped relationship property for the shared reader. This
+   * is the lazy native edge for read binding: target/type resolution and mapper selection happen
+   * here, so an unsupported or unresolvable target fails before the shared cardinality and
+   * null/empty short-circuit checks. A {@link ResourceIdentifier} target is {@code Direct}; any
+   * other registered target is {@code Mapped} with the mapping token the mapper expects; an opt-in
+   * {@code RelationshipLinkage} property is {@code Wrapped} over its target's own direct/mapped
+   * shape.
+   */
+  static ReadRelationshipShape<JavaType> readRelationshipShape(
+      JavaType propertyType,
+      MappingPropertyView property,
+      Map<Class<?>, RelationshipLinkageMapper> linkageMappers,
+      TypeFactory typeFactory) {
+    JavaType linkageType = MappingTypeSupport.linkageJavaType(propertyType);
+    if (linkageType != null) {
+      boolean toMany =
+          MappingTypeSupport.isToManyType(MappingTypeSupport.unwrapTransportWrappers(propertyType));
+      RelationshipLinkageMapper mapper =
+          selectLinkageMapper(propertyType, property, linkageMappers);
+      ReadRelationshipShape<JavaType> targetShape =
+          mapper == null
+              ? new ReadRelationshipShape.Direct<>(false)
+              : new ReadRelationshipShape.Mapped<>(
+                  false, MappingTypeSupport.linkageTargetType(linkageType));
+      return new ReadRelationshipShape.Wrapped<>(
+          toMany, MappingTypeSupport.linkageMetaType(linkageType), targetShape);
+    }
+    RelationshipLinkageMapper mapper = selectLinkageMapper(propertyType, property, linkageMappers);
+    JavaType mappingType = MappingTypeSupport.targetMappingType(propertyType, typeFactory);
+    boolean toMany = MappingTypeSupport.isToManyType(mappingType);
+    JavaType target = toMany ? mappingType : MappingTypeSupport.unwrapOptionalType(mappingType);
+    if (mapper == null) {
+      return new ReadRelationshipShape.Direct<>(toMany);
+    }
+    return new ReadRelationshipShape.Mapped<>(toMany, target);
+  }
+
+  /**
+   * Invokes the configured mapper for one non-empty, cardinality-valid mapped linkage branch. The
+   * shared reader owns cardinality, short-circuiting, and wrapper occurrence orchestration; this
+   * native edge resolves the registered mapper and translates mapper failures into the stable
+   * {@link MappingDiagnostic#LINKAGE_MAPPING_FAILED} diagnostic at the relationship's data
+   * location.
+   */
+  static @Nullable Object mapLinkage(
+      RelationshipData data,
+      JavaType target,
+      MappingPropertyView property,
+      Map<Class<?>, RelationshipLinkageMapper> linkageMappers) {
+    RelationshipLinkageMapper mapper =
+        Objects.requireNonNull(
+            selectLinkageMapper(property.type(), property, linkageMappers), "linkageMapper");
+    return invokeLinkageMapper(mapper, data, target, property);
   }
 
   /**
@@ -274,7 +341,18 @@ final class RelationshipLinkageSupport {
     if (identifier == null || identifier.meta() == null) {
       return null;
     }
-    Meta meta = identifier.meta();
+    return convertIdentifierMeta(
+        Objects.requireNonNull(identifier.meta()), metaType, mapper, property, index);
+  }
+
+  /**
+   * Converts one present identifier {@link Meta} to the declared identifier-meta token. The shared
+   * reader owns presence, occurrence index, and the identifier-meta location; native conversion
+   * failures surface here as the stable {@link MappingDiagnostic#INVALID_META_TARGET} diagnostic at
+   * that location.
+   */
+  static @Nullable Object convertIdentifierMeta(
+      Meta meta, JavaType metaType, JsonMapper mapper, MappingPropertyView property, int index) {
     MappingLocation location =
         index < 0
             ? IdentifierMetaSupport.identifierMetaLocation(property.jsonapiName())

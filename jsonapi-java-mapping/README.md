@@ -20,14 +20,19 @@ package owns backend-neutral semantics for mapped resources:
   relationship-member assembly, resource/relationship/identifier meta construction and attachment,
   identifier-meta overlay, and base `ResourceObject` assembly. Declared meta-target validation and
   configured conversion stay with each backend and are applied around this writer.
-- **Basic resource read orchestration.** Resource-type matching through the shared type-match
-  authority, strict and independent `id`/`lid` role selection, wire-member lookup by JSON:API name,
-  the distinction between an absent attribute and a present JSON null, the distinction between an
-  absent relationship (or absent relationship `data`) and present linkage, synthetic input keys by
-  backend external name, member-relative diagnostic locations, and the non-deserializable and
-  identifier-conversion diagnostics. Each backend supplies configured wire-identifier parsing and
-  configured relationship-linkage conversion through a thin `ReadResourceBackend` boundary and keeps
-  whole-object meta and relationship-meta binding plus final bean construction.
+- **Basic and advanced resource read orchestration.** Resource-type matching through the shared
+  type-match authority, strict and independent `id`/`lid` role selection, wire-member lookup by
+  JSON:API name, the distinction between an absent attribute and a present JSON null, the
+  distinction between an absent relationship (or absent relationship `data`) and present linkage,
+  synthetic input keys by backend external name, member-relative diagnostic locations, and the
+  non-deserializable and identifier-conversion diagnostics. Relationship cardinality validation,
+  null/empty short-circuiting, direct `ResourceIdentifier` copies that preserve identifier meta and
+  drop additional members, opt-in `RelationshipLinkage` occurrence orchestration with
+  per-occurrence target and identifier-meta pairing, and resource/relationship meta presence and
+  raw-member binding. Each backend supplies configured wire-identifier parsing, lazy
+  relationship-shape resolution and configured linkage-mapper invocation, and declared
+  identifier-meta conversion through a thin `ReadResourceBackend` boundary; final bean
+  construction remains adapter-owned.
 - **Additive link decoration.** Exact decorator lookup by effective runtime raw class, decorator
   failure/null translation, relationship target classification and logical-to-wire name resolution,
   whole-value resource and relationship link replacement, fieldset non-resurrection, and
@@ -54,13 +59,17 @@ and target resolution, and native type specialization. The shared decoration pha
 adapter's already-resolved effective runtime raw class and the configured registry. Advanced
 relationship normalization runs through a neutral declared `RelationshipShape` that keeps native type
 specialization and unresolved-target validation adapter-owned while the shared writer owns the
-neutral meta semantics and diagnostics. The basic reader reaches its native mechanics through a thin
-`ReadResourceBackend` boundary limited to a mapped property's diagnostic raw class, configured
-wire-identifier parsing, and configured relationship-linkage conversion, while resource-type
-matching, identity-role selection, member presence and order, synthetic-input assembly, and the
-shared member diagnostics stay in the reader. Adapter write and read property records remain
-backend-owned; only the semantic value they compose is shared. This module imports no Jackson-major
-or concrete-adapter package.
+neutral meta semantics and diagnostics. The resource reader reaches its native mechanics through a
+thin `ReadResourceBackend` boundary limited to a mapped property's diagnostic raw class, configured
+wire-identifier parsing, lazy relationship-shape resolution (native target/type resolution and
+mapper selection), configured linkage-mapper invocation, and declared identifier-meta conversion,
+while resource-type matching, identity-role selection, member presence and order, synthetic-input
+assembly, cardinality validation, direct-identifier copying, wrapper occurrence orchestration,
+resource/relationship meta binding, and the shared member diagnostics stay in the reader. The
+neutral read relationship shape is declared by a read-specific shape that keeps native
+specialization and configured conversion adapter-owned. Adapter write and read property records
+remain backend-owned; only the semantic value they compose is shared. This module imports no
+Jackson-major or concrete-adapter package.
 
 ## Boundary
 

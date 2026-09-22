@@ -76,10 +76,10 @@ record ReadResourceMapping(
   }
 
   /**
-   * Builds the neutral read definition consumed by the shared basic reader: resource type, separate
-   * identity roles, and ordered attribute/relationship properties, each carrying its semantic
-   * metadata and effective-bindability state. Whole-meta and relationship-meta properties stay in
-   * this adapter mapping because their binding remains adapter-owned.
+   * Builds the neutral read definition consumed by the shared reader: resource type, separate
+   * identity roles, and ordered attribute, relationship, resource-meta, and matched
+   * relationship-meta properties, each carrying its semantic metadata and effective-bindability
+   * state. Relationship meta properties keep the resolved target relationship's JSON:API name.
    */
   ReadResourceDefinition<ReadMappingProperty> readDefinition() {
     List<ReadProperty<ReadMappingProperty>> attributeProperties =
@@ -92,12 +92,18 @@ record ReadResourceMapping(
     for (ReadMappingProperty property : relationships) {
       relationshipProperties.add(readProperty(property));
     }
+    List<ReadProperty<ReadMappingProperty>> relationshipMeta = new ArrayList<>();
+    for (ReadMappingProperty property : relationshipMetaProperties) {
+      relationshipMeta.add(readProperty(property));
+    }
     return new ReadResourceDefinition<>(
         resourceType,
         readPropertyOrNull(identifierProperty),
         readPropertyOrNull(localIdProperty),
         attributeProperties,
-        relationshipProperties);
+        relationshipProperties,
+        readPropertyOrNull(resourceMeta),
+        relationshipMeta);
   }
 
   private static ReadProperty<ReadMappingProperty> readProperty(ReadMappingProperty property) {
