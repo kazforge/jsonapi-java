@@ -30,8 +30,9 @@ package owns backend-neutral semantics for mapped resources:
   drop additional members, opt-in `RelationshipLinkage` occurrence orchestration with
   per-occurrence target and identifier-meta pairing, and resource/relationship meta presence and
   raw-member binding. Each backend supplies configured wire-identifier parsing, lazy
-  relationship-shape resolution and configured linkage-mapper invocation, declared identifier-meta
-  conversion, and final bean construction through a thin `ReadResourceBackend` boundary.
+  relationship-shape resolution and configured linkage-mapper invocation, and declared
+  identifier-meta conversion through a thin `ReadResourceBackend` boundary; final bean
+  construction remains adapter-owned.
 - **Additive link decoration.** Exact decorator lookup by effective runtime raw class, decorator
   failure/null translation, relationship target classification and logical-to-wire name resolution,
   whole-value resource and relationship link replacement, fieldset non-resurrection, and

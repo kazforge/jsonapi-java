@@ -41,7 +41,6 @@ import com.kazforge.jsonapi.fixtures.domainread.FlatIntIdArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatNullableIdArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatMetaArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatMutableArticle
-import com.kazforge.jsonapi.fixtures.domainread.FlatRelationshipLinkageArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatRequiredThing
 import com.kazforge.jsonapi.fixtures.domainread.FlatThingWithIgnored
 import com.kazforge.jsonapi.fixtures.domainread.FlatThrowingCreatorThing
