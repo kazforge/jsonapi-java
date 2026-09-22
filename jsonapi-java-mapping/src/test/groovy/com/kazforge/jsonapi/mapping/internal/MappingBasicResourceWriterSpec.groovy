@@ -6,7 +6,6 @@ import static com.kazforge.jsonapi.mapping.internal.PropertyRole.ID
 import static com.kazforge.jsonapi.mapping.internal.PropertyRole.LOCAL_ID
 import static com.kazforge.jsonapi.mapping.internal.PropertyRole.RELATIONSHIP
 
-import com.kazforge.jsonapi.core.model.Relationship
 import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
@@ -25,7 +24,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     def domain = domain('id': '1', 'localId': 'tmp-1', 'title': 'T')
 
     when:
-    def resource = writer.writeBasic(domain, 'articles', null, false, relationshipPhase())
+    def resource = writer.writeBasic(domain, 'articles', null, false)
 
     then:
     resource.type() == 'articles'
@@ -38,7 +37,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     articlesWithIdentity()
 
     when:
-    writer.writeBasic(domain('title': 'T'), 'articles', null, false, relationshipPhase())
+    writer.writeBasic(domain('title': 'T'), 'articles', null, false)
 
     then:
     def failure = thrown(JsonApiMappingException)
@@ -52,7 +51,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     backend.define('articles', property(LOCAL_ID, 'localId', 'localId', 'lid'))
 
     when:
-    writer.writeBasic(domain([:]), 'articles', null, false, relationshipPhase())
+    writer.writeBasic(domain([:]), 'articles', null, false)
 
     then:
     def failure = thrown(JsonApiMappingException)
@@ -66,7 +65,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     articlesWithIdentity()
 
     when:
-    def resource = writer.writeBasic(domain('title': 'T'), 'articles', null, true, relationshipPhase())
+    def resource = writer.writeBasic(domain('title': 'T'), 'articles', null, true)
 
     then:
     resource.type() == 'articles'
@@ -81,7 +80,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     backend.unconvertibleIdentity('tmp-1')
 
     when:
-    writer.writeBasic(domain('id': '1', 'localId': 'tmp-1'), 'articles', null, false, relationshipPhase())
+    writer.writeBasic(domain('id': '1', 'localId': 'tmp-1'), 'articles', null, false)
 
     then:
     def failure = thrown(JsonApiMappingException)
@@ -100,7 +99,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     def domain = domain('id': '1', 'headline': 'H', 'body': 'B')
 
     when:
-    def resource = writer.writeBasic(domain, 'articles', null, false, relationshipPhase())
+    def resource = writer.writeBasic(domain, 'articles', null, false)
 
     then:
     resource.attributes().attributes() == ['wire-headline': 'converted:H', body: 'converted:B']
@@ -117,7 +116,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     def domain = domain('id': '1', 'title': null, 'secret': 'hidden')
 
     when:
-    def resource = writer.writeBasic(domain, 'articles', null, false, relationshipPhase())
+    def resource = writer.writeBasic(domain, 'articles', null, false)
 
     then:
     resource.attributes().attributes() == [title: null]
@@ -128,14 +127,14 @@ class MappingBasicResourceWriterSpec extends Specification {
     backend.define('articles', property(ID, 'id', 'id', 'id'))
 
     when:
-    def resource = writer.writeBasic(domain('id': '1'), 'articles', null, false, relationshipPhase())
+    def resource = writer.writeBasic(domain('id': '1'), 'articles', null, false)
 
     then:
     resource.attributes() == null
     resource.relationships() == null
   }
 
-  def "filters attributes and passes only selected relationships to the phase in order"() {
+  def "filters attributes and builds only selected relationships in declaration order"() {
     given:
     backend.define(
         'articles',
@@ -144,17 +143,23 @@ class MappingBasicResourceWriterSpec extends Specification {
         property(ATTRIBUTE, 'body', 'body', 'body'),
         property(RELATIONSHIP, 'author', 'author', 'author'),
         property(RELATIONSHIP, 'editor', 'editor', 'editor'))
-    backend.relationshipMember('author', relationship('people', 'p1'))
-    backend.relationshipMember('editor', relationship('people', 'p2'))
-    def domain = domain('id': '1', 'title': 'T', 'body': 'B')
+    backend.define('people', property(ID, 'id', 'id', 'id'))
+    backend.relationshipShape('author', RelationshipShape.ordinary(false, 'people'))
+    backend.relationshipShape('editor', RelationshipShape.ordinary(false, 'people'))
+    def first = domain('id': 'p1')
+    def second = domain('id': 'p2')
+    def domain = domain('id': '1', 'title': 'T', 'body': 'B', 'author': first, 'editor': second)
 
     when:
-    def resource = writer.writeBasic(domain, 'articles', ['body', 'editor', 'author'] as Set, false, relationshipPhase())
+    def resource = writer.writeBasic(domain, 'articles', ['body', 'editor', 'author'] as Set, false)
 
     then:
     resource.attributes().attributes() == [body: 'converted:B']
-    backend.relationshipPhaseOrder == ['author', 'editor']
     resource.relationships().relationships().keySet() == ['author', 'editor'] as Set
+    (resource.relationships().relationships().get('author').data() as RelationshipData.SingleLinkage).identifier() ==
+        ResourceIdentifier.of('people', 'p1')
+    (resource.relationships().relationships().get('editor').data() as RelationshipData.SingleLinkage).identifier() ==
+        ResourceIdentifier.of('people', 'p2')
   }
 
   def "validates an unknown fieldset field before any selective read"() {
@@ -264,14 +269,6 @@ class MappingBasicResourceWriterSpec extends Specification {
     expect:
     writer.extractId(domain, 'articles') == '1'
     writer.extractLocalId(domain, 'articles') == 'tmp-1'
-  }
-
-  private BasicRelationshipWriter<String, String> relationshipPhase() {
-    backend.&writeRelationships as BasicRelationshipWriter
-  }
-
-  private static Relationship relationship(String type, String id) {
-    new Relationship(new RelationshipData.SingleLinkage(ResourceIdentifier.of(type, id)), null, null, [:])
   }
 
   private void articlesWithIdentity() {

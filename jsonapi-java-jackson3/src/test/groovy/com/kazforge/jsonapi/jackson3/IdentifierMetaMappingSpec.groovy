@@ -16,6 +16,8 @@ import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.EncodedIdMeta
 import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.GenericIdentifierMetaArticle
 import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.IdMetaBox
 import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.NonEmittingIdentifierMetaArticle
+import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.NullEmittingIdentifierMetaArticle
+import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.NullIdMeta
 import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.ScalarIdMeta
 import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.ScalarSerializedMetaArticle
 import com.kazforge.jsonapi.jackson3.IdentifierMetaFixtures.SerializedIdentifierMetaArticle
@@ -211,6 +213,23 @@ class IdentifierMetaMappingSpec extends Specification {
     def e = thrown(JsonApiMappingException)
     e.diagnostic == MappingDiagnostic.LINKAGE_MAPPING_FAILED
     e.propertyPath() == "/relationships/comments/data/0"
+  }
+
+  def "serializer-emitted JSON null clears existing to-one identifier meta"() {
+    given:
+    def article = new NullEmittingIdentifierMetaArticle(
+        "1",
+        new RelationshipLinkage(
+        new ResourceIdentifier("people", "p1", null, Meta.of([role: "editor"]), [:]),
+        new NullIdMeta("ignored")))
+
+    when:
+    def resource = mapper().toResource(article)
+
+    then:
+    def authorData = resource.relationships().relationships().get("author").data()
+    authorData == new RelationshipData.SingleLinkage(
+        new ResourceIdentifier("people", "p1", null, null, [:]))
   }
 
   def "converted scalar identifier meta is INVALID_META_TARGET"() {

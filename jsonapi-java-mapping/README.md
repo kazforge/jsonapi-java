@@ -16,9 +16,10 @@ package owns backend-neutral semantics for mapped resources:
   create-request identity rules, empty-member omission, attribute and member naming, ordinary
   domain-object to-one/to-many identifier construction, advanced relationship-value normalization
   (direct identifiers, direct linkage data, `RelationshipLinkage` wrapper occurrence handling,
-  to-many container materialization, null-item skipping, and mixed-value rejection), relationship
-  `data` construction, and base `ResourceObject` assembly. Resource and relationship meta,
-  decoration, and configured conversion stay with each backend and are applied around this writer.
+  to-many container materialization, null-item skipping, and mixed-value rejection), matched
+  relationship-member assembly, resource/relationship/identifier meta construction and attachment,
+  identifier-meta overlay, and base `ResourceObject` assembly. Decoration, declared meta-target
+  validation, and configured conversion stay with each backend and are applied around this writer.
 - **Mapping roles and naming metadata.** The backend-neutral mapping roles and the per-property
   semantic metadata that adapters compose into their own write and read mapping records: role,
   logical backend property identity, configured backend external name, and JSON:API member name.
@@ -29,17 +30,17 @@ package owns backend-neutral semantics for mapped resources:
   stays resolver-local.
 
 Native type and property models, introspection, mapping lookup, property access, native container
-type-shape derivation, configured conversion, identifier conversion, whole-meta conversion,
-decoration, and selective rendering stay in each backend. The compound-inclusion engine reaches
-native mechanics through the `InclusionBackend` capability boundary; the basic resource writer
-reaches them through a thin `WriteResourceBackend` boundary limited to mapping lookup, property
-access, identifier and attribute conversion, and native type specialization, plus an
-adapter-supplied `BasicRelationshipWriter` phase for relationship-member orchestration. Advanced
-relationship normalization runs through a neutral declared `RelationshipShape` and two narrow
-adapter callbacks (target resolution and wrapper identifier-meta enrichment) that keep native type
-specialization, unresolved-target validation, and property-scoped meta conversion adapter-owned.
-Adapter write and read property records remain backend-owned; only the semantic value they compose
-is shared. This module imports no Jackson-major or concrete-adapter package.
+type-shape derivation, configured conversion (including whole-meta and declared-type identifier-meta
+serialization), identifier conversion, declared meta-target validation, decoration, and selective
+rendering stay in each backend. The compound-inclusion engine reaches native mechanics through the
+`InclusionBackend` capability boundary; the resource writer reaches them through a thin
+`WriteResourceBackend` boundary limited to mapping lookup, property access, identifier and attribute
+conversion, whole-meta and declared identifier-meta conversion, native relationship-shape derivation
+and target resolution, and native type specialization. Advanced relationship normalization runs
+through a neutral declared `RelationshipShape` that keeps native type specialization and
+unresolved-target validation adapter-owned while the shared writer owns the neutral meta semantics
+and diagnostics. Adapter write and read property records remain backend-owned; only the semantic
+value they compose is shared. This module imports no Jackson-major or concrete-adapter package.
 
 ## Boundary
 
