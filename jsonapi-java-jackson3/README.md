@@ -47,14 +47,16 @@ capability from a caller-configured `JsonMapper`:
 Advanced mapping accepts a complete Jackson `JavaType` when a parameterized root cannot be recovered
 from its runtime class. Typed documents use an explicit neutral `ResourceTypeRegistry`; included DTOs
 remain independently bound rather than being injected into relationships. Shared representation,
-meta, identifier, decoration, and PATCH semantics are owned by
+meta, identifier, decoration contracts, and PATCH semantics are owned by
 [`jsonapi-java-api`](../jsonapi-java-api/README.md); backend-neutral compound-inclusion traversal and
 inclusion state, and the basic and advanced resource write semantics for identity, attributes,
-ordinary and advanced relationship linkage, fieldsets, relationship-member assembly, and
-resource/relationship/identifier meta application, are owned by
+ordinary and advanced relationship linkage, fieldsets, relationship-member assembly,
+resource/relationship/identifier meta application, and additive resource/relationship link
+decoration, are owned by
 [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). This adapter supplies the native
 capability bridges over configured Jackson, including declared relationship-shape and target
-resolution and property-scoped whole-meta and declared-type identifier-meta conversion. Public
+resolution, property-scoped whole-meta and declared-type identifier-meta conversion, the
+effective-type resolution that decoration looks up, and the configured decoration registry. Public
 Javadocs and the linked ADRs own the remaining details rather than repeated here.
 
 ## Jackson 3 boundary

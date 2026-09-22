@@ -8,8 +8,8 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Backend-independent additive resource-level decoration for domain writes. The current Jackson
- * adapters apply it through caller-configured Jackson.
+ * Backend-independent additive resource-level decoration for domain writes. It is applied by the
+ * shared backend-neutral decoration phase after the basic write.
  *
  * <p>Carries only:
  *

@@ -13,10 +13,11 @@ import org.jspecify.annotations.Nullable;
  * <p>Resource-meta and relationship-meta properties carry their semantic role and JSON:API target
  * names while their native tokens stay opaque. A relationship-meta property's {@link
  * WriteProperty#jsonapiName()} is the matched target relationship's JSON:API member name, so the
- * shared writer can attach each relationship meta to its selected relationship. Decoration and
- * configured conversion stay adapter-owned. Lists are defensively copied so a definition is an
- * immutable snapshot for the duration of one write. This is unsupported implementation detail for
- * backend cooperation, not consumer SPI.
+ * shared writer can attach each relationship meta to its selected relationship. Configured
+ * conversion stays adapter-owned, and additive link decoration reads the definition through {@link
+ * ResourceDecorationWriter}. Lists are defensively copied so a definition is an immutable snapshot
+ * for the duration of one write. This is unsupported implementation detail for backend cooperation,
+ * not consumer SPI.
  *
  * @param <P> opaque backend-native property token
  */

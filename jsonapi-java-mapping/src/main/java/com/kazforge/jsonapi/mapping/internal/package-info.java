@@ -18,16 +18,25 @@
  * configured backend external name, and JSON:API member name, with the adapter-independent role and
  * name invariants enforced on construction.
  *
+ * <p>{@link com.kazforge.jsonapi.mapping.internal.ResourceDecorationWriter} owns the additive link
+ * decoration phase after the basic write: exact effective-class decorator lookup, decorator
+ * failure/null translation, relationship target classification and logical-to-wire name resolution,
+ * whole-value resource and relationship link replacement, fieldset non-resurrection, and
+ * preservation of the other members the basic write produced. The adapter resolves the effective
+ * runtime raw class and supplies the configured registry; the decorator contracts and registry
+ * remain neutral API.
+ *
  * <p>Native type resolution, mapping lookup, property lookup and access, native container
  * type-shape derivation, identifier conversion, configured conversion, whole-meta and declared-type
- * meta conversion, decoration, and resource rendering stay in each backend. The inclusion engine
- * reaches them through {@link com.kazforge.jsonapi.mapping.internal.InclusionBackend}; the writer
- * reaches a thin {@link com.kazforge.jsonapi.mapping.internal.WriteResourceBackend}
- * native-mechanics boundary that also supplies a neutral declared {@link
- * com.kazforge.jsonapi.mapping.internal.RelationshipShape}, native target resolution, and the
- * property-scoped whole-meta and declared-type identifier-meta conversion operations. Those keep
- * native type specialization, unresolved-target validation, and configured conversion adapter-owned
- * while the shared writer owns the neutral meta semantics and diagnostics.
+ * meta conversion, effective-type resolution, and resource rendering stay in each backend. The
+ * inclusion engine reaches them through {@link
+ * com.kazforge.jsonapi.mapping.internal.InclusionBackend}; the writer reaches a thin {@link
+ * com.kazforge.jsonapi.mapping.internal.WriteResourceBackend} native-mechanics boundary that also
+ * supplies a neutral declared {@link com.kazforge.jsonapi.mapping.internal.RelationshipShape},
+ * native target resolution, and the property-scoped whole-meta and declared-type identifier-meta
+ * conversion operations. Those keep native type specialization, unresolved-target validation, and
+ * configured conversion adapter-owned while the shared writer owns the neutral meta semantics and
+ * diagnostics.
  *
  * <p>This package is not consumer SPI. Its Java-public types exist only so backend artifacts can
  * cooperate on neutral mapping implementation. Application code must not depend on it, and backend
