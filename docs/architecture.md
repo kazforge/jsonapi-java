@@ -34,7 +34,7 @@ authorization, query execution, relationship mutation, and application of PATCH 
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable wire model, local invariants, aggregate validation | None |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free semantic mapping roles | None |
 | [`jsonapi-java-api`](../jsonapi-java-api/README.md) | Backend-independent application, document, mapping, representation, diagnostic, and PATCH contracts currently implemented by configured Jackson | Core |
-| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; owns backend-neutral compound-inclusion traversal, identity/order/limit policy, sparse-fieldset linkage exemptions, basic and advanced resource-write and resource-read orchestration, and neutral mapping-role/per-property naming metadata; published but unsupported consumer API | API |
+| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; owns backend-neutral compound-inclusion traversal, identity/order/limit policy, sparse-fieldset linkage exemptions, basic and advanced resource-write and resource-read orchestration, low-level `PatchCommand` orchestration, and neutral mapping-role/per-property naming metadata; published but unsupported consumer API | API |
 | [`jsonapi-java-query`](../jsonapi-java-query/README.md) | Neutral query selection parsing and opaque parameter preservation | Core and neutral Jackson representation contracts |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Native Jackson 3 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
 | [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Native Jackson 2 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
@@ -58,7 +58,11 @@ strict and independent identity-role selection, wire-member presence, attribute,
 meta order, synthetic-input assembly preserving absent-versus-explicit-null, relationship
 cardinality validation, null/empty short-circuiting, direct-identifier copying,
 `RelationshipLinkage` occurrence pairing, resource/relationship meta binding, and the
-member-relative diagnostics), and the neutral mapping roles and
+member-relative diagnostics), backend-neutral low-level `PatchCommand` orchestration (required `id`
+identity that never falls back to `lid`, supplied-member classification, effective-deserialization
+bindability enforcement, `PatchChange` construction and `PatchCommand` assembly in the contract
+phase order, sharing whole-linkage replacement, cardinality, direct-identifier copying, wrapper
+occurrence pairing, and identifier-meta sequencing with the reader), and the neutral mapping roles and
 per-property name metadata each adapter composes into its own write and read mapping records. Each
 adapter supplies only narrow native capability bridges for type resolution, mapping lookup, property
 access, configured conversion (including whole-meta and declared-type identifier-meta conversion),
@@ -102,8 +106,12 @@ effective deserialization property discovery, nested construction-path walking, 
 extraction, and the single configured bean construction. The neutral read definition also owns the
 top-level backend-name to JSON:API construction-start translation, while the effective native
 property remains the adapter's authority. Advanced
-typed envelopes bind included resources independently through explicit type registration. PATCH
-projections do not read `included`.
+typed envelopes bind included resources independently through explicit type registration. Low-level
+`PatchCommand` orchestration lives in the same module behind an adapter-supplied
+`PatchResourceBackend` bridge and shares the neutral relationship-linkage binder with reads; each
+adapter keeps declared meta-target validation against the effective inbound PATCH property types,
+identity and attribute/meta conversion, recursive structured binding, final relationship container
+coercion, and the native linkage operations. PATCH projections do not read `included`.
 
 Writes map application values into the core model, preserve representation provenance, validate,
 then emit:
@@ -153,7 +161,9 @@ owns that boundary.
 | Allowed fields/includes and traversal limits | Application/runtime `RepresentationPolicy` |
 | Basic resource write semantics: fieldset validation/filtering, strict versus create identity, empty-member omission, ordinary and advanced relationship linkage normalization, relationship-member assembly, resource/relationship/identifier meta application and overlay, and additive resource/relationship link decoration | `jsonapi-java-mapping` internal basic resource and decoration writers |
 | Basic and advanced resource read semantics: resource-type matching, strict independent identity roles, wire-member presence, attribute/relationship/meta order, synthetic-input assembly preserving absent-versus-explicit-null, relationship cardinality validation, null/empty short-circuiting, direct-identifier copying, `RelationshipLinkage` occurrence pairing, resource/relationship meta binding, member-relative diagnostics, and top-level construction-start backend-name to JSON:API location translation | `jsonapi-java-mapping` internal resource reader |
+| Low-level `PatchCommand` semantics: resource-type matching, required `id` identity that never falls back to `lid`, supplied-member classification, effective-deserialization bindability enforcement, `PatchChange` construction, `PatchCommand` assembly, and the contract phase order, sharing whole-linkage replacement and the relationship-linkage orchestration with the reader | `jsonapi-java-mapping` internal PATCH command binder |
 | Configured wire-identifier parsing, lazy read relationship-shape resolution (target/type resolution and mapper selection), configured linkage-mapper invocation, declared identifier-meta conversion, declared meta-target validation, effective deserialization property discovery, nested construction-path walking, native failure-path extraction, and final bean construction | Each backend's read orchestration |
+| Declared meta-target validation against the effective inbound PATCH property types, identity and attribute/meta conversion, recursive structured binding, final relationship container coercion, and the native relationship-linkage operations for low-level PATCH | Each backend's PATCH orchestration |
 | Configured conversion (whole-meta and declared-type identifier-meta serialization), effective-type resolution, declared relationship-shape and target resolution, declared meta-target validation, and unresolved-target validation | Each backend's write orchestration |
 | Compound-inclusion traversal order, identity aliasing, deduplication, and limits | `jsonapi-java-mapping` internal engine |
 | Persistence, authorization, HTTP behavior, query execution, and applying updates | Application |
@@ -172,8 +182,10 @@ replacement. See [ADR-014](adr/014-flat-whole-object-meta-mapping.md),
 [ADR-017](adr/017-relationship-data-presence-in-domain-mapping.md).
 
 Low-level `PatchCommand` and typed `PatchPresence<T>` DTOs are two projections of a validated update
-document. Both preserve omission versus explicit null; applications authorize and apply the result.
-Recursive structured changes and atomic-container boundaries are owned by
+document. Backend-neutral low-level command orchestration lives in `jsonapi-java-mapping` behind each
+adapter's `PatchResourceBackend` bridge, while typed DTO binding remains adapter-owned. Both preserve
+omission versus explicit null; applications authorize and apply the result. Recursive structured
+changes and atomic-container boundaries are owned by
 [ADR-013](adr/013-recursive-structured-value-patch-semantics.md).
 
 ## Diagnostics

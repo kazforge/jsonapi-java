@@ -130,6 +130,8 @@ public final class MappingDefinitionCache {
     SerializationConfig serializationConfig = mapper.getSerializationConfig();
     BeanDescription serializationDescription =
         introspectSerialization(serializationConfig, javaType);
+    MappingDefinitionResolver.rejectConflicts(
+        view.description(), serializationDescription, javaType.getRawClass());
     return MappingDefinitionResolver.resolveRead(
         view.description(),
         serializationDescription,

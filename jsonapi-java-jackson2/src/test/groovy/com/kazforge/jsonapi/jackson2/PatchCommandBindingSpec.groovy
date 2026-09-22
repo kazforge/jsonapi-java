@@ -1,5 +1,6 @@
 package com.kazforge.jsonapi.jackson2
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JavaType
@@ -290,6 +291,33 @@ class PatchCommandBindingSpec extends Specification {
     ex.location().pointer() == "/attributes/count"
   }
 
+  def "attribute conversion failure wraps as an unsupported-attribute diagnostic"() {
+    given:
+    def reader = JsonApiJackson2.patchCommandReader(JsonMapper.builder().build())
+    def json = '{"data":{"type":"things","id":"1","attributes":{"count":"not-a-number"}}}'
+
+    when:
+    reader.readValue(json, FlatCountedThing)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    ex.location().pointer() == "/attributes/count"
+  }
+
+  def "duplicate mapping definitions fail with a name-collision diagnostic"() {
+    given:
+    def reader = JsonApiJackson2.patchCommandReader(JsonMapper.builder().build())
+    def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'
+
+    when:
+    reader.readValue(json, FlatDuplicateAttributeArticle)
+
+    then:
+    def failure = thrown(JsonApiMappingException)
+    failure.diagnostic() == MappingDiagnostic.NAME_COLLISION
+  }
+
   def "identifier conversion applies through the property deserializer"() {
     given:
     def converter = new IdentifierConverter() {
@@ -365,5 +393,14 @@ class PatchCommandBindingSpec extends Specification {
     @JsonDeserialize(using = UppercaseDeserializer)
     @JsonApiAttribute
     String title
+  }
+
+  @JsonApiResource(type = "articles")
+  static class FlatDuplicateAttributeArticle {
+    @JsonApiId String id
+    @JsonApiAttribute @JsonProperty("title")
+    String title
+    @JsonApiAttribute @JsonProperty("title")
+    String alsoTitle
   }
 }

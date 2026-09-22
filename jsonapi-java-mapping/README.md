@@ -37,6 +37,21 @@ package owns backend-neutral semantics for mapped resources:
   resource-relative JSON:API start location, paired with the same opaque property token, so the
   adapters share that translation while nested shape walking, effective native types, configured
   deserialization, and native failure-path extraction stay backend-owned.
+- **Low-level PATCH command orchestration.** Resource-type matching, required `id` identity that
+  never falls back to `lid`, supplied-member lookup by JSON:API name, effective-deserialization
+  bindability enforcement, `PatchChange` construction, and `PatchCommand` assembly. The phase order
+  is part of the contract: resource-type match, backend declared meta-target validation, identity,
+  resource meta, attributes in wire encounter order, and relationships in wire encounter order with
+  each relationship-meta change adjacent to its relationship and emitted only beside supplied
+  relationship `data`. Whole linkage replacement, cardinality, direct `ResourceIdentifier` copies,
+  wrapper occurrence orchestration, and identifier-meta sequencing are shared with ordinary reads
+  through the neutral linkage binder. Each backend supplies declared meta-target validation against
+  the effective inbound PATCH property types, identity and attribute/meta conversion, recursive
+  structured binding, final relationship target/container coercion, lazy relationship-shape
+  resolution, configured linkage-mapper invocation, and identifier-meta conversion through a thin
+  `PatchResourceBackend` boundary. Ordinary reads and low-level PATCH are separate projections of
+  one adapter-resolved deserialization mapping; they never resolve competing configured-Jackson
+  models.
 - **Additive link decoration.** Exact decorator lookup by effective runtime raw class, decorator
   failure/null translation, relationship target classification and logical-to-wire name resolution,
   whole-value resource and relationship link replacement, fieldset non-resurrection, and
@@ -70,10 +85,13 @@ mapper selection), configured linkage-mapper invocation, and declared identifier
 while resource-type matching, identity-role selection, member presence and order, synthetic-input
 assembly, cardinality validation, direct-identifier copying, wrapper occurrence orchestration,
 resource/relationship meta binding, and the shared member diagnostics stay in the reader. The
-neutral read relationship shape is declared by a read-specific shape that keeps native
-specialization and configured conversion adapter-owned. Adapter write and read property records
-remain backend-owned; only the semantic value they compose is shared. This module imports no
-Jackson-major or concrete-adapter package.
+neutral relationship shape used by the reader and the low-level PATCH binder keeps native
+specialization and configured conversion adapter-owned. The low-level PATCH binder reaches its
+native mechanics through a thin `PatchResourceBackend` boundary limited to declared meta-target
+validation, identity and attribute/meta conversion, final relationship container coercion, and the
+same lazy relationship-shape, linkage-mapper, and identifier-meta operations as the reader. Adapter
+write and read property records remain backend-owned; only the semantic value they compose is
+shared. This module imports no Jackson-major or concrete-adapter package.
 
 ## Boundary
 

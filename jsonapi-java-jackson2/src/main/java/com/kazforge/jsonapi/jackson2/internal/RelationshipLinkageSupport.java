@@ -23,15 +23,15 @@ import org.jspecify.annotations.Nullable;
 /**
  * Adapter-local native relationship-linkage support: declared-shape resolution and
  * configured-mapper selection, configured mapper invocation, and identifier-meta conversion for
- * flat read binding, plus the cardinality checks, opt-in {@link RelationshipLinkage} unwrap/wrap,
- * and built-in {@link ResourceIdentifier} conversion still used by presence-aware PATCH.
+ * flat read and low-level PATCH binding, plus the cardinality checks, opt-in {@link
+ * RelationshipLinkage} unwrap/wrap, and built-in {@link ResourceIdentifier} conversion still used
+ * by the typed {@code PatchPresence} DTO path.
  *
- * <p>Flat read binding no longer owns cardinality, null/empty short-circuiting, wrapper occurrence
- * orchestration, or identifier-meta sequencing; those live once in the shared {@code
- * com.kazforge.jsonapi.mapping.internal.BasicResourceReader}, and this class is reached only for
- * the native operations above. The PATCH path still uses its own {@link #convertLinkage}
- * orchestration, so those read-shaped rules remain duplicated here until a later PATCH extraction
- * collapses them; the duplication is intentional and this class must not gain new read callers.
+ * <p>Ordinary flat reads and low-level PATCH binding no longer own cardinality, null/empty
+ * short-circuiting, wrapper occurrence orchestration, or identifier-meta sequencing; those live
+ * once in the shared {@code com.kazforge.jsonapi.mapping.internal.RelationshipLinkageBinder}, and
+ * this class is reached only for the native operations above. Only the typed {@code PatchPresence}
+ * DTO path still uses its own {@link #convertLinkage} orchestration.
  */
 final class RelationshipLinkageSupport {
 

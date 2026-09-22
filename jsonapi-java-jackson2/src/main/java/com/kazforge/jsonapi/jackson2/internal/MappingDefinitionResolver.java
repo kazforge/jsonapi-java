@@ -622,6 +622,31 @@ final class MappingDefinitionResolver {
         effective.creatorExternalNames());
   }
 
+  /**
+   * Rejects conflicting Jackson member definitions before any deserializer is built, so a duplicate
+   * declaration surfaces as the shared name-collision diagnostic instead of leaking Jackson's
+   * introspection exception. Role classification performs the same check later; this pre-pass
+   * exists because effective-property resolution can fail first on the same declaration.
+   */
+  static void rejectConflicts(
+      BeanDescription deserializationDescription,
+      BeanDescription serializationDescription,
+      Class<?> rawType) {
+    List<PropertyPair> pairs;
+    try {
+      pairs = mergeProperties(deserializationDescription, serializationDescription);
+    } catch (IllegalArgumentException e) {
+      throw JsonApiMappingException.withoutLocation(
+          MappingDiagnostic.NAME_COLLISION,
+          rawType,
+          "Conflicting property definitions on " + rawType.getName());
+    }
+    for (PropertyPair pair : pairs) {
+      rejectConflictingJacksonName(
+          RoleAnnotations.from(pair.definitions()), pair.primary().getName(), rawType);
+    }
+  }
+
   private static List<PropertyPair> mergeProperties(
       BeanDescription deserializationDescription, BeanDescription serializationDescription) {
     List<PropertyPair> pairs = new ArrayList<>();
