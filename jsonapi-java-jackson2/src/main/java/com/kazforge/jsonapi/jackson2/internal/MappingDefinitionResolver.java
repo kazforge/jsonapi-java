@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
 import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
@@ -545,7 +545,7 @@ final class MappingDefinitionResolver {
       BeanDescription serializationDescription,
       Class<?> rawType,
       AnnotatedClass resourceMetadata,
-      Map<String, JavaType> deserializationTypes) {
+      MappingDefinitionCache.EffectiveReadProperties effective) {
     String resourceType = validateResourceTypeName(resourceTypeName(resourceMetadata), rawType);
     List<ReadMappingProperty> identifierProperties = new ArrayList<>();
     List<ReadMappingProperty> localIdProperties = new ArrayList<>();
@@ -569,16 +569,13 @@ final class MappingDefinitionResolver {
       validateJsonApiName(jsonapiName, role, logicalName, rawType);
       AnnotatedMember serializationMember =
           pair.serialization() == null ? null : pair.serialization().getAccessor();
-      AnnotatedMember deserializationMember =
-          pair.deserialization() == null ? null : pair.deserialization().getMutator();
-      JavaType deserializationType = deserializationTypes.get(externalName);
+      SettableBeanProperty effectiveProperty = effective.byExternalName().get(externalName);
       if (role == PropertyRole.RELATIONSHIP_META) {
         relationshipMetaProperties.add(
             new UnresolvedReadRelationshipMeta(
                 propertyDefinition,
                 serializationMember,
-                deserializationMember,
-                deserializationType,
+                effectiveProperty,
                 logicalName,
                 externalName,
                 jsonapiName));
@@ -587,8 +584,7 @@ final class MappingDefinitionResolver {
             new ReadMappingProperty(
                 propertyDefinition,
                 serializationMember,
-                deserializationMember,
-                deserializationType,
+                effectiveProperty,
                 new SemanticProperty(role, logicalName, externalName, jsonapiName));
         switch (role) {
           case ID -> identifierProperties.add(mappingProperty);
@@ -623,22 +619,7 @@ final class MappingDefinitionResolver {
         resourceMeta,
         List.copyOf(boundRelationshipMeta),
         deserializationDescription.getType(),
-        creatorPropertyNames(deserializationDescription));
-  }
-
-  /**
-   * Collects the configured Jackson external names of the deserialization-introspected properties
-   * that carry constructor parameters: the effective creator properties used by message-independent
-   * missing-creator-input classification.
-   */
-  private static Set<String> creatorPropertyNames(BeanDescription deserializationDescription) {
-    Set<String> creatorNames = new HashSet<>();
-    for (BeanPropertyDefinition definition : deserializationDescription.findProperties()) {
-      if (definition.hasConstructorParameter()) {
-        creatorNames.add(definition.getName());
-      }
-    }
-    return Set.copyOf(creatorNames);
+        effective.creatorExternalNames());
   }
 
   private static List<PropertyPair> mergeProperties(
@@ -696,10 +677,6 @@ final class MappingDefinitionResolver {
       this.serialization = serialization;
     }
 
-    @Nullable BeanPropertyDefinition deserialization() {
-      return deserialization;
-    }
-
     @Nullable BeanPropertyDefinition serialization() {
       return serialization;
     }
@@ -731,8 +708,7 @@ final class MappingDefinitionResolver {
   private record UnresolvedReadRelationshipMeta(
       BeanPropertyDefinition definition,
       @Nullable AnnotatedMember serializationMember,
-      @Nullable AnnotatedMember deserializationMember,
-      @Nullable JavaType deserializationType,
+      @Nullable SettableBeanProperty effectiveProperty,
       String logicalName,
       String externalName,
       String targetIdentity) {}
@@ -755,8 +731,7 @@ final class MappingDefinitionResolver {
           new ReadMappingProperty(
               property.definition(),
               property.serializationMember(),
-              property.deserializationMember(),
-              property.deserializationType(),
+              property.effectiveProperty(),
               new SemanticProperty(
                   PropertyRole.RELATIONSHIP_META,
                   property.logicalName(),

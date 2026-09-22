@@ -167,21 +167,31 @@ public final class MappingDefinitionCache {
         serializationDescription,
         rawType,
         resourceMetadata,
-        effectiveDeserializationTypes(javaType, deserializationDescription));
+        effectiveReadProperties(javaType, deserializationDescription));
   }
 
   /**
-   * Resolves property types from the actual configured bean deserializer. In particular, this keeps
-   * creator parameters, setter-only properties, write-only properties, generic bindings, and
-   * property-level type refinement on the deserialization side instead of guessing from a getter.
+   * Resolves the effective read properties from the actual configured bean deserializer. In
+   * particular, this keeps creator parameters, setter-only properties, write-only properties,
+   * generic bindings, and property-level type refinement on the deserialization side instead of
+   * guessing from a getter. Injection-only and view-excluded properties are absent, so a supplied
+   * member for which the configured mapper has no effective deserialization target is not bindable.
+   *
+   * <p>The configured bean deserializer's effective properties retain their property-scoped value
+   * deserializers, which nested construction-path walking needs to stop at custom-deserializer
+   * boundaries. The creator-name set covers every non-injection, view-eligible effective creator
+   * property, including unannotated ones that are absent from the JSON:API read mapping but still
+   * required by the configured creator; those names drive message-independent missing-creator-input
+   * classification.
    */
-  private Map<String, JavaType> effectiveDeserializationTypes(
+  private EffectiveReadProperties effectiveReadProperties(
       JavaType javaType, BeanDescription description) {
-    Map<String, JavaType> targets = new java.util.LinkedHashMap<>();
+    Map<String, SettableBeanProperty> targets = new java.util.LinkedHashMap<>();
+    java.util.Set<String> creatorExternalNames = new java.util.HashSet<>();
     ValueDeserializer<?> deserializer =
         mapper._deserializationContext().findNonContextualValueDeserializer(javaType);
     if (!(deserializer instanceof BeanDeserializerBase bean)) {
-      return targets;
+      return new EffectiveReadProperties(targets, creatorExternalNames);
     }
     Class<?> activeView = mapper.deserializationConfig().getActiveView();
     for (var definition : description.findProperties()) {
@@ -190,11 +200,23 @@ public final class MappingDefinitionCache {
       if (property != null
           && !property.isInjectionOnly()
           && (activeView == null || property.visibleInView(activeView))) {
-        targets.put(definition.getName(), property.getType());
+        targets.put(definition.getName(), property);
       }
     }
-    return targets;
+    for (var creators = bean.creatorProperties(); creators.hasNext(); ) {
+      SettableBeanProperty property = creators.next();
+      if (!property.isInjectionOnly()
+          && (activeView == null || property.visibleInView(activeView))) {
+        creatorExternalNames.add(property.getName());
+      }
+    }
+    return new EffectiveReadProperties(targets, java.util.Set.copyOf(creatorExternalNames));
   }
+
+  /** Effective read properties plus the external names of every eligible effective creator. */
+  record EffectiveReadProperties(
+      Map<String, SettableBeanProperty> byExternalName,
+      java.util.Set<String> creatorExternalNames) {}
 
   /**
    * Identity fragment shared by serialization and deserialization cache keys: naming strategy and

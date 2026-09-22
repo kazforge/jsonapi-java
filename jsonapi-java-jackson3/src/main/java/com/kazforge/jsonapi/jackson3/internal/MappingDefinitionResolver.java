@@ -25,7 +25,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.BeanDescription;
-import tools.jackson.databind.JavaType;
+import tools.jackson.databind.deser.SettableBeanProperty;
 import tools.jackson.databind.introspect.AnnotatedClass;
 import tools.jackson.databind.introspect.AnnotatedMember;
 import tools.jackson.databind.introspect.BeanPropertyDefinition;
@@ -78,7 +78,7 @@ final class MappingDefinitionResolver {
       BeanDescription serializationDescription,
       Class<?> rawType,
       AnnotatedClass resourceMetadata,
-      Map<String, JavaType> deserializationTypes) {
+      MappingDefinitionCache.EffectiveReadProperties effective) {
     String resourceType = validateResourceTypeName(resourceTypeName(resourceMetadata), rawType);
     List<ReadMappingProperty> identifierProperties = new ArrayList<>();
     List<ReadMappingProperty> localIdProperties = new ArrayList<>();
@@ -102,16 +102,13 @@ final class MappingDefinitionResolver {
       validateJsonApiName(jsonapiName, role, logicalName, rawType);
       AnnotatedMember serializationMember =
           pair.serialization() == null ? null : pair.serialization().getAccessor();
-      AnnotatedMember deserializationMember =
-          pair.deserialization() == null ? null : pair.deserialization().getMutator();
-      JavaType deserializationType = deserializationTypes.get(externalName);
+      SettableBeanProperty effectiveProperty = effective.byExternalName().get(externalName);
       if (role == PropertyRole.RELATIONSHIP_META) {
         relationshipMetaProperties.add(
             new UnresolvedReadRelationshipMeta(
                 propertyDefinition,
                 serializationMember,
-                deserializationMember,
-                deserializationType,
+                effectiveProperty,
                 logicalName,
                 externalName,
                 jsonapiName));
@@ -120,8 +117,7 @@ final class MappingDefinitionResolver {
             new ReadMappingProperty(
                 propertyDefinition,
                 serializationMember,
-                deserializationMember,
-                deserializationType,
+                effectiveProperty,
                 new SemanticProperty(role, logicalName, externalName, jsonapiName));
         switch (role) {
           case ID -> identifierProperties.add(mappingProperty);
@@ -156,7 +152,8 @@ final class MappingDefinitionResolver {
         List.copyOf(relationshipProperties),
         resourceMeta,
         List.copyOf(boundRelationshipMeta),
-        deserializationDescription.getType());
+        deserializationDescription.getType(),
+        effective.creatorExternalNames());
   }
 
   /**
@@ -544,8 +541,7 @@ final class MappingDefinitionResolver {
   private record UnresolvedReadRelationshipMeta(
       BeanPropertyDefinition definition,
       @Nullable AnnotatedMember serializationMember,
-      @Nullable AnnotatedMember deserializationMember,
-      @Nullable JavaType deserializationType,
+      @Nullable SettableBeanProperty effectiveProperty,
       String logicalName,
       String externalName,
       String targetIdentity) {}
@@ -568,8 +564,7 @@ final class MappingDefinitionResolver {
           new ReadMappingProperty(
               property.definition(),
               property.serializationMember(),
-              property.deserializationMember(),
-              property.deserializationType(),
+              property.effectiveProperty(),
               new SemanticProperty(
                   PropertyRole.RELATIONSHIP_META,
                   property.logicalName(),
@@ -702,20 +697,40 @@ final class MappingDefinitionResolver {
       pairs.add(new PropertyPair(definition, null));
     }
     for (BeanPropertyDefinition definition : serializationDescription.findProperties()) {
-      PropertyPair match = null;
-      for (PropertyPair pair : pairs) {
-        if (pair.matches(definition)) {
-          match = pair;
-          break;
-        }
-      }
+      // Logical identity takes precedence because externally configured names can cross between
+      // properties. External names are only a fallback when they identify one deserialization
+      // property; a second serialization definition never overwrites an existing pairing.
+      PropertyPair match =
+          findUniqueDeserializationMatch(
+              pairs, definition, BeanPropertyDefinition::getInternalName);
       if (match == null) {
+        match = findUniqueDeserializationMatch(pairs, definition, BeanPropertyDefinition::getName);
+      }
+      if (match == null || match.serialization() != null) {
         pairs.add(new PropertyPair(null, definition));
       } else {
         match.setSerialization(definition);
       }
     }
     return pairs;
+  }
+
+  private static @Nullable PropertyPair findUniqueDeserializationMatch(
+      List<PropertyPair> pairs,
+      BeanPropertyDefinition candidate,
+      Function<BeanPropertyDefinition, String> nameExtractor) {
+    String candidateName = nameExtractor.apply(candidate);
+    PropertyPair match = null;
+    for (PropertyPair pair : pairs) {
+      if (!pair.matchesDeserializationName(candidateName, nameExtractor)) {
+        continue;
+      }
+      if (match != null) {
+        return null;
+      }
+      match = pair;
+    }
+    return match;
   }
 
   private static final class PropertyPair {
@@ -730,10 +745,6 @@ final class MappingDefinitionResolver {
       this.serialization = serialization;
     }
 
-    @Nullable BeanPropertyDefinition deserialization() {
-      return deserialization;
-    }
-
     @Nullable BeanPropertyDefinition serialization() {
       return serialization;
     }
@@ -742,11 +753,9 @@ final class MappingDefinitionResolver {
       serialization = definition;
     }
 
-    boolean matches(BeanPropertyDefinition candidate) {
-      BeanPropertyDefinition existing = deserialization != null ? deserialization : serialization;
-      return existing != null
-          && (existing.getName().equals(candidate.getName())
-              || existing.getInternalName().equals(candidate.getInternalName()));
+    boolean matchesDeserializationName(
+        String candidateName, Function<BeanPropertyDefinition, String> nameExtractor) {
+      return deserialization != null && nameExtractor.apply(deserialization).equals(candidateName);
     }
 
     BeanPropertyDefinition primary() {

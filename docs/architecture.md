@@ -97,8 +97,11 @@ validation, null/empty short-circuiting, direct-identifier copying, `Relationshi
 occurrence pairing, resource/relationship meta binding, and the member-relative diagnostics — lives
 once in `jsonapi-java-mapping` behind an adapter-supplied native bridge for configured
 wire-identifier parsing, lazy relationship-shape resolution, configured linkage-mapper invocation,
-and declared identifier-meta conversion; each adapter keeps declared meta-target validation and the
-single configured bean construction. Advanced
+and declared identifier-meta conversion; each adapter keeps declared meta-target validation,
+effective deserialization property discovery, nested construction-path walking, native failure-path
+extraction, and the single configured bean construction. The neutral read definition also owns the
+top-level backend-name to JSON:API construction-start translation, while the effective native
+property remains the adapter's authority. Advanced
 typed envelopes bind included resources independently through explicit type registration. PATCH
 projections do not read `included`.
 
@@ -149,8 +152,8 @@ owns that boundary.
 | Include paths and fieldsets for one operation | `RepresentationSelection` |
 | Allowed fields/includes and traversal limits | Application/runtime `RepresentationPolicy` |
 | Basic resource write semantics: fieldset validation/filtering, strict versus create identity, empty-member omission, ordinary and advanced relationship linkage normalization, relationship-member assembly, resource/relationship/identifier meta application and overlay, and additive resource/relationship link decoration | `jsonapi-java-mapping` internal basic resource and decoration writers |
-| Basic and advanced resource read semantics: resource-type matching, strict independent identity roles, wire-member presence, attribute/relationship/meta order, synthetic-input assembly preserving absent-versus-explicit-null, relationship cardinality validation, null/empty short-circuiting, direct-identifier copying, `RelationshipLinkage` occurrence pairing, resource/relationship meta binding, and member-relative diagnostics | `jsonapi-java-mapping` internal resource reader |
-| Configured wire-identifier parsing, lazy read relationship-shape resolution (target/type resolution and mapper selection), configured linkage-mapper invocation, declared identifier-meta conversion, declared meta-target validation, and final bean construction | Each backend's read orchestration |
+| Basic and advanced resource read semantics: resource-type matching, strict independent identity roles, wire-member presence, attribute/relationship/meta order, synthetic-input assembly preserving absent-versus-explicit-null, relationship cardinality validation, null/empty short-circuiting, direct-identifier copying, `RelationshipLinkage` occurrence pairing, resource/relationship meta binding, member-relative diagnostics, and top-level construction-start backend-name to JSON:API location translation | `jsonapi-java-mapping` internal resource reader |
+| Configured wire-identifier parsing, lazy read relationship-shape resolution (target/type resolution and mapper selection), configured linkage-mapper invocation, declared identifier-meta conversion, declared meta-target validation, effective deserialization property discovery, nested construction-path walking, native failure-path extraction, and final bean construction | Each backend's read orchestration |
 | Configured conversion (whole-meta and declared-type identifier-meta serialization), effective-type resolution, declared relationship-shape and target resolution, declared meta-target validation, and unresolved-target validation | Each backend's write orchestration |
 | Compound-inclusion traversal order, identity aliasing, deduplication, and limits | `jsonapi-java-mapping` internal engine |
 | Persistence, authorization, HTTP behavior, query execution, and applying updates | Application |

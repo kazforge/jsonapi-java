@@ -6,6 +6,7 @@ import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JavaType;
@@ -41,22 +42,34 @@ final class BeanConstruction {
       JsonMapper mapper,
       Map<String, @Nullable Object> properties,
       JavaType targetType,
-      Class<?> rawType) {
-    return convertBean(mapper, properties, targetType, rawType, null);
+      Class<?> rawType,
+      @Nullable FailurePathTranslator translator) {
+    return convertBean(mapper, properties, targetType, rawType, translator, null);
   }
 
+  /**
+   * Constructs the bean with a single {@code convertValue}, optionally classifying creator failures
+   * against the effective creator property names. The typed PATCH DTO binder keeps the
+   * message-based default classifier ({@code null} names); ordinary flat reads pass the read
+   * mapping's effective creator external names so a missing-input mismatch is message-independent.
+   */
   static Object convertBean(
       JsonMapper mapper,
       Map<String, @Nullable Object> properties,
       JavaType targetType,
       Class<?> rawType,
-      @Nullable FailurePathTranslator translator) {
+      @Nullable FailurePathTranslator translator,
+      @Nullable Set<String> creatorPropertyNames) {
     try {
       return mapper.convertValue(properties, targetType);
     } catch (RuntimeException e) {
       Throwable failure = jacksonFailure(e);
+      boolean creatorInputFailure =
+          creatorPropertyNames == null
+              ? isCreatorInputFailure(failure)
+              : isCreatorInputFailure(failure, properties, creatorPropertyNames);
       MappingDiagnostic diagnostic =
-          isCreatorInputFailure(failure)
+          creatorInputFailure
               ? MappingDiagnostic.MISSING_CREATOR_INPUT
               : MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE;
       MappingLocation location = translator != null ? translator.translate(failure, rawType) : null;
@@ -67,6 +80,31 @@ final class BeanConstruction {
           "Failed to construct " + rawType.getName() + " from resource values",
           failure);
     }
+  }
+
+  /**
+   * Message-independent creator classification against the effective creator property names. A
+   * missing creator property surfaces as a {@link MismatchedInputException} whose first path names
+   * an effective creator property absent from the synthetic input; a supplied value whose shape
+   * does not match can surface through the same exception class, but such a value is present, so
+   * absence distinguishes missing creator input from a supplied-value failure.
+   * Creator/instantiation failures (including throwing creators) remain {@link
+   * ValueInstantiationException} and are always creator input problems.
+   */
+  private static boolean isCreatorInputFailure(
+      Throwable failure, Map<String, @Nullable Object> supplied, Set<String> creatorPropertyNames) {
+    if (failure instanceof ValueInstantiationException) {
+      return true;
+    }
+    if (failure instanceof MismatchedInputException) {
+      List<String> names = pathNames(failure);
+      if (!names.isEmpty()) {
+        return !supplied.containsKey(names.getFirst())
+            && creatorPropertyNames.contains(names.getFirst());
+      }
+      return false;
+    }
+    return false;
   }
 
   /**

@@ -32,7 +32,11 @@ package owns backend-neutral semantics for mapped resources:
   raw-member binding. Each backend supplies configured wire-identifier parsing, lazy
   relationship-shape resolution and configured linkage-mapper invocation, and declared
   identifier-meta conversion through a thin `ReadResourceBackend` boundary; final bean
-  construction remains adapter-owned.
+  construction remains adapter-owned. The neutral read definition also owns the top-level
+  construction-start translation: each bindable member's backend external name maps to its
+  resource-relative JSON:API start location, paired with the same opaque property token, so the
+  adapters share that translation while nested shape walking, effective native types, configured
+  deserialization, and native failure-path extraction stay backend-owned.
 - **Additive link decoration.** Exact decorator lookup by effective runtime raw class, decorator
   failure/null translation, relationship target classification and logical-to-wire name resolution,
   whole-value resource and relationship link replacement, fieldset non-resurrection, and

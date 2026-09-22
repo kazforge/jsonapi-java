@@ -2,6 +2,7 @@ package com.kazforge.jsonapi.jackson2
 
 import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.kazforge.jsonapi.annotation.JsonApiAttribute
@@ -74,6 +75,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
@@ -602,6 +604,56 @@ class ResourceBinderSpec extends Specification {
     ex.resourceClass() == FlatNestedThing
   }
 
+  def "nested construction path walking uses the effective deserialization type, not the declared type"() {
+    when:
+    binder.fromResource(
+        resource("refined-nested", "1", [profile: [geo: [lon: "boom"]]], null),
+        FlatRefinedNestedThing)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    ex.propertyPath() == "/attributes/profile/geo/lon"
+    ex.resourceClass() == FlatRefinedNestedThing
+  }
+
+  def "nested construction path stops at a property-scoped custom deserializer boundary"() {
+    when:
+    binder.fromResource(
+        resource("boundary-nested", "1", [profile: [custom: [whatever: 1]]], null),
+        FlatBoundaryNestedThing)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    ex.propertyPath() == "/attributes/profile/custom"
+    ex.resourceClass() == FlatBoundaryNestedThing
+  }
+
+  def "nested construction path walks through an Optional attribute container"() {
+    when:
+    binder.fromResource(
+        resource("optional-nested", "1", [point: [x: "boom"]], null), FlatOptionalNestedThing)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    ex.propertyPath() == "/attributes/point/x"
+    ex.resourceClass() == FlatOptionalNestedThing
+  }
+
+  def "an unannotated required creator input absent from the synthetic input is a missing creator input"() {
+    when:
+    binder.fromResource(
+        resource("unmapped-required-things", "1", null, null), FlatUnmappedRequiredThing)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.MISSING_CREATOR_INPUT
+    ex.propertyPath() == null
+    ex.resourceClass() == FlatUnmappedRequiredThing
+  }
+
   def "property null provider applies to the explicitly bound null value"() {
     when:
     def thing = binder.fromResource(
@@ -994,6 +1046,69 @@ class ResourceBinderSpec extends Specification {
 
     void setY(int y) {
       this.y = y
+    }
+  }
+
+  @JsonApiResource(type = "refined-nested")
+  static class FlatRefinedNestedThing {
+    @JsonApiId String id
+    @JsonApiAttribute FlatProfile profile
+  }
+
+  static class FlatProfile {
+    @JsonDeserialize(as = FlatSubGeo.class)
+    FlatGeo geo
+  }
+
+  static class FlatGeo {
+    int lat
+  }
+
+  static class FlatSubGeo extends FlatGeo {
+    int lon
+  }
+
+  @JsonApiResource(type = "boundary-nested")
+  static class FlatBoundaryNestedThing {
+    @JsonApiId String id
+    @JsonApiAttribute FlatBoundaryProfile profile
+  }
+
+  @JsonApiResource(type = "optional-nested")
+  static class FlatOptionalNestedThing {
+    @JsonApiId String id
+    @JsonApiAttribute Optional<NestedPoint> point
+  }
+
+  static class FlatBoundaryProfile {
+    @JsonDeserialize(using = BoundaryGeoDeserializer)
+    FlatGeo custom
+  }
+
+  static class BoundaryGeoDeserializer extends JsonDeserializer<FlatGeo> {
+    @Override
+    FlatGeo deserialize(JsonParser parser, DeserializationContext context) {
+      def failure = MismatchedInputException.from(parser, FlatGeo, "custom boundary")
+      failure.prependPath(FlatGeo, "lat")
+      throw failure
+    }
+  }
+
+  @JsonApiResource(type = "unmapped-required-things")
+  static class FlatUnmappedRequiredThing {
+    private final String id
+    private final String secret
+
+    @JsonCreator
+    FlatUnmappedRequiredThing(
+    @JsonProperty("id") @JsonApiId String id,
+    @JsonProperty(value = "secret", required = true) String secret) {
+      this.id = id
+      this.secret = secret
+    }
+
+    String idValue() {
+      return id
     }
   }
 
