@@ -20,6 +20,8 @@ import com.kazforge.jsonapi.representation.IncludePath
 import com.kazforge.jsonapi.representation.IncludePolicy
 import com.kazforge.jsonapi.representation.RepresentationPolicy
 import com.kazforge.jsonapi.representation.RepresentationSelection
+import com.kazforge.jsonapi.fixtures.compoundwrite.BaseComment
+import com.kazforge.jsonapi.fixtures.compoundwrite.ModeratedComment
 import com.kazforge.jsonapi.fixtures.domainwrite.Article
 import com.kazforge.jsonapi.fixtures.domainwrite.Comment
 import com.kazforge.jsonapi.fixtures.domainwrite.Person
@@ -175,6 +177,22 @@ class ResourceDecorationSpec extends Specification {
 
     then:
     resource.links() == resourceLinks
+  }
+
+  def "decorator registered for the runtime subtype is selected when writing through the declared base type"() {
+    given:
+    Links moderatedLinks = Links.ofLinks([self: new Link.StringLink("https://example.test/moderated-comments/m1")])
+    ResourceDecorator<ModeratedComment> decorator = { c -> ResourceDecoration.ofLinks(moderatedLinks) }
+    def registry = ResourceDecoratorRegistry.builder().register(ModeratedComment, decorator).build()
+    def base = JsonMapper.builder().build()
+    def mapper = JsonApiJackson2.resourceMapper(base, registry)
+    def declaredType = base.constructType(BaseComment)
+
+    when:
+    def resource = mapper.toResource(new ModeratedComment("m1", "Moderated", null), declaredType)
+
+    then:
+    resource.links() == moderatedLinks
   }
 
   def "decorator registry is immutable and safe for concurrent use"() {
