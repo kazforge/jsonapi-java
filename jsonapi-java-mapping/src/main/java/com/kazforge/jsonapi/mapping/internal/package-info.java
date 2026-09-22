@@ -12,6 +12,17 @@
  * and relationship meta construction and attachment, identifier-meta overlay, and base {@link
  * com.kazforge.jsonapi.core.model.ResourceObject} assembly.
  *
+ * <p>It owns backend-neutral basic resource-read semantics: resource-type matching through the
+ * shared {@link com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch} authority, strict and
+ * independent {@code id}/{@code lid} role selection, wire-member lookup by JSON:API name, the
+ * distinction between an absent attribute and a present JSON null, the distinction between an
+ * absent relationship (or absent relationship {@code data}) and present linkage, synthetic input
+ * keys by backend external name, the resource-relative locations of supplied members, and the
+ * shared non-deserializable and identifier-conversion diagnostics. Each backend reaches configured
+ * wire-identifier parsing and configured relationship-linkage conversion through a thin {@link
+ * com.kazforge.jsonapi.mapping.internal.ReadResourceBackend} native-mechanics boundary and remains
+ * responsible for whole-object meta and relationship-meta binding plus final bean construction.
+ *
  * <p>It additionally owns the neutral {@link com.kazforge.jsonapi.mapping.internal.PropertyRole}
  * enum and the {@link com.kazforge.jsonapi.mapping.internal.SemanticProperty} value that adapters
  * compose into their own write and read mapping records: role, logical backend property identity,

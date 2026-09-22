@@ -2,6 +2,7 @@ package com.kazforge.jsonapi.fixtures.contract
 
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
+import com.kazforge.jsonapi.fixtures.domainread.FlatDefaultedArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatThingWithIgnored
 import com.kazforge.jsonapi.fixtures.domainwrite.Article
 import com.kazforge.jsonapi.fixtures.domainwrite.ArticleWithUnannotatedExtra
@@ -66,6 +67,22 @@ abstract class AttributesCharacterizationSpec extends Specification {
     then:
     bound.title() == null
     bound.body() == null
+  }
+
+  def "distinguishes an omitted attribute member from a present explicit null on read"() {
+    given:
+    def omitted = '{"data":{"type":"articles","id":"1","attributes":{}}}'
+    def explicitNull = '{"data":{"type":"articles","id":"1","attributes":{"title":null,"body":"B"}}}'
+
+    when:
+    def omittedBound = api().resources().readOne(omitted, FlatDefaultedArticle)
+    def nullBound = api().resources().readOne(explicitNull, FlatDefaultedArticle)
+
+    then:
+    omittedBound.title == "default"
+    omittedBound.body == "default"
+    nullBound.title == null
+    nullBound.body == "B"
   }
 
   def "never participates an attribute whose Jackson visibility is disabled"() {

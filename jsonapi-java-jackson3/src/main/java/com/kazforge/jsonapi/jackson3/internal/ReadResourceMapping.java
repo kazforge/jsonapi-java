@@ -1,6 +1,9 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.mapping.internal.ReadProperty;
+import com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,5 +73,39 @@ record ReadResourceMapping(
               property.type()));
     }
     return starts;
+  }
+
+  /**
+   * Builds the neutral read definition consumed by the shared basic reader: resource type, separate
+   * identity roles, and ordered attribute/relationship properties, each carrying its semantic
+   * metadata and effective-bindability state. Whole-meta and relationship-meta properties stay in
+   * this adapter mapping because their binding remains adapter-owned.
+   */
+  ReadResourceDefinition<ReadMappingProperty> readDefinition() {
+    List<ReadProperty<ReadMappingProperty>> attributeProperties =
+        new ArrayList<>(attributes.size());
+    for (ReadMappingProperty property : attributes) {
+      attributeProperties.add(readProperty(property));
+    }
+    List<ReadProperty<ReadMappingProperty>> relationshipProperties =
+        new ArrayList<>(relationships.size());
+    for (ReadMappingProperty property : relationships) {
+      relationshipProperties.add(readProperty(property));
+    }
+    return new ReadResourceDefinition<>(
+        resourceType,
+        readPropertyOrNull(identifierProperty),
+        readPropertyOrNull(localIdProperty),
+        attributeProperties,
+        relationshipProperties);
+  }
+
+  private static ReadProperty<ReadMappingProperty> readProperty(ReadMappingProperty property) {
+    return new ReadProperty<>(property, property.metadata(), property.deserializable());
+  }
+
+  private static @Nullable ReadProperty<ReadMappingProperty> readPropertyOrNull(
+      @Nullable ReadMappingProperty property) {
+    return property == null ? null : readProperty(property);
   }
 }
