@@ -24,7 +24,7 @@ import org.jspecify.annotations.Nullable;
  * JSON null, the distinction between an absent relationship (or absent relationship {@code data})
  * and present linkage, synthetic input keys by backend external name, resource-relative locations
  * for supplied members, and the shared non-deserializable and identifier-conversion diagnostics.
- * The local-id authority stays the existing {@link ResourceTypeMatch}.
+ * The resource-type authority stays the existing {@link ResourceTypeMatch}.
  *
  * <p>Read phase order is part of the contract: the caller resolves the mapping, then calls {@link
  * #requireResourceType} and validates all declared meta targets, then calls {@link #readBasic}.
@@ -154,10 +154,7 @@ public final class BasicResourceReader<P> {
     }
     for (ReadProperty<P> property : definition.relationships()) {
       Relationship relationship = relationships.relationships().get(property.jsonapiName());
-      if (relationship == null) {
-        continue;
-      }
-      RelationshipData data = relationship.data();
+      RelationshipData data = relationship == null ? null : relationship.data();
       if (data == null) {
         continue;
       }
@@ -187,12 +184,17 @@ public final class BasicResourceReader<P> {
   }
 
   /**
-   * Builds the stable identifier-conversion diagnostic for a supplied identity member. Exposed to
-   * backend cooperation so a backend's adapter-owned construction-failure reclassification reports
-   * the same identifier-conversion failure without re-deriving its message.
+   * Builds the stable identifier-conversion diagnostic for a supplied identity member.
+   *
+   * <p>{@code diagnosticClass} is the class reported on the mapping failure, which is deliberately
+   * not always the mapped identity property's type. A direct wire-identifier parse failure reports
+   * the identity property's raw type, while a backend's construction-failure reclassification
+   * reports the containing resource type; both callers share this diagnostic without changing what
+   * each reports. Exposed to backend cooperation so the reclassification reports the same
+   * identifier-conversion failure without re-deriving its message.
    */
   public static JsonApiMappingException identifierConversionFailure(
-      Class<?> propertyRawType, MappingLocation identifierLocation, @Nullable Throwable cause) {
+      Class<?> diagnosticClass, MappingLocation identifierLocation, @Nullable Throwable cause) {
     String message =
         cause == null
             ? "Identifier converter returned null for the wire identifier at '"
@@ -201,16 +203,16 @@ public final class BasicResourceReader<P> {
             : "Failed to convert the wire identifier at '"
                 + identifierLocation
                 + "' for "
-                + propertyRawType.getName();
+                + diagnosticClass.getName();
     return cause == null
         ? new JsonApiMappingException(
             MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED,
-            propertyRawType,
+            diagnosticClass,
             identifierLocation,
             message)
         : new JsonApiMappingException(
             MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED,
-            propertyRawType,
+            diagnosticClass,
             identifierLocation,
             message,
             cause);
