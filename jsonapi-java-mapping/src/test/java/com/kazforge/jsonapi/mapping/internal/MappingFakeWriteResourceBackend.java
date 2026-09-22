@@ -1,11 +1,6 @@
 package com.kazforge.jsonapi.mapping.internal;
 
-import com.kazforge.jsonapi.core.model.Meta;
-import com.kazforge.jsonapi.core.model.Relationship;
-import com.kazforge.jsonapi.core.model.Relationships;
-import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -17,13 +12,13 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Mapping-local test double for {@link WriteResourceBackend} and the relationship phase over string
- * type and property tokens. Test code configures definitions, domain values, and per-property
- * behavior directly; no write semantics beyond that configuration are simulated.
+ * Mapping-local test double for {@link WriteResourceBackend} over string type and property tokens.
+ * Test code configures definitions, domain values, relationship shapes, and per-member conversion
+ * outcomes directly; no write semantics beyond that configuration are simulated.
  *
- * <p>It also carries passive observations of the advanced relationship-write callbacks the shared
- * writer invokes: target resolution and wrapper identifier-meta enrichment. The observers record
- * invocations and delegate or overlay deterministically; they implement no Jackson behavior.
+ * <p>It also carries passive observations of the native callbacks the shared writer invokes: target
+ * resolution, whole-meta conversion, and identifier-meta conversion. The observers record
+ * invocations and return configured or deterministic results; they implement no Jackson behavior.
  */
 @NullMarked
 final class MappingFakeWriteResourceBackend implements WriteResourceBackend<String, String> {
@@ -34,29 +29,41 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
   final Set<String> omittedAttributes = new LinkedHashSet<>();
   final Set<Object> unconvertibleValues = new LinkedHashSet<>();
 
-  /** Relationship members returned by the phase, by relationship property token. */
-  final Map<String, Relationship> relationshipMembers = new LinkedHashMap<>();
+  /** Declared relationship shapes by relationship property token. */
+  final Map<String, RelationshipShape<String>> relationshipShapes = new LinkedHashMap<>();
 
-  /** JSON:API names passed to the phase, in call order. */
-  final List<String> relationshipPhaseOrder = new ArrayList<>();
+  /**
+   * Whole-meta conversion outcomes by meta property token; absent means emitted unwrapped value.
+   */
+  final Map<String, MemberConversion> wholeMetaConversions = new LinkedHashMap<>();
+
+  /**
+   * Identifier-meta conversion outcomes by declared meta token; absent means a deterministic map.
+   */
+  final Map<String, MemberConversion> identifierMetaConversions = new LinkedHashMap<>();
+
+  /** Whole-meta property tokens whose conversion throws. */
+  final Set<String> failingWholeMeta = new LinkedHashSet<>();
+
+  /** Declared identifier-meta tokens whose conversion throws. */
+  final Set<String> failingIdentifierMeta = new LinkedHashSet<>();
 
   /** Target-resolution observations of the shared writer, in call order. */
   final List<TargetResolution> targetResolutions = new ArrayList<>();
 
-  /** Wrapper identifier-meta enrichment observations of the shared writer, in call order. */
-  final List<MetaEnrichment> metaEnrichments = new ArrayList<>();
+  /** Identifier-meta conversion observations of the shared writer, in call order. */
+  final List<IdentifierMetaObservation> identifierMetaObservations = new ArrayList<>();
 
-  /** One target-resolution invocation: the representative target, declared token, and location. */
+  /** One target-resolution invocation: target, declared token, cardinality, and location. */
   record TargetResolution(
-      @Nullable Object target, @Nullable String declaredTargetToken, MappingLocation location) {}
+      @Nullable Object target,
+      @Nullable String declaredTargetToken,
+      boolean relationshipToMany,
+      MappingLocation location) {}
 
-  /** One enrichment invocation: declared meta token, value, identifier, name, and location. */
-  record MetaEnrichment(
-      @Nullable String declaredMetaToken,
-      @Nullable Object metaValue,
-      ResourceIdentifier identifier,
-      String relationshipName,
-      MappingLocation identifierMetaLocation) {}
+  /** One identifier-meta conversion invocation: declared meta token and occurrence value. */
+  record IdentifierMetaObservation(
+      @Nullable String declaredMetaToken, @Nullable Object metaValue) {}
 
   static WriteProperty<String> property(
       PropertyRole role, String logicalName, String externalName, String jsonapiName) {
@@ -69,22 +76,30 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
   final void define(String resourceType, WriteProperty<String>... properties) {
     WriteProperty<String> identifier = null;
     WriteProperty<String> localId = null;
+    WriteProperty<String> resourceMeta = null;
     List<WriteProperty<String>> attributes = new ArrayList<>();
     List<WriteProperty<String>> relationships = new ArrayList<>();
+    List<WriteProperty<String>> relationshipMeta = new ArrayList<>();
     for (WriteProperty<String> property : properties) {
       switch (property.role()) {
         case ID -> identifier = property;
         case LOCAL_ID -> localId = property;
         case ATTRIBUTE -> attributes.add(property);
         case RELATIONSHIP -> relationships.add(property);
-        case RESOURCE_META, RELATIONSHIP_META ->
-            throw new IllegalArgumentException("basic write definitions carry no meta roles");
+        case RESOURCE_META -> resourceMeta = property;
+        case RELATIONSHIP_META -> relationshipMeta.add(property);
       }
     }
     definitions.put(
         resourceType,
         new WriteResourceDefinition<>(
-            resourceType, identifier, localId, attributes, relationships));
+            resourceType,
+            identifier,
+            localId,
+            attributes,
+            relationships,
+            resourceMeta,
+            relationshipMeta));
   }
 
   /** Sets one domain's value for a property token; presence is explicit. */
@@ -105,20 +120,29 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
     unconvertibleValues.add(value);
   }
 
-  void relationshipMember(String propertyToken, Relationship relationship) {
-    relationshipMembers.put(propertyToken, relationship);
+  /** Registers the declared shape of one relationship property. */
+  void relationshipShape(String propertyToken, RelationshipShape<String> shape) {
+    relationshipShapes.put(propertyToken, shape);
   }
 
-  /** Relationship phase double: returns the configured members for the selected properties. */
-  @SuppressWarnings("unused")
-  Relationships writeRelationships(
-      Object resource, String declaredType, List<WriteProperty<String>> selectedRelationships) {
-    Map<String, @Nullable Relationship> members = new LinkedHashMap<>();
-    for (WriteProperty<String> property : selectedRelationships) {
-      relationshipPhaseOrder.add(property.jsonapiName());
-      members.put(property.jsonapiName(), relationshipMembers.get(property.token()));
-    }
-    return Relationships.ofRelationships(members);
+  /** Configures one whole-meta property's conversion outcome. */
+  void wholeMetaConversion(String propertyToken, MemberConversion conversion) {
+    wholeMetaConversions.put(propertyToken, conversion);
+  }
+
+  /** Configures one declared identifier-meta token's conversion outcome. */
+  void identifierMetaConversion(String declaredMetaToken, MemberConversion conversion) {
+    identifierMetaConversions.put(declaredMetaToken, conversion);
+  }
+
+  /** Configures one whole-meta property whose conversion throws. */
+  void failWholeMetaConversion(String propertyToken) {
+    failingWholeMeta.add(propertyToken);
+  }
+
+  /** Configures one declared identifier-meta token whose conversion throws. */
+  void failIdentifierMetaConversion(String declaredMetaToken) {
+    failingIdentifierMeta.add(declaredMetaToken);
   }
 
   @Override
@@ -145,47 +169,69 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
   }
 
   @Override
-  public AttributeConversion convertAttribute(
+  public MemberConversion convertAttribute(
       Object domain, String declaredType, WriteProperty<String> property) {
     Map<String, @Nullable Object> domainValues = values.get(domain);
     if (domainValues == null || !domainValues.containsKey(property.token())) {
-      return AttributeConversion.omitted();
+      return MemberConversion.omitted();
     }
     if (omittedAttributes.contains(property.token())) {
-      return AttributeConversion.omitted();
+      return MemberConversion.omitted();
     }
     Object raw = domainValues.get(property.token());
-    return AttributeConversion.emitted(raw == null ? null : "converted:" + raw);
+    return MemberConversion.emitted(raw == null ? null : "converted:" + raw);
+  }
+
+  @Override
+  public MemberConversion convertWholeMeta(
+      Object domain,
+      String declaredType,
+      WriteProperty<String> property,
+      @Nullable Object rawValue,
+      @Nullable Object unwrappedValue) {
+    if (failingWholeMeta.contains(property.token())) {
+      throw new IllegalStateException("whole-meta conversion failed for " + property.token());
+    }
+    MemberConversion configured = wholeMetaConversions.get(property.token());
+    return configured != null ? configured : MemberConversion.emitted(unwrappedValue);
+  }
+
+  @Override
+  public MemberConversion convertIdentifierMeta(
+      String declaredMetaToken, @Nullable Object metaValue) {
+    identifierMetaObservations.add(new IdentifierMetaObservation(declaredMetaToken, metaValue));
+    if (failingIdentifierMeta.contains(declaredMetaToken)) {
+      throw new IllegalStateException("identifier-meta conversion failed for " + declaredMetaToken);
+    }
+    MemberConversion configured = identifierMetaConversions.get(declaredMetaToken);
+    return configured != null
+        ? configured
+        : MemberConversion.emitted(
+            Map.of("observed:" + declaredMetaToken, String.valueOf(metaValue)));
+  }
+
+  @Override
+  public RelationshipShape<String> relationshipShape(WriteProperty<String> property) {
+    RelationshipShape<String> shape = relationshipShapes.get(property.token());
+    if (shape == null) {
+      throw new IllegalArgumentException("no relationship shape for " + property.token());
+    }
+    return shape;
+  }
+
+  @Override
+  public String resolveRelationshipTarget(
+      @Nullable Object target,
+      @Nullable String declaredTarget,
+      boolean relationshipToMany,
+      MappingLocation relationshipLocation) {
+    targetResolutions.add(
+        new TargetResolution(target, declaredTarget, relationshipToMany, relationshipLocation));
+    return effectiveType(Objects.requireNonNull(target), Objects.requireNonNull(declaredTarget));
   }
 
   @Override
   public String effectiveType(Object domain, String declaredType) {
     return effectiveTypes.getOrDefault(domain, declaredType);
-  }
-
-  /**
-   * Passive target-resolution observer: records each invocation and resolves through the configured
-   * effective-type mapping, keeping native resolution behavior out of the double.
-   */
-  RelationshipTargetResolver<String> observingTargetResolver() {
-    return (target, declaredTargetToken, location) -> {
-      targetResolutions.add(new TargetResolution(target, declaredTargetToken, location));
-      return effectiveType(
-          Objects.requireNonNull(target), Objects.requireNonNull(declaredTargetToken));
-    };
-  }
-
-  /**
-   * Passive identifier-meta enrichment observer: records each invocation and overlays a
-   * deterministic meta value built from the observed tokens, without any conversion behavior.
-   */
-  RelationshipMetaEnricher<String> observingMetaEnricher() {
-    return (declaredMetaToken, metaValue, identifier, relationshipName, identifierMetaLocation) -> {
-      metaEnrichments.add(
-          new MetaEnrichment(
-              declaredMetaToken, metaValue, identifier, relationshipName, identifierMetaLocation));
-      return IdentifierMetaSupport.withMeta(
-          identifier, Meta.of(Map.of("observed:" + declaredMetaToken, String.valueOf(metaValue))));
-    };
   }
 }

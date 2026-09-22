@@ -2,25 +2,21 @@ package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.model.Relationship;
-import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.core.model.Relationships;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
-import com.kazforge.jsonapi.core.validation.JsonApiValidationException;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.RelationshipDecoration;
 import com.kazforge.jsonapi.mapping.ResourceDecoration;
 import com.kazforge.jsonapi.mapping.ResourceDecorator;
 import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry;
-import com.kazforge.jsonapi.mapping.internal.AttributeConversion;
 import com.kazforge.jsonapi.mapping.internal.BasicResourceWriter;
 import com.kazforge.jsonapi.mapping.internal.EffectiveRepresentation;
+import com.kazforge.jsonapi.mapping.internal.MemberConversion;
 import com.kazforge.jsonapi.mapping.internal.PropertyRole;
 import com.kazforge.jsonapi.mapping.internal.RelationshipShape;
 import com.kazforge.jsonapi.mapping.internal.WriteProperty;
@@ -92,10 +88,8 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
     requireAssignable(resource, declaredType);
     ResourceMapping mapping = mappingFor(declaredType);
     validateMetaTargets(mapping, resource.getClass());
-    ResourceObject base =
-        basicWriter.writeBasic(resource, declaredType, null, false, this::buildRelationships);
-    return decorateResource(
-        resource, declaredType, mapping, withResourceMeta(resource, mapping, base), null);
+    ResourceObject base = basicWriter.writeBasic(resource, declaredType, null, false);
+    return decorateResource(resource, declaredType, mapping, base, null);
   }
 
   /**
@@ -156,29 +150,8 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
     validateMetaTargets(mapping, resource.getClass());
     Set<String> allowedFields = fields == null ? null : Set.copyOf(fields);
     ResourceObject base =
-        basicWriter.writeBasic(
-            resource, declaredType, allowedFields, allowAbsentIdentity, this::buildRelationships);
-    return decorateResource(
-        resource, declaredType, mapping, withResourceMeta(resource, mapping, base), allowedFields);
-  }
-
-  /** Applies the single mapped resource-meta property after all basic members are built. */
-  @SuppressWarnings("NullAway")
-  private ResourceObject withResourceMeta(
-      Object resource, ResourceMapping mapping, ResourceObject base) {
-    Meta meta = buildResourceMeta(resource, mapping);
-    if (meta == null) {
-      return base;
-    }
-    return new ResourceObject(
-        base.type(),
-        base.id(),
-        base.lid(),
-        base.attributes(),
-        base.relationships(),
-        base.links(),
-        meta,
-        base.additionalMembers());
+        basicWriter.writeBasic(resource, declaredType, allowedFields, allowAbsentIdentity);
+    return decorateResource(resource, declaredType, mapping, base, allowedFields);
   }
 
   @SuppressWarnings("NullAway")
@@ -506,203 +479,6 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
   }
 
   /**
-   * Relationship phase delegated to the shared writer. The shared writer supplies the
-   * fieldset-filtered relationship properties in declaration order; this adapter path keeps the
-   * advanced direct and wrapper forms, their identifier meta, and per-relationship meta for the
-   * later relationship and meta extractions.
-   */
-  Relationships buildRelationships(
-      Object resource,
-      JavaType declaredType,
-      List<WriteProperty<MappingProperty>> selectedRelationships) {
-    if (selectedRelationships.isEmpty()) {
-      return Relationships.empty();
-    }
-    ResourceMapping mapping = mappingFor(declaredType);
-    Map<String, MappingProperty> relationshipMetaByTarget =
-        RelationshipMetaSupport.byTarget(mapping.relationshipMetaProperties());
-    Map<String, @Nullable Relationship> relationships = new LinkedHashMap<>();
-    for (WriteProperty<MappingProperty> property : selectedRelationships) {
-      relationships.put(
-          property.jsonapiName(),
-          buildRelationship(resource, mapping, property, relationshipMetaByTarget));
-    }
-    return Relationships.ofRelationships(relationships);
-  }
-
-  private Relationship buildRelationship(
-      Object resource,
-      ResourceMapping mapping,
-      WriteProperty<MappingProperty> property,
-      Map<String, MappingProperty> relationshipMetaByTarget) {
-    MappingProperty nativeProperty = property.token();
-    Object value = readValue(resource, nativeProperty, PropertyRole.RELATIONSHIP);
-    JavaType propertyType = nativeProperty.accessor().getType();
-    boolean toMany = MappingTypeSupport.isToManyType(propertyType);
-    RelationshipShape<JavaType> shape = MappingTypeSupport.relationshipShape(propertyType);
-    RelationshipData linkage =
-        basicWriter.relationshipData(
-            resource,
-            property,
-            shape,
-            value,
-            toMany
-                ? (target, declaredTarget, location) ->
-                    resolveToManyDeclaredTarget(declaredTarget, location)
-                : (target, declaredTarget, location) -> resolveToOneTarget(target, declaredTarget),
-            (metaType, metaValue, identifier, relationshipName, identifierMetaLocation) ->
-                applyWrapperMeta(
-                    resource,
-                    metaType,
-                    metaValue,
-                    identifier,
-                    relationshipName,
-                    identifierMetaLocation));
-    Meta meta = null;
-    MappingProperty metaProperty = relationshipMetaByTarget.get(property.jsonapiName());
-    if (metaProperty != null) {
-      meta =
-          buildMetaValue(
-              resource,
-              mapping,
-              metaProperty,
-              RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()));
-    }
-    return new Relationship(linkage, null, meta, Map.of());
-  }
-
-  /** Builds the resource-side {@code meta} from the single mapped resource-meta property. */
-  private @Nullable Meta buildResourceMeta(Object resource, ResourceMapping mapping) {
-    MappingProperty resourceMetaProperty = mapping.resourceMeta();
-    if (resourceMetaProperty == null) {
-      return null;
-    }
-    return buildMetaValue(
-        resource, mapping, resourceMetaProperty, RelationshipMetaSupport.resourceMetaLocation());
-  }
-
-  /**
-   * Converts one whole-meta property value into a core {@link Meta}. The converted result must be a
-   * {@link Map}; scalar/array/non-object runtime values fail with a stable meta diagnostic (never a
-   * leaked cast or core-validation failure). Failures report the location-specific {@code path}.
-   */
-  private @Nullable Meta buildMetaValue(
-      Object resource,
-      ResourceMapping mapping,
-      MappingProperty property,
-      MappingLocation metaLocation) {
-    Object rawValue = readValue(resource, property, property.role());
-    Object value = unwrapOptional(rawValue);
-    if (value == null) {
-      return null;
-    }
-    Object converted;
-    try {
-      PropertyScopedValueConverter.SerializationResult serialized =
-          propertyScoped.serialize(
-              mapping.domainType(),
-              property.definition().getFullName().getSimpleName(),
-              resource,
-              rawValue,
-              value);
-      if (!serialized.emitted()) {
-        return null;
-      }
-      converted = serialized.value();
-    } catch (RuntimeException e) {
-      throw metaValueFailure(resource, metaLocation, "Failed to convert meta value", e);
-    }
-    if (!(converted instanceof Map<?, ?> map)) {
-      throw metaValueFailure(
-          resource,
-          metaLocation,
-          "Converted meta value is not an object (expected a JSON object, got "
-              + convertedTypeName(converted)
-              + ")",
-          null);
-    }
-    try {
-      return Meta.of(castMembers(map, resource, metaLocation));
-    } catch (JsonApiValidationException e) {
-      throw metaValueFailure(resource, metaLocation, "Invalid meta members", e);
-    }
-  }
-
-  private static String convertedTypeName(@Nullable Object converted) {
-    return converted == null ? "null" : converted.getClass().getName();
-  }
-
-  /**
-   * Rebuilds the converted meta value into a string-keyed member map. Today the conversion target
-   * {@code Object.class} always yields string keys (Jackson's untyped map representation), so the
-   * non-string branch is defensive: it keeps the stable {@link
-   * MappingDiagnostic#INVALID_META_TARGET} diagnostic at the known {@code metaLocation} instead of
-   * leaking a class cast or a core-validation failure when conversion produces non-string keys.
-   */
-  private static Map<String, Object> castMembers(
-      Map<?, ?> map, Object resource, MappingLocation metaLocation) {
-    Map<String, Object> members = new LinkedHashMap<>();
-    for (Map.Entry<?, ?> entry : map.entrySet()) {
-      Object key = entry.getKey();
-      if (!(key instanceof String stringKey)) {
-        throw new JsonApiMappingException(
-            MappingDiagnostic.INVALID_META_TARGET,
-            resource.getClass(),
-            metaLocation,
-            "Meta object key is not a string: " + key);
-      }
-      members.put(stringKey, entry.getValue());
-    }
-    return members;
-  }
-
-  private JsonApiMappingException metaValueFailure(
-      Object resource, MappingLocation metaLocation, String message, @Nullable Throwable cause) {
-    return cause == null
-        ? new JsonApiMappingException(
-            MappingDiagnostic.INVALID_META_TARGET, resource.getClass(), metaLocation, message)
-        : new JsonApiMappingException(
-            MappingDiagnostic.INVALID_META_TARGET,
-            resource.getClass(),
-            metaLocation,
-            message,
-            cause);
-  }
-
-  /**
-   * Applies one wrapper occurrence's {@code meta} onto the mapped to-one identifier. The shared
-   * relationship writer guarantees to-one linkage and a present meta value, so conversion state and
-   * overlay stay adapter-owned: non-emission leaves the identifier's own meta in place, and
-   * conversion failures keep the stable identifier-meta diagnostics at the occurrence's location.
-   */
-  private ResourceIdentifier applyWrapperMeta(
-      Object resource,
-      JavaType metaType,
-      @Nullable Object metaValue,
-      ResourceIdentifier identifier,
-      String relationshipName,
-      MappingLocation identifierMetaLocation) {
-    Object converted;
-    try {
-      PropertyScopedValueConverter.SerializationResult serialized =
-          propertyScoped.serializeDeclared(metaType, Objects.requireNonNull(metaValue));
-      if (!serialized.emitted()) {
-        return identifier;
-      }
-      converted = serialized.value();
-    } catch (RuntimeException e) {
-      throw new JsonApiMappingException(
-          MappingDiagnostic.INVALID_META_TARGET,
-          resource.getClass(),
-          identifierMetaLocation,
-          "Failed to convert identifier meta for relationship '" + relationshipName + "'",
-          e);
-    }
-    Meta meta = metaFromConverted(converted, resource, identifierMetaLocation);
-    return IdentifierMetaSupport.withMeta(identifier, meta);
-  }
-
-  /**
    * Resolves the declared element-type token for one ordinary to-many branch: the declared element
    * type must carry resource metadata as the configured mapper sees it (including class-level
    * mix-ins), and an unresolvable content type keeps the stable collection diagnostic. The shared
@@ -734,25 +510,51 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
     return effectiveType(Objects.requireNonNull(target), declared);
   }
 
-  private @Nullable Meta metaFromConverted(
-      @Nullable Object converted, Object resource, MappingLocation metaLocation) {
-    if (converted == null) {
-      return null;
+  @Override
+  public RelationshipShape<JavaType> relationshipShape(WriteProperty<MappingProperty> property) {
+    return MappingTypeSupport.relationshipShape(property.token().accessor().getType());
+  }
+
+  @Override
+  public JavaType resolveRelationshipTarget(
+      @Nullable Object target,
+      @Nullable JavaType declaredTarget,
+      boolean relationshipToMany,
+      MappingLocation relationshipLocation) {
+    if (relationshipToMany) {
+      return resolveToManyDeclaredTarget(declaredTarget, relationshipLocation);
     }
-    if (!(converted instanceof Map<?, ?> map)) {
-      throw metaValueFailure(
-          resource,
-          metaLocation,
-          "Converted identifier meta value is not an object (expected a JSON object, got "
-              + convertedTypeName(converted)
-              + ")",
-          null);
-    }
-    try {
-      return Meta.of(castMembers(map, resource, metaLocation));
-    } catch (JsonApiValidationException e) {
-      throw metaValueFailure(resource, metaLocation, "Invalid identifier meta members", e);
-    }
+    return resolveToOneTarget(target, declaredTarget);
+  }
+
+  @Override
+  public MemberConversion convertWholeMeta(
+      Object resource,
+      JavaType declaredType,
+      WriteProperty<MappingProperty> property,
+      @Nullable Object rawValue,
+      @Nullable Object unwrappedValue) {
+    MappingProperty nativeProperty = property.token();
+    PropertyScopedValueConverter.SerializationResult serialized =
+        propertyScoped.serialize(
+            mappingFor(declaredType).domainType(),
+            nativeProperty.definition().getFullName().getSimpleName(),
+            resource,
+            rawValue,
+            unwrappedValue);
+    return serialized.emitted()
+        ? MemberConversion.emitted(serialized.value())
+        : MemberConversion.omitted();
+  }
+
+  @Override
+  public MemberConversion convertIdentifierMeta(
+      JavaType declaredMetaToken, @Nullable Object metaValue) {
+    PropertyScopedValueConverter.SerializationResult serialized =
+        propertyScoped.serializeDeclared(declaredMetaToken, Objects.requireNonNull(metaValue));
+    return serialized.emitted()
+        ? MemberConversion.emitted(serialized.value())
+        : MemberConversion.omitted();
   }
 
   private static @Nullable Object readValue(
@@ -801,12 +603,12 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
   }
 
   @Override
-  public AttributeConversion convertAttribute(
+  public MemberConversion convertAttribute(
       Object domain, JavaType declaredType, WriteProperty<MappingProperty> property) {
     MappingProperty nativeProperty = property.token();
     Object rawValue = readValue(domain, nativeProperty, PropertyRole.ATTRIBUTE);
     if (rawValue instanceof Optional<?> optional && optional.isEmpty()) {
-      return AttributeConversion.omitted();
+      return MemberConversion.omitted();
     }
     try {
       PropertyScopedValueConverter.SerializationResult converted =
@@ -817,8 +619,8 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
               rawValue,
               unwrapOptional(rawValue));
       return converted.emitted()
-          ? AttributeConversion.emitted(converted.value())
-          : AttributeConversion.omitted();
+          ? MemberConversion.emitted(converted.value())
+          : MemberConversion.omitted();
     } catch (RuntimeException e) {
       throw new JsonApiMappingException(
           MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE,
@@ -848,12 +650,19 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
     for (MappingProperty property : mapping.relationships()) {
       relationships.add(writeProperty(property));
     }
+    List<WriteProperty<MappingProperty>> relationshipMeta =
+        new ArrayList<>(mapping.relationshipMetaProperties().size());
+    for (MappingProperty property : mapping.relationshipMetaProperties()) {
+      relationshipMeta.add(writeProperty(property));
+    }
     return new WriteResourceDefinition<>(
         mapping.resourceType(),
         writeProperty(mapping.identifierProperty()),
         writeProperty(mapping.localIdProperty()),
         attributes,
-        relationships);
+        relationships,
+        writeProperty(mapping.resourceMeta()),
+        relationshipMeta);
   }
 
   @Override

@@ -51,13 +51,14 @@ mechanics, and wire codecs remain adapter-owned. Backend-neutral compound-inclus
 validation, traversal, identity/order/deduplication, limits, and sparse-fieldset omission decisions
 live once in `jsonapi-java-mapping`, together with backend-neutral basic resource-write
 orchestration (fieldset validation and filtering, strict versus create identity rules, ordinary
-domain-object linkage construction, advanced relationship-value normalization, and base resource
-assembly) and the neutral mapping roles and per-property name metadata each adapter composes into
-its own write and read mapping records. Each adapter supplies only narrow native capability bridges
-for type resolution, mapping lookup, property access, configured conversion, and selective
-rendering, plus a relationship phase that keeps whole-meta phases, decoration, configured
-conversion, and native diagnostics adapter-owned. Framework integrations, when added, depend on
-these lower-layer public contracts; no lower layer depends on a framework.
+domain-object linkage construction, advanced relationship-value normalization, relationship-member
+assembly, and resource/relationship/identifier meta application) and the neutral mapping roles and
+per-property name metadata each adapter composes into its own write and read mapping records. Each
+adapter supplies only narrow native capability bridges for type resolution, mapping lookup, property
+access, configured conversion (including whole-meta and declared-type identifier-meta conversion),
+declared relationship-shape and target resolution, configured meta-target validation, decoration,
+and selective rendering, keeping native diagnostics adapter-owned. Framework integrations, when
+added, depend on these lower-layer public contracts; no lower layer depends on a framework.
 
 Within core, aggregate validation depends downward on the model, internal helpers, and validation
 types; the model and internal helpers may depend on validation, but lower responsibilities do not
@@ -99,11 +100,12 @@ flowchart LR
 ```
 
 Mapped relationships produce linkage. Basic resource mapping — fieldset validation and filtering,
-strict versus create identity, attributes, ordinary relationship linkage, advanced
-relationship-value normalization, and base resource assembly — lives in `jsonapi-java-mapping`
-behind an adapter-supplied native capability bridge; each adapter still validates and applies
-whole-meta phases, decorates, and owns configured conversion, unresolved-target validation, and
-property-scoped identifier-meta conversion through narrow native callbacks. Compound inclusion
+strict versus create identity, attributes, ordinary and advanced relationship linkage normalization,
+relationship-member assembly, and resource/relationship/identifier meta application — lives in
+`jsonapi-java-mapping` behind an adapter-supplied native capability bridge; each adapter still
+validates declared meta targets, decorates, and owns configured conversion (including property-scoped
+whole-meta and declared-type identifier-meta serialization), declared relationship-shape and
+target resolution, and unresolved-target validation through narrow native bridges. Compound inclusion
 requires both operation-scoped selection and application-scoped policy; its backend-neutral
 traversal lives in the same module behind another adapter-supplied native capability bridge.
 Decoration only adds links to already mapped resources and relationships. Sparse-fieldset linkage
@@ -127,8 +129,8 @@ owns that boundary.
 | Java property discovery, visibility, external names, mix-ins, creators, serializers, deserializers, and conversion | Caller-configured Jackson |
 | Include paths and fieldsets for one operation | `RepresentationSelection` |
 | Allowed fields/includes and traversal limits | Application/runtime `RepresentationPolicy` |
-| Basic resource write semantics: fieldset validation/filtering, strict versus create identity, empty-member omission, ordinary and advanced relationship linkage normalization, base resource assembly | `jsonapi-java-mapping` internal basic resource writer |
-| Whole-meta conversion, decoration, configured conversion, and unresolved-target validation | Each backend's write orchestration |
+| Basic resource write semantics: fieldset validation/filtering, strict versus create identity, empty-member omission, ordinary and advanced relationship linkage normalization, relationship-member assembly, resource/relationship/identifier meta application and overlay | `jsonapi-java-mapping` internal basic resource writer |
+| Configured conversion (whole-meta and declared-type identifier-meta serialization), declared relationship-shape and target resolution, declared meta-target validation, decoration, and unresolved-target validation | Each backend's write orchestration |
 | Compound-inclusion traversal order, identity aliasing, deduplication, and limits | `jsonapi-java-mapping` internal engine |
 | Persistence, authorization, HTTP behavior, query execution, and applying updates | Application |
 

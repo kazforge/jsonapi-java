@@ -27,9 +27,13 @@ identity resolution, custom linkage mapping, inclusion, cardinality, generic typ
 diagnostics follow the ordinary relationship path. To-many containers hold one wrapper per linkage,
 so target and meta cannot desynchronize.
 
-On write, null meta means no overlay and preserves any meta already present on a direct identifier;
-non-null meta is an authoritative object-valued overlay. On read, each identifier's meta converts to
-the declared `M` while ordinary target conversion remains in force.
+On write, the identifier-meta contract is whole-value. A null wrapper `meta` requests no conversion
+and preserves any identifier meta already present on a direct identifier. When the wrapper carries a
+value, the declared `M` converts through the configured authority: conversion non-emission (a
+suppressed or absent value) preserves existing identifier meta, an emitted JSON `null` is an
+authoritative overlay that clears it, and an emitted object replaces it wholesale. Any other emitted
+shape fails as an invalid meta target. On read, each identifier's meta converts to the declared `M`
+while ordinary target conversion remains in force.
 
 Identifier meta is not independently patchable. Typed PATCH replaces the whole
 `RelationshipLinkage`; low-level PATCH carries it within `RelationshipChange`; to-many PATCH replaces

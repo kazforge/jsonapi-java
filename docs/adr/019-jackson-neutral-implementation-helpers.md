@@ -93,6 +93,23 @@ validation, overlay, and their current stable diagnostics). Whole-meta conversio
 relationship-level meta stay in the existing adapter write path for the later write-meta
 extraction.
 
+A later extraction moved whole-object write-meta semantics and relationship assembly to the same
+writer, so the duplicated relationship-member orchestration and meta handling left both adapters.
+The neutral write definition now carries the optional resource-meta property and the matched
+relationship-meta properties, and the shared writer owns resource, relationship, and identifier meta
+construction and attachment, the identifier overlay, relationship-member assembly in declaration
+order, and the stable meta diagnostics and resource-relative locations. The adapter-supplied
+`BasicRelationshipWriter` phase and the `RelationshipMetaEnricher` callback were removed; the
+`WriteResourceBackend` capability interface now supplies the neutral declared
+`RelationshipShape`, native target resolution, and the property-scoped whole-meta and declared-type
+identifier-meta conversion operations, while the `MemberConversion` result (generalized from the
+former attribute-only conversion result) keeps omission distinct from emitted JSON null across
+attributes and all three meta locations. Declared meta-target validation, native type
+specialization, unresolved-target validation, decoration, and configured conversion remain
+adapter-owned. The attribute-conversion result no longer exists under its old name; the neutral
+`RelationshipTargetResolver` callback type was removed as target resolution moved into the backend
+capability.
+
 The remaining helpers listed in the Decision (wire member classification and pointers,
 identifier-meta copies, and supplied PATCH markers) stay in the API artifact under
 `com.kazforge.jsonapi.internal` until a later extraction moves them.

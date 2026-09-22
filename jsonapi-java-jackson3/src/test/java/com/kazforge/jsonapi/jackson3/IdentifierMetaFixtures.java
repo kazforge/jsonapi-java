@@ -89,6 +89,21 @@ public final class IdentifierMetaFixtures {
   }
 
   @JsonApiResource(type = "articles")
+  public record NullEmittingIdentifierMetaArticle(
+      @JsonApiId String id,
+      @JsonApiRelationship RelationshipLinkage<ResourceIdentifier, NullIdMeta> author) {}
+
+  @JsonSerialize(using = NullIdMetaSerializer.class)
+  public record NullIdMeta(String role) {}
+
+  public static final class NullIdMetaSerializer extends ValueSerializer<NullIdMeta> {
+    @Override
+    public void serialize(NullIdMeta value, JsonGenerator generator, SerializationContext context) {
+      generator.writeNull();
+    }
+  }
+
+  @JsonApiResource(type = "articles")
   public record WrappedMappedArticle(
       @JsonApiId String id,
       @JsonApiRelationship
