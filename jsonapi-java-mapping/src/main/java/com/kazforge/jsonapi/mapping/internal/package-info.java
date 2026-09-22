@@ -12,16 +12,21 @@
  * and relationship meta construction and attachment, identifier-meta overlay, and base {@link
  * com.kazforge.jsonapi.core.model.ResourceObject} assembly.
  *
- * <p>It owns backend-neutral basic resource-read semantics: resource-type matching through the
- * shared {@link com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch} authority, strict and
- * independent {@code id}/{@code lid} role selection, wire-member lookup by JSON:API name, the
- * distinction between an absent attribute and a present JSON null, the distinction between an
- * absent relationship (or absent relationship {@code data}) and present linkage, synthetic input
- * keys by backend external name, the resource-relative locations of supplied members, and the
- * shared non-deserializable and identifier-conversion diagnostics. Each backend reaches configured
- * wire-identifier parsing and configured relationship-linkage conversion through a thin {@link
- * com.kazforge.jsonapi.mapping.internal.ReadResourceBackend} native-mechanics boundary and remains
- * responsible for whole-object meta and relationship-meta binding plus final bean construction.
+ * <p>It owns backend-neutral resource-read semantics, basic and advanced: resource-type matching
+ * through the shared {@link com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch} authority,
+ * strict and independent {@code id}/{@code lid} role selection, wire-member lookup by JSON:API
+ * name, the distinction between an absent attribute and a present JSON null, the distinction
+ * between an absent relationship (or absent relationship {@code data}) and present linkage,
+ * synthetic input keys by backend external name, the resource-relative locations of supplied
+ * members, and the shared non-deserializable and identifier-conversion diagnostics. It also owns
+ * relationship cardinality validation, null/empty short-circuiting, direct {@link
+ * com.kazforge.jsonapi.core.model.ResourceIdentifier} copies that preserve identifier meta and drop
+ * additional members, opt-in {@link com.kazforge.jsonapi.mapping.RelationshipLinkage} occurrence
+ * orchestration with per-occurrence target and identifier-meta pairing, and resource/relationship
+ * meta presence and raw-member binding. Each backend reaches configured wire-identifier parsing,
+ * lazy relationship-shape resolution with configured linkage-mapper invocation and declared
+ * identifier-meta conversion, and final bean construction through the thin {@link
+ * com.kazforge.jsonapi.mapping.internal.ReadResourceBackend} native-mechanics boundary.
  *
  * <p>It additionally owns the neutral {@link com.kazforge.jsonapi.mapping.internal.PropertyRole}
  * enum and the {@link com.kazforge.jsonapi.mapping.internal.SemanticProperty} value that adapters
@@ -39,15 +44,20 @@
  *
  * <p>Native type resolution, mapping lookup, property lookup and access, native container
  * type-shape derivation, identifier conversion, configured conversion, whole-meta and declared-type
- * meta conversion, effective-type resolution, and resource rendering stay in each backend. The
- * inclusion engine reaches them through {@link
- * com.kazforge.jsonapi.mapping.internal.InclusionBackend}; the writer reaches a thin {@link
+ * meta conversion, effective-type resolution, relationship target/type resolution and mapper
+ * selection, and resource rendering stay in each backend. The inclusion engine reaches them through
+ * {@link com.kazforge.jsonapi.mapping.internal.InclusionBackend}; the writer reaches a thin {@link
  * com.kazforge.jsonapi.mapping.internal.WriteResourceBackend} native-mechanics boundary that also
  * supplies a neutral declared {@link com.kazforge.jsonapi.mapping.internal.RelationshipShape},
  * native target resolution, and the property-scoped whole-meta and declared-type identifier-meta
- * conversion operations. Those keep native type specialization, unresolved-target validation, and
+ * conversion operations, keeping native type specialization, unresolved-target validation, and
  * configured conversion adapter-owned while the shared writer owns the neutral meta semantics and
- * diagnostics.
+ * diagnostics. The reader reaches a thin {@link
+ * com.kazforge.jsonapi.mapping.internal.ReadResourceBackend} boundary that supplies a neutral
+ * declared {@link com.kazforge.jsonapi.mapping.internal.ReadRelationshipShape}, the configured
+ * linkage-mapper invocation, and the declared identifier-meta conversion, keeping native
+ * target/type resolution, mapper selection, and configured conversion adapter-owned while the
+ * shared reader owns the neutral relationship and meta semantics and diagnostics.
  *
  * <p>This package is not consumer SPI. Its Java-public types exist only so backend artifacts can
  * cooperate on neutral mapping implementation. Application code must not depend on it, and backend

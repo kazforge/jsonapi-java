@@ -52,14 +52,17 @@ representation, meta, identifier, decoration contracts, and PATCH semantics are 
 inclusion state, the basic and advanced resource write semantics for identity, attributes,
 ordinary and advanced relationship linkage, fieldsets, relationship-member assembly,
 resource/relationship/identifier meta application, and additive resource/relationship link
-decoration, and the basic resource read semantics for resource-type matching, identity-role
-selection, attribute/relationship presence and order, and synthetic-input assembly preserving
-absent-versus-explicit-null, are owned by
+decoration, and the basic and advanced resource read semantics for resource-type matching,
+identity-role selection, attribute/relationship presence and order, synthetic-input assembly
+preserving absent-versus-explicit-null, relationship cardinality, null/empty short-circuiting,
+direct-identifier copying, `RelationshipLinkage` occurrence pairing, and resource/relationship meta
+binding, are owned by
 [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). This adapter supplies the native
-capability bridges over configured Jackson, including declared relationship-shape and target
-resolution, property-scoped whole-meta and declared-type identifier-meta conversion, the
+capability bridges over configured Jackson, including declared write relationship-shape and target
+resolution, lazy read relationship-shape resolution with configured linkage-mapper selection and
+invocation, property-scoped whole-meta and declared-type identifier-meta conversion, the
 effective-type resolution that decoration looks up, configured wire-identifier parsing,
-relationship-linkage conversion, and the configured decoration registry. Public
+and the configured decoration registry. Public
 Javadocs and the linked ADRs own the remaining details rather than repeated here.
 
 ## Jackson 2 boundary

@@ -113,8 +113,6 @@ class ResourceBinderSpec extends Specification {
     "lid-only resource never binds into the id role" | resourceWithLid(ARTICLES, "lid-1", attrs("title", "T")) | FlatNullableIdArticle | new FlatNullableIdArticle(null, "T")
     "resource without id or lid" | resourceWithLid(ARTICLES, null, attrs("title", "T")) | FlatNullableIdArticle | new FlatNullableIdArticle(null, "T")
     "id and lid bind independently" | new ResourceObject(ARTICLES, "42", "lid-1", Attributes.ofAttributes(attrs("title", "T")), null, null, null, Map.of()) | LocalIdentityArticle | new LocalIdentityArticle("42", "lid-1", "T")
-    "present Optional relationship" | resource(ARTICLES, "1", null, rels(AUTHOR, single(PEOPLE, "p1"))) | FlatArticleWithOptional | new FlatArticleWithOptional("1", null, Optional.of(ResourceIdentifier.of(PEOPLE, "p1")))
-    "explicit null Optional relationship" | resource(ARTICLES, "1", null, rels(AUTHOR, Relationship.withData(RelationshipData.NullLinkage.INSTANCE))) | FlatArticleWithOptional | new FlatArticleWithOptional("1", null, Optional.empty())
     "array relationship" | resource(ARTICLES, "1", null, rels(COMMENTS, collection(COMMENTS, ["c1", "c2"]))) | FlatArticleWithArray | new FlatArticleWithArray("1", null, [
       ResourceIdentifier.of(COMMENTS, "c1"),
       ResourceIdentifier.of(COMMENTS, "c2")
@@ -123,14 +121,8 @@ class ResourceBinderSpec extends Specification {
     "Map RelationshipLinkage relationship" | resource(ARTICLES, "1", null, rels(COMMENTS, collectionWithIdentifierMeta(COMMENTS, ["c1"], [Meta.of([pinned: true])]))) | MapRelationshipLinkageArticle | new MapRelationshipLinkageArticle("1", [
       new RelationshipLinkage<>(identifier(COMMENTS, "c1", Meta.of([pinned: true])), [pinned: true])
     ])
-    "whole resource and relationship meta" | resourceWithMeta(attrs("title", "Hello"), relsWithMeta(single(PEOPLE, "p1"), Meta.of([displayName: "Alice"])), Meta.of([source: "cms", note: "n"])) | FlatMetaArticle | new FlatMetaArticle("1", "Hello", ResourceIdentifier.of(PEOPLE, "p1"), new ArticleMeta("cms", "n"), new AuthorMeta("Alice"))
     "Map whole resource and relationship meta" | resourceWithMeta(attrs("title", "Hello"), relsWithMeta(single(PEOPLE, "p1"), Meta.of([displayName: "Alice"])), Meta.of([source: "cms"])) | ArticleWithMapMeta | new ArticleWithMapMeta("1", "Hello", ResourceIdentifier.of(PEOPLE, "p1"), [source: "cms"], [displayName: "Alice"])
     "Optional whole resource meta" | resourceWithMeta(attrs("title", "Hello"), null, Meta.of([source: "cms", note: "n"])) | ArticleWithOptionalMeta | new ArticleWithOptionalMeta("1", "Hello", null, Optional.of(new ArticleMeta("cms", "n")), Optional.empty())
-    "to-one identifier meta" | resource(ARTICLES, "1", null, rels(AUTHOR, toOneWithIdentifierMeta(PEOPLE, "p1", Meta.of([role: "editor"])))) | FlatRelationshipLinkageArticle | new FlatRelationshipLinkageArticle("1", null, new RelationshipLinkage<>(identifier(PEOPLE, "p1", Meta.of([role: "editor"])), new AuthorIdMeta("editor")), null, null, null)
-    "to-many identifier meta" | resource(ARTICLES, "1", null, rels(COMMENTS, collectionWithIdentifierMeta(COMMENTS, ["c1", "c2"], [Meta.of([pinned: true]), null]))) | FlatRelationshipLinkageArticle | new FlatRelationshipLinkageArticle("1", null, null, [
-      new RelationshipLinkage<>(identifier(COMMENTS, "c1", Meta.of([pinned: true])), new CommentIdMeta(true)),
-      new RelationshipLinkage<>(ResourceIdentifier.of(COMMENTS, "c2"), null)
-    ], null, null)
     "array RelationshipLinkage relationship" | resource(ARTICLES, "1", null, rels(COMMENTS, collectionWithIdentifierMeta(COMMENTS, ["c1", "c2"], [Meta.of([pinned: true]), null]))) | ArrayRelationshipLinkageArticle | new ArrayRelationshipLinkageArticle("1", [
       new RelationshipLinkage<>(identifier(COMMENTS, "c1", Meta.of([pinned: true])), new CommentIdMeta(true)),
       new RelationshipLinkage<>(ResourceIdentifier.of(COMMENTS, "c2"), null)
@@ -753,6 +745,30 @@ class ResourceBinderSpec extends Specification {
     article.author() == null
     article.contributors() == []
     !invoked
+  }
+
+  def "unregistered relationship target still fails for null and empty linkage before short-circuiting"() {
+    when:
+    binder.fromResource(
+        resource(ARTICLES, "1", null,
+        [author: Relationship.withData(RelationshipData.NullLinkage.INSTANCE)]),
+        FlatUnregisteredRelationshipsArticle)
+
+    then:
+    def nullFailure = thrown(JsonApiMappingException)
+    nullFailure.diagnostic() == MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_TARGET
+    nullFailure.propertyPath() == "/relationships/author/data"
+
+    when:
+    binder.fromResource(
+        resource(ARTICLES, "1", null,
+        [comments: Relationship.withData(RelationshipData.IdentifierCollectionLinkage.empty())]),
+        FlatUnregisteredRelationshipsArticle)
+
+    then:
+    def emptyFailure = thrown(JsonApiMappingException)
+    emptyFailure.diagnostic() == MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_TARGET
+    emptyFailure.propertyPath() == "/relationships/comments/data"
   }
 
   def "cardinality is enforced before the mapper is invoked"() {
