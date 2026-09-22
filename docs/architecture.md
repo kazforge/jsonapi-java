@@ -34,7 +34,7 @@ authorization, query execution, relationship mutation, and application of PATCH 
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable wire model, local invariants, aggregate validation | None |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free semantic mapping roles | None |
 | [`jsonapi-java-api`](../jsonapi-java-api/README.md) | Backend-independent application, document, mapping, representation, diagnostic, and PATCH contracts currently implemented by configured Jackson | Core |
-| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; owns backend-neutral compound-inclusion traversal, identity/order/limit policy, sparse-fieldset linkage exemptions, basic resource-write orchestration, and neutral mapping-role/per-property naming metadata; published but unsupported consumer API | API |
+| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; owns backend-neutral compound-inclusion traversal, identity/order/limit policy, sparse-fieldset linkage exemptions, basic resource-write and basic resource-read orchestration, and neutral mapping-role/per-property naming metadata; published but unsupported consumer API | API |
 | [`jsonapi-java-query`](../jsonapi-java-query/README.md) | Neutral query selection parsing and opaque parameter preservation | Core and neutral Jackson representation contracts |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Native Jackson 3 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
 | [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Native Jackson 2 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
@@ -53,11 +53,15 @@ live once in `jsonapi-java-mapping`, together with backend-neutral basic resourc
 orchestration (fieldset validation and filtering, strict versus create identity rules, ordinary
 domain-object linkage construction, advanced relationship-value normalization, relationship-member
 assembly, resource/relationship/identifier meta application, and additive resource/relationship link
-decoration) and the neutral mapping roles and
+decoration), backend-neutral basic resource-read orchestration (resource-type matching, strict and
+independent identity-role selection, wire-member presence, attribute and relationship order,
+synthetic-input assembly preserving absent-versus-explicit-null, and the member-relative
+diagnostics), and the neutral mapping roles and
 per-property name metadata each adapter composes into its own write and read mapping records. Each
 adapter supplies only narrow native capability bridges for type resolution, mapping lookup, property
 access, configured conversion (including whole-meta and declared-type identifier-meta conversion),
-declared relationship-shape and target resolution, configured meta-target validation, and selective
+declared relationship-shape and target resolution, configured meta-target validation, configured
+wire-identifier parsing and relationship-linkage conversion, and selective
 rendering, keeping native diagnostics adapter-owned. Framework integrations, when
 added, depend on these lower-layer public contracts; no lower layer depends on a framework.
 
@@ -82,7 +86,13 @@ flowchart LR
   DOC --> RAW["Raw document operation"]
 ```
 
-Flat binding is linkage-oriented and never injects `included` resources into relationships. Advanced
+Flat binding is linkage-oriented and never injects `included` resources into relationships. Its
+basic Core-to-application read orchestration — resource-type matching, strict and independent
+identity-role selection, wire-member presence, attribute and relationship order, synthetic-input
+assembly preserving absent-versus-explicit-null, and the member-relative diagnostics — lives once in
+`jsonapi-java-mapping` behind an adapter-supplied native bridge for configured wire-identifier
+parsing and relationship-linkage conversion; each adapter keeps whole-object and relationship-meta
+binding, declared meta-target validation, and the single configured bean construction. Advanced
 typed envelopes bind included resources independently through explicit type registration. PATCH
 projections do not read `included`.
 
@@ -133,6 +143,8 @@ owns that boundary.
 | Include paths and fieldsets for one operation | `RepresentationSelection` |
 | Allowed fields/includes and traversal limits | Application/runtime `RepresentationPolicy` |
 | Basic resource write semantics: fieldset validation/filtering, strict versus create identity, empty-member omission, ordinary and advanced relationship linkage normalization, relationship-member assembly, resource/relationship/identifier meta application and overlay, and additive resource/relationship link decoration | `jsonapi-java-mapping` internal basic resource and decoration writers |
+| Basic resource read semantics: resource-type matching, strict independent identity roles, wire-member presence and order, synthetic-input assembly preserving absent-versus-explicit-null, and member-relative diagnostics | `jsonapi-java-mapping` internal basic resource reader |
+| Configured wire-identifier parsing and relationship-linkage conversion, whole-object and relationship meta binding, declared meta-target validation, and final bean construction | Each backend's read orchestration |
 | Configured conversion (whole-meta and declared-type identifier-meta serialization), effective-type resolution, declared relationship-shape and target resolution, declared meta-target validation, and unresolved-target validation | Each backend's write orchestration |
 | Compound-inclusion traversal order, identity aliasing, deduplication, and limits | `jsonapi-java-mapping` internal engine |
 | Persistence, authorization, HTTP behavior, query execution, and applying updates | Application |

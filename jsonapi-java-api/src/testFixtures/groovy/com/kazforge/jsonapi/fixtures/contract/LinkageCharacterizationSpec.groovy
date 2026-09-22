@@ -2,6 +2,7 @@ package com.kazforge.jsonapi.fixtures.contract
 
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
+import com.kazforge.jsonapi.fixtures.domainread.FlatDefaultedRelationshipArticle
 import com.kazforge.jsonapi.fixtures.domainwrite.Article
 import com.kazforge.jsonapi.fixtures.domainwrite.Comment
 import com.kazforge.jsonapi.fixtures.domainwrite.Person
@@ -75,6 +76,26 @@ abstract class LinkageCharacterizationSpec extends Specification {
     expect:
     document.data.relationships."written-by".data == ["type": "people", "id": "p1"]
     !document.data.relationships.containsKey("author")
+  }
+
+  def "distinguishes an omitted relationship and a data-absent relationship object from explicit null linkage"() {
+    given:
+    def omitted = '{"data":{"type":"articles","id":"1"}}'
+    def dataAbsent =
+        '{"data":{"type":"articles","id":"1","relationships":{"author":{"meta":{"note":"x"}}}}}'
+    def explicitNull =
+        '{"data":{"type":"articles","id":"1","relationships":{"author":{"data":null}}}}'
+    def declaredDefault = ResourceIdentifier.of("people", "default")
+
+    when:
+    def omittedBound = api().resources().readOne(omitted, FlatDefaultedRelationshipArticle)
+    def dataAbsentBound = api().resources().readOne(dataAbsent, FlatDefaultedRelationshipArticle)
+    def nullBound = api().resources().readOne(explicitNull, FlatDefaultedRelationshipArticle)
+
+    then:
+    omittedBound.author == declaredDefault
+    dataAbsentBound.author == declaredDefault
+    nullBound.author == null
   }
 
   def "writes and reads explicit-null and empty linkage documents through the relationship facet"() {

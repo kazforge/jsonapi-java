@@ -120,6 +120,21 @@ runtime raw-class resolution, and delegation; the decorator contracts and regist
 neutral API. This supersedes the earlier statements above that decoration stays in the existing
 adapter write path.
 
+A later extraction moved backend-neutral basic resource-read orchestration to the same module. The
+shared `com.kazforge.jsonapi.mapping.internal.BasicResourceReader` now owns resource-type matching
+through the existing `ResourceTypeMatch` authority, strict and independent `id`/`lid` role
+selection, wire-member lookup by JSON:API name, the distinction between an absent attribute and a
+present JSON null, the distinction between an absent relationship (or absent relationship `data`)
+and present linkage, synthetic input keys by backend external name, member-relative diagnostic
+locations, and the non-deserializable and identifier-conversion diagnostics. Each adapter supplies
+configured wire-identifier parsing and configured relationship-linkage conversion through a third
+unsupported capability interface,
+`com.kazforge.jsonapi.mapping.internal.ReadResourceBackend`, deliberately limited to a mapped
+property's diagnostic raw class, wire-identifier parsing, and relationship-linkage conversion.
+Whole-object meta and relationship-meta binding, declared meta-target validation, construction-path
+metadata, and the single configured bean construction stay in each adapter's `DomainResourceBinder`,
+so those concerns remain adapter-owned for a later extraction.
+
 The remaining helpers listed in the Decision (wire member classification and pointers,
 identifier-meta copies, and supplied PATCH markers) stay in the API artifact under
 `com.kazforge.jsonapi.internal` until a later extraction moves them.

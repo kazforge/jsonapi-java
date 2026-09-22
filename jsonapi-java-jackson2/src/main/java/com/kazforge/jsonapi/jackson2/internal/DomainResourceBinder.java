@@ -2,7 +2,6 @@ package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.kazforge.jsonapi.core.model.Attributes;
 import com.kazforge.jsonapi.core.model.Relationship;
 import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.core.model.Relationships;
@@ -10,9 +9,13 @@ import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch;
 import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
+import com.kazforge.jsonapi.mapping.internal.BasicReadResult;
+import com.kazforge.jsonapi.mapping.internal.BasicResourceReader;
+import com.kazforge.jsonapi.mapping.internal.ReadProperty;
+import com.kazforge.jsonapi.mapping.internal.ReadResourceBackend;
+import com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -21,8 +24,16 @@ import org.jspecify.annotations.Nullable;
 /**
  * Binds validated {@link ResourceObject} values to annotated flat DTO types.
  *
- * <p>Identifier, attribute, and relationship values are placed into a synthetic property map keyed
- * by Jackson logical property names, then the bean is constructed with a single {@link
+ * <p>The basic Core-to-application read semantics are owned by the shared {@link
+ * BasicResourceReader}: resource-type matching, strict and independent identity-role selection,
+ * wire-member presence, attribute and relationship order, the synthetic input map, and the
+ * member-relative diagnostics. This adapter supplies the native edges through {@link
+ * ReadResourceBackend} (configured wire identifier parsing and configured relationship-linkage
+ * conversion) and keeps whole-object meta and relationship-meta binding plus the single configured
+ * bean construction.
+ *
+ * <p>Identifier, attribute, relationship, and meta values are placed into a synthetic property map
+ * keyed by Jackson logical property names, then the bean is constructed with a single {@link
  * JsonMapper#convertValue(Object, JavaType)} so creators, deserializers, converters, and configured
  * modules remain authoritative. The JSON:API identifier is parsed before it enters the map, so its
  * target property's configured deserializer still applies during construction. Document {@code
@@ -40,10 +51,7 @@ import org.jspecify.annotations.Nullable;
  * Bean-construction failures translate their Jackson failure paths through this mapping; unmappable
  * paths carry an absent location instead of a logical property name.
  */
-public final class DomainResourceBinder {
-
-  private static final MappingLocation ID_LOCATION = MappingLocation.of("id");
-  private static final MappingLocation LID_LOCATION = MappingLocation.of("lid");
+public final class DomainResourceBinder implements ReadResourceBackend<ReadMappingProperty> {
 
   private final JsonMapper mapper;
   private final IdentifierConverter identifierConverter;
@@ -51,6 +59,7 @@ public final class DomainResourceBinder {
   private final Map<Class<?>, RelationshipLinkageMapper> linkageMappers;
   private final WholeMetaTarget wholeMetaTarget;
   private final FlatConstructionPaths constructionPaths;
+  private final BasicResourceReader<ReadMappingProperty> reader;
 
   public DomainResourceBinder(
       JsonMapper mapper,
@@ -63,6 +72,7 @@ public final class DomainResourceBinder {
     this.linkageMappers = Map.copyOf(Objects.requireNonNull(linkageMappers, "linkageMappers"));
     this.wholeMetaTarget = new WholeMetaTarget(mapper);
     this.constructionPaths = new FlatConstructionPaths(mapper);
+    this.reader = new BasicResourceReader<>(this);
   }
 
   /** Binds one resource object to the given target type. */
@@ -71,125 +81,45 @@ public final class DomainResourceBinder {
     Objects.requireNonNull(targetType, "targetType");
     Class<?> rawType = targetType.getRawClass();
     ReadResourceMapping mapping = cache.resolveRead(targetType);
-    ResourceTypeMatch.requireMatching(mapping.resourceType(), resource, rawType);
+    ReadResourceDefinition<ReadMappingProperty> definition = mapping.readDefinition();
+    reader.requireResourceType(resource, definition, rawType);
     // Whole-meta declared-target validation for the read/write domain-mapping role.
     wholeMetaTarget.validateReadWriteTargets(mapping, rawType);
-    Map<String, @Nullable Object> properties = new LinkedHashMap<>();
-    // Strict role mapping: wire id binds only to the id role, wire lid only to the local-id role.
-    // Neither member ever falls back into the other role's property.
-    MappingLocation idLocation = null;
-    ReadMappingProperty identifierProperty = mapping.identifierProperty();
-    if (identifierProperty != null && resource.hasId()) {
-      idLocation = ID_LOCATION;
-      requireDeserializable(identifierProperty, idLocation, rawType);
-      bindIdentifierValue(
-          Objects.requireNonNull(resource.id()), ID_LOCATION, identifierProperty, properties);
-    }
-    MappingLocation lidLocation = null;
-    ReadMappingProperty localIdProperty = mapping.localIdProperty();
-    if (localIdProperty != null && resource.hasLid()) {
-      lidLocation = LID_LOCATION;
-      requireDeserializable(localIdProperty, lidLocation, rawType);
-      bindIdentifierValue(
-          Objects.requireNonNull(resource.lid()), LID_LOCATION, localIdProperty, properties);
-    }
-    bindAttributes(resource, mapping, properties, rawType);
-    bindRelationships(resource, mapping, properties, rawType);
+    BasicReadResult result = reader.readBasic(resource, definition, rawType);
+    Map<String, @Nullable Object> properties = new LinkedHashMap<>(result.properties());
     bindResourceMeta(resource, mapping, properties, rawType);
     bindRelationshipMeta(resource, mapping, properties, rawType);
-    return convertBean(properties, targetType, rawType, mapping, idLocation, lidLocation);
+    return convertBean(
+        properties,
+        targetType,
+        rawType,
+        mapping,
+        result.identifierLocation(),
+        result.localIdLocation());
   }
 
-  private void bindIdentifierValue(
-      String wireIdentifier,
-      MappingLocation identifierLocation,
-      ReadMappingProperty identifierProperty,
-      Map<String, @Nullable Object> properties) {
-    Object parsed;
-    try {
-      parsed = identifierConverter.parse(wireIdentifier);
-    } catch (RuntimeException e) {
-      throw identifierConversionFailed(rawTypeOf(identifierProperty), identifierLocation, e);
-    }
-    if (parsed == null) {
-      throw identifierConversionFailed(rawTypeOf(identifierProperty), identifierLocation, null);
-    }
-    // Keep the parsed JSON:API intermediate in the synthetic property map. The final bean
-    // construction then applies the target property's fully contextualized Jackson deserializer
-    // exactly once, rather than converting the detached identifier as a root value first.
-    properties.put(identifierProperty.externalName(), parsed);
+  @Override
+  public Class<?> rawType(ReadProperty<ReadMappingProperty> property) {
+    return RelationshipLinkageSupport.rawTypeOf(property.token());
   }
 
-  private JsonApiMappingException identifierConversionFailed(
-      Class<?> rawType, MappingLocation identifierLocation, @Nullable Throwable cause) {
-    String message =
-        cause == null
-            ? "Identifier converter returned null for the wire identifier at '"
-                + identifierLocation
-                + "'"
-            : "Failed to convert the wire identifier at '"
-                + identifierLocation
-                + "' for "
-                + rawType.getName();
-    return cause == null
-        ? new JsonApiMappingException(
-            MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED, rawType, identifierLocation, message)
-        : new JsonApiMappingException(
-            MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED,
-            rawType,
-            identifierLocation,
-            message,
-            cause);
+  @Override
+  public @Nullable Object parseIdentifier(String wireIdentifier) {
+    return identifierConverter.parse(wireIdentifier);
   }
 
-  private static Class<?> rawTypeOf(MappingPropertyView property) {
-    return RelationshipLinkageSupport.rawTypeOf(property);
-  }
-
-  private void bindAttributes(
-      ResourceObject resource,
-      ReadResourceMapping mapping,
-      Map<String, @Nullable Object> properties,
-      Class<?> rawType) {
-    if (mapping.attributes().isEmpty()) {
-      return;
-    }
-    Attributes attributes = resource.attributes();
-    if (attributes == null) {
-      return;
-    }
-    Map<String, @Nullable Object> members = attributes.attributes();
-    for (ReadMappingProperty property : mapping.attributes()) {
-      if (!members.containsKey(property.jsonapiName())) {
-        continue;
-      }
-      requireDeserializable(
-          property, MappingLocation.of("attributes", property.jsonapiName()), rawType);
-      properties.put(property.externalName(), members.get(property.jsonapiName()));
-    }
-  }
-
-  private void bindRelationships(
-      ResourceObject resource,
-      ReadResourceMapping mapping,
-      Map<String, @Nullable Object> properties,
-      Class<?> rawType) {
-    if (mapping.relationships().isEmpty()) {
-      return;
-    }
-    Relationships relationships = resource.relationships();
-    if (relationships == null) {
-      return;
-    }
-    for (ReadMappingProperty property : mapping.relationships()) {
-      RelationshipData data = relationshipData(relationships, property);
-      if (data == null) {
-        continue;
-      }
-      requireDeserializable(
-          property, RelationshipMetaSupport.relationshipLocation(property), rawType);
-      bindRelationship(properties, property, data);
-    }
+  @Override
+  public @Nullable Object convertRelationship(
+      ReadProperty<ReadMappingProperty> property, RelationshipData data) {
+    ReadMappingProperty nativeProperty = property.token();
+    JavaType propertyType = nativeProperty.type();
+    JavaType mappingType =
+        MappingTypeSupport.targetMappingType(propertyType, mapper.getTypeFactory());
+    RelationshipLinkageMapper linkageMapper =
+        RelationshipLinkageSupport.selectLinkageMapper(
+            propertyType, nativeProperty, linkageMappers);
+    return RelationshipLinkageSupport.convertLinkage(
+        nativeProperty, data, linkageMapper, mappingType, mapper);
   }
 
   /**
@@ -242,30 +172,6 @@ public final class DomainResourceBinder {
     }
   }
 
-  private static @Nullable RelationshipData relationshipData(
-      Relationships relationships, MappingPropertyView property) {
-    Relationship relationship = relationships.relationships().get(property.jsonapiName());
-    if (relationship == null) {
-      return null;
-    }
-    return relationship.data();
-  }
-
-  private void bindRelationship(
-      Map<String, @Nullable Object> properties,
-      ReadMappingProperty property,
-      RelationshipData data) {
-    JavaType propertyType = property.type();
-    JavaType mappingType =
-        MappingTypeSupport.targetMappingType(propertyType, mapper.getTypeFactory());
-    RelationshipLinkageMapper linkageMapper =
-        RelationshipLinkageSupport.selectLinkageMapper(propertyType, property, linkageMappers);
-    properties.put(
-        property.externalName(),
-        RelationshipLinkageSupport.convertLinkage(
-            property, data, linkageMapper, mappingType, mapper));
-  }
-
   private static void requireDeserializable(
       ReadMappingProperty property, MappingLocation location, Class<?> rawType) {
     if (property.deserializable()) {
@@ -279,7 +185,7 @@ public final class DomainResourceBinder {
             + location
             + "' targets property '"
             + property.logicalName()
-            + "' without an effective Jackson deserialization target on "
+            + "' without an effective deserialization target on "
             + rawType.getName());
   }
 
@@ -308,14 +214,14 @@ public final class DomainResourceBinder {
           && idLocation != null
           && BeanConstruction.isConstructionFailureForProperty(e, identifierProperty, idLocation)) {
         Throwable cause = e.getCause() == null ? e : e.getCause();
-        throw identifierConversionFailed(rawType, idLocation, cause);
+        throw BasicResourceReader.identifierConversionFailure(rawType, idLocation, cause);
       }
       ReadMappingProperty localIdProperty = mapping.localIdProperty();
       if (localIdProperty != null
           && lidLocation != null
           && BeanConstruction.isConstructionFailureForProperty(e, localIdProperty, lidLocation)) {
         Throwable cause = e.getCause() == null ? e : e.getCause();
-        throw identifierConversionFailed(rawType, lidLocation, cause);
+        throw BasicResourceReader.identifierConversionFailure(rawType, lidLocation, cause);
       }
       throw e;
     }

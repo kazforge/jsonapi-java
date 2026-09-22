@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
  * deserialization property for the logical name. A serialization-only declaration may therefore
  * remain in the read mapping for supplied-member diagnostics without becoming bindable.
  */
-record ReadMappingProperty(
+public record ReadMappingProperty(
     BeanPropertyDefinition definition,
     @Nullable AnnotatedMember serializationMember,
     @Nullable AnnotatedMember deserializationMember,
