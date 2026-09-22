@@ -34,15 +34,17 @@ import org.jspecify.annotations.Nullable;
  * orchestration, ordinary domain-object to-one/to-many linkage construction, advanced
  * relationship-value normalization (see {@link #relationshipData}), relationship-member assembly,
  * resource/relationship/identifier meta construction and attachment, member naming, and base {@link
- * ResourceObject} assembly. Decoration and configured conversion stay in the backend's own write
- * orchestration reached through the {@link WriteResourceBackend} capability boundary.
+ * ResourceObject} assembly. Configured conversion stays in the backend's own write orchestration
+ * reached through the {@link WriteResourceBackend} capability boundary; additive link decoration is
+ * applied by {@link ResourceDecorationWriter} after {@link #writeBasic} returns.
  *
  * <p>Write phase order is part of the contract: the backend validates its declared meta targets
  * before calling {@link #writeBasic}; within the shared write, all declared meta targets are
  * validated before any basic member read, each selected relationship's linkage read and
  * normalization precedes that relationship's meta conversion, and one relationship's meta completes
  * before the next relationship property is read. Resource meta is applied independently of
- * fieldsets, and decoration is applied by the caller after {@link #writeBasic} returns.
+ * fieldsets, and additive link decoration is applied by {@link ResourceDecorationWriter} after
+ * {@link #writeBasic} returns.
  *
  * @param <T> opaque backend-native type token
  * @param <P> opaque backend-native property token

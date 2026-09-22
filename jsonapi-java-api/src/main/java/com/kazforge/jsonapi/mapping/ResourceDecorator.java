@@ -2,7 +2,9 @@ package com.kazforge.jsonapi.mapping;
 
 /**
  * Backend-independent application-provided decoration for JSON:API resource links during domain
- * writes. The current Jackson adapters invoke it through caller-configured Jackson.
+ * writes. A registered decorator is invoked by the shared backend-neutral decoration phase after
+ * the basic write; each adapter resolves the effective runtime type and supplies the configured
+ * registry through caller-configured construction.
  *
  * <p>Decorators are application/runtime collaborators, not domain-model metadata. They are supplied
  * through mapper construction so dependency-injected, request-aware, or tenant-aware link builders

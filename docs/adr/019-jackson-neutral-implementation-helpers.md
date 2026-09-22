@@ -110,6 +110,16 @@ adapter-owned. The attribute-conversion result no longer exists under its old na
 `RelationshipTargetResolver` callback type was removed as target resolution moved into the backend
 capability.
 
+A later extraction moved additive resource and relationship link decoration to the same module. The
+shared `com.kazforge.jsonapi.mapping.internal.ResourceDecorationWriter` now owns exact
+effective-class decorator lookup, decorator failure/null translation, relationship target
+classification against the neutral write definition, logical-to-wire name resolution, whole-value
+link replacement, fieldset non-resurrection, and reconstruction that preserves the other members the
+basic write produced. Each adapter retains only the empty-registry short-circuit, the effective
+runtime raw-class resolution, and delegation; the decorator contracts and registry remain in the
+neutral API. This supersedes the earlier statements above that decoration stays in the existing
+adapter write path.
+
 The remaining helpers listed in the Decision (wire member classification and pointers,
 identifier-meta copies, and supplied PATCH markers) stay in the API artifact under
 `com.kazforge.jsonapi.internal` until a later extraction moves them.

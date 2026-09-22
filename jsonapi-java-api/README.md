@@ -26,7 +26,8 @@ Jackson (discovery, visibility, external names, construction, and conversion), a
 type/property handles, introspection, naming, serializers, deserializers, parser/generator
 mechanics, and wire codecs remain adapter-owned. Backend-neutral compound-inclusion traversal,
 inclusion bookkeeping, basic and advanced relationship write normalization, relationship-member
-assembly, resource/relationship/identifier meta application, mapping roles, and
+assembly, resource/relationship/identifier meta application, additive resource/relationship link
+decoration, mapping roles, and
 per-property naming metadata are owned by
 [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). `id` and `lid` stay invariant JSON:API
 role names.
