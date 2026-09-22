@@ -65,7 +65,7 @@ final class FlatConstructionPaths {
     }
     MappingLocation pointer = start.location();
     JavaType current = start.property().token().type();
-    boolean walking = true;
+    boolean walking = isWalkable(start.property().token().effectivePropertyOrThrow());
     for (int i = 1; i < names.size() && walking; i++) {
       String name = names.get(i);
       Shape shape = shapeOf(unwrapOptional(current));
@@ -76,12 +76,24 @@ final class FlatConstructionPaths {
         if (member != null) {
           pointer = pointer.append(member.wireName());
           current = member.type();
+          walking = member.walkable();
         } else {
           walking = false;
         }
       }
     }
     return pointer;
+  }
+
+  /**
+   * Whether the effective property exposes a walkable bean shape below it. An effective
+   * property-scoped custom deserializer is a hard boundary: the walker must stop after the
+   * property's own wire segment instead of resolving the root bean shape of its declared type.
+   * {@code Optional} wrappers stay walkable because the walker unwraps them.
+   */
+  private static boolean isWalkable(SettableBeanProperty property) {
+    return isOptional(property.getType())
+        || property.getValueDeserializer() instanceof BeanDeserializerBase;
   }
 
   private @Nullable Shape shapeOf(JavaType type) {
@@ -133,14 +145,12 @@ final class FlatConstructionPaths {
       @Nullable Class<?> activeView) {
     while (properties.hasNext()) {
       SettableBeanProperty property = properties.next();
-      if (property.isInjectionOnly()) {
-        continue;
-      }
-      if (activeView != null && !property.visibleInView(activeView)) {
-        continue;
-      }
-      if (seen.add(property.getName())) {
-        members.add(new Shape.Member(property.getName(), property.getType()));
+      boolean eligible =
+          !property.isInjectionOnly()
+              && (activeView == null || property.visibleInView(activeView))
+              && seen.add(property.getName());
+      if (eligible) {
+        members.add(new Shape.Member(property.getName(), property.getType(), isWalkable(property)));
       }
     }
   }
@@ -171,8 +181,10 @@ final class FlatConstructionPaths {
     /**
      * One walkable member. The wire name is the configured Jackson external name used as the {@code
      * convertValue} map key; the type is the effective deserialization type of the configured bean
-     * deserializer's property for that name.
+     * deserializer's property for that name. {@code walkable} is false when the effective property
+     * carries a custom property-scoped deserializer, so the walker stops after this member's own
+     * wire segment.
      */
-    record Member(String wireName, JavaType type) {}
+    record Member(String wireName, JavaType type, boolean walkable) {}
   }
 }

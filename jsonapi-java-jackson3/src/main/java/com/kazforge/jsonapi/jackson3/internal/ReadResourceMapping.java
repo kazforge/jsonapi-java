@@ -3,7 +3,6 @@ package com.kazforge.jsonapi.jackson3.internal;
 import com.kazforge.jsonapi.mapping.internal.ReadProperty;
 import com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -16,9 +15,11 @@ import tools.jackson.databind.JavaType;
  * deserialization model and records whether each mapped property has a bindable effective property.
  * It intentionally does not replace or weaken the serialization-oriented write mapping.
  *
- * <p>Creator participation is read from the effective properties rather than re-inferred from a
- * serialization description: the external names of the mapped effective creator properties feed
- * message-independent construction-failure classification for ordinary flat reads.
+ * <p>Creator participation is read from the configured bean deserializer's effective creator
+ * properties rather than re-inferred from a serialization description: the external names of every
+ * non-injection, view-eligible effective creator property, including unannotated properties that
+ * are absent from the JSON:API read mapping, feed message-independent construction-failure
+ * classification.
  */
 record ReadResourceMapping(
     String resourceType,
@@ -28,36 +29,8 @@ record ReadResourceMapping(
     List<ReadMappingProperty> relationships,
     @Nullable ReadMappingProperty resourceMeta,
     List<ReadMappingProperty> relationshipMetaProperties,
-    JavaType domainType) {
-
-  /**
-   * The configured Jackson external names of the mapped effective creator properties. A
-   * missing-creator input failure names one of these properties while that property is absent from
-   * the synthetic input, whereas a supplied value's shape mismatch names a property that was
-   * supplied.
-   */
-  Set<String> creatorPropertyNames() {
-    Set<String> names = new HashSet<>();
-    addCreatorName(names, identifierProperty);
-    addCreatorName(names, localIdProperty);
-    for (ReadMappingProperty property : attributes) {
-      addCreatorName(names, property);
-    }
-    for (ReadMappingProperty property : relationships) {
-      addCreatorName(names, property);
-    }
-    addCreatorName(names, resourceMeta);
-    for (ReadMappingProperty property : relationshipMetaProperties) {
-      addCreatorName(names, property);
-    }
-    return Set.copyOf(names);
-  }
-
-  private static void addCreatorName(Set<String> names, @Nullable ReadMappingProperty property) {
-    if (property != null && property.creatorProperty()) {
-      names.add(property.externalName());
-    }
-  }
+    JavaType domainType,
+    Set<String> creatorPropertyNames) {
 
   /**
    * Builds the neutral read definition consumed by the shared reader: resource type, separate

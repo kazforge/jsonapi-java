@@ -545,7 +545,7 @@ final class MappingDefinitionResolver {
       BeanDescription serializationDescription,
       Class<?> rawType,
       AnnotatedClass resourceMetadata,
-      Map<String, SettableBeanProperty> effectiveProperties) {
+      MappingDefinitionCache.EffectiveReadProperties effective) {
     String resourceType = validateResourceTypeName(resourceTypeName(resourceMetadata), rawType);
     List<ReadMappingProperty> identifierProperties = new ArrayList<>();
     List<ReadMappingProperty> localIdProperties = new ArrayList<>();
@@ -569,7 +569,7 @@ final class MappingDefinitionResolver {
       validateJsonApiName(jsonapiName, role, logicalName, rawType);
       AnnotatedMember serializationMember =
           pair.serialization() == null ? null : pair.serialization().getAccessor();
-      SettableBeanProperty effectiveProperty = effectiveProperties.get(externalName);
+      SettableBeanProperty effectiveProperty = effective.byExternalName().get(externalName);
       if (role == PropertyRole.RELATIONSHIP_META) {
         relationshipMetaProperties.add(
             new UnresolvedReadRelationshipMeta(
@@ -618,7 +618,8 @@ final class MappingDefinitionResolver {
         List.copyOf(relationshipProperties),
         resourceMeta,
         List.copyOf(boundRelationshipMeta),
-        deserializationDescription.getType());
+        deserializationDescription.getType(),
+        effective.creatorExternalNames());
   }
 
   private static List<PropertyPair> mergeProperties(

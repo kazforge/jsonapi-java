@@ -1,6 +1,7 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
 import com.kazforge.jsonapi.mapping.internal.SemanticProperty;
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.deser.SettableBeanProperty;
@@ -28,9 +29,12 @@ public record ReadMappingProperty(
     return effectiveProperty != null;
   }
 
-  /** Whether this mapped property participates as an effective creator property. */
-  boolean creatorProperty() {
-    return effectiveProperty != null && effectiveProperty.isCreatorProperty();
+  /**
+   * The effective property for a bindable read property. Only construction starts, which are
+   * emitted for bindable properties, call this.
+   */
+  SettableBeanProperty effectivePropertyOrThrow() {
+    return Objects.requireNonNull(effectiveProperty, "effectiveProperty");
   }
 
   @Override
