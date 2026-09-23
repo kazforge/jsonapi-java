@@ -18,8 +18,8 @@ name for application-property correspondence. Its state is either an atomic valu
 structured member list. An empty structured patch means an explicitly supplied empty object, not
 clear-all.
 
-Each Jackson adapter implements the same location-neutral recursive binding contract with native
-Jackson introspection:
+Both Jackson adapters share one location-neutral recursive binding implementation, over each
+adapter's native Jackson introspection:
 
 - The typed path recurses only into an opt-in presence-aware shape whose visible members are exactly
   `PatchPresence<T>`. Mixed shapes, raw presence wrappers, and wrapper-level customization are invalid.
@@ -50,5 +50,25 @@ variants, while `StructuredPatch` remains a payload rather than a structured-val
 - Typed recursion is declaration-driven and may fail when the nested shape is first used.
 - Relationships remain linkage-oriented atomic replacements; recursion does not mutate a resource
   graph.
-- Neutral payload contracts stay Jackson-import-free while the recursive engine remains
-  adapter-internal.
+- Neutral payload contracts stay Jackson-import-free. The recursive engine is one backend-neutral
+  implementation in `jsonapi-java-mapping`; each Jackson adapter supplies configured shape discovery
+  and native atomic conversion over an unsupported capability bridge (see
+  [ADR-019](019-jackson-neutral-implementation-helpers.md)).
+
+## Partial supersession
+
+The earlier statement that the recursive engine remained adapter-internal is superseded.
+JSON:API location, presence, and nested-shape **policy** are now owned once by
+`com.kazforge.jsonapi.mapping.internal.StructuredPatchBinder`, together with the neutral resolved
+shape value. Each adapter keeps adapter-owned native mechanics only: configured Jackson
+shape discovery and caching, wrapper-customization facts, and property-scoped conversion,
+supplied through `com.kazforge.jsonapi.mapping.internal.StructuredShapeBackend`;
+construction-path translation stays adapter-owned outside that capability interface. The
+semantics in the Decision —
+typed versus low-level recursion boundaries, atomic containers, null handling, strict typed versus
+skip low-level unknown members, and property-scoped conversion authority — are unchanged.
+
+The typed `PatchPresence<T>` DTO orchestration is likewise shared policy, owned by
+`com.kazforge.jsonapi.mapping.internal.TypedPatchBinder` over an unsupported
+`TypedPatchBackend` capability interface; the typed DTO projection itself remains the adapter's
+serialization-oriented mapping. See [ADR-019](019-jackson-neutral-implementation-helpers.md).

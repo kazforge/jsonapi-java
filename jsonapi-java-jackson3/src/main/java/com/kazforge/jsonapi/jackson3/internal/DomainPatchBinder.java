@@ -11,6 +11,7 @@ import com.kazforge.jsonapi.mapping.internal.PatchProperty;
 import com.kazforge.jsonapi.mapping.internal.PatchResourceBackend;
 import com.kazforge.jsonapi.mapping.internal.PatchResourceDefinition;
 import com.kazforge.jsonapi.mapping.internal.ReadRelationshipShape;
+import com.kazforge.jsonapi.mapping.internal.StructuredPatchBinder;
 import com.kazforge.jsonapi.patch.PatchCommand;
 import java.util.Map;
 import java.util.Objects;
@@ -140,7 +141,7 @@ public final class DomainPatchBinder
     if (!wholeMeta && rawValue == null) {
       return converter.convertAttribute(property, null, declaredType, rawType, beanType, location);
     }
-    StructuredValueBinder.LowLevelKind kind =
+    StructuredPatchBinder.LowLevelKind kind =
         structuredBinder.lowLevelKind(
             declaredType,
             rawValue,
@@ -148,7 +149,7 @@ public final class DomainPatchBinder
             property.definition().getMutator(),
             location,
             rawType);
-    if (kind == StructuredValueBinder.LowLevelKind.RECURSE) {
+    if (kind == StructuredPatchBinder.LowLevelKind.RECURSE) {
       return structuredBinder.bindLowLevelStructured(rawValue, declaredType, location, rawType);
     }
     JavaType targetType = PatchMemberConverter.unwrapPatchPresence(declaredType);

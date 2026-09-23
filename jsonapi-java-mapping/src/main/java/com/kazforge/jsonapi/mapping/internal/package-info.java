@@ -37,11 +37,28 @@
  * identifier-meta sequencing are shared with the reader through {@link
  * com.kazforge.jsonapi.mapping.internal.RelationshipLinkageBinder}. Each backend reaches declared
  * meta-target validation against the effective inbound PATCH property types, identity and
- * attribute/meta conversion, recursive structured binding, final relationship container coercion,
- * and the shared linkage native operations through the thin {@link
- * com.kazforge.jsonapi.mapping.internal.PatchResourceBackend} boundary. Ordinary reads and
- * low-level PATCH are separate projections of one adapter-resolved deserialization mapping, so they
- * never resolve competing configured-Jackson models.
+ * attribute/meta conversion, final relationship container coercion, configured structured-shape
+ * introspection and caching, native atomic conversion, typed relationship conversion,
+ * construction-path translation, and the shared linkage native operations through the thin {@link
+ * com.kazforge.jsonapi.mapping.internal.PatchResourceBackend} and {@link
+ * com.kazforge.jsonapi.mapping.internal.StructuredShapeBackend} and {@link
+ * com.kazforge.jsonapi.mapping.internal.TypedPatchBackend} boundaries. Ordinary reads and low-level
+ * PATCH are separate projections of one adapter-resolved deserialization mapping, so they never
+ * resolve competing configured-Jackson models. The typed PATCH DTO projection is the adapter's
+ * serialization-oriented mapping, projected into a neutral {@link
+ * com.kazforge.jsonapi.mapping.internal.TypedPatchDefinition}.
+ *
+ * <p>The backend-neutral recursive structured-value engine and typed PATCH DTO orchestrator live
+ * here too. {@link com.kazforge.jsonapi.mapping.internal.StructuredPatchBinder} owns typed
+ * marker-tree assembly, low-level supplied-only {@link com.kazforge.jsonapi.patch.StructuredPatch}
+ * assembly, the present/omitted/explicit-null/empty-object distinctions, strict typed versus skip
+ * low-level unknown-member policy, pointer accumulation, and the typed-only nature of
+ * presence-aware shapes. {@link com.kazforge.jsonapi.mapping.internal.TypedPatchBinder} owns the
+ * typed DTO contract phase order, synthetic {@link
+ * com.kazforge.jsonapi.internal.patch.PresenceMarker} assembly, complete declaration preflight,
+ * strict supplied unknown-member handling, and meta/data gating. The neutral resolved {@link
+ * com.kazforge.jsonapi.mapping.internal.StructuredShape} carries only adapter-resolved facts, so
+ * the adapters never decide atomic-versus-recursive behavior.
  *
  * <p>{@link com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition#constructionStarts(
  * com.kazforge.jsonapi.diagnostic.MappingLocation,
@@ -83,9 +100,15 @@
  * shared reader owns the neutral relationship and meta semantics and diagnostics. The low-level
  * PATCH binder reaches a thin {@link com.kazforge.jsonapi.mapping.internal.PatchResourceBackend}
  * boundary that supplies declared meta-target validation, identity and attribute/meta conversion,
- * recursive structured binding, and final relationship container coercion alongside the shared
- * native linkage operations, keeping native conversion adapter-owned while the shared binder owns
- * the neutral PATCH phase order and change assembly.
+ * and final relationship container coercion alongside the shared native linkage operations, keeping
+ * native conversion adapter-owned while the shared binder owns the neutral PATCH phase order and
+ * change assembly. The recursive structured engine reaches {@link
+ * com.kazforge.jsonapi.mapping.internal.StructuredShapeBackend} for resolved shape facts and atomic
+ * conversion, and the typed PATCH DTO orchestrator reaches {@link
+ * com.kazforge.jsonapi.mapping.internal.TypedPatchBackend} for identity parsing, relationship
+ * conversion, and the single construction, keeping configured Jackson introspection and caching,
+ * wrapper-customization detection, property-scoped conversion, and construction-path translation
+ * adapter-owned.
  *
  * <p>This package is not consumer SPI. Its Java-public types exist only so backend artifacts can
  * cooperate on neutral mapping implementation. Application code must not depend on it, and backend

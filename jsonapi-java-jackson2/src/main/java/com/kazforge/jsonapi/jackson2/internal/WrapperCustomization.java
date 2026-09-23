@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.cfg.MapperConfig;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.kazforge.jsonapi.patch.PatchPresence;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -17,6 +18,22 @@ import org.jspecify.annotations.Nullable;
 final class WrapperCustomization {
 
   private WrapperCustomization() {}
+
+  /** True when {@code type} is exactly {@code PatchPresence<T>} with one type argument. */
+  static boolean isPatchPresence(JavaType type) {
+    return type.getRawClass() == PatchPresence.class && type.containedTypeCount() == 1;
+  }
+
+  /**
+   * True when {@code type} is a presence-aware attempt: {@code PatchPresence}, {@code
+   * PatchPresence.Present}, or {@code PatchPresence.Omitted}.
+   */
+  static boolean isPresenceAttempt(JavaType type) {
+    Class<?> raw = type.getRawClass();
+    return raw == PatchPresence.class
+        || raw == PatchPresence.Present.class
+        || raw == PatchPresence.Omitted.class;
+  }
 
   /**
    * Checks wrapper-level serialization and deserialization customization on the property, on both

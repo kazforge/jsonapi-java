@@ -217,3 +217,29 @@ recursive structured PATCH are out of scope for this increment. This supersedes 
 statements above that the adapter-local relationship-linkage code is still used by PATCH and that
 low-level PATCH retains write-oriented `ResourceMapping`.
 
+A later extraction moved backend-neutral recursive structured-value PATCH binding and typed PATCH
+DTO orchestration to the same module, so the duplicated recursive engine and typed loop left both
+adapters. `com.kazforge.jsonapi.mapping.internal.StructuredPatchBinder` now owns typed marker-tree
+assembly, low-level supplied-only `StructuredPatch`/`StructuredMember` assembly, the
+present/omitted/explicit-null/empty-object distinctions, strict typed versus skip low-level
+unknown-member policy, pointer accumulation, and the typed-only nature of presence-aware shapes.
+Each adapter supplies resolved shape facts, native type queries, and atomic conversion through an
+unsupported `com.kazforge.jsonapi.mapping.internal.StructuredShapeBackend` capability interface;
+shape caching, configured deserialization introspection, wrapper-customization detection,
+property-scoped conversion, and construction-path translation remain adapter-owned. The neutral
+`StructuredShape` value carries only adapter-resolved facts, so the adapters never decide
+atomic-versus-recursive behavior. `com.kazforge.jsonapi.mapping.internal.TypedPatchBinder` now owns
+the typed PATCH DTO phase order (resource-type match, complete typed declaration preflight, required
+identity, attributes, relationships, resource meta, relationship meta, then native construction),
+synthetic `PresenceMarker` assembly, strict supplied unknown-member handling, and meta/data gating,
+over an unsupported `com.kazforge.jsonapi.mapping.internal.TypedPatchBackend` capability interface
+limited to declared relationship-linkage identifier-meta validation, wire-identifier parsing, typed
+relationship-linkage conversion, and the single native construction with identifier-failure
+reclassification. The typed DTO projection remains the adapter's serialization-oriented
+`ResourceMapping`; low-level PATCH keeps its deserialization-oriented projection and phase order, so
+the two do not compete. Adapter-local `StructuredValueBinder` is now a thin Jackson bridge over the
+shared recursive engine, and the adapter-local `DomainPatchDtoBinder` a thin bridge over the shared
+typed orchestrator. This supersedes the earlier statement above that the typed `PatchPresence` DTO
+path and recursive structured PATCH are out of scope and that adapter-local `StructuredValueBinder`
+and structured binding remain adapter-owned.
+

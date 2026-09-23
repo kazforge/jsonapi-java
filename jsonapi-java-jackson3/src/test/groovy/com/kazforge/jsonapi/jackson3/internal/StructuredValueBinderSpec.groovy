@@ -4,6 +4,7 @@ import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.diagnostic.MappingLocation
 import com.kazforge.jsonapi.internal.patch.PresenceMarker
+import com.kazforge.jsonapi.mapping.internal.StructuredPatchBinder
 import com.kazforge.jsonapi.patch.PatchPresence
 import com.kazforge.jsonapi.patch.StructuredMember
 import com.kazforge.jsonapi.patch.StructuredMemberState
@@ -113,7 +114,7 @@ class StructuredValueBinderSpec extends Specification {
 
     expect:
     binder.lowLevelKind(declared, [street: "S"], null, null, META, Address) ==
-    StructuredValueBinder.LowLevelKind.RECURSE
+    StructuredPatchBinder.LowLevelKind.RECURSE
 
     when:
     def patch = binder.bindLowLevelStructured([street: "S"], declared, META, Address)
@@ -133,7 +134,7 @@ class StructuredValueBinderSpec extends Specification {
 
     expect:
     binder.lowLevelKind(dimensions, [width: null], null, null, META, Dimensions) ==
-    StructuredValueBinder.LowLevelKind.RECURSE
+    StructuredPatchBinder.LowLevelKind.RECURSE
 
     when:
     binder.bindLowLevelStructured([width: null], dimensions, META, Dimensions)
