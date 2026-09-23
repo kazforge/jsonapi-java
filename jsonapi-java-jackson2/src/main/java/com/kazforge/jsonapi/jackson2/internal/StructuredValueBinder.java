@@ -108,18 +108,20 @@ final class StructuredValueBinder implements StructuredShapeBackend<JavaType> {
     }
     MappingLocation pointer = start.location();
     JavaType current = start.declaredType();
-    for (int i = 1; i < names.size(); i++) {
+    boolean walking = true;
+    for (int i = 1; i < names.size() && walking; i++) {
       String name = names.get(i);
       StructuredShape<JavaType> shape = shared.typedShape(current);
       if (shape == null) {
-        break;
-      }
-      StructuredShape.Member<JavaType> member = shape.memberByWire(name);
-      if (member != null) {
-        pointer = pointer.append(member.wireName());
-        current = member.declaredType();
-      } else if (!"value".equals(name)) {
-        break;
+        walking = false;
+      } else {
+        StructuredShape.Member<JavaType> member = shape.memberByWire(name);
+        if (member != null) {
+          pointer = pointer.append(member.wireName());
+          current = member.declaredType();
+        } else if (!"value".equals(name)) {
+          walking = false;
+        }
       }
     }
     return pointer;
