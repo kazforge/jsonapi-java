@@ -59,19 +59,15 @@ final class PatchMemberConverter {
   /** Converts a wire identifier into the identifier property's converted value (never null). */
   Object convertIdentity(
       String wireIdentifier,
-      MappingProperty identifierProperty,
+      ReadMappingProperty identifierProperty,
       JavaType beanType,
       Class<?> rawType) {
     Object parsed = parseIdentity(wireIdentifier, rawType);
     try {
-      JavaType identifierType = identifierProperty.definition().getPrimaryType();
+      JavaType identifierType = identifierProperty.type();
       Object converted =
           propertyScoped.convert(
-              beanType,
-              identifierProperty.definition().getFullName().getSimpleName(),
-              identifierType,
-              identifierType,
-              parsed);
+              beanType, identifierProperty.externalName(), identifierType, identifierType, parsed);
       return Objects.requireNonNull(converted, "identity");
     } catch (RuntimeException e) {
       throw identifierConversionFailed(rawType, e);
@@ -119,7 +115,7 @@ final class PatchMemberConverter {
    * resource-relative attribute location (for example {@code /attributes/count}).
    */
   @Nullable Object convertAttribute(
-      MappingProperty property,
+      ReadMappingProperty property,
       @Nullable Object rawValue,
       JavaType targetType,
       Class<?> rawType,
@@ -139,11 +135,10 @@ final class PatchMemberConverter {
       if (rawValue == null) {
         return null;
       }
-      return convertAttributeViaJackson(property, rawValue, targetType, beanType);
+      return convertViaJackson(property, rawValue, targetType, beanType);
+    } catch (JsonApiMappingException e) {
+      throw e;
     } catch (RuntimeException e) {
-      if (e instanceof JsonApiMappingException mappingException) {
-        throw mappingException;
-      }
       throw new JsonApiMappingException(
           MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE,
           rawType,
@@ -154,20 +149,16 @@ final class PatchMemberConverter {
   }
 
   /**
-   * Uses {@code convertValue} unless the property carries property-scoped Jackson deserialization
-   * customization, in which case the shared {@link PropertyScopedValueConverter} runs the
-   * property's fully-contextualized deserializer with a real context (same machinery as {@code
-   * convertValue}, property-scoped). A null {@code rawValue} converts through the target type's
-   * null value (for example {@code Optional.empty()} for an {@link Optional} target).
+   * Uses the property's fully-contextualized deserializer unless the caller unwrapped a wrapper
+   * type, in which case the value converts against {@code targetType} directly.
    */
-  private @Nullable Object convertAttributeViaJackson(
-      MappingProperty property, @Nullable Object rawValue, JavaType targetType, JavaType beanType) {
+  private @Nullable Object convertViaJackson(
+      ReadMappingProperty property,
+      @Nullable Object rawValue,
+      JavaType targetType,
+      JavaType beanType) {
     return propertyScoped.convert(
-        beanType,
-        property.definition().getFullName().getSimpleName(),
-        property.accessor().getType(),
-        targetType,
-        rawValue);
+        beanType, property.externalName(), property.type(), targetType, rawValue);
   }
 
   /**
@@ -176,18 +167,17 @@ final class PatchMemberConverter {
    * location so failures never surface an attribute-oriented pointer.
    */
   @Nullable Object convertWholeMeta(
-      MappingProperty property,
+      ReadMappingProperty property,
       @Nullable Object rawValue,
       JavaType declaredType,
       JavaType beanType,
       MappingLocation metaLocation,
       Class<?> rawType) {
     try {
-      return convertAttributeViaJackson(property, rawValue, declaredType, beanType);
+      return convertViaJackson(property, rawValue, declaredType, beanType);
+    } catch (JsonApiMappingException e) {
+      throw e;
     } catch (RuntimeException e) {
-      if (e instanceof JsonApiMappingException mappingException) {
-        throw mappingException;
-      }
       throw new JsonApiMappingException(
           MappingDiagnostic.INVALID_META_TARGET,
           rawType,
@@ -195,16 +185,6 @@ final class PatchMemberConverter {
           "Failed to convert the meta value at '" + metaLocation + "'",
           e);
     }
-  }
-
-  /**
-   * Converts one relationship linkage against {@code targetType} (the unwrapped inner type on the
-   * DTO path).
-   */
-  @Nullable Object convertRelationship(
-      MappingProperty property, RelationshipData data, JavaType targetType) {
-    return finalizeRelationshipValue(
-        convertRelationshipLinkage(property, data, targetType), targetType, property);
   }
 
   /** Converts linkage for a typed PATCH DTO without coercing the complete inner target type yet. */
@@ -223,8 +203,9 @@ final class PatchMemberConverter {
         property, data, linkageMapper, mappingType, mapper);
   }
 
-  private @Nullable Object finalizeRelationshipValue(
-      @Nullable Object intermediate, JavaType targetType, MappingProperty property) {
+  /** Applies final native coercion of one orchestrated relationship value to its declared type. */
+  @Nullable Object coerceRelationship(ReadMappingProperty property, @Nullable Object intermediate) {
+    JavaType targetType = property.type();
     if (alreadyConverted(intermediate, targetType)) {
       return intermediate;
     }
@@ -233,7 +214,7 @@ final class PatchMemberConverter {
     } catch (RuntimeException e) {
       throw new JsonApiMappingException(
           MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_TARGET,
-          RelationshipLinkageSupport.rawTypeOf(property),
+          targetType.getRawClass(),
           RelationshipMetaSupport.relationshipLocation(property),
           "Failed to convert relationship '"
               + property.logicalName()

@@ -28,6 +28,21 @@
  * identifier-meta conversion, and final bean construction through the thin {@link
  * com.kazforge.jsonapi.mapping.internal.ReadResourceBackend} native-mechanics boundary.
  *
+ * <p>It owns the backend-neutral low-level PATCH command semantics: resource-type matching,
+ * required {@code id} identity that never falls back to {@code lid}, supplied-member lookup by
+ * JSON:API name, effective-deserialization bindability enforcement, {@link
+ * com.kazforge.jsonapi.patch.PatchChange} construction, and {@link
+ * com.kazforge.jsonapi.patch.PatchCommand} assembly in the contract phase order. Whole linkage
+ * replacement, cardinality, direct identifier copies, wrapper occurrence orchestration, and
+ * identifier-meta sequencing are shared with the reader through {@link
+ * com.kazforge.jsonapi.mapping.internal.RelationshipLinkageBinder}. Each backend reaches declared
+ * meta-target validation against the effective inbound PATCH property types, identity and
+ * attribute/meta conversion, recursive structured binding, final relationship container coercion,
+ * and the shared linkage native operations through the thin {@link
+ * com.kazforge.jsonapi.mapping.internal.PatchResourceBackend} boundary. Ordinary reads and
+ * low-level PATCH are separate projections of one adapter-resolved deserialization mapping, so they
+ * never resolve competing configured-Jackson models.
+ *
  * <p>{@link com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition#constructionStarts(
  * com.kazforge.jsonapi.diagnostic.MappingLocation,
  * com.kazforge.jsonapi.diagnostic.MappingLocation)} owns the neutral top-level construction-start
@@ -65,7 +80,12 @@
  * declared {@link com.kazforge.jsonapi.mapping.internal.ReadRelationshipShape}, the configured
  * linkage-mapper invocation, and the declared identifier-meta conversion, keeping native
  * target/type resolution, mapper selection, and configured conversion adapter-owned while the
- * shared reader owns the neutral relationship and meta semantics and diagnostics.
+ * shared reader owns the neutral relationship and meta semantics and diagnostics. The low-level
+ * PATCH binder reaches a thin {@link com.kazforge.jsonapi.mapping.internal.PatchResourceBackend}
+ * boundary that supplies declared meta-target validation, identity and attribute/meta conversion,
+ * recursive structured binding, and final relationship container coercion alongside the shared
+ * native linkage operations, keeping native conversion adapter-owned while the shared binder owns
+ * the neutral PATCH phase order and change assembly.
  *
  * <p>This package is not consumer SPI. Its Java-public types exist only so backend artifacts can
  * cooperate on neutral mapping implementation. Application code must not depend on it, and backend

@@ -12,10 +12,11 @@ import org.jspecify.annotations.Nullable;
  * wire-identifier parsing, lazy relationship-shape resolution (target/type resolution plus
  * configured-mapper selection), configured linkage-mapper invocation, and declared identifier-meta
  * conversion. Resource-type matching, strict and independent identity-role selection, wire-member
- * presence, attribute/relationship ordering, synthetic-key assembly, cardinality validation,
- * null/empty short-circuiting, direct identifier copying, wrapper occurrence orchestration,
- * identifier-meta sequencing, resource/relationship meta presence and binding, and their shared
- * diagnostics live in {@link BasicResourceReader}.
+ * presence, attribute ordering, synthetic-key assembly, resource/relationship meta presence and
+ * binding, and their shared diagnostics live in {@link BasicResourceReader}. Relationship
+ * cardinality, null/empty short-circuiting, direct identifier copying, wrapper occurrence
+ * orchestration, identifier-meta sequencing, and their diagnostics are shared with low-level PATCH
+ * through {@link RelationshipLinkageBinder}.
  *
  * <p>Relationship shape resolution happens lazily, only after the shared reader finds supplied
  * relationship {@code data} and validates the property's bindability, so an unsupported or
@@ -34,12 +35,14 @@ import org.jspecify.annotations.Nullable;
  * @param <P> opaque backend-native property token
  */
 @NullMarked
-public interface ReadResourceBackend<T, P> {
+public interface ReadResourceBackend<T, P>
+    extends RelationshipLinkageBinder.Backend<T, ReadProperty<P>> {
 
   /**
    * Raw class of a mapped property's effective target type, for identifier-conversion and
    * cardinality diagnostics.
    */
+  @Override
   Class<?> rawType(ReadProperty<P> property);
 
   /**
@@ -55,6 +58,7 @@ public interface ReadResourceBackend<T, P> {
    * bindable. Target/type resolution and configured-mapper selection happen here, so an unsupported
    * or unresolvable target fails before the shared cardinality and null/empty short-circuit checks.
    */
+  @Override
   ReadRelationshipShape<T> readRelationshipShape(ReadProperty<P> property);
 
   /**
@@ -65,6 +69,7 @@ public interface ReadResourceBackend<T, P> {
    * a wrapped to-many null target is failed by the shared reader at that occurrence's indexed
    * relationship-data location.
    */
+  @Override
   @Nullable Object mapLinkage(ReadProperty<P> property, RelationshipData data, T target);
 
   /**
@@ -73,6 +78,7 @@ public interface ReadResourceBackend<T, P> {
    * identifier-meta location; conversion failures surface as the backend's own identifier-meta
    * diagnostic at that location.
    */
+  @Override
   @Nullable Object convertIdentifierMeta(
       ReadProperty<P> property, Meta meta, T metaToken, int occurrenceIndex);
 }

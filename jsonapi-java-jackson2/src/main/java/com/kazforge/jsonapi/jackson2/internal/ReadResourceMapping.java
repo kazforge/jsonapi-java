@@ -1,6 +1,8 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
+import com.kazforge.jsonapi.mapping.internal.PatchProperty;
+import com.kazforge.jsonapi.mapping.internal.PatchResourceDefinition;
 import com.kazforge.jsonapi.mapping.internal.ReadProperty;
 import com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition;
 import java.util.ArrayList;
@@ -70,5 +72,40 @@ record ReadResourceMapping(
   private static @Nullable ReadProperty<ReadMappingProperty> readPropertyOrNull(
       @Nullable ReadMappingProperty property) {
     return property == null ? null : readProperty(property);
+  }
+
+  /**
+   * Projects the low-level PATCH definition from this same configured inbound mapping. Identity is
+   * the {@code id} role only: {@code lid} never enters the command-identity fallback path even when
+   * it is independently mapped for ordinary reads. Attribute, relationship, resource-meta, and
+   * matched relationship-meta properties keep their effective deserialization types and bindability
+   * and their resolved semantic names.
+   */
+  PatchResourceDefinition<ReadMappingProperty> patchDefinition() {
+    return new PatchResourceDefinition<>(
+        resourceType,
+        patchPropertyOrNull(identifierProperty),
+        patchProperties(attributes),
+        patchProperties(relationships),
+        patchPropertyOrNull(resourceMeta),
+        patchProperties(relationshipMetaProperties));
+  }
+
+  private static List<PatchProperty<ReadMappingProperty>> patchProperties(
+      List<ReadMappingProperty> properties) {
+    List<PatchProperty<ReadMappingProperty>> patchProperties = new ArrayList<>(properties.size());
+    for (ReadMappingProperty property : properties) {
+      patchProperties.add(patchProperty(property));
+    }
+    return patchProperties;
+  }
+
+  private static @Nullable PatchProperty<ReadMappingProperty> patchPropertyOrNull(
+      @Nullable ReadMappingProperty property) {
+    return property == null ? null : patchProperty(property);
+  }
+
+  private static PatchProperty<ReadMappingProperty> patchProperty(ReadMappingProperty property) {
+    return new PatchProperty<>(property, property.metadata(), property.deserializable());
   }
 }

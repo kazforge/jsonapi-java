@@ -187,3 +187,33 @@ type. Jackson 3 ordinary flat reads classify a missing creator input from the ef
 property names through an explicit `BeanConstruction` seam; the typed PATCH DTO binder keeps its
 existing default classifier.
 
+A later extraction moved backend-neutral low-level PATCH command orchestration to the same module.
+`com.kazforge.jsonapi.mapping.internal.PatchCommandBinder` now owns resource-type matching, required
+`id` identity that never falls back to `lid`, supplied-member lookup by JSON:API name, bindability
+enforcement, `PatchChange` construction, `PatchCommand` assembly, and the contract phase order
+(resource-type match, backend declared meta-target validation, identity, resource meta, attributes in
+wire encounter order, and relationships in wire encounter order with each relationship-meta change
+adjacent to its relationship and emitted only beside supplied relationship `data`). Each adapter
+projects a dedicated `com.kazforge.jsonapi.mapping.internal.PatchResourceDefinition` from the same
+deserialization-resolved inbound mapping that ordinary reads use, so one configured-Jackson authority
+owns merged role annotations, effective properties, bindability, generic specialization, class
+metadata, active views, and matched relationship-meta resolution; ordinary reads and low-level PATCH
+remain separate neutral projections and never resolve competing configured-Jackson models. PATCH
+participation is resolved from effective deserialization targets, so setter-only, creator-only, and
+write-only properties participate while a supplied mapped property without an effective
+deserialization target fails instead of being converted from a serialization accessor. The shared
+`com.kazforge.jsonapi.mapping.internal.RelationshipLinkageBinder` now owns relationship cardinality,
+null/empty short-circuiting, direct identifier copies, wrapper occurrence orchestration, configured
+linkage-mapper callback sequencing, and identifier-meta sequencing for both ordinary reads and
+low-level PATCH, so the duplicated adapter-side low-level linkage route left both adapters. Each
+adapter reaches its native mechanics through a thin
+`com.kazforge.jsonapi.mapping.internal.PatchResourceBackend` boundary limited to declared meta-target
+validation against the effective inbound PATCH property types, identity and attribute/meta
+conversion, recursive structured binding, final relationship container coercion, and the shared lazy
+relationship-shape, linkage-mapper, and identifier-meta operations; adapter-local
+`StructuredValueBinder`, property-scoped deserialization, custom-mapper invocation, native target
+resolution, and native diagnostics remain adapter-owned. The typed `PatchPresence` DTO path and
+recursive structured PATCH are out of scope for this increment. This supersedes the earlier
+statements above that the adapter-local relationship-linkage code is still used by PATCH and that
+low-level PATCH retains write-oriented `ResourceMapping`.
+

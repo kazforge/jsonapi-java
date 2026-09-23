@@ -479,7 +479,8 @@ class PatchBindingSpec extends Specification {
     reader.readValue(json, FlatDuplicateAttributeArticle)
 
     then:
-    thrown(JsonApiMappingException)
+    def failure = thrown(JsonApiMappingException)
+    failure.diagnostic() == MappingDiagnostic.NAME_COLLISION
   }
 
   def "typed identity is never listed among changes"() {

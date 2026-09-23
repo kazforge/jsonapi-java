@@ -56,14 +56,19 @@ decoration, and the basic and advanced resource read semantics for resource-type
 identity-role selection, attribute/relationship presence and order, synthetic-input assembly
 preserving absent-versus-explicit-null, relationship cardinality, null/empty short-circuiting,
 direct-identifier copying, `RelationshipLinkage` occurrence pairing, resource/relationship meta
-binding, and top-level construction-start backend-name to JSON:API location translation, are owned by
+binding, top-level construction-start backend-name to JSON:API location translation, and
+backend-neutral low-level `PatchCommand` orchestration (required `id` identity, supplied-member
+classification, effective-deserialization bindability enforcement, change construction, and the
+contract phase order, sharing relationship-linkage orchestration with reads), are owned by
 [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). This adapter supplies the native
 capability bridges over configured Jackson, including declared write relationship-shape and target
 resolution, lazy read relationship-shape resolution with configured linkage-mapper selection and
 invocation, property-scoped whole-meta and declared-type identifier-meta conversion, the
 effective-type resolution that decoration looks up, configured wire-identifier parsing,
 effective deserialization property discovery, nested construction-path walking, native
-failure-path extraction, and the configured decoration registry. Public
+failure-path extraction, declared meta-target validation against effective inbound PATCH property
+types, identity and attribute/meta conversion, recursive structured binding, final relationship
+container coercion, and the configured decoration registry. Public
 Javadocs and the linked ADRs own the remaining details rather than repeated here.
 
 ## Jackson 3 boundary
