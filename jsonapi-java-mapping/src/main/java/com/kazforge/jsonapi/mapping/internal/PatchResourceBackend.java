@@ -8,12 +8,13 @@ import org.jspecify.annotations.Nullable;
  * Thin backend capability boundary required by the shared low-level PATCH command binder.
  *
  * <p>Only native mechanics live here: declared whole-meta target validation against the effective
- * inbound PATCH property types, identity parsing and property conversion, atomic and recursively
- * structured attribute and whole-meta conversion, final relationship target/container coercion, and
- * the linkage mechanics inherited from {@link RelationshipLinkageBinder.Backend}. Resource-type
- * matching, required {@code id} identity selection, supplied-member classification, lookup by
- * JSON:API name, change construction, {@code PatchCommand} assembly, and the complete phase order
- * live in {@link PatchCommandBinder}.
+ * inbound PATCH property types, identity parsing and property conversion, atomic attribute and
+ * whole-meta conversion, final relationship target/container coercion, and the linkage mechanics
+ * inherited from {@link RelationshipLinkageBinder.Backend}. Object-wire structured attributes and
+ * meta are decided and recursed by {@link StructuredPatchBinder} through {@link
+ * StructuredShapeBackend}, not here. Resource-type matching, required {@code id} identity
+ * selection, supplied-member classification, lookup by JSON:API name, change construction, {@code
+ * PatchCommand} assembly, and the complete phase order live in {@link PatchCommandBinder}.
  *
  * <p>The type token {@code T} and property token {@code N} are deliberately opaque to the shared
  * mapping domain. This is unsupported implementation detail for backend cooperation, not consumer
@@ -46,9 +47,10 @@ public interface PatchResourceBackend<T, N>
       String wireIdentifier, PatchProperty<N> identifier, T beanType, Class<?> rawType);
 
   /**
-   * Converts one supplied mapped attribute value, including the backend's own recursively
-   * structured binding decision for object wire values. Failures surface as the backend's own
-   * diagnostic at {@code location}.
+   * Converts one supplied mapped attribute value. When the wire value is an object that the shared
+   * {@link StructuredPatchBinder} decides to recurse, the adapter reaches {@link
+   * StructuredShapeBackend} for the structured traversal and native atomic conversion instead of
+   * this method. Failures surface as the backend's own diagnostic at {@code location}.
    */
   @Nullable Object convertAttribute(
       PatchProperty<N> property,
@@ -58,9 +60,10 @@ public interface PatchResourceBackend<T, N>
       Class<?> rawType);
 
   /**
-   * Converts one supplied whole-object resource- or relationship-meta value, including the
-   * backend's own recursively structured binding decision for object wire values. Failures surface
-   * as the backend's own diagnostic at {@code location}.
+   * Converts one supplied whole-object resource- or relationship-meta value. When the wire value is
+   * an object that the shared {@link StructuredPatchBinder} decides to recurse, the adapter reaches
+   * {@link StructuredShapeBackend} for the structured traversal and native atomic conversion
+   * instead of this method. Failures surface as the backend's own diagnostic at {@code location}.
    */
   @Nullable Object convertWholeMeta(
       PatchProperty<N> property,

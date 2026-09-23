@@ -1,5 +1,6 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
+import com.kazforge.jsonapi.patch.PatchPresence;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.DeserializationConfig;
 import tools.jackson.databind.JavaType;
@@ -17,6 +18,22 @@ import tools.jackson.databind.json.JsonMapper;
 final class WrapperCustomization {
 
   private WrapperCustomization() {}
+
+  /** True when {@code type} is exactly {@code PatchPresence<T>} with one type argument. */
+  static boolean isPatchPresence(JavaType type) {
+    return type.getRawClass() == PatchPresence.class && type.containedTypeCount() == 1;
+  }
+
+  /**
+   * True when {@code type} is a presence-aware attempt: {@code PatchPresence}, {@code
+   * PatchPresence.Present}, or {@code PatchPresence.Omitted}.
+   */
+  static boolean isPresenceAttempt(JavaType type) {
+    Class<?> raw = type.getRawClass();
+    return raw == PatchPresence.class
+        || raw == PatchPresence.Present.class
+        || raw == PatchPresence.Omitted.class;
+  }
 
   /**
    * Checks wrapper-level serialization and deserialization customization on the property, on both

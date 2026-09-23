@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.json.JsonMapper
+import com.kazforge.jsonapi.patch.PatchPresence
 import spock.lang.Specification
 
 class WrapperCustomizationSpec extends Specification {
@@ -54,6 +55,40 @@ class WrapperCustomizationSpec extends Specification {
     !WrapperCustomization.hasDeserialization(mapper, type, null)
   }
 
+  def "treats type refinement as customization"() {
+    given:
+    def mapper = JsonMapper.builder().build()
+    def beanType = mapper.constructType(RefinedBean)
+    def deserialization =
+        mapper.deserializationConfig.classIntrospector.forDeserialization(
+        mapper.deserializationConfig, beanType, mapper.deserializationConfig)
+    def serialization =
+        mapper.serializationConfig.classIntrospector.forSerialization(
+        mapper.serializationConfig, beanType, mapper.serializationConfig)
+    def refinedDeserialization = deserialization.findProperties().find { it.internalName == "refined" }
+    def refinedSerialization = serialization.findProperties().find { it.internalName == "refined" }
+
+    expect:
+    WrapperCustomization.hasDeserialization(
+        mapper, refinedDeserialization.primaryType, refinedDeserialization.mutator)
+    WrapperCustomization.hasSerialization(
+        mapper, refinedSerialization.primaryType, refinedSerialization.accessor)
+  }
+
+  def "classifies presence-aware member types"() {
+    given:
+    def mapper = JsonMapper.builder().build()
+
+    expect:
+    WrapperCustomization.isPatchPresence(
+        mapper.typeFactory.constructParametricType(PatchPresence, String))
+    WrapperCustomization.isPresenceAttempt(mapper.constructType(PatchPresence))
+    WrapperCustomization.isPresenceAttempt(mapper.constructType(PatchPresence.Present))
+    WrapperCustomization.isPresenceAttempt(mapper.constructType(PatchPresence.Omitted))
+    !WrapperCustomization.isPresenceAttempt(mapper.constructType(String))
+    !WrapperCustomization.isPatchPresence(mapper.constructType(PatchPresence))
+  }
+
   static class UpperDeserializer extends JsonDeserializer<String> {
     @Override
     String deserialize(JsonParser p, DeserializationContext c) {
@@ -73,5 +108,19 @@ class WrapperCustomizationSpec extends Specification {
     @JsonDeserialize(using = UpperDeserializer)
     @JsonSerialize(using = UpperSerializer)
     String custom
+  }
+
+  static class PlainBase {
+    String value
+  }
+
+  static class RefinedSubtype extends PlainBase {
+    String extra
+  }
+
+  static class RefinedBean {
+    @JsonDeserialize(as = RefinedSubtype)
+    @JsonSerialize(as = RefinedSubtype)
+    PlainBase refined
   }
 }

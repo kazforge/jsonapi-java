@@ -46,12 +46,30 @@ package owns backend-neutral semantics for mapped resources:
   relationship `data`. Whole linkage replacement, cardinality, direct `ResourceIdentifier` copies,
   wrapper occurrence orchestration, and identifier-meta sequencing are shared with ordinary reads
   through the neutral linkage binder. Each backend supplies declared meta-target validation against
-  the effective inbound PATCH property types, identity and attribute/meta conversion, recursive
-  structured binding, final relationship target/container coercion, lazy relationship-shape
+  the effective inbound PATCH property types, identity and atomic attribute/meta conversion, final
+  relationship target/container coercion, lazy relationship-shape
   resolution, configured linkage-mapper invocation, and identifier-meta conversion through a thin
-  `PatchResourceBackend` boundary. Ordinary reads and low-level PATCH are separate projections of
+  `PatchResourceBackend` boundary; configured structured-shape introspection and caching, native
+  atomic conversion, and construction-path translation are reached through the separate
+  `StructuredShapeBackend` bridge. Ordinary reads and low-level PATCH are separate projections of
   one adapter-resolved deserialization mapping; they never resolve competing configured-Jackson
   models.
+- **Recursive structured-value and typed PATCH DTO orchestration.** `StructuredPatchBinder` owns
+  typed marker-tree assembly, low-level supplied-only `StructuredPatch`/`StructuredMember`
+  assembly, present/omitted/explicit-null/empty-object distinctions, strict typed versus skip
+  low-level unknown-member policy, pointer accumulation, and the typed-only nature of
+  presence-aware shapes, over an adapter-supplied `StructuredShapeBackend` that supplies resolved
+  shape facts, native type queries, and atomic conversion; configured shape introspection and
+  caching, wrapper-customization detection, property-scoped conversion, and construction-path
+  translation stay adapter-owned. `TypedPatchBinder` owns the typed `PatchPresence<T>` DTO contract
+  phase order (resource-type match, complete declaration preflight, required identity, attributes,
+  relationships, resource meta, relationship meta, then native construction), synthetic
+  `PresenceMarker` assembly, strict supplied unknown-member handling, and meta/data gating, over an
+  adapter-supplied `TypedPatchBackend` limited to declared relationship-linkage identifier-meta
+  validation, wire-identifier parsing, typed relationship conversion, and the single native
+  construction with identifier-failure reclassification. The typed DTO projection remains the
+  adapter's serialization-oriented `ResourceMapping`; low-level PATCH keeps its
+  deserialization-oriented projection.
 - **Additive link decoration.** Exact decorator lookup by effective runtime raw class, decorator
   failure/null translation, relationship target classification and logical-to-wire name resolution,
   whole-value resource and relationship link replacement, fieldset non-resurrection, and
@@ -89,7 +107,12 @@ neutral relationship shape used by the reader and the low-level PATCH binder kee
 specialization and configured conversion adapter-owned. The low-level PATCH binder reaches its
 native mechanics through a thin `PatchResourceBackend` boundary limited to declared meta-target
 validation, identity and attribute/meta conversion, final relationship container coercion, and the
-same lazy relationship-shape, linkage-mapper, and identifier-meta operations as the reader. Adapter
+same lazy relationship-shape, linkage-mapper, and identifier-meta operations as the reader. The
+recursive structured engine reaches native shape discovery and atomic conversion through a
+`StructuredShapeBackend` bridge, and the typed PATCH DTO orchestrator reaches identity parsing,
+relationship conversion, and the single bean construction through a `TypedPatchBackend` bridge,
+leaving configured Jackson introspection, wrapper-customization detection, property-scoped
+conversion, and construction-path translation adapter-owned. Adapter
 write and read property records remain backend-owned; only the semantic value they compose is
 shared. This module imports no Jackson-major or concrete-adapter package.
 

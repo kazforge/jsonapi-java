@@ -110,8 +110,13 @@ typed envelopes bind included resources independently through explicit type regi
 `PatchCommand` orchestration lives in the same module behind an adapter-supplied
 `PatchResourceBackend` bridge and shares the neutral relationship-linkage binder with reads; each
 adapter keeps declared meta-target validation against the effective inbound PATCH property types,
-identity and attribute/meta conversion, recursive structured binding, final relationship container
-coercion, and the native linkage operations. PATCH projections do not read `included`.
+identity and attribute/meta conversion, final relationship container coercion, and the native
+linkage operations. The neutral recursive structured-value engine and the typed `PatchPresence<T>`
+DTO contract phase order also live in the same module, behind adapter-supplied
+`StructuredShapeBackend` and `TypedPatchBackend` bridges; each adapter keeps configured shape
+introspection and caching, wrapper-customization detection, property-scoped conversion,
+construction-path translation, identity parsing, relationship conversion, and the single native
+construction. PATCH projections do not read `included`.
 
 Writes map application values into the core model, preserve representation provenance, validate,
 then emit:
@@ -162,8 +167,9 @@ owns that boundary.
 | Basic resource write semantics: fieldset validation/filtering, strict versus create identity, empty-member omission, ordinary and advanced relationship linkage normalization, relationship-member assembly, resource/relationship/identifier meta application and overlay, and additive resource/relationship link decoration | `jsonapi-java-mapping` internal basic resource and decoration writers |
 | Basic and advanced resource read semantics: resource-type matching, strict independent identity roles, wire-member presence, attribute/relationship/meta order, synthetic-input assembly preserving absent-versus-explicit-null, relationship cardinality validation, null/empty short-circuiting, direct-identifier copying, `RelationshipLinkage` occurrence pairing, resource/relationship meta binding, member-relative diagnostics, and top-level construction-start backend-name to JSON:API location translation | `jsonapi-java-mapping` internal resource reader |
 | Low-level `PatchCommand` semantics: resource-type matching, required `id` identity that never falls back to `lid`, supplied-member classification, effective-deserialization bindability enforcement, `PatchChange` construction, `PatchCommand` assembly, and the contract phase order, sharing whole-linkage replacement and the relationship-linkage orchestration with the reader | `jsonapi-java-mapping` internal PATCH command binder |
+| Recursive structured PATCH semantics (typed marker-tree assembly, low-level supplied-only `StructuredPatch` assembly, presence/null/empty distinctions, strict typed versus skip low-level unknown-member policy, and pointer accumulation) and typed `PatchPresence<T>` DTO phase order with presence-marker assembly, declaration preflight, and meta/data gating | `jsonapi-java-mapping` internal structured and typed PATCH binders |
 | Configured wire-identifier parsing, lazy read relationship-shape resolution (target/type resolution and mapper selection), configured linkage-mapper invocation, declared identifier-meta conversion, declared meta-target validation, effective deserialization property discovery, nested construction-path walking, native failure-path extraction, and final bean construction | Each backend's read orchestration |
-| Declared meta-target validation against the effective inbound PATCH property types, identity and attribute/meta conversion, recursive structured binding, final relationship container coercion, and the native relationship-linkage operations for low-level PATCH | Each backend's PATCH orchestration |
+| Declared meta-target validation against the effective inbound PATCH property types, identity and attribute/meta conversion, configured structured-shape introspection and caching, wrapper-customization detection, native atomic conversion, final relationship container coercion, typed relationship conversion, construction-path translation, and final bean construction | Each backend's PATCH orchestration |
 | Configured conversion (whole-meta and declared-type identifier-meta serialization), effective-type resolution, declared relationship-shape and target resolution, declared meta-target validation, and unresolved-target validation | Each backend's write orchestration |
 | Compound-inclusion traversal order, identity aliasing, deduplication, and limits | `jsonapi-java-mapping` internal engine |
 | Persistence, authorization, HTTP behavior, query execution, and applying updates | Application |
@@ -182,10 +188,13 @@ replacement. See [ADR-014](adr/014-flat-whole-object-meta-mapping.md),
 [ADR-017](adr/017-relationship-data-presence-in-domain-mapping.md).
 
 Low-level `PatchCommand` and typed `PatchPresence<T>` DTOs are two projections of a validated update
-document. Backend-neutral low-level command orchestration lives in `jsonapi-java-mapping` behind each
-adapter's `PatchResourceBackend` bridge, while typed DTO binding remains adapter-owned. Both preserve
-omission versus explicit null; applications authorize and apply the result. Recursive structured
-changes and atomic-container boundaries are owned by
+document. Backend-neutral low-level command orchestration, recursive structured-value binding, and
+the typed DTO contract phase order live in `jsonapi-java-mapping` behind each adapter's
+`PatchResourceBackend`, `StructuredShapeBackend`, and `TypedPatchBackend` bridges; the typed DTO
+projection itself remains the adapter's serialization-oriented mapping, while native identity
+parsing, relationship conversion, configured shape introspection, and the single bean construction
+stay adapter-owned. Both paths preserve omission versus explicit null; applications authorize and
+apply the result. Recursive structured changes and atomic-container boundaries are owned by
 [ADR-013](adr/013-recursive-structured-value-patch-semantics.md).
 
 ## Diagnostics
