@@ -64,7 +64,7 @@ public final class PatchCommandBinder<T, N> {
    * Binds one resource object into a presence-aware patch command for {@code rawType}. The caller
    * supplies the dedicated inbound PATCH definition and its opaque native bean type token.
    */
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings({"rawtypes", "unchecked", "java:S1452"})
   public PatchCommand<?> bind(
       ResourceObject resource,
       PatchResourceDefinition<N> definition,
@@ -166,29 +166,28 @@ public final class PatchCommandBinder<T, N> {
       }
       Relationship relationship = entry.getValue();
       RelationshipData data = relationship.data();
-      if (data == null) {
-        continue;
-      }
-      MappingLocation location =
-          MappingLocation.of(
-              JsonApiMembers.RELATIONSHIPS, property.jsonapiName(), JsonApiMembers.DATA);
-      requireBindable(property, location, rawType);
-      Object value = backend.coerceRelationship(property, linkageBinder.bind(property, data));
-      changes.add(
-          new PatchChange.RelationshipChange(
-              property.jsonapiName(), property.logicalName(), value));
-      PatchProperty<N> metaProperty = relationshipMetaByTarget.get(property.jsonapiName());
-      if (metaProperty != null && relationship.meta() != null) {
-        MappingLocation metaLocation =
+      if (data != null) {
+        MappingLocation location =
             MappingLocation.of(
-                JsonApiMembers.RELATIONSHIPS, property.jsonapiName(), JsonApiMembers.META);
-        requireBindable(metaProperty, metaLocation, rawType);
-        Object metaValue =
-            backend.convertWholeMeta(
-                metaProperty, relationship.meta().members(), beanType, metaLocation, rawType);
+                JsonApiMembers.RELATIONSHIPS, property.jsonapiName(), JsonApiMembers.DATA);
+        requireBindable(property, location, rawType);
+        Object value = backend.coerceRelationship(property, linkageBinder.bind(property, data));
         changes.add(
-            new PatchChange.RelationshipMetaChange(
-                metaProperty.jsonapiName(), metaProperty.logicalName(), metaValue));
+            new PatchChange.RelationshipChange(
+                property.jsonapiName(), property.logicalName(), value));
+        PatchProperty<N> metaProperty = relationshipMetaByTarget.get(property.jsonapiName());
+        if (metaProperty != null && relationship.meta() != null) {
+          MappingLocation metaLocation =
+              MappingLocation.of(
+                  JsonApiMembers.RELATIONSHIPS, property.jsonapiName(), JsonApiMembers.META);
+          requireBindable(metaProperty, metaLocation, rawType);
+          Object metaValue =
+              backend.convertWholeMeta(
+                  metaProperty, relationship.meta().members(), beanType, metaLocation, rawType);
+          changes.add(
+              new PatchChange.RelationshipMetaChange(
+                  metaProperty.jsonapiName(), metaProperty.logicalName(), metaValue));
+        }
       }
     }
   }
