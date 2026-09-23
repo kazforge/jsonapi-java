@@ -83,16 +83,16 @@ public final class DomainPatchBinder
   }
 
   /**
-   * Whole-meta declared-target validation for the low-level PATCH role, resolved from the same
-   * effective inbound mapping that produced the dedicated PATCH definition: Bean / Map / Object
-   * with at most one {@link java.util.Optional} wrapper.
+   * Whole-meta declared-target validation for the low-level PATCH role, resolved from the dedicated
+   * inbound PATCH projection: only effective/bindable properties contribute declared targets, so a
+   * serialization-only declaration cannot block a PATCH that does not supply it.
    */
   @Override
   public void validateDeclaredMetaTargets(
       PatchResourceDefinition<ReadMappingProperty> definition,
       JavaType beanType,
       Class<?> rawType) {
-    wholeMetaTarget.validateReadWriteTargets(cache.resolveRead(beanType), rawType);
+    wholeMetaTarget.validateDeclaredPatchTargets(definition, rawType);
   }
 
   @Override

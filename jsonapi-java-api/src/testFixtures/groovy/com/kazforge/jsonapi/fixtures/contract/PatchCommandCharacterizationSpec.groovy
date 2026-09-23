@@ -307,6 +307,61 @@ abstract class PatchCommandCharacterizationSpec extends Specification {
     failure.propertyPath() == "/relationships/comments/data/0"
   }
 
+  def "does not block a PATCH on serialization-only meta declarations"() {
+    when:
+    def resourceMeta =
+        api().patches().readCommand(
+        '{"data":{"type":"serialization-only-meta","id":"1"}}',
+        SerializationOnlyResourceMetaArticle)
+    def relationshipMeta =
+        api().patches().readCommand(
+        '{"data":{"type":"serialization-only-rel-meta","id":"1"}}',
+        SerializationOnlyRelationshipMetaArticle)
+    def identifierMeta =
+        api().patches().readCommand(
+        '{"data":{"type":"serialization-only-id-meta","id":"1"}}',
+        SerializationOnlyIdentifierMetaArticle)
+
+    then:
+    resourceMeta.changes() == []
+    relationshipMeta.changes() == []
+    identifierMeta.changes() == []
+  }
+
+  def "fails supplied serialization-only meta as non-deserializable at the member location"() {
+    when:
+    api().patches().readCommand(
+        '{"data":{"type":"serialization-only-meta","id":"1","meta":{"source":"cms"}}}',
+        SerializationOnlyResourceMetaArticle)
+
+    then:
+    def resourceMetaFailure = thrown(JsonApiMappingException)
+    resourceMetaFailure.diagnostic() == MappingDiagnostic.NON_DESERIALIZABLE_PROPERTY
+    resourceMetaFailure.propertyPath() == "/meta"
+
+    when:
+    api().patches().readCommand(
+        '{"data":{"type":"serialization-only-rel-meta","id":"1","relationships":' +
+        '{"author":{"data":{"type":"people","id":"p1"},"meta":{"displayName":"Alice"}}}}}',
+        SerializationOnlyRelationshipMetaArticle)
+
+    then:
+    def relationshipMetaFailure = thrown(JsonApiMappingException)
+    relationshipMetaFailure.diagnostic() == MappingDiagnostic.NON_DESERIALIZABLE_PROPERTY
+    relationshipMetaFailure.propertyPath() == "/relationships/author/meta"
+
+    when:
+    api().patches().readCommand(
+        '{"data":{"type":"serialization-only-id-meta","id":"1","relationships":' +
+        '{"author":{"data":{"type":"people","id":"p1","meta":{"role":"editor"}}}}}}',
+        SerializationOnlyIdentifierMetaArticle)
+
+    then:
+    def identifierMetaFailure = thrown(JsonApiMappingException)
+    identifierMetaFailure.diagnostic() == MappingDiagnostic.NON_DESERIALIZABLE_PROPERTY
+    identifierMetaFailure.propertyPath() == "/relationships/author/data"
+  }
+
   def "binds a deserialization-only mapped property"() {
     when:
     def command =

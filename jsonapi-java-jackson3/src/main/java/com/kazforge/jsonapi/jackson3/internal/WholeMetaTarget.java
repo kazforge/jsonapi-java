@@ -4,6 +4,8 @@ import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
+import com.kazforge.jsonapi.mapping.internal.PatchProperty;
+import com.kazforge.jsonapi.mapping.internal.PatchResourceDefinition;
 import com.kazforge.jsonapi.patch.PatchPresence;
 import java.util.List;
 import java.util.Map;
@@ -68,13 +70,16 @@ final class WholeMetaTarget {
     if (resourceMeta != null
         && invalidReadWriteTarget(resourceMeta.definition().getPrimaryType())) {
       throw invalidTarget(
-          "Resource meta", resourceMeta, rawType, RelationshipMetaSupport.resourceMetaLocation());
+          "Resource meta",
+          resourceMeta.logicalName(),
+          rawType,
+          RelationshipMetaSupport.resourceMetaLocation());
     }
     for (MappingProperty property : mapping.relationshipMetaProperties()) {
       if (invalidReadWriteTarget(property.definition().getPrimaryType())) {
         throw invalidTarget(
             "Relationship meta",
-            property,
+            property.logicalName(),
             rawType,
             RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()));
       }
@@ -87,18 +92,56 @@ final class WholeMetaTarget {
     ReadMappingProperty resourceMeta = mapping.resourceMeta();
     if (resourceMeta != null && invalidReadWriteTarget(resourceMeta.type())) {
       throw invalidTarget(
-          "Resource meta", resourceMeta, rawType, RelationshipMetaSupport.resourceMetaLocation());
+          "Resource meta",
+          resourceMeta.logicalName(),
+          rawType,
+          RelationshipMetaSupport.resourceMetaLocation());
     }
     for (ReadMappingProperty property : mapping.relationshipMetaProperties()) {
       if (invalidReadWriteTarget(property.type())) {
         throw invalidTarget(
             "Relationship meta",
-            property,
+            property.logicalName(),
             rawType,
             RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()));
       }
     }
     validateRelationshipLinkageMeta(mapping.relationships(), rawType);
+  }
+
+  /**
+   * Validates the declared whole-meta targets of the dedicated low-level PATCH projection,
+   * considering only effective/bindable inbound properties. A serialization-only declaration has no
+   * effective deserialization target, so it contributes no declared target and cannot block a PATCH
+   * that does not supply it; a supplied member is failed by the shared binder's bindability check
+   * at its member location instead of being validated from a serialization-side fallback type.
+   */
+  void validateDeclaredPatchTargets(
+      PatchResourceDefinition<ReadMappingProperty> definition, Class<?> rawType) {
+    PatchProperty<ReadMappingProperty> resourceMeta = definition.resourceMeta();
+    if (resourceMeta != null
+        && resourceMeta.bindable()
+        && invalidReadWriteTarget(resourceMeta.token().type())) {
+      throw invalidTarget(
+          "Resource meta",
+          resourceMeta.logicalName(),
+          rawType,
+          RelationshipMetaSupport.resourceMetaLocation());
+    }
+    for (PatchProperty<ReadMappingProperty> property : definition.relationshipMetaProperties()) {
+      if (property.bindable() && invalidReadWriteTarget(property.token().type())) {
+        throw invalidTarget(
+            "Relationship meta",
+            property.logicalName(),
+            rawType,
+            RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()));
+      }
+    }
+    for (PatchProperty<ReadMappingProperty> property : definition.relationships()) {
+      if (property.bindable()) {
+        validateRelationshipLinkageMeta(List.of(property.token()), rawType);
+      }
+    }
   }
 
   void validateRelationshipLinkageMeta(
@@ -115,37 +158,37 @@ final class WholeMetaTarget {
           || MappingTypeSupport.isLinkageType(
               MappingTypeSupport.unwrapOptionalType(
                   MappingTypeSupport.linkageTargetType(linkageType)))) {
-        throw invalidIdentifierMetaTarget(property, rawType, location);
+        throw invalidIdentifierMetaTarget(property.logicalName(), rawType, location);
       }
       JavaType metaType = MappingTypeSupport.linkageMetaType(linkageType);
       if (invalidReadWriteTarget(metaType)) {
-        throw invalidIdentifierMetaTarget(property, rawType, location);
+        throw invalidIdentifierMetaTarget(property.logicalName(), rawType, location);
       }
     }
   }
 
   private static JsonApiMappingException invalidIdentifierMetaTarget(
-      MappingPropertyView property, Class<?> rawType, MappingLocation location) {
+      String logicalName, Class<?> rawType, MappingLocation location) {
     return new JsonApiMappingException(
         MappingDiagnostic.INVALID_IDENTIFIER_META_TARGET,
         rawType,
         location,
         "Relationship '"
-            + property.logicalName()
+            + logicalName
             + "' RelationshipLinkage meta type must be a Bean, Map, or Object (with at most one"
             + " Optional wrapper) on "
             + rawType.getName());
   }
 
   private static JsonApiMappingException invalidTarget(
-      String kind, MappingPropertyView property, Class<?> rawType, MappingLocation metaLocation) {
+      String kind, String logicalName, Class<?> rawType, MappingLocation metaLocation) {
     return new JsonApiMappingException(
         MappingDiagnostic.INVALID_META_TARGET,
         rawType,
         metaLocation,
         kind
             + " property '"
-            + property.logicalName()
+            + logicalName
             + "' must be a Bean, Map, or Object (with at most one Optional wrapper) on "
             + rawType.getName());
   }
