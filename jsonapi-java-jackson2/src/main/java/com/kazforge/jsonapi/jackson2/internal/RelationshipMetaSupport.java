@@ -2,39 +2,11 @@ package com.kazforge.jsonapi.jackson2.internal;
 
 import com.kazforge.jsonapi.core.model.JsonApiMembers;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
-/** Shared helpers for whole-meta mapping properties and diagnostic locations. */
+/** Shared helpers for resource-relative diagnostic locations. */
 final class RelationshipMetaSupport {
 
   private RelationshipMetaSupport() {}
-
-  /**
-   * Builds a target-relationship-jsonapi-name to relationship-meta property map. The resolver
-   * guarantees at most one relationship-meta property per target, so keys are unique.
-   */
-  static Map<String, MappingProperty> byTarget(List<MappingProperty> relationshipMetaProperties) {
-    Map<String, MappingProperty> byName = new LinkedHashMap<>();
-    for (MappingProperty property : relationshipMetaProperties) {
-      byName.put(property.jsonapiName(), property);
-    }
-    return byName;
-  }
-
-  /**
-   * Maps JSON:API member names to write-mapping properties. Owned by mapping metadata so PATCH
-   * binders resolve supplied attributes and relationships without depending on PATCH conversion
-   * support.
-   */
-  static Map<String, MappingProperty> byJsonapiName(List<MappingProperty> properties) {
-    Map<String, MappingProperty> byName = new LinkedHashMap<>();
-    for (MappingProperty property : properties) {
-      byName.put(property.jsonapiName(), property);
-    }
-    return byName;
-  }
 
   /** Resource-relative diagnostic location for a relationship's linkage member. */
   static MappingLocation relationshipLocation(MappingPropertyView property) {
