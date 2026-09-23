@@ -42,6 +42,9 @@ import tools.jackson.databind.type.LogicalType;
  */
 final class WholeMetaTarget {
 
+  private static final String RESOURCE_META_LABEL = "Resource meta";
+  private static final String RELATIONSHIP_META_LABEL = "Relationship meta";
+
   private final JsonMapper mapper;
   private final Map<JavaType, Boolean> beanShapeCache = new ConcurrentHashMap<>();
 
@@ -70,7 +73,7 @@ final class WholeMetaTarget {
     if (resourceMeta != null
         && invalidReadWriteTarget(resourceMeta.definition().getPrimaryType())) {
       throw invalidTarget(
-          "Resource meta",
+          RESOURCE_META_LABEL,
           resourceMeta.logicalName(),
           rawType,
           RelationshipMetaSupport.resourceMetaLocation());
@@ -78,7 +81,7 @@ final class WholeMetaTarget {
     for (MappingProperty property : mapping.relationshipMetaProperties()) {
       if (invalidReadWriteTarget(property.definition().getPrimaryType())) {
         throw invalidTarget(
-            "Relationship meta",
+            RELATIONSHIP_META_LABEL,
             property.logicalName(),
             rawType,
             RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()));
@@ -92,7 +95,7 @@ final class WholeMetaTarget {
     ReadMappingProperty resourceMeta = mapping.resourceMeta();
     if (resourceMeta != null && invalidReadWriteTarget(resourceMeta.type())) {
       throw invalidTarget(
-          "Resource meta",
+          RESOURCE_META_LABEL,
           resourceMeta.logicalName(),
           rawType,
           RelationshipMetaSupport.resourceMetaLocation());
@@ -100,7 +103,7 @@ final class WholeMetaTarget {
     for (ReadMappingProperty property : mapping.relationshipMetaProperties()) {
       if (invalidReadWriteTarget(property.type())) {
         throw invalidTarget(
-            "Relationship meta",
+            RELATIONSHIP_META_LABEL,
             property.logicalName(),
             rawType,
             RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()));
@@ -123,7 +126,7 @@ final class WholeMetaTarget {
         && resourceMeta.bindable()
         && invalidReadWriteTarget(resourceMeta.token().type())) {
       throw invalidTarget(
-          "Resource meta",
+          RESOURCE_META_LABEL,
           resourceMeta.logicalName(),
           rawType,
           RelationshipMetaSupport.resourceMetaLocation());
@@ -131,7 +134,7 @@ final class WholeMetaTarget {
     for (PatchProperty<ReadMappingProperty> property : definition.relationshipMetaProperties()) {
       if (property.bindable() && invalidReadWriteTarget(property.token().type())) {
         throw invalidTarget(
-            "Relationship meta",
+            RELATIONSHIP_META_LABEL,
             property.logicalName(),
             rawType,
             RelationshipMetaSupport.relationshipMetaLocation(property.jsonapiName()));
