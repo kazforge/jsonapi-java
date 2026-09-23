@@ -61,9 +61,10 @@ The earlier statement that the recursive engine remained adapter-internal is sup
 JSON:API location, presence, and nested-shape **policy** are now owned once by
 `com.kazforge.jsonapi.mapping.internal.StructuredPatchBinder`, together with the neutral resolved
 shape value. Each adapter keeps adapter-owned native mechanics only: configured Jackson
-shape discovery and caching, wrapper-customization facts, property-scoped conversion, and
-construction-path translation, supplied through
-`com.kazforge.jsonapi.mapping.internal.StructuredShapeBackend`. The semantics in the Decision —
+shape discovery and caching, wrapper-customization facts, and property-scoped conversion,
+supplied through `com.kazforge.jsonapi.mapping.internal.StructuredShapeBackend`;
+construction-path translation stays adapter-owned outside that capability interface. The
+semantics in the Decision —
 typed versus low-level recursion boundaries, atomic containers, null handling, strict typed versus
 skip low-level unknown members, and property-scoped conversion authority — are unchanged.
 

@@ -49,9 +49,10 @@ package owns backend-neutral semantics for mapped resources:
   the effective inbound PATCH property types, identity and atomic attribute/meta conversion, final
   relationship target/container coercion, lazy relationship-shape
   resolution, configured linkage-mapper invocation, and identifier-meta conversion through a thin
-  `PatchResourceBackend` boundary; configured structured-shape introspection and caching, native
-  atomic conversion, and construction-path translation are reached through the separate
-  `StructuredShapeBackend` bridge. Ordinary reads and low-level PATCH are separate projections of
+  `PatchResourceBackend` boundary; configured structured-shape introspection, caching, and native
+  atomic conversion are reached through the separate `StructuredShapeBackend` bridge, while
+  construction-path translation stays adapter-owned over that resolved shape metadata. Ordinary
+  reads and low-level PATCH are separate projections of
   one adapter-resolved deserialization mapping; they never resolve competing configured-Jackson
   models.
 - **Recursive structured-value and typed PATCH DTO orchestration.** `StructuredPatchBinder` owns
