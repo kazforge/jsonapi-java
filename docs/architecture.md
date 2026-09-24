@@ -89,7 +89,8 @@ top-level backend-name to JSON:API construction-start translation, while the eff
 property remains the adapter's authority. Advanced
 typed envelopes bind included resources independently through explicit type registration. Low-level
 `PatchCommand` orchestration lives in the same module behind an adapter-supplied
-`PatchResourceBackend` bridge and shares the neutral relationship-linkage binder with reads; each
+`PatchResourceBackend` bridge and shares the neutral relationship-linkage binder with reads and
+typed PATCH DTOs; each
 adapter keeps declared meta-target validation against the effective inbound PATCH property types,
 identity and attribute/meta conversion, final relationship container coercion, and the native
 linkage operations. The neutral recursive structured-value engine and the typed `PatchPresence<T>`

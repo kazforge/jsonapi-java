@@ -34,13 +34,13 @@
  * com.kazforge.jsonapi.patch.PatchChange} construction, and {@link
  * com.kazforge.jsonapi.patch.PatchCommand} assembly in the contract phase order. Whole linkage
  * replacement, cardinality, direct identifier copies, wrapper occurrence orchestration, and
- * identifier-meta sequencing are shared with the reader through {@link
- * com.kazforge.jsonapi.mapping.internal.RelationshipLinkageBinder}. Each backend reaches declared
- * meta-target validation against the effective inbound PATCH property types, identity and
- * attribute/meta conversion, final relationship container coercion, configured structured-shape
- * introspection and caching, native atomic conversion, typed relationship conversion,
- * construction-path translation, and the shared linkage native operations through the thin {@link
- * com.kazforge.jsonapi.mapping.internal.PatchResourceBackend} and {@link
+ * identifier-meta sequencing are shared across flat read, low-level PATCH, and the typed PATCH DTO
+ * path through {@link com.kazforge.jsonapi.mapping.internal.RelationshipLinkageBinder}. Each
+ * backend reaches declared meta-target validation against the effective inbound PATCH property
+ * types, identity and attribute/meta conversion, final relationship container coercion, configured
+ * structured-shape introspection and caching, native atomic conversion, typed relationship
+ * conversion, construction-path translation, and the shared linkage native operations through the
+ * thin {@link com.kazforge.jsonapi.mapping.internal.PatchResourceBackend} and {@link
  * com.kazforge.jsonapi.mapping.internal.StructuredShapeBackend} and {@link
  * com.kazforge.jsonapi.mapping.internal.TypedPatchBackend} boundaries. Ordinary reads and low-level
  * PATCH are separate projections of one adapter-resolved deserialization mapping, so they never

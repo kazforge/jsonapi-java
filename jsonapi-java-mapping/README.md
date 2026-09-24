@@ -67,8 +67,9 @@ package owns backend-neutral semantics for mapped resources:
   relationships, resource meta, relationship meta, then native construction), synthetic
   `PresenceMarker` assembly, strict supplied unknown-member handling, and meta/data gating, over an
   adapter-supplied `TypedPatchBackend` limited to declared relationship-linkage identifier-meta
-  validation, wire-identifier parsing, typed relationship conversion, and the single native
-  construction with identifier-failure reclassification. The typed DTO projection remains the
+  validation, wire-identifier parsing, typed relationship conversion through the shared
+  relationship-linkage binder, and the single native construction with identifier-failure
+  reclassification. The typed DTO projection remains the
   adapter's serialization-oriented `ResourceMapping`; low-level PATCH keeps its
   deserialization-oriented projection.
 - **Additive link decoration.** Exact decorator lookup by effective runtime raw class, decorator

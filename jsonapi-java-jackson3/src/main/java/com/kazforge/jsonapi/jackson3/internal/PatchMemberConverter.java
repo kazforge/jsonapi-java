@@ -1,5 +1,6 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
+import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
@@ -7,6 +8,9 @@ import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.internal.PresenceMarker;
+import com.kazforge.jsonapi.mapping.internal.ReadRelationshipShape;
+import com.kazforge.jsonapi.mapping.internal.RelationshipBindingProperty;
+import com.kazforge.jsonapi.mapping.internal.RelationshipLinkageBinder;
 import com.kazforge.jsonapi.patch.PatchCommand;
 import com.kazforge.jsonapi.patch.PatchPresence;
 import java.util.List;
@@ -45,6 +49,7 @@ final class PatchMemberConverter {
   private final PropertyScopedValueConverter propertyScoped;
   private final IdentifierConverter identifierConverter;
   private final Map<Class<?>, RelationshipLinkageMapper> linkageMappers;
+  private final RelationshipLinkageBinder<JavaType, PatchDtoLinkageProperty> linkageBinder;
 
   PatchMemberConverter(
       JsonMapper mapper,
@@ -54,6 +59,7 @@ final class PatchMemberConverter {
     this.propertyScoped = new PropertyScopedValueConverter(mapper);
     this.identifierConverter = Objects.requireNonNull(identifierConverter, "identifierConverter");
     this.linkageMappers = Map.copyOf(Objects.requireNonNull(linkageMappers, "linkageMappers"));
+    this.linkageBinder = new RelationshipLinkageBinder<>(new PatchDtoLinkageBackend());
   }
 
   /** Converts a wire identifier into the identifier property's converted value (never null). */
@@ -187,20 +193,15 @@ final class PatchMemberConverter {
     }
   }
 
-  /** Converts linkage for a typed PATCH DTO without coercing the complete inner target type yet. */
+  /**
+   * Converts linkage for a typed PATCH DTO without coercing the complete inner target type yet.
+   * Shares cardinality, null/empty short-circuiting, direct identifier copying, and wrapper
+   * occurrence orchestration with flat read and low-level PATCH through {@link
+   * RelationshipLinkageBinder}.
+   */
   @Nullable Object convertRelationshipForPatchDto(
-      MappingProperty property, RelationshipData data, JavaType targetType) {
-    return convertRelationshipLinkage(property, data, targetType);
-  }
-
-  private @Nullable Object convertRelationshipLinkage(
-      MappingProperty property, RelationshipData data, JavaType targetType) {
-    JavaType mappingType =
-        MappingTypeSupport.targetMappingType(targetType, mapper.getTypeFactory());
-    RelationshipLinkageMapper linkageMapper =
-        RelationshipLinkageSupport.selectLinkageMapper(targetType, property, linkageMappers);
-    return RelationshipLinkageSupport.convertLinkage(
-        property, data, linkageMapper, mappingType, mapper);
+      MappingProperty property, RelationshipData data, JavaType innerType) {
+    return linkageBinder.bind(new PatchDtoLinkageProperty(property, innerType), data);
   }
 
   /** Applies final native coercion of one orchestrated relationship value to its declared type. */
@@ -268,5 +269,53 @@ final class PatchMemberConverter {
     return type.getRawClass() == PatchPresence.class && type.containedTypeCount() == 1
         ? type.containedType(0)
         : type;
+  }
+
+  /**
+   * Minimal logical/wire view of one typed PATCH DTO relationship paired with the unwrapped {@code
+   * PatchPresence} inner type its shape and mapper selection are resolved against.
+   */
+  private record PatchDtoLinkageProperty(MappingProperty property, JavaType innerType)
+      implements RelationshipBindingProperty {
+
+    @Override
+    public String logicalName() {
+      return property.logicalName();
+    }
+
+    @Override
+    public String jsonapiName() {
+      return property.jsonapiName();
+    }
+  }
+
+  /** Native typed-PATCH edges for the shared relationship-linkage binder. */
+  private final class PatchDtoLinkageBackend
+      implements RelationshipLinkageBinder.Backend<JavaType, PatchDtoLinkageProperty> {
+
+    @Override
+    public Class<?> rawType(PatchDtoLinkageProperty property) {
+      return property.property().type().getRawClass();
+    }
+
+    @Override
+    public ReadRelationshipShape<JavaType> readRelationshipShape(PatchDtoLinkageProperty property) {
+      return RelationshipLinkageSupport.readRelationshipShape(
+          property.innerType(), property.property(), linkageMappers, mapper.getTypeFactory());
+    }
+
+    @Override
+    public @Nullable Object mapLinkage(
+        PatchDtoLinkageProperty property, RelationshipData data, JavaType target) {
+      return RelationshipLinkageSupport.mapLinkage(
+          data, target, property.innerType(), property.property(), linkageMappers);
+    }
+
+    @Override
+    public @Nullable Object convertIdentifierMeta(
+        PatchDtoLinkageProperty property, Meta meta, JavaType metaToken, int occurrenceIndex) {
+      return RelationshipLinkageSupport.convertIdentifierMeta(
+          meta, metaToken, mapper, property.property(), occurrenceIndex);
+    }
   }
 }

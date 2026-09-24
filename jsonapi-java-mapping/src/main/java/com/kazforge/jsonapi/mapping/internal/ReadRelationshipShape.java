@@ -4,7 +4,8 @@ import java.util.Objects;
 import org.jspecify.annotations.NullMarked;
 
 /**
- * Backend-neutral declared shape of one mapped relationship property for advanced read binding.
+ * Backend-neutral declared shape of one mapped relationship property for shared
+ * relationship-linkage binding.
  *
  * <p>The shape carries the declared to-one/to-many cardinality plus the backend-native tokens the
  * shared reader cannot introspect. A {@link Direct} relationship targets the built-in {@link

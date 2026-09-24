@@ -33,6 +33,12 @@ import tools.jackson.databind.json.JsonMapper;
  * identifier-construction failure reclassification. Recursive structured attributes use the shared
  * structured engine through {@link StructuredValueBinder}.
  *
+ * <p>Typed relationship-linkage cardinality, null/empty short-circuiting, direct identifier
+ * copying, and wrapper occurrence orchestration are shared with flat read and low-level PATCH
+ * through {@link com.kazforge.jsonapi.mapping.internal.RelationshipLinkageBinder}; this adapter
+ * resolves the declared shape and configured mapper against the unwrapped {@code PatchPresence}
+ * inner type.
+ *
  * <p>Supplied atomic members retain their JSON-compatible wire values in a synthetic property map
  * as an internal {@link com.kazforge.jsonapi.mapping.internal.PresenceMarker}; the marker
  * deserializer performs the sole inner-type conversion while the bean is constructed with a single
