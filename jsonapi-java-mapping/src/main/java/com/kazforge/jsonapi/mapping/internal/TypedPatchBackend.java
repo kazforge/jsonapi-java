@@ -47,7 +47,10 @@ public interface TypedPatchBackend<P, T> {
 
   /**
    * Converts one supplied typed relationship linkage without coercing the complete inner target
-   * type. Failures surface as the backend's own diagnostic at the relationship's data location.
+   * type. The adapter supplies the native shape, configured mapper invocation, and identifier-meta
+   * conversion while {@link RelationshipLinkageBinder} owns cardinality, null/empty
+   * short-circuiting, direct identifier copying, and wrapper occurrence orchestration. Failures
+   * surface as the backend's own diagnostic at the relationship's data location.
    */
   @Nullable Object convertRelationship(
       TypedPatchProperty<P, T> property, RelationshipData data, Class<?> rawType);

@@ -263,6 +263,49 @@ class PatchDtoBindingSpec extends Specification {
     emptyDto.contributors == PatchPresence.present([])
   }
 
+  def "typed PATCH DTO linkage mapper is not invoked for empty collection linkage"() {
+    given:
+    def invoked = false
+    def mapper = { RelationshipData data, JavaType target ->
+      invoked = true
+      []
+    } as RelationshipLinkageMapper
+    def reader = JsonApiJackson3.patchDtoReader(
+        JsonMapper.builder().build(),
+        ValidationContext.defaults(),
+        IdentifierConverter.defaults(),
+        [(AuthorId): mapper])
+    def json = '{"data":{"type":"articles","id":"1","relationships":{"contributors":{"data":[]}}}}'
+
+    when:
+    def dto = reader.readValue(json, AuthorListPatch)
+
+    then:
+    dto.contributors == PatchPresence.present([])
+    !invoked
+  }
+
+  def "typed PATCH DTO linkage mapper failure is LINKAGE_MAPPING_FAILED"() {
+    given:
+    def mapper = { RelationshipData data, JavaType target ->
+      throw new IllegalStateException("boom")
+    } as RelationshipLinkageMapper
+    def reader = JsonApiJackson3.patchDtoReader(
+        JsonMapper.builder().build(),
+        ValidationContext.defaults(),
+        IdentifierConverter.defaults(),
+        [(AuthorId): mapper])
+    def json = '{"data":{"type":"articles","id":"1","relationships":{"contributors":{"data":[{"type":"authors","id":"a1"}]}}}}'
+
+    when:
+    reader.readValue(json, AuthorListPatch)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.LINKAGE_MAPPING_FAILED
+    ex.propertyPath() == "/relationships/contributors/data"
+  }
+
   def "Optional inner relationship binds null linkage as Present(Optional.empty())"() {
     given:
     def mapper = { RelationshipData data, JavaType target ->

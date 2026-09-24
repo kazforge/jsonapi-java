@@ -15,8 +15,8 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Backend-neutral relationship-linkage orchestration shared by ordinary flat reads and low-level
- * PATCH binding.
+ * Backend-neutral relationship-linkage orchestration shared by ordinary flat reads, low-level PATCH
+ * binding, and the typed PATCH DTO path.
  *
  * <p>It owns cardinality validation, null/empty short-circuiting, direct {@link ResourceIdentifier}
  * copies that preserve identifier meta and drop additional members, opt-in {@code
@@ -28,7 +28,9 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Relationship-shape resolution happens only when the shared binder is called, which the caller
  * does only after it established supplied {@code data}; no mapper is invoked for null or empty
- * linkage.
+ * linkage. A caller may resolve its declared shape against a different native type than the one it
+ * uses for diagnostics; the typed PATCH DTO path passes the unwrapped {@code PatchPresence} inner
+ * type while keeping the native property for diagnostics.
  *
  * <p>This type is unsupported implementation detail for backend cooperation, not consumer SPI, and
  * must not appear in supported backend public signatures.

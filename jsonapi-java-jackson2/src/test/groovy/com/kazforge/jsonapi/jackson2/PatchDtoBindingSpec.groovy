@@ -283,6 +283,49 @@ class PatchDtoBindingSpec extends Specification {
     patch.author == PatchPresence.present(Optional.of(new SinglePassValue("hello!")))
   }
 
+  def "typed PATCH DTO linkage mapper is not invoked for empty collection linkage"() {
+    given:
+    def invoked = false
+    def mapper = { RelationshipData data, JavaType target ->
+      invoked = true
+      []
+    } as RelationshipLinkageMapper
+    def reader = JsonApiJackson2.patchDtoReader(
+        JsonMapper.builder().build(),
+        ValidationContext.defaults(),
+        IdentifierConverter.defaults(),
+        [(AuthorId): mapper])
+    def json = '{"data":{"type":"articles","id":"1","relationships":{"contributors":{"data":[]}}}}'
+
+    when:
+    def patch = reader.readValue(json, AuthorListPatch)
+
+    then:
+    patch.contributors == PatchPresence.present([])
+    !invoked
+  }
+
+  def "typed PATCH DTO linkage mapper failure is LINKAGE_MAPPING_FAILED"() {
+    given:
+    def mapper = { RelationshipData data, JavaType target ->
+      throw new IllegalStateException("boom")
+    } as RelationshipLinkageMapper
+    def reader = JsonApiJackson2.patchDtoReader(
+        JsonMapper.builder().build(),
+        ValidationContext.defaults(),
+        IdentifierConverter.defaults(),
+        [(AuthorId): mapper])
+    def json = '{"data":{"type":"articles","id":"1","relationships":{"contributors":{"data":[{"type":"authors","id":"a1"}]}}}}'
+
+    when:
+    reader.readValue(json, AuthorListPatch)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.LINKAGE_MAPPING_FAILED
+    ex.location().pointer() == "/relationships/contributors/data"
+  }
+
   def "identifier conversion inverts the wire identifier"() {
     given:
     def converter = new IdentifierConverter() {
@@ -408,5 +451,23 @@ class PatchDtoBindingSpec extends Specification {
   static class IntIdPatch {
     @JsonApiId int id
     @JsonApiAttribute PatchPresence<String> title
+  }
+
+  @JsonApiResource(type = "articles")
+  static class AuthorListPatch {
+    @JsonApiId String id
+    @JsonApiRelationship PatchPresence<List<AuthorId>> contributors
+  }
+
+  static class AuthorId {
+    String type
+    String id
+
+    AuthorId() {}
+
+    AuthorId(String type, String id) {
+      this.type = type
+      this.id = id
+    }
   }
 }
