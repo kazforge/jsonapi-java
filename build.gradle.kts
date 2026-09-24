@@ -12,35 +12,25 @@ sonar {
         property("sonar.organization", "kazemek")
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.qualitygate.wait", "true")
-        // Intentional Jackson 2/Jackson 3 parity duplication: these Jackson 2 production files are
-        // adapter-local adaptations of their Jackson 3 counterparts (document codec, adapter-local
-        // wire helpers, read-side, typed domain envelope, write-side domain mapping engine,
-        // inclusion capability bridge, flat DTO resource binding, and presence-aware PATCH binding),
-        // kept adapter-local for
-        // Jackson-major isolation per ADR-007. Jackson-major-neutral implementation bookkeeping and
-        // compound-inclusion traversal are shared in jsonapi-java-mapping; do not exclude whole
-        // packages.
+        // Exclude only substantial Jackson 2 implementations paired with Jackson 3: token-level
+        // readers; configured-Jackson construction, property discovery, conversion, and module
+        // bridges; and the adapter's document, resource, and PATCH operation coordinators. These
+        // remain separately compiled to preserve native codec and mapper authority (ADR-022).
+        // Neutral mapping orchestration lives in jsonapi-java-mapping. Small codec utilities,
+        // property records, and thin public delegates participate in CPD; do not exclude packages.
         // Paths must be repository-root-relative; module-relative `src/main/java/...` at project
         // level is deprecated by SonarCloud.
         property(
             "sonar.cpd.exclusions",
             """
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiDocumentReader.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiDomainDocument.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiDomainDocumentReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiJackson2Assembly.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiPatchCommandReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiPatchDtoReader.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiResourceBinder.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiResourceMapper.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/Jackson2JsonApi.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/Jackson2JsonApiDocuments.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/Jackson2JsonApiPatches.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/Jackson2JsonApiRelationships.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/Jackson2JsonApiResources.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/mapping/RelationshipLinkageMapper.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/BeanConstruction.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/BinderMetaConverter.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/Jackson2InclusionBackend.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/DocumentWireReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/DomainPatchBinder.java,
@@ -49,35 +39,19 @@ sonar {
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/DomainResourceWriter.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/ErrorWireReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/FlatConstructionPaths.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/JsonApiWireReader.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/JsonPointerAccumulator.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/LinkWireReader.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MappingConstructionStart.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MappingDefinitionCache.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MappingDefinitionResolver.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MappingTypeSupport.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/MemberClassifier.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/MetaBindingModule.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/PatchMemberConverter.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/PatchPresenceDeserializer.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/PatchPresenceModule.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/PointerEscapes.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/PresenceMarkerSerializer.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/PropertyScopedValueConverter.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/RawValueBeanPropertyWriter.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/RawValuePropertyModule.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/ReadLocationIndex.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/ReadLocations.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/ReadMappingProperty.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/ReadResourceMapping.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/RelationshipLinkageSupport.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/ResourceWireReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/ResolvedTypeSupport.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/StructuredValueBinder.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/ValidationPointers.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/WireMetaReader.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/WireObjectMembers.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/WireOpenValues.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/WireTokens.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/WholeMetaTarget.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/internal/WrapperCustomization.java
