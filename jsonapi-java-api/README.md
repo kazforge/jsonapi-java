@@ -65,7 +65,7 @@ owns that split.
   locations are absent or valid escaped JSON Pointers.
 - The `internal` namespace is unsupported and must not appear in supported public signatures; native
   Jackson mechanics stay in each adapter per
-  [ADR-019](../docs/adr/019-jackson-neutral-implementation-helpers.md).
+  [ADR-022](../docs/adr/022-responsibility-based-mapping-and-native-wire-codecs.md).
 
 ## Shared test fixtures
 

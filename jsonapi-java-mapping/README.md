@@ -127,4 +127,4 @@ shared. This module imports no Jackson-major or concrete-adapter package.
 See the [architecture overview](../docs/architecture.md),
 [ADR-005](../docs/adr/005-domain-mapping-and-inclusion.md),
 [ADR-007](../docs/adr/007-module-boundaries.md), and
-[ADR-019](../docs/adr/019-jackson-neutral-implementation-helpers.md).
+[ADR-022](../docs/adr/022-responsibility-based-mapping-and-native-wire-codecs.md).

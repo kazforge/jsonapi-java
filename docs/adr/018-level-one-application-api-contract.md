@@ -3,6 +3,10 @@
 **Status:** Accepted
 **Date:** 2026-09-04
 
+The Level-1 operation contract remains accepted. [ADR-022](022-responsibility-based-mapping-and-native-wire-codecs.md)
+supersedes the former artifact and package ownership names below; the current contract lives in
+`jsonapi-java-api` under `com.kazforge.jsonapi.api`.
+
 ## Context
 
 The major-specific capability APIs provide explicit codec, mapping, binding, typed-envelope, and
@@ -11,8 +15,8 @@ pipeline phases, and framework contracts should not depend on either Jackson maj
 
 ## Decision
 
-`jsonapi-java-api` owns a narrow neutral operation contract in
-`com.kazforge.jsonapi.api`. Its `JsonApi` root exposes four facets:
+`jsonapi-java-jackson-api` owns a narrow neutral operation contract in
+`com.kazforge.jsonapi.jackson.api`. Its `JsonApi` root exposes four facets:
 
 - resources: strict homogeneous resource reads, single/collection writes, typed document results,
   and create/update document authoring;
