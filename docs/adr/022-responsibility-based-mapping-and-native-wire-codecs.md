@@ -45,12 +45,19 @@ handling, and native scalar fidelity.
 
 ## Relation to earlier decisions
 
-This decision partially supersedes [ADR-019](019-jackson-neutral-implementation-helpers.md): its
-no-new-artifact, unchanged-dependency-direction, and adapter-owned inclusion, read, write, and PATCH
-orchestration conclusions no longer describe production. Its unsupported internal-helper boundary
-and adapter ownership of native Jackson mechanics still apply. [ADR-004](004-jackson-integration.md)
-retains configured-Jackson property authority and explicit document codecs;
-[ADR-018](018-level-one-application-api-contract.md) retains the Level-1 neutral contract; and
-[ADR-005](005-domain-mapping-and-inclusion.md) retains the separation of linkage from inclusion.
-[ADR-007](007-module-boundaries.md) identifies the physical modules; this record explains their
-current responsibility split and the retained wire-codec choice.
+This decision partially supersedes [ADR-007](007-module-boundaries.md) and
+[ADR-018](018-level-one-application-api-contract.md): their former
+`jsonapi-java-jackson-api` artifact and `com.kazforge.jsonapi.jackson.api` Level-1 package ownership
+are replaced by `jsonapi-java-api` and `com.kazforge.jsonapi.api`. ADR-007's original module list
+did not include `jsonapi-java-mapping` or the backend → mapping → API dependency edge; those now
+apply. Its core, annotations, query, framework isolation, and separately compiled native-major
+adapters remain valid, as do ADR-018's Level-1 facets and neutral signature boundary.
+
+This decision also partially supersedes [ADR-019](019-jackson-neutral-implementation-helpers.md):
+its no-new-artifact, unchanged-dependency-direction, and adapter-owned inclusion, read, write, and
+PATCH orchestration conclusions no longer describe production. Its unsupported internal-helper
+boundary and adapter ownership of native Jackson mechanics still apply.
+[ADR-004](004-jackson-integration.md) remains authoritative for configured-Jackson property
+introspection and explicit document codecs; its decision is not displaced by shared neutral mapping
+orchestration. [ADR-005](005-domain-mapping-and-inclusion.md) retains the separation of linkage from
+inclusion.
