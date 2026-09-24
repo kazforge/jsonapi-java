@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.internal.wire;
+package com.kazforge.jsonapi.jackson2.internal.codec;
 
 import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.core.model.Links;

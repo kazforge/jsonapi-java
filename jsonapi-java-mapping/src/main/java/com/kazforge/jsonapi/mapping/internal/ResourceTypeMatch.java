@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.internal.mapping;
+package com.kazforge.jsonapi.mapping.internal;
 
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;

@@ -9,7 +9,6 @@ import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.internal.patch.PresenceMarker
 import spock.lang.Specification
 
 /**

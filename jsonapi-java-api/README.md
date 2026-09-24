@@ -15,9 +15,6 @@ runtime.
 | [`com.kazforge.jsonapi.patch`](src/main/java/com/kazforge/jsonapi/patch/package-info.java) | Presence, command, change, and structured PATCH contracts |
 | [`com.kazforge.jsonapi.representation`](src/main/java/com/kazforge/jsonapi/representation/package-info.java) | Include/fieldset selection and application policy |
 | [`com.kazforge.jsonapi.diagnostic`](src/main/java/com/kazforge/jsonapi/diagnostic/package-info.java) | Stable codec/mapping diagnostics and locations |
-| `com.kazforge.jsonapi.internal.mapping` | Unsupported shared identifier-meta and resource-type bookkeeping used only for adapter cooperation |
-| `com.kazforge.jsonapi.internal.patch` | Unsupported shared typed-PATCH bridge state used only for adapter cooperation |
-| `com.kazforge.jsonapi.internal.wire` | Unsupported shared wire-reading support used only for adapter cooperation |
 
 Supported packages above are backend-independent contract/value shapes: logical application
 properties, JSON:API member names, document envelopes, selections, and diagnostics. The current
@@ -63,8 +60,9 @@ owns that split.
 - `RelationshipLinkage<T, M>` is the opt-in carrier for per-identifier meta.
 - Core validation, document-read, and mapping diagnostics remain separate families. Mapping
   locations are absent or valid escaped JSON Pointers.
-- The `internal` namespace is unsupported and must not appear in supported public signatures; native
-  Jackson mechanics stay in each adapter per
+- This artifact ships only supported contract packages. Cross-artifact mapping helpers live in
+  `jsonapi-java-mapping`'s unsupported internal namespace, and native wire/codec helpers stay in
+  each adapter's internal package; neither may appear in supported public signatures per
   [ADR-022](../docs/adr/022-responsibility-based-mapping-and-native-wire-codecs.md).
 
 ## Shared test fixtures

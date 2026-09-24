@@ -10,7 +10,6 @@ import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;

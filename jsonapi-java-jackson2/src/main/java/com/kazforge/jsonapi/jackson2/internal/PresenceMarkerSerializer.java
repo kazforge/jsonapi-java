@@ -3,7 +3,7 @@ package com.kazforge.jsonapi.jackson2.internal;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.kazforge.jsonapi.internal.patch.PresenceMarker;
+import com.kazforge.jsonapi.mapping.internal.PresenceMarker;
 import java.io.IOException;
 
 /**

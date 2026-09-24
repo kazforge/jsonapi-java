@@ -1,26 +1,18 @@
-package com.kazforge.jsonapi.internal
+package com.kazforge.jsonapi.jackson3.internal.codec
 
-import com.kazforge.jsonapi.core.model.Meta
-import com.kazforge.jsonapi.core.model.ResourceIdentifier
-import com.kazforge.jsonapi.core.model.ResourceObject
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException
 import com.kazforge.jsonapi.core.validation.LinksContext
-import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
-import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.diagnostic.SourceLocation
-import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport
-import com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch
-import com.kazforge.jsonapi.internal.patch.PresenceMarker
-import com.kazforge.jsonapi.internal.wire.JsonPointerAccumulator
-import com.kazforge.jsonapi.internal.wire.MemberClassifier
-import com.kazforge.jsonapi.internal.wire.PointerEscapes
-import com.kazforge.jsonapi.internal.wire.ReadLocationIndex
-import com.kazforge.jsonapi.internal.wire.ValidationPointers
 import java.util.function.Supplier
 import spock.lang.Specification
 
-class JacksonInternalHelpersSpec extends Specification {
+/**
+ * Direct behavioral proof for the Jackson 3 adapter-local wire helpers: member classification,
+ * pointer escaping and accumulation, and core-pointer relocation.
+ */
+class WireCodecHelpersSpec extends Specification {
 
   def "member classification keeps attribute and relationship pass-through rules distinct from links"() {
     expect:
@@ -161,57 +153,5 @@ class JacksonInternalHelpersSpec extends Specification {
     then:
     def rootRelocated = thrown(JsonApiValidationException)
     rootRelocated.jsonPointer() == '/data/0'
-  }
-
-  def "resource type matching reports the neutral type location"() {
-    given:
-    def resource = ResourceObject.of('people', '1')
-
-    when:
-    ResourceTypeMatch.requireMatching('people', resource, String)
-
-    then:
-    noExceptionThrown()
-
-    when:
-    ResourceTypeMatch.requireMatching('articles', resource, String)
-
-    then:
-    def exception = thrown(RuntimeException)
-    exception.diagnostic() == MappingDiagnostic.RESOURCE_TYPE_MISMATCH
-    exception.resourceClass() == String
-    exception.propertyPath() == '/type'
-  }
-
-  def "identifier meta support preserves the documented copy distinctions and locations"() {
-    given:
-    def originalMeta = Meta.of([source: 'linkage'])
-    def replacementMeta = Meta.of([source: 'replacement'])
-    def identifier = new ResourceIdentifier(
-        'people', '1', 'local-1', originalMeta, ['ext:member': 'value'])
-
-    expect:
-    IdentifierMetaSupport.identifierMetaLocation('author').pointer() ==
-        '/relationships/author/data/meta'
-    IdentifierMetaSupport.identifierMetaLocation('comments', 2).pointer() ==
-        '/relationships/comments/data/2/meta'
-
-    def linkageCopy = IdentifierMetaSupport.copyLinkageIdentifier(identifier)
-    linkageCopy.type() == 'people'
-    linkageCopy.id() == '1'
-    linkageCopy.lid() == 'local-1'
-    linkageCopy.meta() == originalMeta
-    linkageCopy.additionalMembers().isEmpty()
-
-    def overlaid = IdentifierMetaSupport.withMeta(identifier, replacementMeta)
-    overlaid.meta() == replacementMeta
-    overlaid.additionalMembers() == ['ext:member': 'value']
-  }
-
-  def "supplied presence state remains a neutral value"() {
-    expect:
-    new PresenceMarker(false, null) == new PresenceMarker(false, null)
-    new PresenceMarker(true, 'value').present()
-    new PresenceMarker(true, 'value').value() == 'value'
   }
 }

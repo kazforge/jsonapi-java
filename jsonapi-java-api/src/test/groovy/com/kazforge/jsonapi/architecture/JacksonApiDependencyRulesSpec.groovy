@@ -27,8 +27,7 @@ class JacksonApiDependencyRulesSpec extends Specification {
   "com.kazforge.jsonapi.mapping..",
   "com.kazforge.jsonapi.patch..",
   "com.kazforge.jsonapi.representation..",
-  "com.kazforge.jsonapi.diagnostic..",
-  "com.kazforge.jsonapi.internal..")
+  "com.kazforge.jsonapi.diagnostic..")
 
   def "common contract production types depend only on allowed packages"() {
     expect:
@@ -41,8 +40,7 @@ class JacksonApiDependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.mapping..",
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
-        "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..")
+        "com.kazforge.jsonapi.diagnostic..")
         .should()
         .onlyDependOnClassesThat()
         .resideInAnyPackage(
@@ -57,8 +55,7 @@ class JacksonApiDependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.mapping..",
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
-        "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..")
+        "com.kazforge.jsonapi.diagnostic..")
         .check(commonClasses)
   }
 
@@ -134,8 +131,7 @@ class JacksonApiDependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.mapping..",
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
-        "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..")
+        "com.kazforge.jsonapi.diagnostic..")
         .check(commonClasses)
   }
 
@@ -161,8 +157,7 @@ class JacksonApiDependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.mapping..",
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
-        "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..")
+        "com.kazforge.jsonapi.diagnostic..")
         .should()
         .dependOnClassesThat()
         .resideInAPackage("com.kazforge.jsonapi.mapping.internal..")

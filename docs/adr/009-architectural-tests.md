@@ -34,6 +34,14 @@ shared fixtures, and query parsing. In particular:
   sanctioned shared-assertion exception: abstract Spock specs asserting neutral Level-1 observable
   semantics, executed through adapter-supplied concrete subclasses, depending only on Groovy, Spock,
   and the neutral packages the passive fixtures may use.
+
+The neutral API artifact owns no shared internal helper namespace: cross-artifact mapping helpers
+(identifier-meta copies, resource-type matching, and the supplied-PATCH marker) live in the mapping
+implementation namespace, and each adapter owns its own wire/codec helpers. The API allowlists and
+selectors therefore carry no production `com.kazforge.jsonapi.internal` namespace. Only the
+test-only signature-leak fixture uses that package, proving the supported-signature selector still
+detects an exposed internal type.
+
 Core preserves its downward responsibility DAG: aggregate validation may depend on model, internal,
 and validation responsibilities; model may depend on internal and validation; internal may depend on
 validation. The reverse edges are forbidden. The declared Gradle project edges themselves are the

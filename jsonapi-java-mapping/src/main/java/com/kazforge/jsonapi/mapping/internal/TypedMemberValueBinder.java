@@ -6,7 +6,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Binds one supplied typed PATCH DTO member value into the JSON-compatible value placed inside a
- * {@link com.kazforge.jsonapi.internal.patch.PresenceMarker}.
+ * {@link PresenceMarker}.
  *
  * <p>Implemented by each adapter over its shared recursive structured-value engine, so the shared
  * typed PATCH orchestrator can assemble nested marker trees without depending on any Jackson

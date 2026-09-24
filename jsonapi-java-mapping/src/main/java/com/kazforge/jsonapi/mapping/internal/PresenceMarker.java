@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.internal.patch;
+package com.kazforge.jsonapi.mapping.internal;
 
 import org.jspecify.annotations.Nullable;
 

@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.internal.wire;
+package com.kazforge.jsonapi.jackson3.internal.codec;
 
 /** RFC 6901 JSON Pointer segment escaping shared by wire pointer helpers. */
 public final class PointerEscapes {

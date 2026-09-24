@@ -8,6 +8,8 @@ import com.tngtech.archunit.core.domain.JavaClasses
 import com.tngtech.archunit.core.domain.JavaModifier
 import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.core.importer.ImportOption
+import com.kazforge.jsonapi.jackson3.ArchitectureAdapterSignatureLeakFixture
+import com.kazforge.jsonapi.jackson3.internal.codec.ArchitectureAdapterInternalException
 import com.kazforge.jsonapi.mapping.internal.ArchitectureMappingInternalFixture
 import spock.lang.Shared
 import spock.lang.Specification
@@ -29,8 +31,7 @@ class Jackson3DependencyRulesSpec extends Specification {
   "com.kazforge.jsonapi.mapping..",
   "com.kazforge.jsonapi.patch..",
   "com.kazforge.jsonapi.representation..",
-  "com.kazforge.jsonapi.diagnostic..",
-  "com.kazforge.jsonapi.internal..")
+  "com.kazforge.jsonapi.diagnostic..")
 
   @Shared
   JavaClasses sharedFixtureClasses = new ClassFileImporter()
@@ -57,7 +58,6 @@ class Jackson3DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
         "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.jackson3..",
         "tools.jackson..")
         .check(jackson3Classes)
@@ -187,6 +187,27 @@ class Jackson3DependencyRulesSpec extends Specification {
     assert violations.isEmpty(), violations.join(System.lineSeparator())
   }
 
+  def "jackson3 supported public signatures detect adapter-internal leaks"() {
+    given:
+    def fixtureClasses = new ClassFileImporter()
+        .importClasses(
+        ArchitectureAdapterSignatureLeakFixture,
+        ArchitectureAdapterInternalException)
+    def violations = fixtureClasses.findAll { JavaClass candidate ->
+      isSupportedAdapterType(candidate)
+    }.collectMany { JavaClass candidate ->
+      exposedTypes(candidate)
+          .findAll { JavaClass dependency -> isSharedInternalType(dependency) }
+          .collect { JavaClass dependency -> "${candidate.fullName} -> ${dependency.fullName}" }
+    }
+
+    expect:
+    violations*.toString().toSet() == [
+      "com.kazforge.jsonapi.jackson3.ArchitectureAdapterSignatureLeakFixture -> " +
+      "com.kazforge.jsonapi.jackson3.internal.codec.ArchitectureAdapterInternalException"
+    ].toSet()
+  }
+
   def "shared passive fixtures outside the contract package depend only on allowed packages"() {
     expect:
     classes()
@@ -208,7 +229,6 @@ class Jackson3DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
         "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)
@@ -235,7 +255,6 @@ class Jackson3DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
         "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)
@@ -266,7 +285,6 @@ class Jackson3DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
         "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)
@@ -316,7 +334,9 @@ class Jackson3DependencyRulesSpec extends Specification {
   }
 
   private static boolean isSharedInternalType(JavaClass candidate) {
-    isInternalPackage(candidate.packageName) || isMappingInternalPackage(candidate.packageName)
+    isInternalPackage(candidate.packageName) ||
+        isMappingInternalPackage(candidate.packageName) ||
+        isAdapterInternalPackage(candidate.packageName)
   }
 
   private static boolean isMappingInternalPackage(String packageName) {

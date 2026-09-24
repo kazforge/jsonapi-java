@@ -1,6 +1,5 @@
 package com.kazforge.jsonapi.jackson3.internal.codec;
 
-import com.kazforge.jsonapi.internal.wire.JsonPointerAccumulator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

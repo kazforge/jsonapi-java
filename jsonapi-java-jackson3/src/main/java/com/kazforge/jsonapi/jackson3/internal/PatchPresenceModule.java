@@ -1,6 +1,6 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
-import com.kazforge.jsonapi.internal.patch.PresenceMarker;
+import com.kazforge.jsonapi.mapping.internal.PresenceMarker;
 import com.kazforge.jsonapi.patch.PatchPresence;
 import tools.jackson.databind.module.SimpleModule;
 
