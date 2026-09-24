@@ -3,7 +3,7 @@ package com.kazforge.jsonapi.jackson3.internal;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
+import com.kazforge.jsonapi.mapping.internal.IdentifierMetaSupport;
 import com.kazforge.jsonapi.mapping.internal.PatchProperty;
 import com.kazforge.jsonapi.mapping.internal.PatchResourceDefinition;
 import com.kazforge.jsonapi.patch.PatchPresence;

@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.kazforge.jsonapi.internal.patch.PresenceMarker;
+import com.kazforge.jsonapi.mapping.internal.PresenceMarker;
 import com.kazforge.jsonapi.patch.PatchPresence;
 
 /**

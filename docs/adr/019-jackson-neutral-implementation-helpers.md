@@ -163,12 +163,17 @@ configured conversion, and the single configured bean construction remain adapte
 adapter-local relationship-linkage code still used by PATCH. This supersedes the earlier statements
 above that whole-object meta and relationship-meta binding stay in each adapter.
 
-The remaining helpers listed in the Decision (wire member classification and pointers,
-identifier-meta copies, and supplied PATCH markers) stay in the API artifact under
-`com.kazforge.jsonapi.internal` until a later extraction moves them. `IdentifierMetaSupport`
-continues to live there: its identifier-meta locations and `ResourceIdentifier` copy are shared by
-the neutral writer, the neutral reader, and PATCH alike, and the extraction demonstrated no concrete
-dependency or ownership problem that would justify relocating it.
+The remaining helpers listed in the Decision have since left the API artifact.
+`IdentifierMetaSupport` (identifier-meta locations and `ResourceIdentifier` linkage copies),
+`ResourceTypeMatch`, and the supplied `PresenceMarker` moved to
+`com.kazforge.jsonapi.mapping.internal`, where the neutral writer, reader, low-level PATCH,
+structured-value, and typed-PATCH orchestrators consume them alongside each adapter. The wire
+helpers — RFC 6901 pointer escaping and accumulation, the first-wins read-location index,
+core-pointer relocation, and structural member classification — moved into each adapter's
+`internal.codec` package beside the token-driven readers that use them. The neutral API artifact
+therefore no longer ships a `com.kazforge.jsonapi.internal` production namespace. This supersedes
+the earlier statement above that these helpers stay in the API artifact and that
+`IdentifierMetaSupport` continues to live there.
 
 A later hardening increment moved the neutral top-level construction-start translation to the shared
 read definition. `ReadResourceDefinition#constructionStarts(...)` now maps each bindable read

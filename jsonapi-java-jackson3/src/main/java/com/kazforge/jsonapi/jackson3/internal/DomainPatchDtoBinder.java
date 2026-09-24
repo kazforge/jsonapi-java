@@ -34,7 +34,7 @@ import tools.jackson.databind.json.JsonMapper;
  * structured engine through {@link StructuredValueBinder}.
  *
  * <p>Supplied atomic members retain their JSON-compatible wire values in a synthetic property map
- * as an internal {@link com.kazforge.jsonapi.internal.patch.PresenceMarker}; the marker
+ * as an internal {@link com.kazforge.jsonapi.mapping.internal.PresenceMarker}; the marker
  * deserializer performs the sole inner-type conversion while the bean is constructed with a single
  * {@link JsonMapper#convertValue(Object, JavaType)}. Creators, deserializers, converters, and
  * configured modules therefore remain authoritative. Omitted members bind to {@code

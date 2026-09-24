@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.internal.mapping;
+package com.kazforge.jsonapi.mapping.internal;
 
 import com.kazforge.jsonapi.core.model.JsonApiMembers;
 import com.kazforge.jsonapi.core.model.Meta;

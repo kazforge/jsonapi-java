@@ -13,19 +13,19 @@
  * com.kazforge.jsonapi.core.model.ResourceObject} assembly.
  *
  * <p>It owns backend-neutral resource-read semantics, basic and advanced: resource-type matching
- * through the shared {@link com.kazforge.jsonapi.internal.mapping.ResourceTypeMatch} authority,
- * strict and independent {@code id}/{@code lid} role selection, wire-member lookup by JSON:API
- * name, the distinction between an absent attribute and a present JSON null, the distinction
- * between an absent relationship (or absent relationship {@code data}) and present linkage,
- * synthetic input keys by backend external name, the resource-relative locations of supplied
- * members, and the shared non-deserializable and identifier-conversion diagnostics. It also owns
- * relationship cardinality validation, null/empty short-circuiting, direct {@link
- * com.kazforge.jsonapi.core.model.ResourceIdentifier} copies that preserve identifier meta and drop
- * additional members, opt-in {@link com.kazforge.jsonapi.mapping.RelationshipLinkage} occurrence
- * orchestration with per-occurrence target and identifier-meta pairing, and resource/relationship
- * meta presence and raw-member binding. Each backend reaches configured wire-identifier parsing,
- * lazy relationship-shape resolution with configured linkage-mapper invocation and declared
- * identifier-meta conversion, and final bean construction through the thin {@link
+ * through the shared {@link ResourceTypeMatch} authority, strict and independent {@code id}/{@code
+ * lid} role selection, wire-member lookup by JSON:API name, the distinction between an absent
+ * attribute and a present JSON null, the distinction between an absent relationship (or absent
+ * relationship {@code data}) and present linkage, synthetic input keys by backend external name,
+ * the resource-relative locations of supplied members, and the shared non-deserializable and
+ * identifier-conversion diagnostics. It also owns relationship cardinality validation, null/empty
+ * short-circuiting, direct {@link com.kazforge.jsonapi.core.model.ResourceIdentifier} copies that
+ * preserve identifier meta and drop additional members, opt-in {@link
+ * com.kazforge.jsonapi.mapping.RelationshipLinkage} occurrence orchestration with per-occurrence
+ * target and identifier-meta pairing, and resource/relationship meta presence and raw-member
+ * binding. Each backend reaches configured wire-identifier parsing, lazy relationship-shape
+ * resolution with configured linkage-mapper invocation and declared identifier-meta conversion, and
+ * final bean construction through the thin {@link
  * com.kazforge.jsonapi.mapping.internal.ReadResourceBackend} native-mechanics boundary.
  *
  * <p>It owns the backend-neutral low-level PATCH command semantics: resource-type matching,
@@ -54,11 +54,10 @@
  * assembly, the present/omitted/explicit-null/empty-object distinctions, strict typed versus skip
  * low-level unknown-member policy, pointer accumulation, and the typed-only nature of
  * presence-aware shapes. {@link com.kazforge.jsonapi.mapping.internal.TypedPatchBinder} owns the
- * typed DTO contract phase order, synthetic {@link
- * com.kazforge.jsonapi.internal.patch.PresenceMarker} assembly, complete declaration preflight,
- * strict supplied unknown-member handling, and meta/data gating. The neutral resolved {@link
- * com.kazforge.jsonapi.mapping.internal.StructuredShape} carries only adapter-resolved facts, so
- * the adapters never decide atomic-versus-recursive behavior.
+ * typed DTO contract phase order, synthetic {@link PresenceMarker} assembly, complete declaration
+ * preflight, strict supplied unknown-member handling, and meta/data gating. The neutral resolved
+ * {@link com.kazforge.jsonapi.mapping.internal.StructuredShape} carries only adapter-resolved
+ * facts, so the adapters never decide atomic-versus-recursive behavior.
  *
  * <p>{@link com.kazforge.jsonapi.mapping.internal.ReadResourceDefinition#constructionStarts(
  * com.kazforge.jsonapi.diagnostic.MappingLocation,

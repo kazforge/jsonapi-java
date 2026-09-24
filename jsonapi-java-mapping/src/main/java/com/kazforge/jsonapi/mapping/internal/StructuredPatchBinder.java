@@ -3,7 +3,6 @@ package com.kazforge.jsonapi.mapping.internal;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.internal.patch.PresenceMarker;
 import com.kazforge.jsonapi.patch.StructuredMember;
 import com.kazforge.jsonapi.patch.StructuredMemberState;
 import com.kazforge.jsonapi.patch.StructuredPatch;

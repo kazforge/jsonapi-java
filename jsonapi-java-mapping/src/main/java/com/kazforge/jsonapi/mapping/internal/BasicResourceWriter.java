@@ -12,7 +12,6 @@ import com.kazforge.jsonapi.core.validation.JsonApiValidationException;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
 import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import com.kazforge.jsonapi.representation.FieldPolicy;
 import java.util.ArrayList;

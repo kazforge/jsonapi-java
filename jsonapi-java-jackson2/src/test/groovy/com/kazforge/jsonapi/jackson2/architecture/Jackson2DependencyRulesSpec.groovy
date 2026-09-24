@@ -30,8 +30,7 @@ class Jackson2DependencyRulesSpec extends Specification {
   "com.kazforge.jsonapi.mapping..",
   "com.kazforge.jsonapi.patch..",
   "com.kazforge.jsonapi.representation..",
-  "com.kazforge.jsonapi.diagnostic..",
-  "com.kazforge.jsonapi.internal..")
+  "com.kazforge.jsonapi.diagnostic..")
 
   @Shared
   JavaClasses sharedFixtureClasses = new ClassFileImporter()
@@ -58,7 +57,6 @@ class Jackson2DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
         "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.jackson2..",
         "com.fasterxml.jackson..")
         .check(jackson2Classes)
@@ -209,7 +207,6 @@ class Jackson2DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
         "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)
@@ -236,7 +233,6 @@ class Jackson2DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
         "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)
@@ -267,7 +263,6 @@ class Jackson2DependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
         "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.fixtures..",
         "com.fasterxml.jackson.annotation..")
         .check(sharedFixtureClasses)

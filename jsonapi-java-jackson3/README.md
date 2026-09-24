@@ -10,7 +10,7 @@ document codec, mapping, flat binding, typed-envelope, and PATCH capabilities.
 | [`com.kazforge.jsonapi.jackson3`](src/main/java/com/kazforge/jsonapi/jackson3/package-info.java) | Public configured runtime, factory, codec, mapping/binding, typed-envelope, and PATCH entry points |
 | [`com.kazforge.jsonapi.jackson3.mapping`](src/main/java/com/kazforge/jsonapi/jackson3/mapping/package-info.java) | Public [`RelationshipLinkageMapper`](src/main/java/com/kazforge/jsonapi/jackson3/mapping/RelationshipLinkageMapper.java) contract |
 | [`com.kazforge.jsonapi.jackson3.internal`](src/main/java/com/kazforge/jsonapi/jackson3/internal/package-info.java) | Mapping, binding, PATCH, and module implementation; unsupported API |
-| [`com.kazforge.jsonapi.jackson3.internal.codec`](src/main/java/com/kazforge/jsonapi/jackson3/internal/codec/package-info.java) | Self-contained token codec implementation; unsupported API |
+| [`com.kazforge.jsonapi.jackson3.internal.codec`](src/main/java/com/kazforge/jsonapi/jackson3/internal/codec/package-info.java) | Self-contained token codec and wire-helper implementation; unsupported API |
 
 ## Start with Level 1
 
@@ -85,8 +85,9 @@ Javadocs and the linked ADRs own the remaining details rather than repeated here
   modules or introspection state require it.
 - The public composition package may depend on mapping and the two internal responsibilities;
   mapping and `internal.codec` do not depend back on composition or on sibling internals.
-- Supported signatures do not expose shared `com.kazforge.jsonapi.internal` helpers, and
-  this module does not redeclare neutral contract types.
+- Supported signatures do not expose the unsupported `com.kazforge.jsonapi.mapping.internal`
+  helpers or this adapter's `internal` implementation packages, and this module does not redeclare
+  neutral contract types.
 - Jackson 3 property, serializer/deserializer, and PATCH-marker mechanics stay adapter-local. The
   `PatchPresence` module is registered only on derived typed-PATCH mappers, never the caller mapper.
 

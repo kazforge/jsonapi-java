@@ -14,10 +14,10 @@
  * <p>No supported signature imports {@code tools.jackson.*}, {@code com.fasterxml.jackson.*}, or a
  * major-specific adapter package. The current Jackson 2 and Jackson 3 adapters derive observable
  * property semantics through caller-configured Jackson (discovery, visibility, external names,
- * construction, and conversion); native Jackson mechanics stay in each adapter. The {@code
- * com.kazforge.jsonapi.internal} namespace is an unsupported implementation detail shipped for
- * adapter cooperation; its Java-public types are not supported API and must not appear in supported
- * public signatures.
+ * construction, and conversion); native Jackson mechanics stay in each adapter. This artifact ships
+ * only supported contract packages. Cross-artifact mapping helpers live in the unsupported {@code
+ * com.kazforge.jsonapi.mapping.internal} namespace of the mapping artifact, and native wire helpers
+ * stay in each adapter's internal package; neither appears in supported public signatures.
  *
  * <p>Wire-visible presence is preserved. On document and envelope values, Java {@code null} means
  * that a member is absent and core sealed variants represent explicit JSON {@code null}. PATCH DTOs

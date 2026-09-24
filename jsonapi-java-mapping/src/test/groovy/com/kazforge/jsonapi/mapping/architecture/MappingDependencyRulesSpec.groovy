@@ -42,7 +42,6 @@ class MappingDependencyRulesSpec extends Specification {
         "com.kazforge.jsonapi.patch..",
         "com.kazforge.jsonapi.representation..",
         "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.internal..",
         "com.kazforge.jsonapi.mapping.internal..")
         .check(mappingClasses)
   }

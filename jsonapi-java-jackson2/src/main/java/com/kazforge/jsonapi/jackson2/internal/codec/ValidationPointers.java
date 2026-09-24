@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.internal.wire;
+package com.kazforge.jsonapi.jackson2.internal.codec;
 
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException;
 import java.util.ArrayList;

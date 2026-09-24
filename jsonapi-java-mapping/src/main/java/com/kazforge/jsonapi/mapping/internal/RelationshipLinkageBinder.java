@@ -7,7 +7,6 @@ import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import com.kazforge.jsonapi.internal.mapping.IdentifierMetaSupport;
 import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import java.util.ArrayList;
 import java.util.List;

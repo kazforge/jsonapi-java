@@ -85,6 +85,11 @@ package owns backend-neutral semantics for mapped resources:
   relationships use their backend external name. Relationship-meta metadata is valid only in
   matched form, carrying the target relationship's JSON:API name; an unresolved annotation target
   stays resolver-local.
+- **Shared neutral mapping helpers.** Identifier-meta locations and linkage
+  `ResourceIdentifier` copies, resource-type match enforcement for binders, and the synthetic
+  typed-PATCH presence-marker carrier. Both backends and the shared orchestrators consume these
+  Java-public types; they are implementation detail for backend cooperation, not supported
+  consumer API.
 
 Native type and property models, introspection, mapping lookup, property access, native container
 type-shape derivation, configured conversion (including whole-meta and declared-type identifier-meta
