@@ -56,5 +56,5 @@ The contract preserves these architectural boundaries:
   relationship top-level members, and mechanism-level policy remain advanced.
 - Relationship helpers are linkage-only and cardinality-strict; they do not become graph hydration or
   general relationship-envelope APIs.
-- Focused Javadoc owns exact method, option/result, and diagnostic contracts; the Jackson API module
-  README provides capability, usage, and navigation context.
+- Focused Javadoc owns exact method, option/result, and diagnostic contracts; the
+  `jsonapi-java-api` README provides capability, usage, and navigation context.

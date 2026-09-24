@@ -42,35 +42,16 @@ authorization, query execution, relationship mutation, and application of PATCH 
 The production dependency shape is a DAG: mapping depends on API, API depends on core, and each
 backend depends on mapping while retaining its direct API, annotations, and core dependencies.
 
-The two Jackson adapters implement the same backend-independent semantics while remaining
-separately compiled native-major integrations. There is no runtime-major detection or
-lowest-common-denominator Jackson abstraction. The neutral API contains no Jackson-major imports;
-configured Jackson remains the current property authority, and native type/property handles,
-introspection, naming, construction, conversion, serializers, deserializers, parser/generator
-mechanics, and wire codecs remain adapter-owned. Backend-neutral compound-inclusion path
-validation, traversal, identity/order/deduplication, limits, and sparse-fieldset omission decisions
-live once in `jsonapi-java-mapping`, together with backend-neutral basic resource-write
-orchestration (fieldset validation and filtering, strict versus create identity rules, ordinary
-domain-object linkage construction, advanced relationship-value normalization, relationship-member
-assembly, resource/relationship/identifier meta application, and additive resource/relationship link
-decoration), backend-neutral basic and advanced resource-read orchestration (resource-type matching,
-strict and independent identity-role selection, wire-member presence, attribute, relationship and
-meta order, synthetic-input assembly preserving absent-versus-explicit-null, relationship
-cardinality validation, null/empty short-circuiting, direct-identifier copying,
-`RelationshipLinkage` occurrence pairing, resource/relationship meta binding, and the
-member-relative diagnostics), backend-neutral low-level `PatchCommand` orchestration (required `id`
-identity that never falls back to `lid`, supplied-member classification, effective-deserialization
-bindability enforcement, `PatchChange` construction and `PatchCommand` assembly in the contract
-phase order, sharing whole-linkage replacement, cardinality, direct-identifier copying, wrapper
-occurrence pairing, and identifier-meta sequencing with the reader), and the neutral mapping roles and
-per-property name metadata each adapter composes into its own write and read mapping records. Each
-adapter supplies only narrow native capability bridges for type resolution, mapping lookup, property
-access, configured conversion (including whole-meta and declared-type identifier-meta conversion),
-declared relationship-shape and target resolution, configured meta-target validation, configured
-wire-identifier parsing, lazy read relationship-shape resolution and linkage-mapper invocation,
-declared identifier-meta conversion, and selective rendering, keeping native diagnostics
-adapter-owned. Framework integrations, when
-added, depend on these lower-layer public contracts; no lower layer depends on a framework.
+The two Jackson adapters share JSON:API mapping semantics, not Jackson mechanics. The neutral API
+contains no production Jackson-major imports; `jsonapi-java-mapping` implements inclusion, resource
+read/write and decoration, PATCH orchestration, and semantic property metadata behind narrow
+unsupported backend capabilities. Each adapter remains the configured authority for property and
+type discovery, names, construction, conversion, native diagnostics, and parser/generator behavior.
+Its token-driven wire codec stays local to that Jackson major; there is no generic JSON tree/IR
+codec, runtime-major detection, or supported Gson backend. This is a responsibility boundary, not a
+lowest-common-denominator Jackson abstraction. [ADR-022](adr/022-responsibility-based-mapping-and-native-wire-codecs.md)
+owns the rationale. Framework integrations, when added, depend on lower-layer public contracts; no
+lower layer depends on a framework.
 
 Within core, aggregate validation depends downward on the model, internal helpers, and validation
 types; the model and internal helpers may depend on validation, but lower responsibilities do not
@@ -85,11 +66,11 @@ validation before any application binding:
 
 ```mermaid
 flowchart LR
-  JSON["Wire JSON"] --> DECODE["Jackson 2 or Jackson 3 decode"]
+  JSON["Wire JSON"] --> DECODE["Adapter token decode"]
   DECODE --> DOC["Validated core JsonApiDocument"]
-  DOC --> FLAT["Flat DTO binding"]
+  DOC --> FLAT["Neutral read orchestration + native DTO binding"]
   DOC --> ENVELOPE["Typed domain envelope"]
-  DOC --> PATCH["Typed or low-level PATCH projection"]
+  DOC --> PATCH["Neutral PATCH orchestration + native conversion"]
   DOC --> RAW["Raw document operation"]
 ```
 
@@ -123,12 +104,13 @@ then emit:
 
 ```mermaid
 flowchart LR
-  APP["Application values"] --> MAP["Configured-Jackson mapping"]
+  APP["Application values"] --> MAP["Neutral mapping orchestration"]
   SELECT["Selection + policy"] --> MAP
-  MAP --> DECORATE["Additive link decoration"]
+  NATIVE["Configured-Jackson property/type authority + conversion"] --> MAP
+  MAP --> DECORATE["Neutral additive link decoration"]
   DECORATE --> MAPPED["MappedDocument"]
   MAPPED --> VALIDATE["Core validation"]
-  VALIDATE --> WRITE["Jackson 2 or Jackson 3 emission"]
+  VALIDATE --> WRITE["Adapter token emission"]
   WRITE --> JSON["Wire JSON"]
 ```
 

@@ -27,3 +27,4 @@ lives in [`docs/architecture.md`](../architecture.md). Stable product direction 
 - [ADR-019: Jackson-Neutral Implementation Helpers](019-jackson-neutral-implementation-helpers.md)
 - [ADR-020: KazForge Namespace and Maven Group](020-kazforge-namespace.md)
 - [ADR-021: Unified Release Train and Version Semantics](021-unified-release-train.md)
+- [ADR-022: Share Mapping Semantics, Keep Native Wire Codecs](022-responsibility-based-mapping-and-native-wire-codecs.md)

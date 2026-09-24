@@ -3,6 +3,11 @@
 **Status:** Accepted
 **Date:** 2026-09-09
 
+The original ownership and artifact conclusions below are historical where superseded by
+[ADR-022](022-responsibility-based-mapping-and-native-wire-codecs.md). The partial-supersession
+history at the end records the successive extractions; ADR-022 owns the consolidated current
+responsibility boundary and wire-codec decision.
+
 ## Context
 
 The two Jackson adapters share small pieces of JSON:API bookkeeping that do not depend on a parser,
@@ -242,4 +247,3 @@ shared recursive engine, and the adapter-local `DomainPatchDtoBinder` a thin bri
 typed orchestrator. This supersedes the earlier statement above that the typed `PatchPresence` DTO
 path and recursive structured PATCH are out of scope and that adapter-local `StructuredValueBinder`
 and structured binding remain adapter-owned.
-
