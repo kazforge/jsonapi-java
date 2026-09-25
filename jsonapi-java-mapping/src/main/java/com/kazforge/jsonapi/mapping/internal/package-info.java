@@ -75,6 +75,12 @@
  * raw diagnostic class, and per-resource binding through the thin {@link
  * com.kazforge.jsonapi.mapping.internal.TypedEnvelopeBinder.Backend} native-mechanics boundary.
  *
+ * <p>{@link com.kazforge.jsonapi.mapping.internal.PrimaryDataShape} owns the backend-neutral
+ * Level-1 primary-data shape policy: the single-resource, resource-collection, to-one
+ * identifier-or-null, and to-many identifier-collection checks, the shared description of the seven
+ * primary-data states, both mismatch message families, and data-only linkage-document assembly.
+ * Each backend keeps facet composition, typed narrowing, and native I/O.
+ *
  * <p>It additionally owns the neutral {@link com.kazforge.jsonapi.mapping.internal.PropertyRole}
  * enum and the {@link com.kazforge.jsonapi.mapping.internal.SemanticProperty} value that adapters
  * compose into their own write and read mapping records: role, logical backend property identity,

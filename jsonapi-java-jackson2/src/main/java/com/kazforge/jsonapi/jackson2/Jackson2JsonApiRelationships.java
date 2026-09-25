@@ -1,16 +1,11 @@
 package com.kazforge.jsonapi.jackson2;
 
 import com.kazforge.jsonapi.api.JsonApiRelationships;
-import com.kazforge.jsonapi.core.model.DocumentData;
-import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
-import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
-import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.mapping.internal.PrimaryDataShape;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -37,37 +32,40 @@ final class Jackson2JsonApiRelationships implements JsonApiRelationships {
   @Override
   public @Nullable ResourceIdentifier readToOne(String json) {
     Objects.requireNonNull(json, "json");
-    return requireToOne(Jackson2Io.call(() -> relationshipReader.readValue(json)));
+    return PrimaryDataShape.requireToOne(Jackson2Io.call(() -> relationshipReader.readValue(json)));
   }
 
   @Override
   public @Nullable ResourceIdentifier readToOne(InputStream json) {
     Objects.requireNonNull(json, "json");
-    return requireToOne(Jackson2Io.call(() -> relationshipReader.readValue(json)));
+    return PrimaryDataShape.requireToOne(Jackson2Io.call(() -> relationshipReader.readValue(json)));
   }
 
   @Override
   public List<ResourceIdentifier> readToMany(String json) {
     Objects.requireNonNull(json, "json");
-    return requireToMany(Jackson2Io.call(() -> relationshipReader.readValue(json)));
+    return PrimaryDataShape.requireToMany(
+        Jackson2Io.call(() -> relationshipReader.readValue(json)));
   }
 
   @Override
   public List<ResourceIdentifier> readToMany(InputStream json) {
     Objects.requireNonNull(json, "json");
-    return requireToMany(Jackson2Io.call(() -> relationshipReader.readValue(json)));
+    return PrimaryDataShape.requireToMany(
+        Jackson2Io.call(() -> relationshipReader.readValue(json)));
   }
 
   @Override
   public String writeToOne(@Nullable ResourceIdentifier identifier) {
     return Jackson2Io.call(
-        () -> relationshipWriter.writeValueAsString(linkageDocument(identifier)));
+        () -> relationshipWriter.writeValueAsString(PrimaryDataShape.linkageDocument(identifier)));
   }
 
   @Override
   public void writeToOne(@Nullable ResourceIdentifier identifier, OutputStream out) {
     Objects.requireNonNull(out, "out");
-    Jackson2Io.run(() -> relationshipWriter.writeValue(out, linkageDocument(identifier)));
+    Jackson2Io.run(
+        () -> relationshipWriter.writeValue(out, PrimaryDataShape.linkageDocument(identifier)));
   }
 
   @Override
@@ -77,7 +75,7 @@ final class Jackson2JsonApiRelationships implements JsonApiRelationships {
     return Jackson2Io.call(
         () ->
             relationshipWriter.writeValueAsString(
-                linkageCollectionDocument(List.copyOf(identifiers))));
+                PrimaryDataShape.linkageCollectionDocument(List.copyOf(identifiers))));
   }
 
   @Override
@@ -88,65 +86,6 @@ final class Jackson2JsonApiRelationships implements JsonApiRelationships {
     Jackson2Io.run(
         () ->
             relationshipWriter.writeValue(
-                out, linkageCollectionDocument(List.copyOf(identifiers))));
-  }
-
-  private static @Nullable ResourceIdentifier requireToOne(JsonApiDocument document) {
-    if (document.data() instanceof DocumentData.SingleIdentifier(ResourceIdentifier identifier)) {
-      return identifier;
-    }
-    if (document.data() instanceof DocumentData.NullData) {
-      return null;
-    }
-    throw linkageMismatch("to-one identifier or explicit null", document);
-  }
-
-  private static List<ResourceIdentifier> requireToMany(JsonApiDocument document) {
-    if (document.data()
-        instanceof DocumentData.IdentifierCollection(List<ResourceIdentifier> identifiers)) {
-      return identifiers;
-    }
-    throw linkageMismatch("to-many identifier collection", document);
-  }
-
-  private static JsonApiDocument linkageDocument(@Nullable ResourceIdentifier identifier) {
-    DocumentData data =
-        identifier == null
-            ? DocumentData.NullData.INSTANCE
-            : new DocumentData.SingleIdentifier(identifier);
-    return new JsonApiDocument(data, null, null, null, null, null, Map.of());
-  }
-
-  private static JsonApiDocument linkageCollectionDocument(List<ResourceIdentifier> identifiers) {
-    for (ResourceIdentifier identifier : identifiers) {
-      Objects.requireNonNull(identifier, "identifiers element");
-    }
-    return new JsonApiDocument(
-        new DocumentData.IdentifierCollection(identifiers), null, null, null, null, null, Map.of());
-  }
-
-  private static JsonApiMappingException linkageMismatch(
-      String expected, JsonApiDocument document) {
-    String actual;
-    if (document.errors() != null) {
-      actual = "an error document";
-    } else if (document.data() == null) {
-      actual = "absent data";
-    } else if (document.data() instanceof DocumentData.NullData) {
-      actual = "explicit null data";
-    } else if (document.data() instanceof DocumentData.SingleResource) {
-      actual = "single-resource data";
-    } else if (document.data() instanceof DocumentData.ResourceCollection) {
-      actual = "resource-collection data";
-    } else if (document.data() instanceof DocumentData.SingleIdentifier) {
-      actual = "single-identifier data";
-    } else {
-      actual = "identifier-collection data";
-    }
-    return new JsonApiMappingException(
-        MappingDiagnostic.RESOURCE_TYPE_MISMATCH,
-        null,
-        MappingLocation.of("data"),
-        "Level-1 relationship read requires " + expected + " primary data but found " + actual);
+                out, PrimaryDataShape.linkageCollectionDocument(List.copyOf(identifiers))));
   }
 }

@@ -5,17 +5,14 @@ import com.kazforge.jsonapi.api.ResourceCollectionDocument;
 import com.kazforge.jsonapi.api.ResourceDocument;
 import com.kazforge.jsonapi.api.ResourceWriteOptions;
 import com.kazforge.jsonapi.core.aggregate.ValidationContext;
-import com.kazforge.jsonapi.core.model.DocumentData;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.JsonApiObject;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.core.validation.DocumentUsage;
 import com.kazforge.jsonapi.core.validation.EndpointIdentity;
-import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
-import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.document.DocumentEnvelope;
 import com.kazforge.jsonapi.mapping.MappedDocument;
+import com.kazforge.jsonapi.mapping.internal.PrimaryDataShape;
 import com.kazforge.jsonapi.representation.RepresentationPolicy;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -266,18 +263,19 @@ final class Jackson3JsonApiResources implements JsonApiResources {
   }
 
   private Object bindSingle(JsonApiDocument document, Class<?> type) {
-    ResourceObject resource = requireSingleResource(document, type);
+    ResourceObject resource = PrimaryDataShape.requireSingleResource(document, type);
     return resourceBinder.fromResource(resource, baseMapper.constructType(type));
   }
 
   private Object bindSingle(JsonApiDocument document, JavaType javaType) {
-    ResourceObject resource = requireSingleResource(document, javaType.getRawClass());
+    ResourceObject resource =
+        PrimaryDataShape.requireSingleResource(document, javaType.getRawClass());
     return resourceBinder.fromResource(resource, javaType);
   }
 
   private <T> List<T> bindCollection(
       JsonApiDocument document, JavaType javaType, @Nullable Class<T> type) {
-    List<ResourceObject> resources = requireResourceCollection(document);
+    List<ResourceObject> resources = PrimaryDataShape.requireResourceCollection(document);
     List<Object> bound = resourceBinder.fromResources(resources, javaType);
     List<T> narrowed = new ArrayList<>(bound.size());
     for (Object item : bound) {
@@ -292,7 +290,7 @@ final class Jackson3JsonApiResources implements JsonApiResources {
   }
 
   private <T> ResourceDocument<T> documentSingle(JsonApiDocument document, Class<T> type) {
-    ResourceObject resource = requireSingleResource(document, type);
+    ResourceObject resource = PrimaryDataShape.requireSingleResource(document, type);
     T bound = type.cast(resourceBinder.fromResource(resource, baseMapper.constructType(type)));
     return new ResourceDocument<>(
         bound, document.meta(), document.links(), document.jsonapi(), document.included());
@@ -335,44 +333,6 @@ final class Jackson3JsonApiResources implements JsonApiResources {
         ValidationContext.defaults()
             .withDocumentUsage(DocumentUsage.UPDATE_REQUEST)
             .withExpectedEndpointIdentity(expectedIdentity));
-  }
-
-  private static ResourceObject requireSingleResource(
-      JsonApiDocument document, @Nullable Class<?> type) {
-    if (document.data() instanceof DocumentData.SingleResource(ResourceObject resource)) {
-      return resource;
-    }
-    throw shapeMismatch(type, "single-resource", describe(document));
-  }
-
-  private static List<ResourceObject> requireResourceCollection(JsonApiDocument document) {
-    if (document.data() instanceof DocumentData.ResourceCollection(List<ResourceObject> items)) {
-      return items;
-    }
-    throw shapeMismatch(null, "resource-collection", describe(document));
-  }
-
-  private static JsonApiMappingException shapeMismatch(
-      @Nullable Class<?> type, String expected, String actual) {
-    return new JsonApiMappingException(
-        MappingDiagnostic.RESOURCE_TYPE_MISMATCH,
-        type,
-        MappingLocation.of("data"),
-        "Level-1 read requires " + expected + " primary data but found " + actual);
-  }
-
-  private static String describe(JsonApiDocument document) {
-    if (document.errors() != null) {
-      return "an error document";
-    }
-    return switch (document.data()) {
-      case null -> "absent data";
-      case DocumentData.NullData ignored -> "explicit null data";
-      case DocumentData.SingleResource ignored -> "single-resource data";
-      case DocumentData.ResourceCollection ignored -> "resource-collection data";
-      case DocumentData.SingleIdentifier ignored -> "single-identifier data";
-      case DocumentData.IdentifierCollection ignored -> "identifier-collection data";
-    };
   }
 
   record ResourceConfiguration(
