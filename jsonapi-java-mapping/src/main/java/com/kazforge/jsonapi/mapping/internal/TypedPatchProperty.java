@@ -36,10 +36,6 @@ public record TypedPatchProperty<P, T>(
     Objects.requireNonNull(declaredType, "declaredType");
   }
 
-  public PropertyRole role() {
-    return metadata.role();
-  }
-
   public String logicalName() {
     return metadata.logicalName();
   }

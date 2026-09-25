@@ -89,7 +89,7 @@ final class MappingFakeReadResourceBackend implements ReadResourceBackend<String
     List<ReadProperty<String>> relationships = new ArrayList<>();
     List<ReadProperty<String>> relationshipMeta = new ArrayList<>();
     for (ReadProperty<String> property : properties) {
-      switch (property.role()) {
+      switch (property.metadata().role()) {
         case ID -> identifier = property;
         case LOCAL_ID -> localId = property;
         case ATTRIBUTE -> attributes.add(property);

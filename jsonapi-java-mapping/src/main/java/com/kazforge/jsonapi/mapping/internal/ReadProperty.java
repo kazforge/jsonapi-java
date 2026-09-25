@@ -28,10 +28,6 @@ public record ReadProperty<P>(P token, SemanticProperty metadata, boolean bindab
     Objects.requireNonNull(metadata, "metadata");
   }
 
-  public PropertyRole role() {
-    return metadata.role();
-  }
-
   @Override
   public String logicalName() {
     return metadata.logicalName();

@@ -22,10 +22,10 @@ record ResourceMapping(
    * member's resource-relative wire location plus declared type. A supplied id role starts at
    * {@code /id}, a supplied local-id role at {@code /lid}; attributes start at {@code
    * /attributes/<wire-name>}, relationships at {@code /relationships/<wire-name>/data}, resource
-   * meta at {@code /meta}, and relationship meta at {@code /relationships/<wire-name>/meta}. Shared
-   * by the flat binder and the typed PATCH DTO binder so construction-failure translation cannot
-   * drift. A null location leaves that identity role out of the map: an unsupplied member never
-   * becomes a synthetic construction input.
+   * meta at {@code /meta}, and relationship meta at {@code /relationships/<wire-name>/meta}.
+   * Consumed by the typed PATCH DTO binder so construction-failure translation uses the write
+   * mapping's declared types. A null location leaves that identity role out of the map: an
+   * unsupplied member never becomes a synthetic construction input.
    */
   Map<String, MappingConstructionStart> constructionStartsByJacksonName(
       @Nullable MappingLocation idLocation, @Nullable MappingLocation lidLocation) {

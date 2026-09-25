@@ -6,6 +6,7 @@ import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import com.kazforge.jsonapi.representation.IncludePolicy
 import com.kazforge.jsonapi.representation.RelationshipAllowance
 import com.kazforge.jsonapi.representation.RepresentationPolicy
@@ -188,6 +189,49 @@ class MappingCompoundInclusionEngineSpec extends Specification {
     then:
     thrown(JsonApiMappingException)
     backend.relatedTypePaths.isEmpty()
+  }
+
+  def "rejects an unsupported to-many relationship value before related-type resolution"() {
+    given:
+    backend.relationships['articles'] = [comments: 'comments']
+    backend.relationshipRawValue('a1', 'comments', new HashMap())
+
+    when:
+    engine.collectIncluded(['a1'], ['articles'], [primary('articles', '1')], null,
+    representation(['comments']))
+
+    then:
+    def exception = thrown(JsonApiMappingException)
+    exception.diagnostic() == MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE
+    exception.resourceClass() == HashMap
+    exception.propertyPath() == null
+    exception.message ==
+        'To-many relationship value is not a supported collection type: java.util.HashMap'
+    backend.relatedTypePaths == ['comments']
+  }
+
+  def "normalizes optional, linkage, and identifier relationship values"() {
+    given:
+    backend.relationships['articles'] = [author: 'people', comments: 'comments']
+    backend.toOneRelationship('articles', 'author')
+    backend.relationshipRawValue('a1', 'author',
+        Optional.of(new RelationshipLinkage('p1', 'meta')))
+    backend.relationshipRawValue('a1', 'comments',
+        [
+          ResourceIdentifier.of('comments', 'c1'),
+          'c2'
+        ])
+    backend.identifiers['p1'] = ResourceIdentifier.of('people', 'p1')
+    backend.identifiers['c2'] = ResourceIdentifier.of('comments', 'c2')
+    backend.rendered['p1'] = ResourceObject.of('people', 'p1')
+    backend.rendered['c2'] = ResourceObject.of('comments', 'c2')
+
+    when:
+    def result = engine.collectIncluded(['a1'], ['articles'], [primary('articles', '1')], null,
+    representation(['author', 'comments']))
+
+    then:
+    result.included()*.id() == ['p1', 'c2']
   }
 
   def "emits intermediate resources before resources reached through them"() {

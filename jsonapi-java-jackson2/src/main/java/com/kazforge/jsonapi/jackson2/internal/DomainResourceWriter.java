@@ -19,7 +19,6 @@ import com.kazforge.jsonapi.mapping.internal.WriteProperty;
 import com.kazforge.jsonapi.mapping.internal.WriteResourceBackend;
 import com.kazforge.jsonapi.mapping.internal.WriteResourceDefinition;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,12 +41,6 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
   private final BasicResourceWriter<JavaType, MappingProperty> basicWriter;
   private final Map<JavaType, WriteResourceDefinition<MappingProperty>> definitions =
       new ConcurrentHashMap<>();
-
-  @SuppressWarnings("unused")
-  public DomainResourceWriter(
-      JsonMapper mapper, IdentifierConverter identifierConverter, MappingDefinitionCache cache) {
-    this(mapper, identifierConverter, cache, ResourceDecoratorRegistry.empty());
-  }
 
   public DomainResourceWriter(
       JsonMapper mapper,
@@ -243,42 +236,6 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
       return optional.orElse(null);
     }
     return value;
-  }
-
-  /**
-   * Converts an already-read to-many value into a list of elements for inclusion traversal, which
-   * has no JSON:API member coordinate for this value; write-side materialization is owned by the
-   * shared relationship normalization operation.
-   */
-  static List<Object> convertToCollection(Object value) {
-    return switch (value) {
-      case List<?> list -> {
-        List<Object> result = new ArrayList<>(list.size());
-        result.addAll(list);
-        yield result;
-      }
-      case Object[] array -> {
-        List<Object> result = new ArrayList<>(array.length);
-        Collections.addAll(result, array);
-        yield result;
-      }
-      case Iterable<?> iterable -> {
-        List<Object> result = new ArrayList<>();
-        for (Object item : iterable) {
-          result.add(item);
-        }
-        yield result;
-      }
-      default -> throw relationshipShapeFailure(value);
-    };
-  }
-
-  private static JsonApiMappingException relationshipShapeFailure(Object value) {
-    String message =
-        "To-many relationship value is not a supported collection type: "
-            + value.getClass().getName();
-    return JsonApiMappingException.withoutLocation(
-        MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE, value.getClass(), message);
   }
 
   /**

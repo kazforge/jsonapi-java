@@ -174,8 +174,7 @@ public final class TypedPatchBinder<P, T> {
           ID_LOCATION,
           "Resource update identity requires a non-null id at '" + ID_LOCATION + "'");
     }
-    Object identity =
-        backend.parseIdentity(Objects.requireNonNull(resource.id()), identifier, rawType);
+    Object identity = backend.parseIdentity(Objects.requireNonNull(resource.id()), rawType);
     properties.put(identifier.externalName(), identity);
   }
 
@@ -235,7 +234,7 @@ public final class TypedPatchBinder<P, T> {
         properties.put(property.externalName(), new PresenceMarker(false, null));
         continue;
       }
-      Object value = backend.convertRelationship(property, data, rawType);
+      Object value = backend.convertRelationship(property, data);
       properties.put(property.externalName(), new PresenceMarker(true, value));
     }
   }

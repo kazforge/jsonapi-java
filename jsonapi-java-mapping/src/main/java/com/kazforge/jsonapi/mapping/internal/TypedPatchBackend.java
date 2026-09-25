@@ -42,8 +42,7 @@ public interface TypedPatchBackend<P, T> {
    * Failures surface as the backend's own {@code IDENTIFIER_CONVERSION_FAILED} diagnostic at {@code
    * /id}.
    */
-  Object parseIdentity(
-      String wireIdentifier, TypedPatchProperty<P, T> identifier, Class<?> rawType);
+  Object parseIdentity(String wireIdentifier, Class<?> rawType);
 
   /**
    * Converts one supplied typed relationship linkage without coercing the complete inner target
@@ -52,8 +51,7 @@ public interface TypedPatchBackend<P, T> {
    * short-circuiting, direct identifier copying, and wrapper occurrence orchestration. Failures
    * surface as the backend's own diagnostic at the relationship's data location.
    */
-  @Nullable Object convertRelationship(
-      TypedPatchProperty<P, T> property, RelationshipData data, Class<?> rawType);
+  @Nullable Object convertRelationship(TypedPatchProperty<P, T> property, RelationshipData data);
 
   /**
    * Performs the single final native bean construction from the synthetic property map, including

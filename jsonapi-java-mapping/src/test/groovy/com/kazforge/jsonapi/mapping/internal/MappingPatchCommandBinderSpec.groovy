@@ -250,7 +250,7 @@ class MappingPatchCommandBinderSpec extends Specification {
         property(PropertyRole.ID, "id", "id", "id"),
         property(PropertyRole.RELATIONSHIP, "r1", "r1", "r1"))
     backend.wrappedRelationship(
-        "r1", true, "metaToken", ReadRelationshipShape.mapped(false, "target"))
+        "r1", true, "metaToken", new ReadRelationshipShape.Mapped<String>(false, "target"))
     backend.linkageMapping("r1", "mapped-target")
     backend.identifierMetaConversion("metaToken", "converted-meta")
     def resource =

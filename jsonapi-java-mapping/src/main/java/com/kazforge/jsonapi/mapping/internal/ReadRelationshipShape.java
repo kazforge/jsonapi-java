@@ -2,6 +2,7 @@ package com.kazforge.jsonapi.mapping.internal;
 
 import java.util.Objects;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Backend-neutral declared shape of one mapped relationship property for shared
@@ -22,7 +23,6 @@ import org.jspecify.annotations.NullMarked;
  * @param <T> opaque backend-native type token
  */
 @NullMarked
-@SuppressWarnings("unused")
 public sealed interface ReadRelationshipShape<T>
     permits ReadRelationshipShape.Direct,
         ReadRelationshipShape.Mapped,
@@ -30,6 +30,14 @@ public sealed interface ReadRelationshipShape<T>
 
   /** Whether the declared relationship property is to-many. */
   boolean toMany();
+
+  /**
+   * Configured mapper target token. Present only on {@link Mapped}; {@link Direct} and {@link
+   * Wrapped} return {@code null} because they do not carry a mapper target at this level.
+   */
+  default @Nullable T mappedTarget() {
+    return null;
+  }
 
   /**
    * Built-in {@link com.kazforge.jsonapi.core.model.ResourceIdentifier} target bound without a
@@ -48,6 +56,11 @@ public sealed interface ReadRelationshipShape<T>
     public Mapped {
       Objects.requireNonNull(target, "target");
     }
+
+    @Override
+    public T mappedTarget() {
+      return target;
+    }
   }
 
   /**
@@ -62,21 +75,5 @@ public sealed interface ReadRelationshipShape<T>
       Objects.requireNonNull(meta, "meta");
       Objects.requireNonNull(targetShape, "targetShape");
     }
-  }
-
-  /** Built-in {@code ResourceIdentifier} target of the given declared cardinality. */
-  static <T> ReadRelationshipShape<T> direct(boolean toMany) {
-    return new Direct<>(toMany);
-  }
-
-  /** Configured mapper target of the given declared cardinality over one opaque mapping token. */
-  static <T> ReadRelationshipShape<T> mapped(boolean toMany, T target) {
-    return new Mapped<>(toMany, target);
-  }
-
-  /** Opt-in {@code RelationshipLinkage} wrapper over the target's own direct/mapped shape. */
-  static <T> ReadRelationshipShape<T> wrapped(
-      boolean toMany, T meta, ReadRelationshipShape<T> targetShape) {
-    return new Wrapped<>(toMany, meta, targetShape);
   }
 }
