@@ -440,8 +440,8 @@ public final class BasicResourceWriter<T, P> {
         identifier, metaFromConverted(converted.value(), resource, location));
   }
 
-  private static List<@Nullable Object> materializeToMany(
-      Object value, MappingLocation relationshipLocation) {
+  static List<@Nullable Object> materializeToMany(
+      Object value, @Nullable MappingLocation relationshipLocation) {
     return switch (value) {
       case List<?> list -> {
         List<Object> result = new ArrayList<>(list.size());
@@ -460,14 +460,29 @@ public final class BasicResourceWriter<T, P> {
         }
         yield result;
       }
-      default ->
-          throw new JsonApiMappingException(
-              MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
-              value.getClass(),
-              relationshipLocation,
-              "To-many relationship value is not a supported collection type: "
-                  + value.getClass().getName());
+      default -> throw unsupportedToManyValue(value, relationshipLocation);
     };
+  }
+
+  /**
+   * Inclusion traversal has no JSON:API member coordinate for this value, so a null location uses
+   * the location-less diagnostic; write-side materialization supplies the relationship data
+   * pointer.
+   */
+  private static JsonApiMappingException unsupportedToManyValue(
+      Object value, @Nullable MappingLocation relationshipLocation) {
+    String message =
+        "To-many relationship value is not a supported collection type: "
+            + value.getClass().getName();
+    if (relationshipLocation == null) {
+      return JsonApiMappingException.withoutLocation(
+          MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE, value.getClass(), message);
+    }
+    return new JsonApiMappingException(
+        MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_VALUE,
+        value.getClass(),
+        relationshipLocation,
+        message);
   }
 
   private T resolveTarget(

@@ -618,7 +618,6 @@ final class MappingDefinitionResolver {
         List.copyOf(relationshipProperties),
         resourceMeta,
         List.copyOf(boundRelationshipMeta),
-        deserializationDescription.getType(),
         effective.creatorExternalNames());
   }
 

@@ -1,10 +1,12 @@
 package com.kazforge.jsonapi.mapping.internal;
 
+import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceIdentity;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
+import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import com.kazforge.jsonapi.representation.IncludePath;
 import com.kazforge.jsonapi.representation.IncludePolicy;
 import java.util.ArrayDeque;
@@ -13,6 +15,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -22,9 +25,11 @@ import org.jspecify.annotations.Nullable;
  * graphs.
  *
  * <p>This engine knows nothing about a concrete backend. Native type tokens, mapping definitions,
- * property access, wrapper/collection unwrapping, conversion, and selective rendering stay behind
- * {@link InclusionBackend}. Traversal order, include policy, identity aliasing, deduplication,
- * sparse-fieldset omissions, limits, and diagnostics live here once for every backend.
+ * property access, declared to-many cardinality, conversion, and selective rendering stay behind
+ * {@link InclusionBackend}. Optional unwrap, to-many materialization, relationship-linkage target
+ * unwrapping, includable filtering, traversal order, include policy, identity aliasing,
+ * deduplication, sparse-fieldset omissions, limits, and diagnostics live here once for every
+ * backend.
  *
  * <p>All visit, identity, and included-output state is allocated per {@link #collectIncluded}
  * invocation. The engine instance itself is immutable and safe to share. Included resources are
@@ -268,7 +273,10 @@ public final class CompoundInclusionEngine<T> {
                 + "'");
       }
 
-      List<Object> related = backend.relatedDomainObjects(domain, declaredType, segment);
+      List<Object> related =
+          relatedDomainObjects(
+              backend.relationshipValue(domain, declaredType, segment),
+              backend.relationshipToMany(declaredType, segment));
       T relatedType = backend.relatedType(declaredType, segment, dottedThrough);
       int nextSegment = current.segmentIndex() + 1;
       boolean lastSegment = nextSegment >= path.segments().size();
@@ -343,6 +351,55 @@ public final class CompoundInclusionEngine<T> {
           && segmentIndex == 0
           && !backend.hasIdentity(domain, declaredType);
     }
+  }
+
+  /**
+   * Normalizes one already-read relationship value into includable domain objects. Related-value
+   * failures run before {@link InclusionBackend#relatedType} so an unsupported to-many container
+   * keeps that precedence.
+   */
+  private static List<Object> relatedDomainObjects(@Nullable Object raw, boolean toMany) {
+    Object value = unwrapOptional(raw);
+    if (toMany) {
+      if (value == null) {
+        return List.of();
+      }
+      List<@Nullable Object> items = BasicResourceWriter.materializeToMany(value, null);
+      List<Object> domainObjects = new ArrayList<>();
+      for (Object item : items) {
+        Object unwrapped = unwrapLinkageTarget(unwrapOptional(item));
+        if (unwrapped != null && isIncludableDomainObject(unwrapped)) {
+          domainObjects.add(unwrapped);
+        }
+      }
+      return domainObjects;
+    }
+    Object unwrapped = unwrapLinkageTarget(value);
+    if (unwrapped != null && isIncludableDomainObject(unwrapped)) {
+      return List.of(unwrapped);
+    }
+    return List.of();
+  }
+
+  private static @Nullable Object unwrapLinkageTarget(@Nullable Object value) {
+    if (value instanceof RelationshipLinkage<?, ?>(Object target, Object ignored)) {
+      return target;
+    }
+    return value;
+  }
+
+  private static boolean isIncludableDomainObject(@Nullable Object value) {
+    return value != null
+        && !(value instanceof ResourceIdentifier)
+        && !(value instanceof RelationshipData)
+        && !(value instanceof RelationshipLinkage<?, ?>);
+  }
+
+  private static @Nullable Object unwrapOptional(@Nullable Object value) {
+    if (value instanceof Optional<?> optional) {
+      return optional.orElse(null);
+    }
+    return value;
   }
 
   private record DomainAtSegment<T>(Object domain, T declaredType, int segmentIndex) {}

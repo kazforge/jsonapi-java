@@ -2,7 +2,7 @@ package com.kazforge.jsonapi.mapping.internal;
 
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
-import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Backend capability boundary required by the shared compound-inclusion engine.
@@ -13,10 +13,11 @@ import java.util.List;
  * definitions, property access, and selective rendering. This is unsupported implementation detail
  * for backend cooperation, not consumer SPI, and must not appear in supported backend signatures.
  *
- * <p>Callers must ask {@link #hasRelationship} before {@link #relatedType} or {@link
- * #relatedDomainObjects}; implementations may reject a name they consider unknown with {@link
- * IllegalArgumentException}. Native type/container resolution failures that cannot be expressed in
- * neutral terms surface as the backend's own {@code JsonApiMappingException} diagnostic.
+ * <p>Callers must ask {@link #hasRelationship} before {@link #relatedType}, {@link
+ * #relationshipValue}, or {@link #relationshipToMany}; implementations may reject a name they
+ * consider unknown with {@link IllegalArgumentException}. Native type/container resolution failures
+ * that cannot be expressed in neutral terms surface as the backend's own {@code
+ * JsonApiMappingException} diagnostic.
  */
 public interface InclusionBackend<T> {
 
@@ -38,10 +39,17 @@ public interface InclusionBackend<T> {
   T relatedType(T ownerType, String relationshipName, String dottedPath);
 
   /**
-   * Reads and normalizes related domain objects for one known JSON:API relationship, excluding
-   * non-includable values such as identifiers, linkage data, or nulls.
+   * Reads the raw mapped relationship property value for one known JSON:API relationship. The
+   * backend does not unwrap {@link java.util.Optional}, materialize collections, unwrap linkage
+   * targets, or filter includable values; the engine owns that normalization.
    */
-  List<Object> relatedDomainObjects(Object domain, T ownerType, String relationshipName);
+  @Nullable Object relationshipValue(Object domain, T ownerType, String relationshipName);
+
+  /**
+   * Returns whether the known JSON:API relationship is declared to-many after unwrapping a native
+   * {@link java.util.Optional} transport wrapper from the declared type.
+   */
+  boolean relationshipToMany(T ownerType, String relationshipName);
 
   /** Resolves the effective runtime type while retaining backend-native generic information. */
   T effectiveType(Object domain, T declaredType);

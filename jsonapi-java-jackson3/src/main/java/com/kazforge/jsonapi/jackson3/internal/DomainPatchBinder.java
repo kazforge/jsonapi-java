@@ -90,9 +90,7 @@ public final class DomainPatchBinder
    */
   @Override
   public void validateDeclaredMetaTargets(
-      PatchResourceDefinition<ReadMappingProperty> definition,
-      JavaType beanType,
-      Class<?> rawType) {
+      PatchResourceDefinition<ReadMappingProperty> definition, Class<?> rawType) {
     wholeMetaTarget.validateDeclaredPatchTargets(definition, rawType);
   }
 

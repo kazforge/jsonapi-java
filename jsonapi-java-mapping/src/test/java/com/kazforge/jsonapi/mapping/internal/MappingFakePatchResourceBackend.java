@@ -107,7 +107,7 @@ final class MappingFakePatchResourceBackend implements PatchResourceBackend<Stri
     List<PatchProperty<String>> relationships = new ArrayList<>();
     List<PatchProperty<String>> relationshipMeta = new ArrayList<>();
     for (PatchProperty<String> property : properties) {
-      switch (property.role()) {
+      switch (property.metadata().role()) {
         case ID -> identifier = property;
         case LOCAL_ID -> throw new IllegalArgumentException("PATCH definitions carry no local id");
         case ATTRIBUTE -> attributes.add(property);
@@ -167,7 +167,7 @@ final class MappingFakePatchResourceBackend implements PatchResourceBackend<Stri
 
   @Override
   public void validateDeclaredMetaTargets(
-      PatchResourceDefinition<String> definition, String beanType, Class<?> rawType) {
+      PatchResourceDefinition<String> definition, Class<?> rawType) {
     metaTargetValidations.add(definition.resourceType());
     callOrder.add("validateMetaTargets");
     if (failMetaTargetValidation) {

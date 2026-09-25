@@ -34,16 +34,6 @@ final class Jackson2JsonApiRelationships implements JsonApiRelationships {
     this.relationshipWriter = Objects.requireNonNull(relationshipWriter, "relationshipWriter");
   }
 
-  /** Document reader bound to this facet, for structural assertions in its own package. */
-  JsonApiDocumentReader reader() {
-    return relationshipReader;
-  }
-
-  /** Document writer bound to this facet, for structural assertions in its own package. */
-  JsonApiDocumentWriter writer() {
-    return relationshipWriter;
-  }
-
   @Override
   public @Nullable ResourceIdentifier readToOne(String json) {
     Objects.requireNonNull(json, "json");

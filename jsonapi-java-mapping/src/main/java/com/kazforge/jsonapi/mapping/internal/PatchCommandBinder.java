@@ -74,7 +74,7 @@ public final class PatchCommandBinder<T, N> {
     Objects.requireNonNull(beanType, "beanType");
     Objects.requireNonNull(rawType, "rawType");
     ResourceTypeMatch.requireMatching(definition.resourceType(), resource, rawType);
-    backend.validateDeclaredMetaTargets(definition, beanType, rawType);
+    backend.validateDeclaredMetaTargets(definition, rawType);
     Object identity = convertIdentity(resource, definition, beanType, rawType);
     List<PatchChange> changes = new ArrayList<>();
     bindResourceMeta(resource, definition, beanType, rawType, changes);

@@ -260,13 +260,13 @@ class MappingTypedPatchBinderSpec extends Specification {
     }
 
     @Override
-    Object parseIdentity(String wireIdentifier, TypedPatchProperty<String, String> identifier, Class<?> rawType) {
+    Object parseIdentity(String wireIdentifier, Class<?> rawType) {
       callOrder << "identity"
       return "identity:" + wireIdentifier
     }
 
     @Override
-    Object convertRelationship(TypedPatchProperty<String, String> property, RelationshipData data, Class<?> rawType) {
+    Object convertRelationship(TypedPatchProperty<String, String> property, RelationshipData data) {
       callOrder << "relationship:" + property.jsonapiName()
       return "converted:" + property.jsonapiName()
     }

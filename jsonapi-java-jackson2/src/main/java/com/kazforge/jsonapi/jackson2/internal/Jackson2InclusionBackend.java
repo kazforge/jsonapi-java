@@ -1,24 +1,20 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
 import com.fasterxml.jackson.databind.JavaType;
-import com.kazforge.jsonapi.core.model.RelationshipData;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import com.kazforge.jsonapi.mapping.internal.EffectiveRepresentation;
 import com.kazforge.jsonapi.mapping.internal.InclusionBackend;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /**
  * Jackson 2 bridge that exposes only the native capabilities the shared compound-inclusion engine
- * cannot own: {@code JavaType} resolution, mapping/property lookup, property reads, wrapper and
- * collection unwrapping, identity extraction, and selective rendering.
+ * cannot own: {@code JavaType} resolution, mapping/property lookup, property reads, declared
+ * to-many cardinality, identity extraction, and selective rendering.
  */
 public final class Jackson2InclusionBackend implements InclusionBackend<JavaType> {
 
@@ -67,36 +63,16 @@ public final class Jackson2InclusionBackend implements InclusionBackend<JavaType
   }
 
   @Override
-  public List<Object> relatedDomainObjects(
+  public @Nullable Object relationshipValue(
       Object domain, JavaType ownerType, String relationshipName) {
     MappingProperty property = requireRelationship(ownerType, relationshipName);
-    Object raw = writer.readRelationshipValue(domain, property);
-    Object value = DomainResourceWriter.unwrapOptional(raw);
-    JavaType propertyType = unwrapOptionalType(property.accessor().getType());
-    if (MappingTypeSupport.isToManyType(propertyType)) {
-      if (value == null) {
-        return List.of();
-      }
-      List<Object> items = DomainResourceWriter.convertToCollection(value);
-      List<Object> domainObjects = new ArrayList<>();
-      for (Object item : items) {
-        Object unwrapped = DomainResourceWriter.unwrapOptional(item);
-        if (unwrapped instanceof RelationshipLinkage<?, ?>(Object target, Object ignored)) {
-          unwrapped = target;
-        }
-        if (isIncludableDomainObject(unwrapped)) {
-          domainObjects.add(unwrapped);
-        }
-      }
-      return domainObjects;
-    }
-    if (value instanceof RelationshipLinkage<?, ?>(Object target, Object ignored)) {
-      value = target;
-    }
-    if (isIncludableDomainObject(value)) {
-      return List.of(value);
-    }
-    return List.of();
+    return writer.readRelationshipValue(domain, property);
+  }
+
+  @Override
+  public boolean relationshipToMany(JavaType ownerType, String relationshipName) {
+    MappingProperty property = requireRelationship(ownerType, relationshipName);
+    return MappingTypeSupport.isToManyType(unwrapOptionalType(property.accessor().getType()));
   }
 
   @Override
@@ -145,12 +121,5 @@ public final class Jackson2InclusionBackend implements InclusionBackend<JavaType
       return type.containedType(0);
     }
     return type;
-  }
-
-  private static boolean isIncludableDomainObject(@Nullable Object value) {
-    return value != null
-        && !(value instanceof ResourceIdentifier)
-        && !(value instanceof RelationshipData)
-        && !(value instanceof RelationshipLinkage<?, ?>);
   }
 }

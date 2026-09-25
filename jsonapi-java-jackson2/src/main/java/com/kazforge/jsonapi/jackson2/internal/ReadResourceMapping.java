@@ -1,6 +1,5 @@
 package com.kazforge.jsonapi.jackson2.internal;
 
-import com.fasterxml.jackson.databind.JavaType;
 import com.kazforge.jsonapi.mapping.internal.PatchProperty;
 import com.kazforge.jsonapi.mapping.internal.PatchResourceDefinition;
 import com.kazforge.jsonapi.mapping.internal.ReadProperty;
@@ -31,7 +30,6 @@ record ReadResourceMapping(
     List<ReadMappingProperty> relationships,
     @Nullable ReadMappingProperty resourceMeta,
     List<ReadMappingProperty> relationshipMetaProperties,
-    JavaType domainType,
     Set<String> creatorPropertyNames) {
 
   /**

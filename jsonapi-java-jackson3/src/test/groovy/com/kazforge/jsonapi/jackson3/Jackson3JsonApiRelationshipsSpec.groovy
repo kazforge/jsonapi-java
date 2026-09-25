@@ -1,7 +1,6 @@
 package com.kazforge.jsonapi.jackson3
 
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
-import com.kazforge.jsonapi.core.validation.PrimaryDataContext
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
 import com.kazforge.jsonapi.diagnostic.CodecFailureCategory
@@ -9,8 +8,6 @@ import com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
-import com.kazforge.jsonapi.document.DocumentReadContext
-import com.kazforge.jsonapi.document.PrimaryDataKind
 import com.kazforge.jsonapi.jackson3.CloseTrackingFixtures.TrackingInputStream
 import com.kazforge.jsonapi.jackson3.CloseTrackingFixtures.TrackingOutputStream
 import spock.lang.Shared
@@ -217,18 +214,5 @@ class Jackson3JsonApiRelationshipsSpec extends Specification {
     ex.category() == CodecFailureCategory.AGGREGATE_VALIDATION
     ex.ruleCode() == ValidationRuleCode.PAGINATION_REQUIRES_COLLECTION
     ex.jsonPointer() == "/links/next"
-  }
-
-  def "relationship facet binds identifier decoding with the relationship endpoint role"() {
-    given:
-    def facet = (Jackson3JsonApiRelationships) jsonApi.relationships()
-
-    expect:
-    facet.reader().context().primaryDataKind() == PrimaryDataKind.RESOURCE_IDENTIFIER
-    facet.reader().context().validationContext().primaryDataContext() ==
-        PrimaryDataContext.RELATIONSHIP
-    facet.writer().context().primaryDataContext() == PrimaryDataContext.RELATIONSHIP
-    DocumentReadContext.identifierDefaults().validationContext().primaryDataContext() ==
-        PrimaryDataContext.RESOURCE
   }
 }

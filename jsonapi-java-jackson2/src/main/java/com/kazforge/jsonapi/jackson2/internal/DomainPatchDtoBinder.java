@@ -150,18 +150,13 @@ public final class DomainPatchDtoBinder implements TypedPatchBackend<MappingProp
   }
 
   @Override
-  public Object parseIdentity(
-      String wireIdentifier,
-      TypedPatchProperty<MappingProperty, JavaType> identifier,
-      Class<?> rawType) {
+  public Object parseIdentity(String wireIdentifier, Class<?> rawType) {
     return converter.parseIdentity(wireIdentifier, rawType);
   }
 
   @Override
   public @Nullable Object convertRelationship(
-      TypedPatchProperty<MappingProperty, JavaType> property,
-      RelationshipData data,
-      Class<?> rawType) {
+      TypedPatchProperty<MappingProperty, JavaType> property, RelationshipData data) {
     JavaType inner = property.declaredType().containedType(0);
     return converter.convertRelationshipForPatchDto(property.token(), data, inner);
   }

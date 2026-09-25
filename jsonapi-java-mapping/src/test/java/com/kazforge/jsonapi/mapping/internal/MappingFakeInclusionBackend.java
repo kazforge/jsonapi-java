@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Mapping-local test double for {@link InclusionBackend} over string type tokens. Test code
@@ -35,8 +36,9 @@ final class MappingFakeInclusionBackend implements InclusionBackend<String> {
   /** Dotted include paths for which related-type resolution was requested, in call order. */
   final List<String> relatedTypePaths = new ArrayList<>();
 
-  private final Map<String, Map<String, List<Object>>> values = new LinkedHashMap<>();
-  private final Map<Object, Map<String, List<Object>>> domainValues = new LinkedHashMap<>();
+  private final Map<String, Map<String, @Nullable Object>> values = new LinkedHashMap<>();
+  private final Map<Object, Map<String, @Nullable Object>> domainValues = new LinkedHashMap<>();
+  private final Set<String> toOneRelationships = new LinkedHashSet<>();
 
   /** Configures related domain objects reached by one relationship of one owner type. */
   void relationshipValues(String ownerType, String relationshipName, Object... related) {
@@ -50,6 +52,18 @@ final class MappingFakeInclusionBackend implements InclusionBackend<String> {
     domainValues
         .computeIfAbsent(domain, ignored -> new LinkedHashMap<>())
         .put(relationshipName, List.of(related));
+  }
+
+  /** Configures the raw relationship property value for one specific domain. */
+  void relationshipRawValue(Object domain, String relationshipName, @Nullable Object raw) {
+    domainValues
+        .computeIfAbsent(domain, ignored -> new LinkedHashMap<>())
+        .put(relationshipName, raw);
+  }
+
+  /** Marks one relationship as declared to-one; unspecified relationships are to-many. */
+  void toOneRelationship(String ownerType, String relationshipName) {
+    toOneRelationships.add(ownerType + "." + relationshipName);
   }
 
   @Override
@@ -87,17 +101,22 @@ final class MappingFakeInclusionBackend implements InclusionBackend<String> {
   }
 
   @Override
-  public List<Object> relatedDomainObjects(
+  public @Nullable Object relationshipValue(
       Object domain, String ownerType, String relationshipName) {
-    Map<String, List<Object>> byDomain = domainValues.get(domain);
+    Map<String, @Nullable Object> byDomain = domainValues.get(domain);
     if (byDomain != null && byDomain.containsKey(relationshipName)) {
       return byDomain.get(relationshipName);
     }
-    Map<String, List<Object>> ownerValues = values.get(ownerType);
+    Map<String, @Nullable Object> ownerValues = values.get(ownerType);
     if (ownerValues == null || !ownerValues.containsKey(relationshipName)) {
-      return List.of();
+      return null;
     }
     return ownerValues.get(relationshipName);
+  }
+
+  @Override
+  public boolean relationshipToMany(String ownerType, String relationshipName) {
+    return !toOneRelationships.contains(ownerType + "." + relationshipName);
   }
 
   @Override

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
-import tools.jackson.databind.JavaType;
 
 /**
  * JSON:API role and wire metadata for ordinary flat reads.
@@ -31,7 +30,6 @@ record ReadResourceMapping(
     List<ReadMappingProperty> relationships,
     @Nullable ReadMappingProperty resourceMeta,
     List<ReadMappingProperty> relationshipMetaProperties,
-    JavaType domainType,
     Set<String> creatorPropertyNames) {
 
   /**

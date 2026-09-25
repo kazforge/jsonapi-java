@@ -328,7 +328,7 @@ class MappingBasicResourceReaderSpec extends Specification {
   def "wraps a direct to-one occurrence with converted identifier meta"() {
     given:
     backend.define('articles', property(RELATIONSHIP, 'author', 'author', 'author'))
-    backend.wrappedRelationship('author', false, 'authorMeta', ReadRelationshipShape.direct(false))
+    backend.wrappedRelationship('author', false, 'authorMeta', new ReadRelationshipShape.Direct<String>(false))
     backend.identifierMetaConversion('authorMeta', 'converted-meta')
     def identifier =
         new ResourceIdentifier('people', 'p1', null, Meta.of([role: 'editor']), [extra: 'x'])
@@ -354,7 +354,7 @@ class MappingBasicResourceReaderSpec extends Specification {
   def "leaves wrapper meta null when the identifier carries no meta"() {
     given:
     backend.define('articles', property(RELATIONSHIP, 'author', 'author', 'author'))
-    backend.wrappedRelationship('author', false, 'authorMeta', ReadRelationshipShape.direct(false))
+    backend.wrappedRelationship('author', false, 'authorMeta', new ReadRelationshipShape.Direct<String>(false))
     def identifier = ResourceIdentifier.of('people', 'p1')
 
     when:
@@ -373,7 +373,7 @@ class MappingBasicResourceReaderSpec extends Specification {
   def "propagates a backend identifier-meta conversion failure unchanged"() {
     given:
     backend.define('articles', property(RELATIONSHIP, 'author', 'author', 'author'))
-    backend.wrappedRelationship('author', false, 'authorMeta', ReadRelationshipShape.direct(false))
+    backend.wrappedRelationship('author', false, 'authorMeta', new ReadRelationshipShape.Direct<String>(false))
     backend.failIdentifierMetaConversion('authorMeta')
     def identifier =
         new ResourceIdentifier('people', 'p1', null, Meta.of([role: 'editor']), [:])
@@ -393,7 +393,7 @@ class MappingBasicResourceReaderSpec extends Specification {
     given:
     backend.define('articles', property(RELATIONSHIP, 'author', 'author', 'author'))
     backend.wrappedRelationship(
-        'author', false, 'authorMeta', ReadRelationshipShape.mapped(false, 'authorTarget'))
+        'author', false, 'authorMeta', new ReadRelationshipShape.Mapped<String>(false, 'authorTarget'))
     backend.linkageMapping('author', null)
 
     when:
@@ -412,7 +412,7 @@ class MappingBasicResourceReaderSpec extends Specification {
     given:
     backend.define('articles', property(RELATIONSHIP, 'comments', 'comments', 'comments'))
     backend.wrappedRelationship(
-        'comments', true, 'commentMeta', ReadRelationshipShape.direct(false))
+        'comments', true, 'commentMeta', new ReadRelationshipShape.Direct<String>(false))
     backend.identifierMetaConversion('commentMeta', 'converted')
     def identifiers = [
       new ResourceIdentifier('comments', 'c1', null, Meta.of([pinned: true]), [:]),
@@ -439,7 +439,7 @@ class MappingBasicResourceReaderSpec extends Specification {
     given:
     backend.define('articles', property(RELATIONSHIP, 'comments', 'comments', 'comments'))
     backend.wrappedRelationship(
-        'comments', true, 'commentMeta', ReadRelationshipShape.direct(false))
+        'comments', true, 'commentMeta', new ReadRelationshipShape.Direct<String>(false))
 
     when:
     def result = reader.readBasic(
@@ -457,7 +457,7 @@ class MappingBasicResourceReaderSpec extends Specification {
     given:
     backend.define('articles', property(RELATIONSHIP, 'comments', 'comments', 'comments'))
     backend.wrappedRelationship(
-        'comments', true, 'commentMeta', ReadRelationshipShape.mapped(false, 'commentTarget'))
+        'comments', true, 'commentMeta', new ReadRelationshipShape.Mapped<String>(false, 'commentTarget'))
     backend.linkageMapping('comments', null)
     backend.rawType('comments', List)
 

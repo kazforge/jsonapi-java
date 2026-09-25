@@ -35,8 +35,7 @@ public interface PatchResourceBackend<T, N>
    * The shared binder invokes this once, after resource-type matching and before identity
    * conversion.
    */
-  void validateDeclaredMetaTargets(
-      PatchResourceDefinition<N> definition, T beanType, Class<?> rawType);
+  void validateDeclaredMetaTargets(PatchResourceDefinition<N> definition, Class<?> rawType);
 
   /**
    * Parses one present wire identity string and converts it through the identifier property's

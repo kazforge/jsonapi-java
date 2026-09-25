@@ -22,7 +22,6 @@ import org.jspecify.annotations.NullMarked;
  * @param <T> opaque backend-native type token
  */
 @NullMarked
-@SuppressWarnings("unused")
 public sealed interface ReadRelationshipShape<T>
     permits ReadRelationshipShape.Direct,
         ReadRelationshipShape.Mapped,
@@ -62,21 +61,5 @@ public sealed interface ReadRelationshipShape<T>
       Objects.requireNonNull(meta, "meta");
       Objects.requireNonNull(targetShape, "targetShape");
     }
-  }
-
-  /** Built-in {@code ResourceIdentifier} target of the given declared cardinality. */
-  static <T> ReadRelationshipShape<T> direct(boolean toMany) {
-    return new Direct<>(toMany);
-  }
-
-  /** Configured mapper target of the given declared cardinality over one opaque mapping token. */
-  static <T> ReadRelationshipShape<T> mapped(boolean toMany, T target) {
-    return new Mapped<>(toMany, target);
-  }
-
-  /** Opt-in {@code RelationshipLinkage} wrapper over the target's own direct/mapped shape. */
-  static <T> ReadRelationshipShape<T> wrapped(
-      boolean toMany, T meta, ReadRelationshipShape<T> targetShape) {
-    return new Wrapped<>(toMany, meta, targetShape);
   }
 }
