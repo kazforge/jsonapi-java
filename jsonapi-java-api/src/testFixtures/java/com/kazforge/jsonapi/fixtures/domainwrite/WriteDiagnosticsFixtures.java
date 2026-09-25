@@ -3,10 +3,13 @@ package com.kazforge.jsonapi.fixtures.domainwrite;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
 import com.kazforge.jsonapi.annotation.JsonApiId;
+import com.kazforge.jsonapi.annotation.JsonApiLocalId;
 import com.kazforge.jsonapi.annotation.JsonApiRelationship;
+import com.kazforge.jsonapi.annotation.JsonApiRelationshipMeta;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.fixtures.domainpatch.AuthorIdMeta;
+import com.kazforge.jsonapi.fixtures.domainpatch.AuthorMeta;
 import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -46,6 +49,15 @@ public final class WriteDiagnosticsFixtures {
   /** Identifier member carrying a second role annotation. */
   @JsonApiResource(type = "dup")
   public record DuplicateRoleEntity(@JsonApiId @JsonApiAttribute String id) {}
+
+  /** Two distinct properties claiming the id role. */
+  @JsonApiResource(type = "dup-ids")
+  public record DuplicateIdEntity(@JsonApiId String id, @JsonApiId String otherId) {}
+
+  /** Two distinct properties claiming the local-id role. */
+  @JsonApiResource(type = "dup-lids")
+  public record DuplicateLidEntity(
+      @JsonApiId String id, @JsonApiLocalId String localA, @JsonApiLocalId String localB) {}
 
   /** Attribute and relationship mapped onto the same Jackson external name. */
   @JsonApiResource(type = "collision")
@@ -112,6 +124,28 @@ public final class WriteDiagnosticsFixtures {
   @JsonApiResource(type = "reserved-rel")
   public record ReservedRelNameEntity(
       @JsonApiId String id, @JsonApiRelationship @JsonProperty("id") String other) {}
+
+  /**
+   * Relationship Jackson name using the reserved {@code id} member name with the identifier
+   * externally renamed, so configured Jackson does not merge the two members and the per-property
+   * name check is reachable.
+   */
+  @JsonApiResource(type = "reserved-rel-wire")
+  public record ReservedRelWireNameEntity(
+      @JsonApiId @JsonProperty("identifier") String id,
+      @JsonApiRelationship @JsonProperty("id") String other) {}
+
+  /** Invalid resource type combined with an invalid attribute name: resource type fails first. */
+  @JsonApiResource(type = "bad type!")
+  public record InvalidTypeAndAttrNameEntity(
+      @JsonApiId String id, @JsonApiAttribute @JsonProperty("bad name!") String value) {}
+
+  /** Invalid attribute name combined with an unmapped relationship-meta target. */
+  @JsonApiResource(type = "articles")
+  public record InvalidAttrAndUnmappedMetaEntity(
+      @JsonApiId String id,
+      @JsonApiAttribute @JsonProperty("bad name!") String value,
+      @JsonApiRelationshipMeta(relationship = "nonexistent") AuthorMeta authorMeta) {}
 
   /**
    * Attribute getter that always throws. Kept as a JavaBean so adapter-local specs cover a

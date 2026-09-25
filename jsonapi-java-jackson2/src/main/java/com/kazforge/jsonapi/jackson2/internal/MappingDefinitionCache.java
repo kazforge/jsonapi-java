@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
 import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
 import com.fasterxml.jackson.databind.introspect.ClassIntrospector;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.kazforge.jsonapi.mapping.internal.MappingDefinitionInvariants;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -93,7 +94,7 @@ public final class MappingDefinitionCache {
    * until the target is actually bound.
    */
   public String requireResourceTypeName(JavaType javaType) {
-    return MappingDefinitionResolver.validateResourceTypeName(
+    return MappingDefinitionInvariants.requireResourceTypeName(
         findResourceTypeName(javaType), javaType.getRawClass());
   }
 
