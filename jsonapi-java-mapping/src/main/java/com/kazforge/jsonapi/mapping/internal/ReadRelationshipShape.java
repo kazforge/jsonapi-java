@@ -2,6 +2,7 @@ package com.kazforge.jsonapi.mapping.internal;
 
 import java.util.Objects;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Backend-neutral declared shape of one mapped relationship property for shared
@@ -31,6 +32,14 @@ public sealed interface ReadRelationshipShape<T>
   boolean toMany();
 
   /**
+   * Configured mapper target token. Present only on {@link Mapped}; {@link Direct} and {@link
+   * Wrapped} return {@code null} because they do not carry a mapper target at this level.
+   */
+  default @Nullable T mappedTarget() {
+    return null;
+  }
+
+  /**
    * Built-in {@link com.kazforge.jsonapi.core.model.ResourceIdentifier} target bound without a
    * configured mapper. The shared reader owns the identifier copy, cardinality check, and
    * null/empty short-circuit for this branch.
@@ -46,6 +55,11 @@ public sealed interface ReadRelationshipShape<T>
 
     public Mapped {
       Objects.requireNonNull(target, "target");
+    }
+
+    @Override
+    public T mappedTarget() {
+      return target;
     }
   }
 

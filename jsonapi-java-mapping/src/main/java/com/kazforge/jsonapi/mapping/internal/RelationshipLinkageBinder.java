@@ -108,8 +108,7 @@ public final class RelationshipLinkageBinder<T, P extends RelationshipBindingPro
     if (shape instanceof ReadRelationshipShape.Direct<T>) {
       return copyDirectLinkage(data);
     }
-    ReadRelationshipShape.Mapped<T> mapped = (ReadRelationshipShape.Mapped<T>) shape;
-    return backend.mapLinkage(property, data, mapped.target());
+    return backend.mapLinkage(property, data, Objects.requireNonNull(shape.mappedTarget()));
   }
 
   private @Nullable Object bindWrapper(
@@ -169,8 +168,7 @@ public final class RelationshipLinkageBinder<T, P extends RelationshipBindingPro
       ResourceIdentifier identifier = singleIdentifier(data);
       return identifier == null ? null : IdentifierMetaSupport.copyLinkageIdentifier(identifier);
     }
-    ReadRelationshipShape.Mapped<T> mapped = (ReadRelationshipShape.Mapped<T>) targetShape;
-    return backend.mapLinkage(property, data, mapped.target());
+    return backend.mapLinkage(property, data, Objects.requireNonNull(targetShape.mappedTarget()));
   }
 
   private @Nullable Object convertOccurrenceMeta(
