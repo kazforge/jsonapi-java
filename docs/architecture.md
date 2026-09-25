@@ -34,7 +34,7 @@ authorization, query execution, relationship mutation, and application of PATCH 
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable wire model, local invariants, aggregate validation | None |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free semantic mapping roles | None |
 | [`jsonapi-java-api`](../jsonapi-java-api/README.md) | Backend-independent application, document, mapping, representation, diagnostic, and PATCH contracts currently implemented by configured Jackson | Core |
-| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; owns backend-neutral compound-inclusion traversal, identity/order/limit policy, sparse-fieldset linkage exemptions, basic and advanced resource-write and resource-read orchestration, low-level `PatchCommand` orchestration, and neutral mapping-role/per-property naming metadata; published but unsupported consumer API | API |
+| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Internal cross-artifact mapping implementation namespace consumed by backend runtimes; owns backend-neutral compound-inclusion traversal, identity/order/limit policy, sparse-fieldset linkage exemptions, basic and advanced resource-write and resource-read orchestration, Level-1 primary-data shape policy, low-level `PatchCommand` orchestration, and neutral mapping-role/per-property naming metadata; published but unsupported consumer API | API |
 | [`jsonapi-java-query`](../jsonapi-java-query/README.md) | Neutral query selection parsing and opaque parameter preservation | Core and neutral Jackson representation contracts |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Native Jackson 3 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
 | [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Native Jackson 2 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
@@ -132,7 +132,10 @@ exemptions remain provenance on `MappedDocument`, which the writer composes into
 Callers do not translate mapping state into validation policy.
 
 The neutral Level-1 `JsonApi` contract coordinates common resource, relationship, document, and
-PATCH operations. Major-specific capability APIs remain public for explicit codec, mapping,
+PATCH operations. The primary-data shape policy those reads accept — single-resource versus
+resource-collection, to-one identifier-or-null versus to-many identifier collection, the shared
+mismatch descriptions, and data-only linkage-document assembly — lives in `jsonapi-java-mapping`.
+Major-specific capability APIs remain public for explicit codec, mapping,
 parameterized-type, heterogeneous-envelope, and policy control. [ADR-018](adr/018-level-one-application-api-contract.md)
 owns that boundary.
 
@@ -150,6 +153,7 @@ owns that boundary.
 | Allowed fields/includes and traversal limits | Application/runtime `RepresentationPolicy` |
 | Basic resource write semantics: fieldset validation/filtering, strict versus create identity, empty-member omission, ordinary and advanced relationship linkage normalization, relationship-member assembly, resource/relationship/identifier meta application and overlay, and additive resource/relationship link decoration | `jsonapi-java-mapping` internal basic resource and decoration writers |
 | Basic and advanced resource read semantics: resource-type matching, strict independent identity roles, wire-member presence, attribute/relationship/meta order, synthetic-input assembly preserving absent-versus-explicit-null, relationship cardinality validation, null/empty short-circuiting, direct-identifier copying, `RelationshipLinkage` occurrence pairing, resource/relationship meta binding, member-relative diagnostics, and top-level construction-start backend-name to JSON:API location translation | `jsonapi-java-mapping` internal resource reader |
+| Level-1 primary-data shape policy: single-resource, resource-collection, to-one identifier-or-null, and to-many identifier-collection checks; shared primary-data descriptions; mismatch diagnostics; data-only linkage-document assembly | `jsonapi-java-mapping` internal `PrimaryDataShape` helper |
 | Low-level `PatchCommand` semantics: resource-type matching, required `id` identity that never falls back to `lid`, supplied-member classification, effective-deserialization bindability enforcement, `PatchChange` construction, `PatchCommand` assembly, and the contract phase order, sharing whole-linkage replacement and the relationship-linkage orchestration with the reader | `jsonapi-java-mapping` internal PATCH command binder |
 | Recursive structured PATCH semantics (typed marker-tree assembly, low-level supplied-only `StructuredPatch` assembly, presence/null/empty distinctions, strict typed versus skip low-level unknown-member policy, and pointer accumulation) and typed `PatchPresence<T>` DTO phase order with presence-marker assembly, declaration preflight, and meta/data gating | `jsonapi-java-mapping` internal structured and typed PATCH binders |
 | Configured wire-identifier parsing, lazy read relationship-shape resolution (target/type resolution and mapper selection), configured linkage-mapper invocation, declared identifier-meta conversion, declared meta-target validation, effective deserialization property discovery, nested construction-path walking, native failure-path extraction, and final bean construction | Each backend's read orchestration |

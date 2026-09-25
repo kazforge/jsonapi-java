@@ -103,10 +103,11 @@ package owns backend-neutral semantics for mapped resources:
   merged-Jackson-name rejection, effective-property resolution, and the remaining adapter-local
   declaration checks stay backend-owned.
 - **Shared neutral mapping helpers.** Identifier-meta locations and linkage
-  `ResourceIdentifier` copies, resource-type match enforcement for binders, and the synthetic
-  typed-PATCH presence-marker carrier. Both backends and the shared orchestrators consume these
-  Java-public types; they are implementation detail for backend cooperation, not supported
-  consumer API.
+  `ResourceIdentifier` copies, resource-type match enforcement for binders, the Level-1
+  primary-data shape policy (resource and relationship-linkage document shape checks, shared
+  mismatch descriptions, and data-only linkage-document assembly), and the synthetic typed-PATCH
+  presence-marker carrier. Both backends and the shared orchestrators consume these Java-public
+  types; they are implementation detail for backend cooperation, not supported consumer API.
 
 Native type and property models, introspection, mapping lookup, property access, native container
 type-shape derivation, configured conversion (including whole-meta and declared-type identifier-meta
