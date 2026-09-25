@@ -18,6 +18,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -64,6 +65,50 @@ public final class TypedEnvelopeBinder<T> {
 
     /** Binds one resource object to the registered native target type. */
     Object bindResource(ResourceObject resource, T targetType);
+  }
+
+  private record FunctionBackend<T>(
+      Function<Type, T> targetTypes,
+      Function<T, Class<?>> rawClasses,
+      Function<T, String> resourceTypeNames,
+      BiFunction<ResourceObject, T, Object> resourceBinder)
+      implements Backend<T> {
+
+    @Override
+    public T targetType(Type registeredType) {
+      return targetTypes.apply(registeredType);
+    }
+
+    @Override
+    public Class<?> rawClass(T targetType) {
+      return rawClasses.apply(targetType);
+    }
+
+    @Override
+    public String requireResourceTypeName(T targetType) {
+      return resourceTypeNames.apply(targetType);
+    }
+
+    @Override
+    public Object bindResource(ResourceObject resource, T targetType) {
+      return resourceBinder.apply(resource, targetType);
+    }
+  }
+
+  /**
+   * Builds a backend from native method references so adapters do not each host a duplicated {@link
+   * Backend} class.
+   */
+  public static <T> Backend<T> backend(
+      Function<Type, T> targetType,
+      Function<T, Class<?>> rawClass,
+      Function<T, String> requireResourceTypeName,
+      BiFunction<ResourceObject, T, Object> bindResource) {
+    return new FunctionBackend<>(
+        Objects.requireNonNull(targetType, "targetType"),
+        Objects.requireNonNull(rawClass, "rawClass"),
+        Objects.requireNonNull(requireResourceTypeName, "requireResourceTypeName"),
+        Objects.requireNonNull(bindResource, "bindResource"));
   }
 
   private final ResourceTypeRegistry registry;

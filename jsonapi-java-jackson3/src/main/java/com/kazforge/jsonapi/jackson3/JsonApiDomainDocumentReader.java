@@ -1,7 +1,6 @@
 package com.kazforge.jsonapi.jackson3;
 
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
-import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.document.DocumentReadContext;
@@ -12,7 +11,6 @@ import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.ResourceTypeRegistry;
 import com.kazforge.jsonapi.mapping.internal.TypedEnvelopeBinder;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.util.Map;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.JavaType;
@@ -28,9 +26,9 @@ import tools.jackson.databind.json.JsonMapper;
  * {@link #fromDocument(JsonApiDocument)} binds only and never re-parses or re-validates.
  *
  * <p>Primary resource data and every present {@code included} element are bound through the flat
- * binder after looking up {@link ResourceObject#type()} in the supplied {@link
- * ResourceTypeRegistry}; identifier primary data and error documents never attempt DTO binding.
- * Resource types absent from the registry fail with {@link
+ * binder after looking up {@link com.kazforge.jsonapi.core.model.ResourceObject#type()} in the
+ * supplied {@link ResourceTypeRegistry}; identifier primary data and error documents never attempt
+ * DTO binding. Resource types absent from the registry fail with {@link
  * MappingDiagnostic#UNREGISTERED_RESOURCE_TYPE} at the document pointer before any envelope
  * escapes; other binder failures compose structurally with the document pointer ({@code /data},
  * {@code /data/<index>}, {@code /included/<index>}) per the mapping-location contract: a
@@ -65,7 +63,12 @@ public final class JsonApiDomainDocumentReader {
             binderMapper, identifierConverter, metadataAuthority, linkageMappers);
     this.envelopeBinder =
         new TypedEnvelopeBinder<>(
-            registry, new EnvelopeBackend(binderMapper, metadataAuthority, binder));
+            registry,
+            TypedEnvelopeBinder.backend(
+                binderMapper::constructType,
+                JavaType::getRawClass,
+                metadataAuthority::requireResourceTypeName,
+                binder::fromResource));
     this.metaConverter = new BinderMetaConverter(binderMapper);
   }
 
@@ -100,41 +103,5 @@ public final class JsonApiDomainDocumentReader {
    */
   public JsonApiDomainDocument fromDocument(JsonApiDocument document) {
     return new JsonApiDomainDocument(envelopeBinder.bind(document), metaConverter);
-  }
-
-  private static final class EnvelopeBackend implements TypedEnvelopeBinder.Backend<JavaType> {
-
-    private final JsonMapper binderMapper;
-    private final MappingDefinitionCache metadataAuthority;
-    private final DomainResourceBinder binder;
-
-    private EnvelopeBackend(
-        JsonMapper binderMapper,
-        MappingDefinitionCache metadataAuthority,
-        DomainResourceBinder binder) {
-      this.binderMapper = binderMapper;
-      this.metadataAuthority = metadataAuthority;
-      this.binder = binder;
-    }
-
-    @Override
-    public JavaType targetType(Type registeredType) {
-      return binderMapper.constructType(registeredType);
-    }
-
-    @Override
-    public Class<?> rawClass(JavaType targetType) {
-      return targetType.getRawClass();
-    }
-
-    @Override
-    public String requireResourceTypeName(JavaType targetType) {
-      return metadataAuthority.requireResourceTypeName(targetType);
-    }
-
-    @Override
-    public Object bindResource(ResourceObject resource, JavaType targetType) {
-      return binder.fromResource(resource, targetType);
-    }
   }
 }

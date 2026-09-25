@@ -56,6 +56,23 @@ class MappingTypedEnvelopeBinderSpec extends Specification {
     failure.message == "Missing @JsonApiResource on java.lang.String"
   }
 
+  def "accepts native method-reference backends"() {
+    given:
+    def nativeBackend =
+        TypedEnvelopeBinder.backend(
+        { Type registered -> (Class<?>) registered },
+        { Class<?> target -> target },
+        { Class<?> target -> "articles" },
+        { resource, target -> resource.type() + ":" + resource.id() })
+    def binder =
+        new TypedEnvelopeBinder<>(
+        ResourceTypeRegistry.builder().register("articles", String).build(), nativeBackend)
+
+    expect:
+    binder.bind(singleResource("articles", "1")).data() ==
+        new DomainData.SingleResource("articles:1")
+  }
+
   def "empty registries stay legal and unused bind failures stay deferred"() {
     given:
     def empty = new FakeBackend()
