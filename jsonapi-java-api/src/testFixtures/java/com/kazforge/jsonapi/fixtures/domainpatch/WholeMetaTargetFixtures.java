@@ -46,11 +46,42 @@ public final class WholeMetaTargetFixtures {
       @JsonApiRelationshipMeta(relationship = "author") String authorMeta,
       @JsonApiRelationshipMeta(relationship = "author") String authorMeta2) {}
 
+  /** Invalid declaration: empty relationship-meta target identity. */
+  @JsonApiResource(type = "articles")
+  public record EmptyRelationshipMetaTargetArticle(
+      @JsonApiId String id, @JsonApiRelationshipMeta(relationship = "") AuthorMeta authorMeta) {}
+
   /** Invalid declaration: relationship meta referencing an unmapped relationship. */
   @JsonApiResource(type = "articles")
   public record UnmappedRelationshipMetaArticle(
       @JsonApiId String id,
       @JsonApiRelationshipMeta(relationship = "nonexistent") AuthorMeta authorMeta) {}
+
+  /**
+   * Unmapped relationship-meta target on an identity-less resource: target binding fails before
+   * resource-level role validation reports the missing identifier.
+   */
+  @JsonApiResource(type = "articles")
+  public record UnmappedRelationshipMetaNoIdArticle(
+      @JsonApiRelationshipMeta(relationship = "nonexistent") AuthorMeta authorMeta) {}
+
+  /**
+   * Two resource meta properties on an identity-less resource: identity validation fails before the
+   * duplicate resource meta is reported.
+   */
+  @JsonApiResource(type = "articles")
+  public record DuplicateMetaNoIdArticle(@JsonApiMeta String meta, @JsonApiMeta String otherMeta) {}
+
+  /**
+   * Invalid declaration: two relationship meta properties targeting one externally renamed
+   * relationship. The duplicate-target location must use the target's wire name.
+   */
+  @JsonApiResource(type = "articles")
+  public record RenamedDuplicateRelationshipMetaArticle(
+      @JsonApiId String id,
+      @JsonApiRelationship @JsonProperty("author") @Nullable ResourceIdentifier writtenBy,
+      @JsonApiRelationshipMeta(relationship = "writtenBy") @Nullable String authorMeta,
+      @JsonApiRelationshipMeta(relationship = "writtenBy") @Nullable String authorMeta2) {}
 
   /** Invalid declaration: scalar whole-meta target. */
   @JsonApiResource(type = "articles")

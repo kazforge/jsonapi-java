@@ -1,5 +1,6 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
+import com.kazforge.jsonapi.mapping.internal.MappingDefinitionInvariants;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -125,7 +126,7 @@ public final class MappingDefinitionCache {
    * Resolves and validates the configured class-level resource type name for a complete Java type.
    */
   public String requireResourceTypeName(JavaType javaType) {
-    return MappingDefinitionResolver.validateResourceTypeName(
+    return MappingDefinitionInvariants.requireResourceTypeName(
         findResourceTypeName(javaType), javaType.getRawClass());
   }
 

@@ -78,14 +78,22 @@ package owns backend-neutral semantics for mapped resources:
   preservation of every other member the basic write produced. The adapter resolves the effective
   runtime raw class at its own edge and supplies the configured registry; the decorator contracts
   and registry remain neutral API.
-- **Mapping roles and naming metadata.** The backend-neutral mapping roles and the per-property
-  semantic metadata that adapters compose into their own write and read mapping records: role,
-  logical backend property identity, configured backend external name, and JSON:API member name.
-  The adapter-independent role/name invariants are enforced when that value is constructed, so
-  identifier roles always name `id`/`lid`, resource meta always names `meta`, and attributes and
-  relationships use their backend external name. Relationship-meta metadata is valid only in
-  matched form, carrying the target relationship's JSON:API name; an unresolved annotation target
-  stays resolver-local.
+- **Mapping roles, naming metadata, and definition invariants.** The backend-neutral mapping roles
+  and the per-property semantic metadata that adapters compose into their own write and read
+  mapping records: role, logical backend property identity, configured backend external name, and
+  JSON:API member name. The adapter-independent role/name invariants are enforced when that value is
+  constructed, so identifier roles always name `id`/`lid`, resource meta always names `meta`, and
+  attributes and relationships use their backend external name. Relationship-meta metadata is valid
+  only in matched form, carrying the target relationship's JSON:API name; an unresolved annotation
+  target stays resolver-local. `MappingDefinitionInvariants` owns the resource-level definition
+  rules both adapters apply after role and wire-name harvesting: class-level resource type name
+  validity, per-property JSON:API member-name validity, relationship-meta target matching by logical
+  identity under the target's wire name, and the resource-level role rules (a single `id` and
+  local-id role, duplicate attribute and relationship names, attribute/relationship collisions, and
+  a single resource meta). Diagnostic codes, resource classes, locations, messages, and evaluation
+  order are shared semantics; configured property discovery, role-annotation harvesting,
+  merged-Jackson-name rejection, effective-property resolution, and the remaining adapter-local
+  declaration checks stay backend-owned.
 - **Shared neutral mapping helpers.** Identifier-meta locations and linkage
   `ResourceIdentifier` copies, resource-type match enforcement for binders, and the synthetic
   typed-PATCH presence-marker carrier. Both backends and the shared orchestrators consume these

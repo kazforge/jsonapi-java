@@ -71,7 +71,14 @@
  * enum and the {@link com.kazforge.jsonapi.mapping.internal.SemanticProperty} value that adapters
  * compose into their own write and read mapping records: role, logical backend property identity,
  * configured backend external name, and JSON:API member name, with the adapter-independent role and
- * name invariants enforced on construction.
+ * name invariants enforced on construction. {@link
+ * com.kazforge.jsonapi.mapping.internal.MappingDefinitionInvariants} owns the shared resource-level
+ * definition rules each backend applies after harvesting roles and wire names: resource-type name
+ * validity, per-property JSON:API member-name validity, relationship-meta target matching by
+ * logical identity under the target's wire name, and the resource-level role rules, with shared
+ * diagnostics and evaluation order. Configured property discovery, role-annotation harvesting,
+ * conflicting-Jackson-name rejection, effective-property resolution, and the remaining
+ * adapter-local declaration checks stay with each backend.
  *
  * <p>{@link com.kazforge.jsonapi.mapping.internal.ResourceDecorationWriter} owns the additive link
  * decoration phase after the basic write: exact effective-class decorator lookup, decorator

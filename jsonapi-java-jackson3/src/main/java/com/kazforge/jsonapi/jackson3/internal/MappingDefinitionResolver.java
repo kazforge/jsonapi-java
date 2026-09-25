@@ -8,17 +8,16 @@ import com.kazforge.jsonapi.annotation.JsonApiRelationship;
 import com.kazforge.jsonapi.annotation.JsonApiRelationshipMeta;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
 import com.kazforge.jsonapi.core.model.JsonApiMembers;
-import com.kazforge.jsonapi.core.validation.MemberNames;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
+import com.kazforge.jsonapi.mapping.internal.MappingDefinitionInvariants;
 import com.kazforge.jsonapi.mapping.internal.PropertyRole;
 import com.kazforge.jsonapi.mapping.internal.SemanticProperty;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -36,13 +35,15 @@ final class MappingDefinitionResolver {
 
   static ResourceMapping resolve(
       BeanDescription beanDescription, Class<?> rawType, AnnotatedClass resourceMetadata) {
-    String resourceType = validateResourceTypeName(resourceTypeName(resourceMetadata), rawType);
+    String resourceType =
+        MappingDefinitionInvariants.requireResourceTypeName(
+            resourceTypeName(resourceMetadata), rawType);
 
     List<BeanPropertyDefinition> propertyDefinitions = beanDescription.findProperties();
     ClassifiedProperties classified = classifyProperties(propertyDefinitions, rawType);
     List<MappingProperty> relationshipMeta =
         bindWriteRelationshipMeta(classified.relationshipMeta, classified.relationships, rawType);
-    validatePropertyRoles(
+    MappingDefinitionInvariants.validatePropertyRoles(
         classified.identifiers,
         classified.localIds,
         classified.attributes,
@@ -78,7 +79,9 @@ final class MappingDefinitionResolver {
       Class<?> rawType,
       AnnotatedClass resourceMetadata,
       MappingDefinitionCache.EffectiveReadProperties effective) {
-    String resourceType = validateResourceTypeName(resourceTypeName(resourceMetadata), rawType);
+    String resourceType =
+        MappingDefinitionInvariants.requireResourceTypeName(
+            resourceTypeName(resourceMetadata), rawType);
     List<ReadMappingProperty> identifierProperties = new ArrayList<>();
     List<ReadMappingProperty> localIdProperties = new ArrayList<>();
     List<ReadMappingProperty> attributeProperties = new ArrayList<>();
@@ -98,7 +101,7 @@ final class MappingDefinitionResolver {
         continue;
       }
       String jsonapiName = resolveJsonapiName(annotations, externalName, role);
-      validateJsonApiName(jsonapiName, role, logicalName, rawType);
+      MappingDefinitionInvariants.validateJsonApiName(jsonapiName, role, logicalName, rawType);
       AnnotatedMember serializationMember =
           pair.serialization() == null ? null : pair.serialization().getAccessor();
       SettableBeanProperty effectiveProperty = effective.byExternalName().get(externalName);
@@ -131,7 +134,7 @@ final class MappingDefinitionResolver {
     }
     List<ReadMappingProperty> boundRelationshipMeta =
         bindReadRelationshipMeta(relationshipMetaProperties, relationshipProperties, rawType);
-    validatePropertyRoles(
+    MappingDefinitionInvariants.validatePropertyRoles(
         identifierProperties,
         localIdProperties,
         attributeProperties,
@@ -168,35 +171,6 @@ final class MappingDefinitionResolver {
     return annotatedClass.getAnnotation(JsonApiResource.class).type();
   }
 
-  /**
-   * Validates a class-level resource type name resolved by {@link #resourceTypeName}.
-   *
-   * @throws JsonApiMappingException {@link MappingDiagnostic#MISSING_RESOURCE_ANNOTATION} when the
-   *     name is absent, or {@link MappingDiagnostic#INVALID_RESOURCE_TYPE} when it is empty or not
-   *     a valid JSON:API member name
-   */
-  static String validateResourceTypeName(@Nullable String resourceTypeName, Class<?> rawType) {
-    if (resourceTypeName == null) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.MISSING_RESOURCE_ANNOTATION,
-          rawType,
-          "Missing @JsonApiResource on " + rawType.getName());
-    }
-    if (resourceTypeName.isEmpty()) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.INVALID_RESOURCE_TYPE,
-          rawType,
-          "@JsonApiResource.type() must not be empty on " + rawType.getName());
-    }
-    if (!MemberNames.isValid(resourceTypeName)) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.INVALID_RESOURCE_TYPE,
-          rawType,
-          "Invalid resource type name: " + resourceTypeName);
-    }
-    return resourceTypeName;
-  }
-
   private static ClassifiedProperties classifyProperties(
       List<BeanPropertyDefinition> propertyDefinitions, Class<?> rawType) {
     ClassifiedProperties classified = new ClassifiedProperties();
@@ -231,7 +205,7 @@ final class MappingDefinitionResolver {
       return null;
     }
     String jsonapiName = resolveJsonapiName(annotations, externalName, role);
-    validateJsonApiName(jsonapiName, role, logicalName, rawType);
+    MappingDefinitionInvariants.validateJsonApiName(jsonapiName, role, logicalName, rawType);
     AnnotatedMember accessor =
         requireAccessorIfAnnotated(
             propertyDefinition, logicalName, rawType, annotations, wireLocation(role, jsonapiName));
@@ -307,8 +281,8 @@ final class MappingDefinitionResolver {
     return switch (role) {
       case ID -> MappingLocation.of("id");
       case LOCAL_ID -> MappingLocation.of("lid");
-      case ATTRIBUTE -> attributeLocation(jsonapiName);
-      case RELATIONSHIP -> relationshipLocation(jsonapiName);
+      case ATTRIBUTE -> MappingDefinitionInvariants.attributeLocation(jsonapiName);
+      case RELATIONSHIP -> MappingDefinitionInvariants.relationshipLocation(jsonapiName);
       case RESOURCE_META -> RelationshipMetaSupport.resourceMetaLocation();
       case RELATIONSHIP_META -> RelationshipMetaSupport.relationshipMetaLocation(jsonapiName);
     };
@@ -355,14 +329,14 @@ final class MappingDefinitionResolver {
       throw new JsonApiMappingException(
           MappingDiagnostic.NAME_COLLISION,
           rawType,
-          attributeLocation(jacksonName),
+          MappingDefinitionInvariants.attributeLocation(jacksonName),
           "Duplicate attribute name: " + jacksonName);
     }
     if (role == PropertyRole.RELATIONSHIP) {
       throw new JsonApiMappingException(
           MappingDiagnostic.NAME_COLLISION,
           rawType,
-          relationshipLocation(jacksonName),
+          MappingDefinitionInvariants.relationshipLocation(jacksonName),
           "Duplicate relationship name: " + jacksonName);
     }
     throw JsonApiMappingException.withoutLocation(
@@ -405,111 +379,6 @@ final class MappingDefinitionResolver {
     };
   }
 
-  private static void validateJsonApiName(
-      String jsonapiName, PropertyRole role, String logicalName, Class<?> rawType) {
-    if (role == PropertyRole.RELATIONSHIP_META) {
-      if (jsonapiName.isEmpty()) {
-        throw JsonApiMappingException.withoutLocation(
-            MappingDiagnostic.INVALID_RELATIONSHIP_META_TARGET,
-            rawType,
-            "@JsonApiRelationshipMeta.relationship() must not be empty for property '"
-                + logicalName
-                + "'");
-      }
-      return;
-    }
-    MappingDiagnostic diagnostic =
-        switch (role) {
-          case ATTRIBUTE -> MappingDiagnostic.INVALID_ATTRIBUTE_NAME;
-          case RELATIONSHIP -> MappingDiagnostic.INVALID_RELATIONSHIP_NAME;
-          default -> null;
-        };
-    if (diagnostic == null) {
-      return;
-    }
-    if (jsonapiName.isEmpty() || isForbiddenMemberName(jsonapiName)) {
-      // The wire name itself is invalid, so it cannot form a pointer segment; the offending name
-      // and its logical property stay in the message.
-      throw JsonApiMappingException.withoutLocation(
-          diagnostic,
-          rawType,
-          "Invalid JSON:API member name '" + jsonapiName + "' for property '" + logicalName + "'");
-    }
-  }
-
-  private static boolean isForbiddenMemberName(String jsonapiName) {
-    return !MemberNames.isValid(jsonapiName)
-        || JsonApiMembers.ID.equals(jsonapiName)
-        || JsonApiMembers.TYPE.equals(jsonapiName);
-  }
-
-  private static void validatePropertyRoles(
-      List<? extends MappingPropertyView> identifierProperties,
-      List<? extends MappingPropertyView> localIdProperties,
-      List<? extends MappingPropertyView> attributeProperties,
-      List<? extends MappingPropertyView> relationshipProperties,
-      List<? extends MappingPropertyView> resourceMetaProperties,
-      Class<?> rawType) {
-    requireSingleIdentityRole(identifierProperties, localIdProperties, rawType);
-    rejectDuplicateNames(
-        attributeProperties, rawType, "attribute", MappingDefinitionResolver::attributeLocation);
-    rejectDuplicateNames(
-        relationshipProperties,
-        rawType,
-        "relationship",
-        MappingDefinitionResolver::relationshipLocation);
-    rejectAttributeRelationshipCollisions(attributeProperties, relationshipProperties, rawType);
-    requireSingleResourceMeta(resourceMetaProperties, rawType);
-    // Relationship-meta target validation already ran in the write and read binding steps
-    // (bindWriteRelationshipMeta during classifyProperties and bindReadRelationshipMeta during
-    // resolveRead): each binding rejects unknown targets and duplicate target identities (by the
-    // relationship property's Java logical name) and rewrites each meta property's jsonapiName to
-    // the target relationship's wire name, so no post-binding target check remains needed.
-  }
-
-  /**
-   * Validates the two independent identity roles: at most one id property, at most one local-id
-   * property, and at least one of the two overall. {@code id} and {@code lid} are distinct wire
-   * members, so both roles may coexist on different logical properties; a property claiming both
-   * roles fails earlier as conflicting role annotations.
-   */
-  private static void requireSingleIdentityRole(
-      List<? extends MappingPropertyView> identifierProperties,
-      List<? extends MappingPropertyView> localIdProperties,
-      Class<?> rawType) {
-    if (identifierProperties.size() > 1) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.DUPLICATE_ROLE,
-          rawType,
-          "Multiple id properties found for " + rawType.getName());
-    }
-    if (localIdProperties.size() > 1) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.DUPLICATE_ROLE,
-          rawType,
-          "Multiple local-id properties found for " + rawType.getName());
-    }
-    if (identifierProperties.isEmpty() && localIdProperties.isEmpty()) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.MISSING_IDENTIFIER,
-          rawType,
-          "No id or local-id property found for " + rawType.getName());
-    }
-  }
-
-  private static void requireSingleResourceMeta(
-      List<? extends MappingPropertyView> resourceMetaProperties, Class<?> rawType) {
-    if (resourceMetaProperties.size() > 1) {
-      throw new JsonApiMappingException(
-          MappingDiagnostic.DUPLICATE_ROLE,
-          rawType,
-          RelationshipMetaSupport.resourceMetaLocation(),
-          "Multiple resource meta properties found for "
-              + rawType.getName()
-              + "; at most one @JsonApiMeta property is allowed");
-    }
-  }
-
   private static List<MappingProperty> bindWriteRelationshipMeta(
       List<UnresolvedRelationshipMeta> relationshipMetaProperties,
       List<MappingProperty> relationshipProperties,
@@ -517,22 +386,18 @@ final class MappingDefinitionResolver {
     if (relationshipMetaProperties.isEmpty()) {
       return List.of();
     }
-    Map<String, MappingProperty> byIdentity = relationshipByIdentity(relationshipProperties);
     Set<String> seen = new HashSet<>();
     List<MappingProperty> bound = new ArrayList<>();
     for (UnresolvedRelationshipMeta property : relationshipMetaProperties) {
-      MappingProperty target =
-          requireRelationshipMetaTarget(
-              property.logicalName(), property.targetIdentity(), byIdentity, seen, rawType);
-      bound.add(
-          new MappingProperty(
-              property.definition(),
-              property.accessor(),
-              new SemanticProperty(
-                  PropertyRole.RELATIONSHIP_META,
-                  property.logicalName(),
-                  property.externalName(),
-                  target.jsonapiName())));
+      SemanticProperty metadata =
+          MappingDefinitionInvariants.resolveRelationshipMeta(
+              property.logicalName(),
+              property.externalName(),
+              property.targetIdentity(),
+              relationshipProperties,
+              seen,
+              rawType);
+      bound.add(new MappingProperty(property.definition(), property.accessor(), metadata));
     }
     return bound;
   }
@@ -553,102 +418,25 @@ final class MappingDefinitionResolver {
     if (relationshipMetaProperties.isEmpty()) {
       return List.of();
     }
-    Map<String, ReadMappingProperty> byIdentity = relationshipByIdentity(relationshipProperties);
     Set<String> seen = new HashSet<>();
     List<ReadMappingProperty> bound = new ArrayList<>();
     for (UnresolvedReadRelationshipMeta property : relationshipMetaProperties) {
-      ReadMappingProperty target =
-          requireRelationshipMetaTarget(
-              property.logicalName(), property.targetIdentity(), byIdentity, seen, rawType);
+      SemanticProperty metadata =
+          MappingDefinitionInvariants.resolveRelationshipMeta(
+              property.logicalName(),
+              property.externalName(),
+              property.targetIdentity(),
+              relationshipProperties,
+              seen,
+              rawType);
       bound.add(
           new ReadMappingProperty(
               property.definition(),
               property.serializationMember(),
               property.effectiveProperty(),
-              new SemanticProperty(
-                  PropertyRole.RELATIONSHIP_META,
-                  property.logicalName(),
-                  property.externalName(),
-                  target.jsonapiName())));
+              metadata));
     }
     return bound;
-  }
-
-  private static <P extends MappingPropertyView> Map<String, P> relationshipByIdentity(
-      List<P> relationshipProperties) {
-    Map<String, P> byIdentity = new java.util.LinkedHashMap<>();
-    for (P relationship : relationshipProperties) {
-      byIdentity.put(relationship.logicalName(), relationship);
-    }
-    return byIdentity;
-  }
-
-  private static <P extends MappingPropertyView> P requireRelationshipMetaTarget(
-      String logicalName,
-      String targetIdentity,
-      Map<String, P> relationshipsByIdentity,
-      Set<String> seen,
-      Class<?> rawType) {
-    P target = relationshipsByIdentity.get(targetIdentity);
-    if (target == null) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.UNRESOLVED_RELATIONSHIP_META,
-          rawType,
-          "@JsonApiRelationshipMeta for property '"
-              + logicalName
-              + "' references unknown relationship '"
-              + targetIdentity
-              + "' on "
-              + rawType.getName());
-    }
-    if (!seen.add(targetIdentity)) {
-      throw new JsonApiMappingException(
-          MappingDiagnostic.DUPLICATE_ROLE,
-          rawType,
-          RelationshipMetaSupport.relationshipMetaLocation(target.jsonapiName()),
-          "Multiple relationship meta properties target relationship '"
-              + targetIdentity
-              + "' on "
-              + rawType.getName()
-              + "; at most one is allowed");
-    }
-    return target;
-  }
-
-  private static void rejectDuplicateNames(
-      List<? extends MappingPropertyView> properties,
-      Class<?> rawType,
-      String roleLabel,
-      Function<String, MappingLocation> containerLocation) {
-    Set<String> seen = new HashSet<>();
-    for (MappingPropertyView property : properties) {
-      if (!seen.add(property.jsonapiName())) {
-        throw new JsonApiMappingException(
-            MappingDiagnostic.NAME_COLLISION,
-            rawType,
-            containerLocation.apply(property.jsonapiName()),
-            "Duplicate " + roleLabel + " name: " + property.jsonapiName());
-      }
-    }
-  }
-
-  private static void rejectAttributeRelationshipCollisions(
-      List<? extends MappingPropertyView> attributeProperties,
-      List<? extends MappingPropertyView> relationshipProperties,
-      Class<?> rawType) {
-    Set<String> relationshipNames = new HashSet<>();
-    for (MappingPropertyView relationship : relationshipProperties) {
-      relationshipNames.add(relationship.jsonapiName());
-    }
-    for (MappingPropertyView attribute : attributeProperties) {
-      if (relationshipNames.contains(attribute.jsonapiName())) {
-        // The colliding name could live under either container; no single member location applies.
-        throw JsonApiMappingException.withoutLocation(
-            MappingDiagnostic.NAME_COLLISION,
-            rawType,
-            "Attribute and relationship name collision: " + attribute.jsonapiName());
-      }
-    }
   }
 
   /**
@@ -761,14 +549,6 @@ final class MappingDefinitionResolver {
   /** The single classified property for a role, or {@code null} when the role is absent. */
   private static <P> @Nullable P firstOrNull(List<P> properties) {
     return properties.isEmpty() ? null : properties.getFirst();
-  }
-
-  private static MappingLocation attributeLocation(String jsonapiName) {
-    return MappingLocation.of("attributes", jsonapiName);
-  }
-
-  private static MappingLocation relationshipLocation(String jsonapiName) {
-    return MappingLocation.of("relationships", jsonapiName, "data");
   }
 
   private record RoleAnnotations(
