@@ -24,7 +24,6 @@ sonar {
             "sonar.cpd.exclusions",
             """
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiDocumentReader.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiDomainDocumentReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiJackson2Assembly.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiPatchCommandReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiPatchDtoReader.java,

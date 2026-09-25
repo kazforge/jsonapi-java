@@ -86,14 +86,15 @@ and declared identifier-meta conversion; each adapter keeps declared meta-target
 effective deserialization property discovery, nested construction-path walking, native failure-path
 extraction, and the single configured bean construction. The neutral read definition also owns the
 top-level backend-name to JSON:API construction-start translation, while the effective native
-property remains the adapter's authority. Advanced
-typed envelopes bind included resources independently through explicit type registration. Low-level
-`PatchCommand` orchestration lives in the same module behind an adapter-supplied
-`PatchResourceBackend` bridge and shares the neutral relationship-linkage binder with reads and
-typed PATCH DTOs; each
-adapter keeps declared meta-target validation against the effective inbound PATCH property types,
-identity and attribute/meta conversion, final relationship container coercion, and the native
-linkage operations. The neutral recursive structured-value engine and the typed `PatchPresence<T>`
+property remains the adapter's authority. Typed-envelope document binding lives in
+`jsonapi-java-mapping` behind an adapter-supplied native bridge for target-type construction,
+configured resource-type name resolution, and per-resource binding; included resources bind
+independently through explicit type registration, while each adapter keeps native per-resource
+binding and meta conversion. Low-level `PatchCommand` orchestration lives in the same module behind
+an adapter-supplied `PatchResourceBackend` bridge and shares the neutral relationship-linkage binder
+with reads and typed PATCH DTOs; each adapter keeps declared meta-target validation against the
+effective inbound PATCH property types, identity and attribute/meta conversion, final relationship
+container coercion, and the native linkage operations. The neutral recursive structured-value engine and the typed `PatchPresence<T>`
 DTO contract phase order also live in the same module, behind adapter-supplied
 `StructuredShapeBackend` and `TypedPatchBackend` bridges; each adapter keeps configured shape
 introspection and caching, wrapper-customization detection, property-scoped conversion,

@@ -3,32 +3,21 @@ package com.kazforge.jsonapi.jackson2;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.kazforge.jsonapi.core.model.DocumentData;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
-import com.kazforge.jsonapi.core.model.ResourceIdentifier;
-import com.kazforge.jsonapi.core.model.ResourceIdentity;
 import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException;
-import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.document.DocumentReadContext;
 import com.kazforge.jsonapi.jackson2.internal.DomainResourceBinder;
 import com.kazforge.jsonapi.jackson2.internal.MappingDefinitionCache;
 import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper;
-import com.kazforge.jsonapi.mapping.DomainData;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
-import com.kazforge.jsonapi.mapping.IncludedResources;
 import com.kazforge.jsonapi.mapping.ResourceTypeRegistry;
+import com.kazforge.jsonapi.mapping.internal.TypedEnvelopeBinder;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Reads validated JSON:API documents into an immutable {@link JsonApiDomainDocument} with flat
@@ -60,9 +49,7 @@ import org.jspecify.annotations.Nullable;
 public final class JsonApiDomainDocumentReader {
 
   private final JsonApiDocumentReader documentReader;
-  private final ResourceTypeRegistry registry;
-  private final JsonMapper binderMapper;
-  private final DomainResourceBinder binder;
+  private final TypedEnvelopeBinder<JavaType> envelopeBinder;
   private final JsonApiDomainDocument.MetaConverter metaConverter;
 
   JsonApiDomainDocumentReader(
@@ -72,34 +59,15 @@ public final class JsonApiDomainDocumentReader {
       IdentifierConverter identifierConverter,
       Map<Class<?>, RelationshipLinkageMapper> linkageMappers) {
     this.documentReader = new JsonApiDocumentReader(base, context);
-    this.registry = Objects.requireNonNull(registry, "registry");
-    this.binderMapper = JsonApiJackson2Assembly.resourceBindingMapper(base);
+    JsonMapper binderMapper = JsonApiJackson2Assembly.resourceBindingMapper(base);
     MappingDefinitionCache metadataAuthority = new MappingDefinitionCache(binderMapper);
-    requireRegistryCoherence(this.registry, metadataAuthority);
-    this.binder =
+    DomainResourceBinder binder =
         new DomainResourceBinder(
             binderMapper, identifierConverter, metadataAuthority, linkageMappers);
+    this.envelopeBinder =
+        new TypedEnvelopeBinder<>(
+            registry, new EnvelopeBackend(binderMapper, metadataAuthority, binder));
     this.metaConverter = new BinderMetaConverter(binderMapper);
-  }
-
-  private void requireRegistryCoherence(
-      ResourceTypeRegistry registry, MappingDefinitionCache metadataAuthority) {
-    for (ResourceTypeRegistry.Registration registered : registry.registrations()) {
-      JavaType targetType = binderMapper.constructType(registered.targetType());
-      String configuredType = metadataAuthority.requireResourceTypeName(targetType);
-      if (!configuredType.equals(registered.jsonApiType())) {
-        throw JsonApiMappingException.withoutLocation(
-            MappingDiagnostic.RESOURCE_TYPE_MISMATCH,
-            targetType.getRawClass(),
-            "Registered JSON:API type '"
-                + registered.jsonApiType()
-                + "' for "
-                + targetType.getRawClass().getName()
-                + " does not match configured resource type '"
-                + configuredType
-                + "'");
-      }
-    }
   }
 
   /**
@@ -144,109 +112,42 @@ public final class JsonApiDomainDocumentReader {
    * Binds an already-validated document into a domain envelope; never re-parses or re-validates.
    */
   public JsonApiDomainDocument fromDocument(JsonApiDocument document) {
-    Objects.requireNonNull(document, "document");
-    return new JsonApiDomainDocument(
-        new JsonApiDomainDocument.Components(
-            bindData(document.data()),
-            document.errors(),
-            document.meta(),
-            document.jsonapi(),
-            document.links(),
-            bindIncluded(document.included()),
-            document.additionalMembers()),
-        metaConverter);
+    return new JsonApiDomainDocument(envelopeBinder.bind(document), metaConverter);
   }
 
-  private @Nullable DomainData bindData(@Nullable DocumentData data) {
-    if (data == null) {
-      return null;
-    }
-    return switch (data) {
-      case DocumentData.NullData() -> DomainData.NullData.INSTANCE;
-      case DocumentData.SingleResource(ResourceObject resource) ->
-          new DomainData.SingleResource(bindResource(resource, MappingLocation.of("data")));
-      case DocumentData.ResourceCollection(List<ResourceObject> resources) -> {
-        List<Object> bound = new ArrayList<>(resources.size());
-        for (int i = 0; i < resources.size(); i++) {
-          bound.add(
-              bindResource(resources.get(i), MappingLocation.of("data", Integer.toString(i))));
-        }
-        yield new DomainData.ResourceCollection(bound);
-      }
-      case DocumentData.SingleIdentifier(ResourceIdentifier identifier) ->
-          new DomainData.SingleIdentifier(identifier);
-      case DocumentData.IdentifierCollection(List<ResourceIdentifier> identifiers) ->
-          new DomainData.IdentifierCollection(identifiers);
-    };
-  }
+  private static final class EnvelopeBackend implements TypedEnvelopeBinder.Backend<JavaType> {
 
-  private @Nullable IncludedResources bindIncluded(@Nullable List<ResourceObject> included) {
-    if (included == null) {
-      return null;
-    }
-    List<Object> bound = new ArrayList<>(included.size());
-    List<Set<ResourceIdentity>> identitiesByPosition = new ArrayList<>(included.size());
-    Set<ResourceIdentity> seen = new LinkedHashSet<>();
-    for (int i = 0; i < included.size(); i++) {
-      ResourceObject resource = included.get(i);
-      MappingLocation pointer = MappingLocation.of("included", Integer.toString(i));
-      Object dto = bindResource(resource, pointer);
-      bound.add(dto);
-      Set<ResourceIdentity> identities = new LinkedHashSet<>();
-      if (resource.hasId()) {
-        ResourceIdentity identity =
-            ResourceIdentity.ofId(resource.type(), Objects.requireNonNull(resource.id()));
-        putIdentity(seen, identity, pointer);
-        identities.add(identity);
-      }
-      if (resource.hasLid()) {
-        ResourceIdentity identity =
-            ResourceIdentity.ofLid(resource.type(), Objects.requireNonNull(resource.lid()));
-        putIdentity(seen, identity, pointer);
-        identities.add(identity);
-      }
-      identitiesByPosition.add(identities);
-    }
-    return IncludedResources.of(bound, identitiesByPosition);
-  }
+    private final JsonMapper binderMapper;
+    private final MappingDefinitionCache metadataAuthority;
+    private final DomainResourceBinder binder;
 
-  private static void putIdentity(
-      Set<ResourceIdentity> seen, ResourceIdentity identity, MappingLocation pointer) {
-    if (!seen.add(identity)) {
-      throw new JsonApiMappingException(
-          MappingDiagnostic.CONFLICTING_INCLUDED_REPRESENTATION,
-          null,
-          pointer,
-          "Duplicate included identity " + identity);
+    private EnvelopeBackend(
+        JsonMapper binderMapper,
+        MappingDefinitionCache metadataAuthority,
+        DomainResourceBinder binder) {
+      this.binderMapper = binderMapper;
+      this.metadataAuthority = metadataAuthority;
+      this.binder = binder;
     }
-  }
 
-  /**
-   * Binds one resource under the given document-relative prefix. Registry misses fail at the prefix
-   * itself; binder failures compose structurally: the document prefix joins the binder's
-   * resource-relative location ({@code /data/2} + {@code /attributes/title} = {@code
-   * /data/2/attributes/title}), and a binder failure without a location reports just the document
-   * prefix rather than inventing a member.
-   */
-  private Object bindResource(ResourceObject resource, MappingLocation documentPrefix) {
-    ResourceObject checkedResource = Objects.requireNonNull(resource, "resource");
-    ResourceTypeRegistry.Registration registered = registry.resolve(checkedResource.type());
-    if (registered == null) {
-      throw new JsonApiMappingException(
-          MappingDiagnostic.UNREGISTERED_RESOURCE_TYPE,
-          null,
-          documentPrefix,
-          "No DTO target registered for JSON:API resource type '" + checkedResource.type() + "'");
+    @Override
+    public JavaType targetType(Type registeredType) {
+      return binderMapper.constructType(registeredType);
     }
-    JavaType targetType = binderMapper.constructType(registered.targetType());
-    try {
-      return binder.fromResource(checkedResource, targetType);
-    } catch (JsonApiMappingException ex) {
-      String message = ex.getMessage() != null ? ex.getMessage() : ex.diagnostic().name();
-      MappingLocation relative = ex.location();
-      MappingLocation composed =
-          relative == null ? documentPrefix : documentPrefix.append(relative);
-      throw new JsonApiMappingException(ex.diagnostic(), ex.resourceClass(), composed, message, ex);
+
+    @Override
+    public Class<?> rawClass(JavaType targetType) {
+      return targetType.getRawClass();
+    }
+
+    @Override
+    public String requireResourceTypeName(JavaType targetType) {
+      return metadataAuthority.requireResourceTypeName(targetType);
+    }
+
+    @Override
+    public Object bindResource(ResourceObject resource, JavaType targetType) {
+      return binder.fromResource(resource, targetType);
     }
   }
 }

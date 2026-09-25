@@ -67,6 +67,14 @@
  * that translation. Nested shape walking, effective native types, configured deserialization,
  * native failure-path extraction, and the single final bean construction remain adapter-owned.
  *
+ * <p>It owns backend-neutral typed-envelope document binding: eager registry coherence,
+ * primary-data dispatch including identifier pass-through, included-resource binding with identity
+ * aliasing and duplicate-identity rejection, document-prefix composition of binder failures, and
+ * {@code /meta} conversion-failure translation. Each backend reaches native target-type
+ * construction from the registered reflection type, configured resource-type name resolution, the
+ * raw diagnostic class, and per-resource binding through the thin {@link
+ * com.kazforge.jsonapi.mapping.internal.TypedEnvelopeBinder.Backend} native-mechanics boundary.
+ *
  * <p>It additionally owns the neutral {@link com.kazforge.jsonapi.mapping.internal.PropertyRole}
  * enum and the {@link com.kazforge.jsonapi.mapping.internal.SemanticProperty} value that adapters
  * compose into their own write and read mapping records: role, logical backend property identity,
@@ -103,12 +111,17 @@
  * declared {@link com.kazforge.jsonapi.mapping.internal.ReadRelationshipShape}, the configured
  * linkage-mapper invocation, and the declared identifier-meta conversion, keeping native
  * target/type resolution, mapper selection, and configured conversion adapter-owned while the
- * shared reader owns the neutral relationship and meta semantics and diagnostics. The low-level
- * PATCH binder reaches a thin {@link com.kazforge.jsonapi.mapping.internal.PatchResourceBackend}
- * boundary that supplies declared meta-target validation, identity and attribute/meta conversion,
- * and final relationship container coercion alongside the shared native linkage operations, keeping
- * native conversion adapter-owned while the shared binder owns the neutral PATCH phase order and
- * change assembly. The recursive structured engine reaches {@link
+ * shared reader owns the neutral relationship and meta semantics and diagnostics. The
+ * typed-envelope document binder reaches {@link
+ * com.kazforge.jsonapi.mapping.internal.TypedEnvelopeBinder.Backend} for native target-type
+ * construction, configured resource-type name resolution, and per-resource binding, keeping those
+ * mechanics adapter-owned while the shared binder owns registry coherence, primary-data dispatch,
+ * included identity handling, and document-prefix composition. The low-level PATCH binder reaches a
+ * thin {@link com.kazforge.jsonapi.mapping.internal.PatchResourceBackend} boundary that supplies
+ * declared meta-target validation, identity and attribute/meta conversion, and final relationship
+ * container coercion alongside the shared native linkage operations, keeping native conversion
+ * adapter-owned while the shared binder owns the neutral PATCH phase order and change assembly. The
+ * recursive structured engine reaches {@link
  * com.kazforge.jsonapi.mapping.internal.StructuredShapeBackend} for resolved shape facts and atomic
  * conversion, and the typed PATCH DTO orchestrator reaches {@link
  * com.kazforge.jsonapi.mapping.internal.TypedPatchBackend} for identity parsing, relationship
