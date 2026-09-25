@@ -41,12 +41,14 @@
   belong in each adapter's own tests. Do not introduce shared test orchestration, expected-outcome
   descriptors, scenario registries, or assertion frameworks.
 - Shared characterization contract specs under `com.kazforge.jsonapi.fixtures.contract` are the
-  sanctioned exception: abstract Spock specs asserting neutral Level-1 observable semantics,
-  executed on every adapter through adapter-supplied concrete subclasses that provide the
-  configured runtime only. Contract specs must not select scenarios, dispatch adapter-specific
-  calls, or encode adapter-local diagnostics or exception policies. New or shared observable
-  semantics for an extraction slice are first secured in a contract spec for that slice, before
-  ownership moves.
+  sanctioned exception: abstract Spock specs asserting backend-neutral observable semantics,
+  executed on every adapter through adapter-supplied concrete subclasses. Level-1 semantics are
+  observed through the configured runtime; extraction slices with no Level-1 entry point use a
+  narrow abstract hook whose subclass performs the native invocation and returns only neutral
+  observable results or failures. Contract specs must not select scenarios, dispatch
+  adapter-specific calls, or encode adapter-local diagnostics or exception policies. New or shared
+  observable semantics for an extraction slice are first secured in a contract spec for that slice,
+  before ownership moves.
 - Before changing shared fixtures or corpora, read the affected corpus/schema resource READMEs; those files own fixture-specific invariants.
 - Keep orthogonal concerns orthogonal: test semantic behavior through one representative entry
   point, and test overload/sink parity with representative data; do not cross-product both
@@ -151,9 +153,11 @@ behavior is expected.
   minimal observable behavior such as access counters when the behavior under test requires it.
   Those passive fixtures must not invoke adapter APIs, select scenarios, encode expected behavioral
   outcomes, or contain assertions. The characterization contract specs are the sanctioned shared
-  exception: they assert neutral Level-1 observable semantics against the runtime each adapter
+  exception: they assert backend-neutral observable semantics against the runtime each adapter
   supplies, and stay at the JSON:API member level (no member-ordering assertions, no backend
-  mechanics). Jackson-major-specific mechanism fixtures remain adapter-local.
+  mechanics). Extraction slices with no Level-1 entry point observe those semantics through a
+  narrow abstract hook whose adapter subclass performs the native invocation and returns only
+  neutral results or failures. Jackson-major-specific mechanism fixtures remain adapter-local.
 - Shared JSON/schema corpora are test input and inventory, not a behavioral oracle. Adapter-specific
   diagnostics, locations, policies, and expected decoded/mapped values belong in adapter-owned
   specifications.

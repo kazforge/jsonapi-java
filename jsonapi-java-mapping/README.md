@@ -37,6 +37,14 @@ package owns backend-neutral semantics for mapped resources:
   resource-relative JSON:API start location, paired with the same opaque property token, so the
   adapters share that translation while nested shape walking, effective native types, configured
   deserialization, and native failure-path extraction stay backend-owned.
+- **Typed-envelope document binding.** Eager registry coherence over every registration,
+  primary-data dispatch (absent, explicit null, single and collection resources, identifier
+  pass-through), included-resource binding with wire order, id/lid aliasing, and duplicate-identity
+  rejection, document-prefix composition of binder failures, and `/meta` conversion-failure
+  translation. Each backend supplies native target-type construction from the registered `Type`,
+  configured resource-type name resolution, the raw class used in diagnostics, and per-resource
+  binding through a thin `TypedEnvelopeBinder.Backend` boundary; native per-resource binding and
+  meta conversion stay adapter-owned.
 - **Low-level PATCH command orchestration.** Resource-type matching, required `id` identity that
   never falls back to `lid`, supplied-member lookup by JSON:API name, effective-deserialization
   bindability enforcement, `PatchChange` construction, and `PatchCommand` assembly. The phase order
@@ -117,8 +125,12 @@ wire-identifier parsing, lazy relationship-shape resolution (native target/type 
 mapper selection), configured linkage-mapper invocation, and declared identifier-meta conversion,
 while resource-type matching, identity-role selection, member presence and order, synthetic-input
 assembly, cardinality validation, direct-identifier copying, wrapper occurrence orchestration,
-resource/relationship meta binding, and the shared member diagnostics stay in the reader. The
-neutral relationship shape used by the reader and the low-level PATCH binder keeps native
+resource/relationship meta binding, and the shared member diagnostics stay in the reader. Typed
+envelope document binding reaches native target-type construction, configured resource-type name
+resolution, and per-resource binding through a `TypedEnvelopeBinder.Backend` bridge, while registry
+coherence, primary-data dispatch, included identity handling, binder-failure composition, and
+`/meta` conversion-failure translation stay in the binder. The neutral relationship shape used by
+the reader and the low-level PATCH binder keeps native
 specialization and configured conversion adapter-owned. The low-level PATCH binder reaches its
 native mechanics through a thin `PatchResourceBackend` boundary limited to declared meta-target
 validation, identity and attribute/meta conversion, final relationship container coercion, and the

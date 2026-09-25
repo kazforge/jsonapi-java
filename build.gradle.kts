@@ -16,15 +16,17 @@ sonar {
         // readers; configured-Jackson construction, property discovery, conversion, and module
         // bridges; and the adapter's document, resource, and PATCH operation coordinators. These
         // remain separately compiled to preserve native codec and mapper authority (ADR-022).
-        // Neutral mapping orchestration lives in jsonapi-java-mapping. Small codec utilities,
-        // property records, and thin public delegates participate in CPD; do not exclude packages.
+        // Neutral mapping orchestration lives in jsonapi-java-mapping. The paired public typed
+        // envelope types stay excluded because metaAs(JavaType) is Jackson-major. Small codec
+        // utilities, property records, and thin public delegates participate in CPD; do not exclude
+        // packages.
         // Paths must be repository-root-relative; module-relative `src/main/java/...` at project
         // level is deprecated by SonarCloud.
         property(
             "sonar.cpd.exclusions",
             """
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiDocumentReader.java,
-            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiDomainDocumentReader.java,
+            jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiDomainDocument.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiJackson2Assembly.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiPatchCommandReader.java,
             jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiPatchDtoReader.java,

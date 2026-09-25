@@ -7,15 +7,13 @@ import com.kazforge.jsonapi.core.model.Links;
 import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
-import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.mapping.DomainData;
 import com.kazforge.jsonapi.mapping.IncludedResources;
-import java.util.Collections;
-import java.util.LinkedHashMap;
+import com.kazforge.jsonapi.mapping.internal.TypedEnvelopeBinder;
+import com.kazforge.jsonapi.mapping.internal.TypedEnvelopeComponents;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -33,10 +31,10 @@ import org.jspecify.annotations.Nullable;
  */
 public final class JsonApiDomainDocument {
 
-  private final Components components;
+  private final TypedEnvelopeComponents components;
   private final MetaConverter metaConverter;
 
-  JsonApiDomainDocument(Components components, MetaConverter metaConverter) {
+  JsonApiDomainDocument(TypedEnvelopeComponents components, MetaConverter metaConverter) {
     this.components = Objects.requireNonNull(components, "components");
     this.metaConverter = Objects.requireNonNull(metaConverter, "metaConverter");
   }
@@ -85,7 +83,9 @@ public final class JsonApiDomainDocument {
    */
   public <T> @Nullable T metaAs(Class<T> targetType) {
     Objects.requireNonNull(targetType, "targetType");
-    Object converted = convertMeta(targetType, meta -> metaConverter.convert(meta, targetType));
+    Object converted =
+        TypedEnvelopeBinder.convertMeta(
+            components.meta(), targetType, meta -> metaConverter.convert(meta, targetType));
     if (converted == null) {
       return null;
     }
@@ -101,23 +101,8 @@ public final class JsonApiDomainDocument {
    */
   public @Nullable Object metaAs(JavaType targetType) {
     Objects.requireNonNull(targetType, "targetType");
-    return convertMeta(targetType, meta -> metaConverter.convert(meta, targetType));
-  }
-
-  private @Nullable Object convertMeta(Object targetType, Function<Meta, Object> conversion) {
-    if (components.meta() == null) {
-      return null;
-    }
-    try {
-      return conversion.apply(components.meta());
-    } catch (RuntimeException ex) {
-      throw new JsonApiMappingException(
-          MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE,
-          null,
-          MappingLocation.of("meta"),
-          "Failed to convert meta members to " + targetType,
-          ex);
-    }
+    return TypedEnvelopeBinder.convertMeta(
+        components.meta(), targetType, meta -> metaConverter.convert(meta, targetType));
   }
 
   /**
@@ -130,43 +115,5 @@ public final class JsonApiDomainDocument {
     Object convert(Meta meta, JavaType targetType);
 
     Object convert(Meta meta, Class<?> rawType);
-  }
-
-  /**
-   * Package-private document member payload with the same absence/null rules as {@link
-   * com.kazforge.jsonapi.core.model.JsonApiDocument}; the envelope copies and freezes it at
-   * construction.
-   */
-  record Components(
-      @Nullable DomainData data,
-      @Nullable List<ErrorObject> errors,
-      @Nullable Meta meta,
-      @Nullable JsonApiObject jsonapi,
-      @Nullable Links links,
-      @Nullable IncludedResources included,
-      Map<String, @Nullable Object> additionalMembers) {
-
-    Components(
-        @Nullable DomainData data,
-        @Nullable List<ErrorObject> errors,
-        @Nullable Meta meta,
-        @Nullable JsonApiObject jsonapi,
-        @Nullable Links links,
-        @Nullable IncludedResources included,
-        Map<String, @Nullable Object> additionalMembers) {
-      this.data = data;
-      this.errors = errors == null ? null : List.copyOf(errors);
-      this.meta = meta;
-      this.jsonapi = jsonapi;
-      this.links = links;
-      this.included = included;
-      this.additionalMembers = copyAdditionalMembers(additionalMembers);
-    }
-
-    private static Map<String, @Nullable Object> copyAdditionalMembers(
-        Map<String, @Nullable Object> members) {
-      return Collections.unmodifiableMap(
-          new LinkedHashMap<String, @Nullable Object>(Objects.requireNonNull(members, "members")));
-    }
   }
 }
