@@ -53,7 +53,8 @@ for cmd in curl jq; do
 done
 
 urlencode() {
-  jq -nr --arg v "$1" '$v|@uri'
+  local value="$1"
+  jq -nr --arg v "$value" '$v|@uri'
 }
 
 COMPONENT_KEY="kazemek_jsonapi-java"
