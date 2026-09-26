@@ -16,8 +16,7 @@
  * {@code ""} or {@code /}.
  *
  * <p>The families remain separate: successful document decoding followed by a domain-mapping
- * failure is not reclassified as a document-read failure. The current Jackson adapters produce
- * these backend-independent diagnostics; Jackson-specific decode mechanics stay adapter-local.
+ * failure is not reclassified as a document-read failure.
  */
 @NullMarked
 package com.kazforge.jsonapi.diagnostic;

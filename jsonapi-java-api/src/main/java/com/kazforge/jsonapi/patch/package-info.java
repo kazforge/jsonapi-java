@@ -13,9 +13,7 @@
  * element-addressed mutation protocols.
  *
  * <p>These values describe a requested change; they do not authorize it or mutate application
- * state. The application owns authorization, concurrency, persistence, and mutation semantics. The
- * current Jackson adapters populate these backend-independent values through caller-configured
- * Jackson conversion.
+ * state. The application owns authorization, concurrency, persistence, and mutation semantics.
  */
 @NullMarked
 package com.kazforge.jsonapi.patch;

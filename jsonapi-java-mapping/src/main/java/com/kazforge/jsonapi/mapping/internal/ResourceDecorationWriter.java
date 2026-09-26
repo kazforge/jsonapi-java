@@ -20,14 +20,14 @@ import org.jspecify.annotations.Nullable;
 /**
  * Backend-neutral additive link-decoration phase for domain writes.
  *
- * <p>It owns the decoration orchestration both Jackson adapters previously duplicated: exact lookup
- * of one {@link ResourceDecorator} by the already-resolved effective runtime raw class, decorator
- * failure/null translation, relationship target classification against the neutral write
- * definition, logical-name to JSON:API-name resolution, whole-value resource and relationship link
- * replacement, fieldset non-resurrection, and reconstruction that preserves every other member the
- * basic write produced. A non-null decoration {@link Links} value replaces the complete existing
- * resource or relationship links; members are never merged. Decoration never creates a relationship
- * that ordinary mapping did not emit.
+ * <p>It owns the decoration orchestration: exact lookup of one {@link ResourceDecorator} by the
+ * already-resolved effective runtime raw class, decorator failure/null translation, relationship
+ * target classification against the neutral write definition, logical-name to JSON:API-name
+ * resolution, whole-value resource and relationship link replacement, fieldset non-resurrection,
+ * and reconstruction that preserves every other member the basic write produced. A non-null
+ * decoration {@link Links} value replaces the complete existing resource or relationship links;
+ * members are never merged. Decoration never creates a relationship that ordinary mapping did not
+ * emit.
  *
  * <p>The effective-type resolution that yields {@code effectiveRawClass} stays at the adapter edge:
  * resolving it is a configured backend type operation with its own failure timing, and the adapter

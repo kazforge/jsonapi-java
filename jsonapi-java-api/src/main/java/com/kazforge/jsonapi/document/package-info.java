@@ -9,8 +9,7 @@
  *
  * <p>{@link com.kazforge.jsonapi.document.DocumentEnvelope} carries optional top-level write
  * members. A {@code null} component means absence, while a non-null empty value remains a present
- * empty object on the wire. These values carry document state only; the current Jackson adapters
- * supply the decode/encode mechanics through caller-configured Jackson.
+ * empty object on the wire. These values carry document state only.
  */
 @NullMarked
 package com.kazforge.jsonapi.document;
