@@ -15,7 +15,7 @@ Use ArchUnit as a `testImplementation`-only dependency where package or type bou
 executable enforcement. It is the repository-wide tool for those checks; do not replace it with
 source-import or classpath scanners, and never publish it as a runtime dependency.
 
-Architecture specifications enforce allowlists for the neutral Jackson API, the mapping
+Architecture specifications enforce allowlists for the neutral API, the mapping
 implementation namespace, each Jackson adapter,
 shared fixtures, and query parsing. In particular:
 
@@ -35,12 +35,9 @@ shared fixtures, and query parsing. In particular:
   semantics, executed through adapter-supplied concrete subclasses, depending only on Groovy, Spock,
   and the neutral packages the passive fixtures may use.
 
-The neutral API artifact owns no shared internal helper namespace: cross-artifact mapping helpers
-(identifier-meta copies, resource-type matching, and the supplied-PATCH marker) live in the mapping
-implementation namespace, and each adapter owns its own wire/codec helpers. The API allowlists and
-selectors therefore carry no production `com.kazforge.jsonapi.internal` namespace. Only the
-test-only signature-leak fixture uses that package, proving the supported-signature selector still
-detects an exposed internal type.
+The neutral API artifact owns no production shared internal helper namespace: cross-artifact mapping
+helpers live in the unsupported mapping implementation namespace, while native wire/codec helpers
+stay in each adapter. Supported signatures must not expose those implementation types.
 
 Core preserves its downward responsibility DAG: aggregate validation may depend on model, internal,
 and validation responsibilities; model may depend on internal and validation; internal may depend on

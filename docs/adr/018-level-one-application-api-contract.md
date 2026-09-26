@@ -3,10 +3,6 @@
 **Status:** Accepted
 **Date:** 2026-09-04
 
-The Level-1 operation contract remains accepted. [ADR-022](022-responsibility-based-mapping-and-native-wire-codecs.md)
-supersedes the former artifact and package ownership names below; the current contract lives in
-`jsonapi-java-api` under `com.kazforge.jsonapi.api`.
-
 ## Context
 
 The major-specific capability APIs provide explicit codec, mapping, binding, typed-envelope, and
@@ -15,8 +11,8 @@ pipeline phases, and framework contracts should not depend on either Jackson maj
 
 ## Decision
 
-`jsonapi-java-jackson-api` owns a narrow neutral operation contract in
-`com.kazforge.jsonapi.jackson.api`. Its `JsonApi` root exposes four facets:
+`jsonapi-java-api` owns a narrow neutral operation contract in
+`com.kazforge.jsonapi.api`. Its `JsonApi` root exposes four facets:
 
 - resources: strict homogeneous resource reads, single/collection writes, typed document results,
   and create/update document authoring;
@@ -40,8 +36,8 @@ The contract preserves these architectural boundaries:
 - configured Jackson owns property discovery, names, visibility, mix-ins, creators, and ordinary
   Java conversion;
 - `id` and `lid` are separate protocol roles with no fallback or persistence interpretation;
-- ordinary relationships follow [ADR-017](017-relationship-data-presence-in-domain-mapping.md):
-  emitted mapped relationships contain linkage, while links-only and meta-only forms stay advanced;
+- ordinary relationships follow [ADR-005](005-domain-mapping-and-inclusion.md): emitted mapped
+  relationships contain linkage, while links-only and meta-only forms stay at the document layer;
 - decoration only adds links to existing mapped resources and relationships;
 - representation selection is operation-scoped, policy is runtime/application-scoped, and
   sparse-fieldset provenance remains on `MappedDocument` for the writer to consume;
@@ -60,5 +56,5 @@ The contract preserves these architectural boundaries:
   relationship top-level members, and mechanism-level policy remain advanced.
 - Relationship helpers are linkage-only and cardinality-strict; they do not become graph hydration or
   general relationship-envelope APIs.
-- Focused Javadoc owns exact method, option/result, and diagnostic contracts; the Jackson API module
+- Focused Javadoc owns exact method, option/result, and diagnostic contracts; the neutral API module
   README provides capability, usage, and navigation context.
