@@ -44,36 +44,15 @@ capability from a caller-configured `JsonMapper`:
 | Heterogeneous typed documents | [`JsonApiDomainDocumentReader`](src/main/java/com/kazforge/jsonapi/jackson3/JsonApiDomainDocumentReader.java), [`JsonApiDomainDocument`](src/main/java/com/kazforge/jsonapi/jackson3/JsonApiDomainDocument.java) |
 | Presence-aware PATCH | [`JsonApiPatchCommandReader`](src/main/java/com/kazforge/jsonapi/jackson3/JsonApiPatchCommandReader.java), [`JsonApiPatchDtoReader`](src/main/java/com/kazforge/jsonapi/jackson3/JsonApiPatchDtoReader.java) |
 
-Advanced mapping accepts a complete Jackson `JavaType` when a parameterized root cannot be recovered
-from its runtime class. Typed documents use an explicit neutral `ResourceTypeRegistry`; included DTOs
-remain independently bound rather than being injected into relationships. Shared representation,
-meta, identifier, decoration contracts, and PATCH semantics are owned by
-[`jsonapi-java-api`](../jsonapi-java-api/README.md); backend-neutral compound-inclusion traversal and
-inclusion state, the basic and advanced resource write semantics for identity, attributes,
-ordinary and advanced relationship linkage, fieldsets, relationship-member assembly,
-resource/relationship/identifier meta application, and additive resource/relationship link
-decoration, and the basic and advanced resource read semantics for resource-type matching,
-identity-role selection, attribute/relationship presence and order, synthetic-input assembly
-preserving absent-versus-explicit-null, relationship cardinality, null/empty short-circuiting,
-direct-identifier copying, `RelationshipLinkage` occurrence pairing, resource/relationship meta
-binding, top-level construction-start backend-name to JSON:API location translation, and
-backend-neutral low-level `PatchCommand` orchestration (required `id` identity, supplied-member
-classification, effective-deserialization bindability enforcement, change construction, and the
-contract phase order, sharing relationship-linkage orchestration with reads), and the
-backend-neutral recursive structured-value engine and typed `PatchPresence<T>` DTO contract phase
-order, are owned by [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). This adapter
-supplies the native
-capability bridges over configured Jackson, including declared write relationship-shape and target
-resolution, lazy read relationship-shape resolution with configured linkage-mapper selection and
-invocation, property-scoped whole-meta and declared-type identifier-meta conversion, the
-effective-type resolution that decoration looks up, configured wire-identifier parsing,
-effective deserialization property discovery, nested construction-path walking, native
-failure-path extraction, declared meta-target validation against effective inbound PATCH property
-types, identity and attribute/meta conversion, configured structured-shape introspection and
-caching, native atomic conversion, typed relationship conversion and identity parsing, single bean
-construction, final relationship
-container coercion, and the configured decoration registry. Public
-Javadocs and the linked ADRs own the remaining details rather than repeated here.
+Use them when Level 1 is not enough, for example a parameterized root `JavaType`, heterogeneous
+typed envelopes over an explicit `ResourceTypeRegistry`, or direct codec and mapping composition.
+Each type's Javadoc owns its contract.
+
+Neutral contracts come from [`jsonapi-java-api`](../jsonapi-java-api/README.md) and backend-neutral
+mapping semantics from [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). This adapter
+implements their capability interfaces over configured Jackson 3: property and type discovery,
+naming, conversion, construction, and native diagnostics. The
+[architecture overview](../docs/architecture.md) owns that split.
 
 ## Jackson 3 boundary
 

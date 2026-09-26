@@ -16,18 +16,10 @@ runtime.
 | [`com.kazforge.jsonapi.representation`](src/main/java/com/kazforge/jsonapi/representation/package-info.java) | Include/fieldset selection and application policy |
 | [`com.kazforge.jsonapi.diagnostic`](src/main/java/com/kazforge/jsonapi/diagnostic/package-info.java) | Stable codec/mapping diagnostics and locations |
 
-Supported packages above are backend-independent contract/value shapes: logical application
-properties, JSON:API member names, document envelopes, selections, and diagnostics. The current
-Jackson 2 and Jackson 3 adapters derive observable property semantics through caller-configured
-Jackson (discovery, visibility, external names, construction, and conversion), and native
-type/property handles, introspection, naming, serializers, deserializers, parser/generator
-mechanics, and wire codecs remain adapter-owned. Backend-neutral compound-inclusion traversal,
-inclusion bookkeeping, basic and advanced relationship write normalization, relationship-member
-assembly, resource/relationship/identifier meta application, additive resource/relationship link
-decoration, mapping roles, and
-per-property naming metadata are owned by
-[`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). `id` and `lid` stay invariant JSON:API
-role names.
+Each package's documentation owns its invariants. The packages carry backend-independent contract
+and value shapes only: configured Jackson in each adapter derives the observable property
+semantics, and backend-neutral mapping implementation lives in the unsupported
+[`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) module.
 
 ## Level-1 contract
 
@@ -46,20 +38,10 @@ major-specific readers, writers, mapping/binding, parameterized Jackson types, a
 typed envelopes remain adapter capabilities. [ADR-018](../docs/adr/018-level-one-application-api-contract.md)
 owns that split.
 
-## Neutral contract boundaries
+## Boundary
 
 - No production signature imports `tools.jackson.*`, `com.fasterxml.jackson.*`, or a major-specific
   adapter package.
-- `DocumentReadContext` keeps primary-data decoding kind separate from endpoint role.
-- `RepresentationSelection` is operation-scoped; `RepresentationPolicy` is application/runtime
-  configuration and is not complete authorization.
-- `MappedDocument` carries sparse-fieldset provenance for the writer; callers do not translate it
-  into validation policy.
-- `PatchPresence.Present(null)` means explicit null, not omission. `PatchCommand` contains supplied
-  changes only, and an empty `StructuredPatch` is a supplied empty object rather than clear-all.
-- `RelationshipLinkage<T, M>` is the opt-in carrier for per-identifier meta.
-- Core validation, document-read, and mapping diagnostics remain separate families. Mapping
-  locations are absent or valid escaped JSON Pointers.
 - This artifact ships only supported contract packages. Cross-artifact mapping helpers live in
   `jsonapi-java-mapping`'s unsupported internal namespace, and native wire/codec helpers stay in
   each adapter's internal package; neither may appear in supported public signatures per
@@ -67,20 +49,13 @@ owns that split.
 
 ## Shared test fixtures
 
-The `java-test-fixtures` variant owns passive, major-neutral application-shaped DTOs, the
+The `java-test-fixtures` variant provides passive, major-neutral application-shaped DTOs, the
 [canonical JSON corpus](src/testFixtures/resources/jsonapi/corpus/1.1/README.md),
-[pinned draft schemas](src/testFixtures/resources/jsonapi/schema/vendor/1.1-pr1603/README.md), and the
-neutral `TestFixtureResources` loader. Behavioral expectations and assertions remain in each
-adapter's tests; this module provides no scenario registry or shared test orchestration.
-
-The `com.kazforge.jsonapi.fixtures.contract` fixtures own the shared characterization contract
-specs: abstract Spock specs asserting neutral Level-1 observable semantics that every adapter runs
-through a concrete subclass supplying its configured runtime only. Contract specs stay at the
-JSON:API member level and never freeze JSON object member ordering; fixture carriers there may use
-Jackson-major-neutral annotations such as `@JsonProperty` purely as test mechanics, which are not
-part of the backend-neutral contract and must not constrain future non-Jackson backends. New or
-shared observable semantics for an extraction slice are first secured in a contract spec for that
-slice, before ownership moves.
+[pinned draft schemas](src/testFixtures/resources/jsonapi/schema/vendor/1.1-pr1603/README.md), the
+neutral `TestFixtureResources` loader, and the shared characterization contract specs in
+[`com.kazforge.jsonapi.fixtures.contract`](src/testFixtures/java/com/kazforge/jsonapi/fixtures/contract/package-info.java),
+which every adapter runs through a concrete subclass. [`AGENTS.md`](../AGENTS.md) owns the fixture
+and contract-spec policy.
 
 See the [architecture overview](../docs/architecture.md) and
 [conformance checklist](../docs/conformance.md).

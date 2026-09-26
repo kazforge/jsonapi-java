@@ -3,9 +3,7 @@
  * framework integrations.
  *
  * <p>{@link com.kazforge.jsonapi.api.JsonApi} is the Level-1 application entry point for ordinary
- * resource, relationship, document, and PATCH operations. Major-specific adapters retain the
- * advanced APIs for Jackson-native types, mapper and module setup, heterogeneous binding, and
- * explicit codec or mapping composition.
+ * resource, relationship, document, and PATCH operations.
  *
  * <p>Supporting contracts are grouped by responsibility: document context and envelopes in {@code
  * document}, domain mapping in {@code mapping}, requested changes in {@code patch}, output shaping

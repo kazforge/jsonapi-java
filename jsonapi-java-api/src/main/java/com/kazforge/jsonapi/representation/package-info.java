@@ -6,8 +6,7 @@
  * explicitly supplied. A {@link com.kazforge.jsonapi.representation.RepresentationPolicy} is
  * application/runtime configuration that permits and bounds those requests. A selection does not
  * grant permission or override policy, and representation policy is not a substitute for endpoint,
- * resource, or field authorization. Selection and policy carry JSON:API member names; the current
- * Jackson adapters resolve them through caller-configured Jackson external names.
+ * resource, or field authorization. Selection and policy carry JSON:API member names.
  */
 @NullMarked
 package com.kazforge.jsonapi.representation;

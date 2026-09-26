@@ -210,12 +210,11 @@ public final class BasicResourceWriter<T, P> {
 
   /**
    * Normalizes one advanced relationship value into core linkage, owning the runtime normalization
-   * and core-model decisions both adapters previously duplicated: one outer {@link Optional},
-   * {@link List}, object-array, and {@link Iterable} materialization, null/empty linkage states,
-   * direct {@link ResourceIdentifier} pass-through, direct to-one {@link RelationshipData}
-   * pass-through, ordinary target linkage, {@link RelationshipLinkage} target recursion,
-   * per-occurrence ordering, null-item skipping, and direct-identifier/domain-object mixed-value
-   * rejection.
+   * and core-model decisions: one outer {@link Optional}, {@link List}, object-array, and {@link
+   * Iterable} materialization, null/empty linkage states, direct {@link ResourceIdentifier}
+   * pass-through, direct to-one {@link RelationshipData} pass-through, ordinary target linkage,
+   * {@link RelationshipLinkage} target recursion, per-occurrence ordering, null-item skipping, and
+   * direct-identifier/domain-object mixed-value rejection.
    *
    * <p>Declared cardinality and backend-native type tokens come from the {@link RelationshipShape}
    * and stay opaque. The ordinary target token is never resolved or validated eagerly: the

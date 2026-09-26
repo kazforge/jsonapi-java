@@ -12,7 +12,20 @@ import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/** Shared Level-1 primary-data shape policy for resource and relationship-linkage documents. */
+/**
+ * Shared Level-1 primary-data shape policy for resource and relationship-linkage documents.
+ *
+ * <p>The policy is strict: single-resource and resource-collection reads accept only their own
+ * primary-data form, a to-one linkage read accepts a single identifier or explicit {@code null},
+ * and a to-many linkage read accepts only an identifier collection; one form is never coerced into
+ * another. Every mismatch reports {@link MappingDiagnostic#RESOURCE_TYPE_MISMATCH} at {@code /data}
+ * with a message describing the found primary data (absent, explicit null, single resource,
+ * resource collection, single identifier, identifier collection, or an error document). It also
+ * assembles the data-only linkage documents that Level-1 relationship writes emit.
+ *
+ * <p>This type is unsupported implementation detail for backend cooperation, not consumer SPI, and
+ * must not appear in supported backend public signatures.
+ */
 public final class PrimaryDataShape {
 
   private static final MappingLocation DATA_LOCATION = MappingLocation.of("data");
