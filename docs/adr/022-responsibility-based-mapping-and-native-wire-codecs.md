@@ -5,23 +5,23 @@
 
 ## Context
 
-Jackson 2 and Jackson 3 implement the same JSON:API operations, but duplicating inclusion,
-resource-write/read, and PATCH orchestration invites semantic drift. Sharing those rules does not
-require sharing Jackson's property model or the mechanics of reading and writing JSON tokens. The
-post-extraction wire review found that the adapter-local token codecs preserve observable behavior
-that a tree-first or generic neutral JSON representation would have to reproduce: duplicate-member
-classification, source locations and pointers, caller-owned parser sequencing, unknown-member
-handling, and native scalar fidelity.
+Jackson 2 and Jackson 3 implement the same JSON:API operations, but duplicating mapping decisions
+invites semantic drift. Sharing those rules does not require sharing Jackson's property model or the
+mechanics of reading and writing JSON tokens. Adapter-local token codecs preserve observable
+behavior that a tree-first or generic neutral JSON representation would have to reproduce:
+duplicate-member classification, source locations and pointers, caller-owned parser sequencing,
+unknown-member handling, and native scalar fidelity.
 
 ## Decision
 
 - `jsonapi-java-core` remains the canonical document model and validation authority.
   `jsonapi-java-api` provides supported backend-neutral application contracts and values without
   Jackson-major production imports; it is not a standalone codec or mapping runtime.
-- The published `jsonapi-java-mapping` artifact owns backend-neutral inclusion, resource-write and
-  resource-read, decoration, low-level and typed PATCH, and structured-value orchestration, plus
-  semantic mapping metadata. Its `com.kazforge.jsonapi.mapping.internal` package is Java-public for
-  cross-artifact cooperation only, not supported consumer API or an application extension SPI.
+- The published `jsonapi-java-mapping` artifact owns backend-neutral mapping policy and orchestration,
+  including inclusion, resource read/write and decoration, typed-envelope binding, PATCH projections,
+  recursive structured changes, Level-1 primary-data shapes, and mapping-definition invariants. Its
+  `com.kazforge.jsonapi.mapping.internal` package is Java-public for cross-artifact cooperation only,
+  not supported consumer API or an application extension SPI.
   Narrow internal backend capabilities supply native facts and operations without creating a
   general-purpose mapper, parser, or JSON intermediate representation.
 - Each native-major adapter owns configured property/type authority, introspection, native
@@ -42,22 +42,3 @@ handling, and native scalar fidelity.
   intentional. Adapters retain direct dependencies on API, annotations, and core.
 - Some native codec code remains intentionally separate across majors; a shared JSON IR is not a
   prerequisite for semantic parity.
-
-## Relation to earlier decisions
-
-This decision partially supersedes [ADR-007](007-module-boundaries.md) and
-[ADR-018](018-level-one-application-api-contract.md): their former
-`jsonapi-java-jackson-api` artifact and `com.kazforge.jsonapi.jackson.api` Level-1 package ownership
-are replaced by `jsonapi-java-api` and `com.kazforge.jsonapi.api`. ADR-007's original module list
-did not include `jsonapi-java-mapping` or the backend → mapping → API dependency edge; those now
-apply. Its core, annotations, query, framework isolation, and separately compiled native-major
-adapters remain valid, as do ADR-018's Level-1 facets and neutral signature boundary.
-
-This decision also partially supersedes [ADR-019](019-jackson-neutral-implementation-helpers.md):
-its no-new-artifact, unchanged-dependency-direction, and adapter-owned inclusion, read, write, and
-PATCH orchestration conclusions no longer describe production. Its unsupported internal-helper
-boundary and adapter ownership of native Jackson mechanics still apply.
-[ADR-004](004-jackson-integration.md) remains authoritative for configured-Jackson property
-introspection and explicit document codecs; its decision is not displaced by shared neutral mapping
-orchestration. [ADR-005](005-domain-mapping-and-inclusion.md) retains the separation of linkage from
-inclusion.

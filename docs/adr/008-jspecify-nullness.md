@@ -18,8 +18,6 @@ Competing annotation sets (JSR-305, JetBrains, Checker Framework) fragment tooli
 - Keep runtime construction checks; annotations document contracts, they do not replace them.
 - Depend on `org.jspecify:jspecify` as **`compileOnly`** in the shared library convention plugin so published core artifacts remain free of third-party runtime dependencies. CLASS-retention metadata stays in bytecode.
 - Enforce nullness on Java `main` sources with Error Prone and NullAway (JSpecify mode) for packages under `com.kazforge.jsonapi`. Do not require Groovy/Spock test sources to be annotated.
-- Keep agent guidance in this ADR, `AGENTS.md`, package documentation, and focused workflow skills.
-  Do not add editor-specific rules or a dedicated JSpecify skill.
 
 ## Consequences
 
@@ -27,4 +25,3 @@ Competing annotation sets (JSR-305, JetBrains, Checker Framework) fragment tooli
 - NullAway fails `./gradlew clean build` when annotated contracts are violated in main sources.
 - Vision “no third-party runtime dependencies” for core still holds: JSpecify is compile-only and not required on the consumer runtime classpath.
 - New production packages must ship `@NullMarked` package-info and follow this policy.
-- Future modules inherit the same convention plugin wiring when they apply `jsonapi-java-library`.
