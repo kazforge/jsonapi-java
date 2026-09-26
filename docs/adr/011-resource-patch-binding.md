@@ -1,52 +1,54 @@
-# ADR-011: Resource PATCH Produces Presence-Aware Commands
+# ADR-011: Presence-Aware Resource PATCH Binding
 
-**Status:** Accepted  
+**Status:** Accepted
 **Date:** 2026-07-30
 
 ## Context
 
-JSON:API resource updates use HTTP `PATCH`, but they are not JSON Merge Patch (RFC 7386). The
-request primary data must be one resource object with `type` and `id`. Omitted attributes and
-relationships retain their current values, while a supplied relationship must contain `data` and
-replaces the relationship linkage.
-
-A normal DTO instance cannot reliably represent this contract. An omitted property and an
-explicit JSON `null` often both become Java `null`, and immutable records may require constructor
-values for properties absent from the update. Applying changes directly would also make the
-library responsible for authorization, mutation, persistence, and application invariants.
+JSON:API resource updates are not JSON Merge Patch. An omitted member is not an explicit null, and
+constructing a complete DTO from a partial update can fabricate values for immutable objects.
+Applying updates directly would also take on authorization, mutation, and persistence policy.
+Nested structured values require the same presence distinction without making relationship linkage
+an object-graph mutation protocol.
 
 ## Decision
 
-Add a core update-request validation usage and an optional Jackson domain-binding layer that
-produces an immutable presence-aware patch command parameterized by the annotated DTO type.
+Validate an update document before either PATCH projection: primary `data` must be one resource
+object with `type` and `id`, not absent, null, an identifier, or a collection. The caller may supply
+an expected endpoint identity. Omitted attributes and relationships request no change; a supplied
+relationship requires `data` and replaces the whole linkage, distinguishing null, single, and empty
+or populated collections. Neither projection reads `included` or applies changes to application
+state. Identity comes from `id`, never `lid`.
 
-The core update contract:
+Offer two projections of the validated update:
 
-- requires `data` to be a single resource object with non-null `type` and `id`;
-- rejects absent data, `data: null`, resource collections, and resource-identifier primary data;
-- treats omitted `attributes` and `relationships` as no requested changes;
-- preserves missing attribute keys versus present keys whose value is JSON `null`;
-- requires every supplied relationship object to contain `data`;
-- preserves explicit null, single, empty collection, and non-empty collection relationship
-  linkage; and
-- can compare the document resource identity with an expected endpoint identity supplied by the
-  caller.
+- The low-level `PatchCommand` contains only supplied mapped changes. It skips unknown members but
+  rejects a supplied mapped member without an effective Jackson deserialization target. Resource
+  and relationship meta have location-specific change variants; relationship meta participates only
+  alongside supplied relationship `data`.
+- The opt-in typed PATCH DTO uses an application-owned annotated schema whose patchable properties
+  are `PatchPresence<T>`: omitted, present null, or present value. Its identity is unwrapped. It
+  rejects unknown supplied members and invalid presence-wrapper declarations rather than projecting
+  through a normal read/write DTO. Configured Jackson owns construction and inner-value conversion;
+  an inner `Optional<T>` does not erase outer presence.
 
-Jackson binding uses ADR-010 mapping definitions to convert only supplied attributes and
-relationship linkage into typed property changes. The command exposes presence explicitly and
-does not construct a complete DTO, resolve `included`, or mutate an existing object.
+For traversable structured attributes and resource-side meta, represent supplied nested members as
+`StructuredPatch` with `StructuredMember` entries retaining configured wire name, logical property
+name, and atomic or nested state. A supplied empty object is not a clear-all. Typed recursion is
+opt-in through all-presence-aware nested shapes and rejects unknown members; low-level recursion
+traverses ordinary beans and skips unknown members. Scalars, custom atomic values, lists, sets,
+arrays, and maps replace as whole values. Nested null follows declared conversion (and fails for
+primitives); it is never a generic remove operation. Configured property-scoped conversion can keep
+an otherwise bean-shaped value atomic. Outer attributes may be null, but object-valued meta may
+not. Relationships remain atomic linkage replacements, including identifier meta carried by that
+linkage ([ADR-014](014-flat-whole-object-meta-mapping.md)).
 
-Resource links, metadata, extension/profile members, and included resources remain available
-through the validated/domain envelope but are not patchable DTO properties in the initial
-contract. Applications own authorization, business validation, relationship mutation, and
-application of the command.
+Backend-neutral orchestration is shared; native shape discovery, conversion, and DTO construction
+remain with each adapter ([ADR-022](022-responsibility-based-mapping-and-native-wire-codecs.md)).
 
 ## Consequences
 
-- Omitted values cannot accidentally clear existing state.
-- Explicit attribute null and null/empty relationship replacement remain observable.
-- Record and immutable DTO mappings do not require fabricated constructor defaults.
-- Endpoint adapters can reject body/URL identity mismatches before application logic.
-- Applications must deliberately translate an accepted command into domain mutations.
-- Supporting direct object mutation or additional patchable member classes would require a later
-  decision and implementation plan.
+- Omission, explicit null, supplied empty objects, and relationship replacement stay observable.
+- Typed PATCH DTOs are distinct from ordinary read/write DTOs; strict typed versus permissive
+  low-level unknown-member handling is deliberate.
+- Applications authorize, validate business invariants, and apply either projection themselves.

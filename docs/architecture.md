@@ -164,26 +164,18 @@ owns that boundary.
 
 Adapters are constructed from configured mapper instances and never mutate the caller's mapper.
 They may derive isolated internal mappers when a capability requires adapter modules or separate
-introspection state; that does not create another public construction model. See
-[ADR-004](adr/004-jackson-integration.md) and
-[ADR-015](adr/015-jackson-adapter-construction.md).
+introspection state. See [ADR-004](adr/004-jackson-integration.md).
 
 Ordinary mapped relationships always carry `data`; links-only and meta-only forms remain available
-through the core/document path. Resource meta, relationship meta, and identifier meta remain distinct
-locations. Identifier meta uses opt-in `RelationshipLinkage<T, M>` and changes only with whole-linkage
-replacement. See [ADR-014](adr/014-flat-whole-object-meta-mapping.md),
-[ADR-016](adr/016-resource-identifier-meta-mapping.md), and
-[ADR-017](adr/017-relationship-data-presence-in-domain-mapping.md).
+through the core/document path ([ADR-005](adr/005-domain-mapping-and-inclusion.md)). Resource meta,
+relationship meta, and identifier meta remain distinct locations. Identifier meta uses opt-in
+`RelationshipLinkage<T, M>` and changes only with whole-linkage replacement
+([ADR-014](adr/014-flat-whole-object-meta-mapping.md)).
 
 Low-level `PatchCommand` and typed `PatchPresence<T>` DTOs are two projections of a validated update
-document. Backend-neutral low-level command orchestration, recursive structured-value binding, and
-the typed DTO contract phase order live in `jsonapi-java-mapping` behind each adapter's
-`PatchResourceBackend`, `StructuredShapeBackend`, and `TypedPatchBackend` bridges; the typed DTO
-projection itself remains the adapter's serialization-oriented mapping, while native identity
-parsing, relationship conversion, configured shape introspection, and the single bean construction
-stay adapter-owned. Both paths preserve omission versus explicit null; applications authorize and
-apply the result. Recursive structured changes and atomic-container boundaries are owned by
-[ADR-013](adr/013-recursive-structured-value-patch-semantics.md).
+document. Both preserve omission versus explicit null; applications authorize and apply the result.
+Recursive structured changes and atomic-container boundaries are owned by
+[ADR-011](adr/011-resource-patch-binding.md).
 
 ## Diagnostics
 

@@ -1,4 +1,4 @@
-# ADR-004: Jackson Introspection Is Authoritative
+# ADR-004: Configured Jackson Is the Mapping Authority
 
 **Status:** Accepted  
 **Date:** 2026-07-26  
@@ -10,7 +10,7 @@ Document envelopes such as links and metadata also do not have the default recor
 
 ## Decision
 
-JSON:API annotations assign semantic roles. Configured Jackson owns property discovery, visibility, external naming, mix-ins, serializers/deserializers, creators, and other property mechanics.
+JSON:API annotations assign semantic roles. The caller-configured Jackson mapper owns property discovery, visibility, external naming, mix-ins, serializers/deserializers, creators, and other property mechanics. Adapter factories take a configured mapper instance and capability-specific collaborators, never mutate the caller's mapper, and may derive isolated internal mappers for capability-specific needs. Builder overloads that merely build a mapper are not a second construction model.
 
 Use Jackson's introspection and logical property model for domain mapping. Do not establish independent field-first or getter-first discovery. Do not give JSON:API annotations a second member-name override; `@JsonApiAttribute` and `@JsonApiRelationship` are role markers only. A Jackson-visible property participates only when it has an appropriate JSON:API role, except for the conventional identifier: a Jackson-visible property whose configured Jackson external name is `id` is the sole intentional implicit JSON:API property-role convention. Otherwise-unclassified properties do not become attributes.
 
@@ -23,15 +23,18 @@ Implement explicit codecs for JSON:API document structures, including:
 - sealed primary and relationship linkage;
 - string and object links;
 - additional members;
-- strict validation during reads.
+- construction and validation of decoded core documents before optional application binding.
 
 Jackson ignores, names, mix-ins, serializers, and creator metadata remain authoritative for participating properties.
+Capability contexts remain distinct: the neutral `ResourceTypeRegistry` registers wire resource types
+against `java.lang.reflect.Type`, which the consuming adapter resolves with its configured mapper.
+Jackson 2 and Jackson 3 have semantic capability parity through native mapper types, not identical
+convenience-overload inventories.
 
 ## Consequences
 
 - Domain mapping follows familiar Jackson behavior for naming, visibility, mix-ins, and conversion.
-- There is exactly one authority for property names: configured Jackson.
+- There is exactly one authority for property names and conversion: configured Jackson.
 - Record annotation propagation is resolved as one logical property.
 - The Jackson module is more than a default record serializer.
-- Exact wire fixtures are required before the core API is considered stable.
 - Supporting a Jackson feature means proving it with an integration test, not assuming reflection preserves it.

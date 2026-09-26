@@ -10,12 +10,18 @@ Treating graph hydration as the inverse of serialization would hide these unreso
 
 ## Decision
 
-Initial read support decodes JSON into the document model and validates it. It does not automatically hydrate annotated domain object graphs.
+Document reads decode JSON into the core document model and validate it before optional application
+binding. Applications may consume resource objects, identifiers, relationships, and errors directly.
+Ordinary flat DTO binding uses Jackson's effective deserialization property model: only mapped,
+deserializable members participate (plus the conventional `id` property). A supplied mapped member
+without an effective deserialization target fails at its JSON:API wire location rather than being
+silently discarded. Relationship properties bind linkage, never hydrated `included` resources.
 
-Applications may consume resource objects, identifiers, relationships, and errors directly.
-[ADR-010](010-flat-dto-read-binding.md) adds document-first flat DTO binding and independently
-bound included resources without graph hydration. [ADR-011](011-resource-patch-binding.md) adds
-presence-aware update commands without applying them to domain state.
+Typed envelopes preserve primary-data shape and bind included resources independently through an
+explicit resource-type registry; an unregistered included type fails rather than being guessed.
+Neither path resolves arbitrary annotated domain graphs or performs persistence lookup, identity-map
+mutation, or cycle resolution. Presence-aware updates remain separate from complete DTO binding
+([ADR-011](011-resource-patch-binding.md)).
 
 The codec remains capable of reading request and response document shapes; this decision limits the target Java representation, not JSON:API wire coverage.
 
@@ -23,6 +29,5 @@ The codec remains capable of reading request and response document shapes; this 
 
 - Deserialization has a clear, achievable contract.
 - Linkage-only documents do not fabricate domain instances.
-- Request validation can ship before a domain hydration system.
+- Flat DTO reads remain useful without turning `included` into an implicit graph-binding policy.
 - Users wanting graph binding still need policy-aware application mapping.
-- Flat DTO serialization/deserialization may be symmetric while graph hydration remains excluded.
