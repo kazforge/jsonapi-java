@@ -5,6 +5,7 @@ import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class ResourceTypeRegistrySpec extends Specification {
 
@@ -30,15 +31,22 @@ class ResourceTypeRegistrySpec extends Specification {
     thrown(UnsupportedOperationException)
   }
 
-  def "rejects invalid and duplicate wire types without a location"() {
+  @Unroll
+  def "rejects explicit wire type #wireType as invalid without a location"() {
     when:
-    ResourceTypeRegistry.builder().register("bad/type", String).build()
+    ResourceTypeRegistry.builder().register(wireType, Object).build()
 
     then:
     def invalid = thrown(JsonApiMappingException)
     invalid.diagnostic() == MappingDiagnostic.INVALID_RESOURCE_TYPE
+    invalid.resourceClass() == Object
     invalid.location() == null
 
+    where:
+    wireType << ["", "bad/type"]
+  }
+
+  def "rejects duplicate wire types without a location"() {
     when:
     ResourceTypeRegistry.builder()
         .register("articles", String)
