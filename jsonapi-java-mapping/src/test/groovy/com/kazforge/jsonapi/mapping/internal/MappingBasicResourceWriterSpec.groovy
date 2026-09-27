@@ -195,7 +195,7 @@ class MappingBasicResourceWriterSpec extends Specification {
     failure.message == 'Fieldset field denied for articles.title'
   }
 
-  def "an unknown fieldset field takes precedence over field-policy denial"() {
+  def "reports the first fieldset validation failure in input order"() {
     given:
     backend.define('articles', property(ID, 'id', 'id', 'id'), property(ATTRIBUTE, 'title', 'title', 'title'))
 
@@ -205,6 +205,13 @@ class MappingBasicResourceWriterSpec extends Specification {
     then:
     def failure = thrown(JsonApiMappingException)
     failure.diagnostic() == MappingDiagnostic.INVALID_FIELDSET_FIELD
+
+    when:
+    writer.validateFieldset(domain([:]), 'articles', ['title', 'unknown'], FieldPolicy.denyAll())
+
+    then:
+    def denied = thrown(JsonApiMappingException)
+    denied.diagnostic() == MappingDiagnostic.DENIED_FIELDSET_FIELD
   }
 
   def "a renamed relationship accepts only its JSON:API member name in a fieldset"() {
