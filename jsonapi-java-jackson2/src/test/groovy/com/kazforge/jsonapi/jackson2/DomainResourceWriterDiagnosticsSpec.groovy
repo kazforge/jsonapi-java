@@ -6,7 +6,6 @@ import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMapMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.AuthorIdMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.AuthorMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.WholeMetaTargetFixtures
 import com.kazforge.jsonapi.fixtures.domainwrite.WriteDiagnosticsFixtures
 import spock.lang.Specification
