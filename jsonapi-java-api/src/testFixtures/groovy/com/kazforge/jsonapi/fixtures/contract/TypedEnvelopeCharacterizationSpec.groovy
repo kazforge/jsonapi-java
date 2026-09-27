@@ -393,6 +393,37 @@ abstract class TypedEnvelopeCharacterizationSpec extends Specification {
     included.propertyPath() == "/included/1/attributes/title"
   }
 
+  def "nested resource-local locations join under the document prefix"() {
+    given:
+    def json = '{"data":{"type":"loc-nested","id":"1","attributes":{"address":{"city":"oops"}}}}'
+
+    when:
+    bind(
+        api().documents().read(json, DocumentReadContext.resourceDefaults()),
+        types(NestedLocationArticle))
+
+    then:
+    def failure = thrown(JsonApiMappingException)
+    failure.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    failure.propertyPath() == "/data/attributes/address/city"
+  }
+
+  def "renamed wire members report the JSON:API name under the document prefix"() {
+    given:
+    def json = '{"data":{"type":"loc-renamed","id":"1","attributes":{"headline":"oops"}}}'
+
+    when:
+    bind(
+        api().documents().read(json, DocumentReadContext.resourceDefaults()),
+        types(RenamedLocationArticle))
+
+    then:
+    def failure = thrown(JsonApiMappingException)
+    failure.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    // Wire coordinate headline; the Jackson/logical property name title must not leak.
+    failure.propertyPath() == "/data/attributes/headline"
+  }
+
   def "locationless binder failures report only the document prefix"() {
     when:
     bind(read("envelope-binding/root-level-failure.json"), types(FlatThrowingArticle))
