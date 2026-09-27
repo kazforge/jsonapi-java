@@ -5,6 +5,9 @@ import com.kazforge.jsonapi.api.JsonApi
 import com.kazforge.jsonapi.core.model.Attributes
 import com.kazforge.jsonapi.core.model.DocumentData
 import com.kazforge.jsonapi.core.model.JsonApiDocument
+import com.kazforge.jsonapi.core.model.Relationship
+import com.kazforge.jsonapi.core.model.RelationshipData
+import com.kazforge.jsonapi.core.model.Relationships
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.model.ResourceObject
@@ -14,6 +17,7 @@ import com.kazforge.jsonapi.document.DocumentReadContext
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
 import com.kazforge.jsonapi.fixtures.domainwrite.Person
+import com.kazforge.jsonapi.fixtures.enveloperead.FlatNode
 import com.kazforge.jsonapi.fixtures.enveloperead.FlatStrictArticle
 import com.kazforge.jsonapi.fixtures.enveloperead.FlatThrowingArticle
 import com.kazforge.jsonapi.mapping.DomainData
@@ -151,6 +155,31 @@ abstract class TypedEnvelopeCharacterizationSpec extends Specification {
         ])
   }
 
+  def "heterogeneous primary-data collections bind each registered DTO type"() {
+    when:
+    def envelope =
+        bind(read("envelope-binding/heterogeneous-collection.json"), types(FlatArticle, Person))
+
+    then:
+    envelope.data() ==
+        new DomainData.ResourceCollection([
+          new FlatArticle("1", "First", null, null, null),
+          new Person("9", "Dan")
+        ])
+  }
+
+  def "cyclic included linkage binds both directions"() {
+    when:
+    def envelope = bind(read("envelope-binding/cyclic-linkage.json"), types(FlatNode))
+
+    then:
+    envelope.data() ==
+        new DomainData.SingleResource(new FlatNode("1", ResourceIdentifier.of("nodes", "2")))
+    envelope.included().resources() == [
+      new FlatNode("2", ResourceIdentifier.of("nodes", "1"))
+    ]
+  }
+
   def "single identifier primary data never binds"() {
     when:
     def envelope =
@@ -223,6 +252,49 @@ abstract class TypedEnvelopeCharacterizationSpec extends Specification {
     byId.isPresent()
     byLid.isPresent()
     byId.get().is(byLid.get())
+  }
+
+  def "included resources unreferenced by primary linkage still bind"() {
+    given:
+    def document =
+        new JsonApiDocument(
+        new DocumentData.SingleResource(
+        new ResourceObject(
+        "articles",
+        "1",
+        null,
+        null,
+        Relationships.ofRelationships([
+          author: Relationship.withData(
+          new RelationshipData.SingleLinkage(ResourceIdentifier.of("people", "9")))
+        ]),
+        null,
+        null,
+        Map.of())),
+        null,
+        null,
+        null,
+        null,
+        [
+          new ResourceObject(
+          "people",
+          "99",
+          null,
+          Attributes.ofAttributes([name: "Other"]),
+          null,
+          null,
+          null,
+          Map.of())
+        ],
+        Map.of())
+
+    when:
+    def envelope = bind(document, types(FlatArticle, Person))
+
+    then:
+    ((DomainData.SingleResource) envelope.data()).resource() ==
+        new FlatArticle("1", null, null, ResourceIdentifier.of("people", "9"), null)
+    envelope.included().resources() == [new Person("99", "Other")]
   }
 
   def "duplicate included identities fail at the later document pointer with the shared message"() {
@@ -319,6 +391,37 @@ abstract class TypedEnvelopeCharacterizationSpec extends Specification {
     included.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
     included.resourceClass() == FlatStrictArticle
     included.propertyPath() == "/included/1/attributes/title"
+  }
+
+  def "nested resource-local locations join under the document prefix"() {
+    given:
+    def json = '{"data":{"type":"loc-nested","id":"1","attributes":{"address":{"city":"oops"}}}}'
+
+    when:
+    bind(
+        api().documents().read(json, DocumentReadContext.resourceDefaults()),
+        types(NestedLocationArticle))
+
+    then:
+    def failure = thrown(JsonApiMappingException)
+    failure.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    failure.propertyPath() == "/data/attributes/address/city"
+  }
+
+  def "renamed wire members report the JSON:API name under the document prefix"() {
+    given:
+    def json = '{"data":{"type":"loc-renamed","id":"1","attributes":{"headline":"oops"}}}'
+
+    when:
+    bind(
+        api().documents().read(json, DocumentReadContext.resourceDefaults()),
+        types(RenamedLocationArticle))
+
+    then:
+    def failure = thrown(JsonApiMappingException)
+    failure.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    // Wire coordinate headline; the Jackson/logical property name title must not leak.
+    failure.propertyPath() == "/data/attributes/headline"
   }
 
   def "locationless binder failures report only the document prefix"() {
@@ -444,6 +547,36 @@ abstract class TypedEnvelopeCharacterizationSpec extends Specification {
 
     then:
     thrown(UnsupportedOperationException)
+  }
+
+  def "document-level members pass through the typed envelope"() {
+    given:
+    def json =
+        '{"errors":[{"status":"400"}],"meta":{"note":"n"},' +
+        '"jsonapi":{"version":"1.1"},"links":{"self":"/errors"}}'
+
+    when:
+    def envelope =
+        bind(
+        api().documents().read(json, DocumentReadContext.resourceDefaults()),
+        ResourceTypeRegistry.builder().build())
+
+    then:
+    envelope.errors().size() == 1
+    envelope.errors().get(0).status() == "400"
+    envelope.meta().members() == [note: "n"]
+    envelope.jsonapi().version() == "1.1"
+    envelope.links().links().get("self").href() == "/errors"
+  }
+
+  def "additional document members pass through the typed envelope"() {
+    when:
+    def envelope = bind(read("envelope-binding/at-member-document.json"), types(FlatArticle))
+
+    then:
+    envelope.data() ==
+        new DomainData.SingleResource(new FlatArticle("1", "Hello", null, null, null))
+    envelope.additionalMembers() == ["@request-id": "req-1"]
   }
 
   private JsonApiDocument read(String corpusPath) {

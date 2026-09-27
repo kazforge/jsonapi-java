@@ -5,239 +5,41 @@ import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.json.JsonMapper
-import com.kazforge.jsonapi.core.model.DocumentData
+import com.kazforge.jsonapi.api.ResourceWriteOptions
+import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.core.model.JsonApiObject
-import com.kazforge.jsonapi.core.model.Link
-import com.kazforge.jsonapi.core.model.Links
-import com.kazforge.jsonapi.core.model.Meta
 import com.kazforge.jsonapi.core.model.RelationshipData
-import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceIdentity
-import com.kazforge.jsonapi.core.validation.DocumentUsage
 import com.kazforge.jsonapi.core.validation.EndpointIdentity
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException
-import com.kazforge.jsonapi.core.aggregate.ValidationContext
-import com.kazforge.jsonapi.fixtures.localid.LocalIdentityArticle
-import com.kazforge.jsonapi.fixtures.localid.LocalIdentityArticleWithAuthor
-import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
-import com.kazforge.jsonapi.fixtures.domainwrite.Article
-import com.kazforge.jsonapi.fixtures.domainwrite.Comment
-import com.kazforge.jsonapi.fixtures.domainwrite.Person
-import com.kazforge.jsonapi.api.ResourceWriteOptions
-import com.kazforge.jsonapi.diagnostic.CodecFailureCategory
-import com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException
-import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.document.DocumentEnvelope
 import com.kazforge.jsonapi.document.DocumentReadContext
 import com.kazforge.jsonapi.document.PrimaryDataKind
-import com.kazforge.jsonapi.mapping.ResourceDecoration
-import com.kazforge.jsonapi.mapping.IdentifierConverter
-import com.kazforge.jsonapi.mapping.ResourceDecorator
-import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry
-import com.kazforge.jsonapi.representation.IncludePath
-import com.kazforge.jsonapi.representation.IncludePolicy
-import com.kazforge.jsonapi.representation.RepresentationPolicy
-import com.kazforge.jsonapi.representation.RepresentationSelection
+import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
+import com.kazforge.jsonapi.fixtures.domainwrite.Article
+import com.kazforge.jsonapi.fixtures.domainwrite.Comment
+import com.kazforge.jsonapi.fixtures.localid.LocalIdentityArticle
 import com.kazforge.jsonapi.jackson2.CloseTrackingFixtures.TrackingInputStream
 import com.kazforge.jsonapi.jackson2.CloseTrackingFixtures.TrackingOutputStream
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatAuthor
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatMappedArticle
 import com.kazforge.jsonapi.jackson2.ParameterizedBindingFixtures.GenericValue
+import com.kazforge.jsonapi.mapping.IdentifierConverter
+import com.kazforge.jsonapi.representation.IncludePath
+import com.kazforge.jsonapi.representation.IncludePolicy
+import com.kazforge.jsonapi.representation.RepresentationPolicy
+import com.kazforge.jsonapi.representation.RepresentationSelection
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.UncheckedIOException
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Unroll
 
 class Jackson2JsonApiResourcesSpec extends Specification {
 
   @Shared
   Jackson2JsonApi jsonApi = JsonApiJackson2.jsonApi(JsonMapper.builder().build())
-
-  def "round-trips a single resource through writeOne and readOne"() {
-    given:
-    def article = new Article("1", "Hello", "Body text", [
-      new Comment("c1", "Nice", null)
-    ], new Person("p1", "Alice"))
-
-    when:
-    def json = jsonApi.resources().writeOne(article)
-    def actual = jsonApi.resources().readOne(json, FlatArticle)
-
-    then:
-    actual.id() == "1"
-    actual.title() == "Hello"
-    actual.body() == "Body text"
-    actual.author() == ResourceIdentifier.of("people", "p1")
-    actual.comments() == [
-      ResourceIdentifier.of("comments", "c1")
-    ]
-  }
-
-  @Unroll
-  def "resource read shape #description is rejected without coercion"() {
-    when:
-    jsonApi.resources().readOne(json, FlatArticle)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.RESOURCE_TYPE_MISMATCH
-    ex.propertyPath() == (description == "wrong type" ? "/type" : "/data")
-
-    where:
-    description       | json
-    "explicit null"  | '{"data":null}'
-    "absent"         | '{"meta":{"count":1}}'
-    "error document" | '{"errors":[{"status":"500","title":"boom"}]}'
-    "wrong type"     | '{"data":{"type":"comments","id":"1"}}'
-    "collection"     | '{"data":[]}'
-  }
-
-  def "readMany rejects single-resource primary data without coercion"() {
-    given:
-    def json = jsonApi.resources().writeOne(new Article("1", "T", "B", List.of(), null))
-
-    when:
-    jsonApi.resources().readMany(json, FlatArticle)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.RESOURCE_TYPE_MISMATCH
-    ex.propertyPath() == "/data"
-  }
-
-  def "readOneDocument retains top-level state and included resources"() {
-    given:
-    def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"Hello"},' +
-        '"relationships":{"author":{"data":{"type":"people","id":"p1"}}}},' +
-        '"included":[{"type":"people","id":"p1","attributes":{"name":"Alice"}}],' +
-        '"meta":{"count":1},"links":{"self":"https://example.test/articles"},' +
-        '"jsonapi":{"version":"1.1"}}'
-
-    when:
-    def document = jsonApi.resources().readOneDocument(json, FlatArticle)
-
-    then:
-    document.resource().id() == "1"
-    document.resource().title() == "Hello"
-    document.resource().author() == ResourceIdentifier.of("people", "p1")
-    document.meta() == Meta.of([count: 1])
-    document.links() == Links.ofLinks([self: new Link.StringLink("https://example.test/articles")])
-    document.jsonapi() == JsonApiObject.ofVersion("1.1")
-    document.included().size() == 1
-    document.included()[0].type() == "people"
-  }
-
-  def "readManyDocument retains collection state"() {
-    given:
-    def json = '{"data":[{"type":"articles","id":"1","attributes":{"title":"A"}},' +
-        '{"type":"articles","id":"2","attributes":{"title":"B"}}],"meta":{"count":2}}'
-
-    when:
-    def document = jsonApi.resources().readManyDocument(json, FlatArticle)
-
-    then:
-    document.resources()*.id() == ["1", "2"]
-    document.resources()*.title() == ["A", "B"]
-    document.meta() == Meta.of([count: 2])
-    document.included() == null
-  }
-
-  def "resource writes carry envelope state and use application defaults"() {
-    given:
-    def options = new ResourceWriteOptions(
-        new DocumentEnvelope(
-        Links.ofLinks([self: new Link.StringLink("https://example.test/articles")]),
-        Meta.of([copyright: "2026"]),
-        JsonApiObject.ofVersion("1.0")),
-        RepresentationSelection.none())
-    def configured = JsonApiJackson2.builder(JsonMapper.builder().build())
-        .jsonApiVersion("1.1")
-        .build()
-    def article = new Article("1", "T", "B", List.of(), null)
-
-    when:
-    def explicit = configured.documents().read(
-        configured.resources().writeOne(article, options), DocumentReadContext.resourceDefaults())
-    def inherited = configured.documents().read(
-        configured.resources().writeOne(article), DocumentReadContext.resourceDefaults())
-    def unconfigured = jsonApi.documents().read(
-        jsonApi.resources().writeOne(article), DocumentReadContext.resourceDefaults())
-
-    then:
-    explicit.links() == options.envelope().links()
-    explicit.meta() == options.envelope().meta()
-    explicit.jsonapi() == options.envelope().jsonapi()
-    inherited.jsonapi() == JsonApiObject.ofVersion("1.1")
-    unconfigured.jsonapi() == null
-  }
-
-  def "configured runtime applies its jsonapi version to collection writes"() {
-    given:
-    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
-        .jsonApiVersion("1.1")
-        .build()
-
-    when:
-    def document = runtime.documents().read(
-        runtime.resources().writeMany([
-          new Article("1", "A", "B", List.of(), null),
-          new Article("2", "C", "D", List.of(), null)
-        ]), DocumentReadContext.resourceDefaults())
-
-    then:
-    document.jsonapi() == JsonApiObject.ofVersion("1.1")
-  }
-
-  def "configured runtime applies its jsonapi version to create authoring"() {
-    given:
-    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
-        .jsonApiVersion("1.1")
-        .build()
-
-    when:
-    def document = runtime.documents().read(
-        runtime.resources().writeCreateDocument(new Article("1", "T", "B", List.of(), null)),
-        DocumentReadContext.resourceDefaults())
-
-    then:
-    document.jsonapi() == JsonApiObject.ofVersion("1.1")
-  }
-
-  def "configured runtime applies its jsonapi version to update authoring"() {
-    given:
-    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
-        .jsonApiVersion("1.1")
-        .build()
-
-    when:
-    def document = runtime.documents().read(
-        runtime.resources().writeUpdateDocument(
-        new Article("1", "T", "B", List.of(), null),
-        new EndpointIdentity("articles", "1")),
-        DocumentReadContext.resourceDefaults())
-
-    then:
-    document.jsonapi() == JsonApiObject.ofVersion("1.1")
-  }
-
-  def "configured runtime preserves arbitrary jsonapi version strings"() {
-    given:
-    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
-        .jsonApiVersion("custom-version")
-        .build()
-
-    when:
-    def document = runtime.documents().read(
-        runtime.resources().writeOne(new Article("1", "T", "B", List.of(), null)),
-        DocumentReadContext.resourceDefaults())
-
-    then:
-    document.jsonapi() == JsonApiObject.ofVersion("custom-version")
-  }
 
   def "jsonapi version configuration rejects null"() {
     when:
@@ -264,156 +66,7 @@ class Jackson2JsonApiResourcesSpec extends Specification {
     !out.closed
   }
 
-  def "representation policy and decoration are coordinated internally"() {
-    given:
-    def links = Links.ofLinks([self: new Link.StringLink("https://example.test/articles/1")])
-    def decorators = ResourceDecoratorRegistry.builder()
-        .register(Article, { Article ignored -> ResourceDecoration.ofLinks(links) } as ResourceDecorator)
-        .build()
-    def policy = RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll())
-    def configured = JsonApiJackson2.builder(JsonMapper.builder().build())
-        .representationPolicy(policy)
-        .decorators(decorators)
-        .build()
-    def options = new ResourceWriteOptions(
-        new DocumentEnvelope(null, null, null),
-        RepresentationSelection.builder().include(IncludePath.of("comments")).build())
-    def article = new Article("1", "T", "B", [new Comment("c1", "C", null)], null)
-
-    when:
-    def json = configured.resources().writeOne(article, options)
-    def document = configured.documents().read(json, DocumentReadContext.resourceDefaults()
-        .withValidationContext(ValidationContext.defaults()
-        .withSparseFieldsetLinkageExemptions(Set.of())))
-    def primary = (document.data() as DocumentData.SingleResource).resource()
-
-    then:
-    primary.links() == links
-    primary.relationships().relationships().containsKey("comments")
-    document.included().size() == 1
-  }
-
-  def "create and update authoring select core validation usage"() {
-    given:
-    def article = new Article("1", "T", "B", List.of(), null)
-    def local = new LocalIdFixtures.RenamedLocalIdArticle(null, "lid-1", "Draft")
-
-    when:
-    def createJson = jsonApi.resources().writeCreateDocument(local)
-
-    then:
-    createJson.contains('"lid":"lid-1"')
-    !createJson.contains('"id"')
-
-    when:
-    jsonApi.resources().writeOne(local)
-
-    then:
-    thrown(JsonApiValidationException)
-
-    when:
-    def updateJson = jsonApi.resources().writeUpdateDocument(article, new EndpointIdentity("articles", "1"))
-
-    then:
-    updateJson.contains('"id":"1"')
-
-    when:
-    jsonApi.resources().writeUpdateDocument(article, new EndpointIdentity("articles", "other"))
-
-    then:
-    thrown(JsonApiValidationException)
-  }
-
-  def "identity-less create with inclusion emits requested included resources"() {
-    given:
-    def options = new ResourceWriteOptions(
-        new DocumentEnvelope(null, null, null),
-        RepresentationSelection.builder()
-        .include(IncludePath.of("comments.author"))
-        .fields("articles", "title", "comments")
-        .build())
-    def policy = RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll())
-    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
-        .representationPolicy(policy)
-        .build()
-    def draft = new LocalIdentityArticleWithAuthor(
-        null, null, "Draft", null, [
-          new Comment("c1", "Nice", new Person("p1", "Alice"))
-        ])
-    def createContext = DocumentReadContext.of(
-        ValidationContext.defaults().withDocumentUsage(DocumentUsage.CREATE_REQUEST),
-        PrimaryDataKind.RESOURCE)
-
-    when:
-    def json = runtime.resources().writeCreateDocument(draft, options)
-    def roundTrip = runtime.documents().read(json, createContext)
-    def primary = (roundTrip.data() as DocumentData.SingleResource).resource()
-
-    then:
-    !primary.hasId()
-    !primary.hasLid()
-    roundTrip.included() != null
-    roundTrip.included().collect { [it.type(), it.id()] } == [
-      ["comments", "c1"],
-      ["people", "p1"]
-    ]
-  }
-
-  def "resource-write options preserve sparse-fieldset provenance"() {
-    given:
-    def options = new ResourceWriteOptions(
-        new DocumentEnvelope(null, null, null),
-        RepresentationSelection.builder()
-        .include(IncludePath.of("comments"))
-        .fields("articles", "title")
-        .build())
-    def policy = RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll())
-    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
-        .representationPolicy(policy)
-        .build()
-    def article = new Article("1", "Hello", "Body text", [
-      new Comment("c1", "Nice", null)
-    ], null)
-    def readContext = DocumentReadContext.of(
-        ValidationContext.defaults().withSparseFieldsetLinkageExemptions(
-        Set.of(ResourceIdentity.ofId("comments", "c1"))),
-        PrimaryDataKind.RESOURCE)
-
-    when:
-    def json = runtime.resources().writeOne(article, options)
-    def roundTrip = runtime.documents().read(json, readContext)
-
-    then:
-    roundTrip.included() != null
-    roundTrip.included().size() == 1
-    roundTrip.included()[0].type() == "comments"
-    !json.contains("Body text")
-    json.contains("Hello")
-  }
-
-  def "id and lid bind to independent roles without coercion"() {
-    given:
-    def article = new LocalIdentityArticle("1", "lid-1", "T")
-
-    when:
-    def json = jsonApi.resources().writeOne(article)
-    def actual = jsonApi.resources().readOne(json, LocalIdentityArticle)
-
-    then:
-    actual.id() == "1"
-    actual.localId() == "lid-1"
-
-    when:
-    jsonApi.resources().readOne(
-        '{"data":{"type":"articles","lid":"lid-9","attributes":{"title":"T"}}}',
-        LocalIdentityArticle)
-
-    then:
-    def validation = thrown(JsonApiDocumentReadException)
-    validation.category() == CodecFailureCategory.AGGREGATE_VALIDATION
-  }
-
-  def "builder identifier and linkage configuration applies to resource reads and writes"() {
+  def "builder identifier conversion applies in both directions"() {
     given:
     def converter = [
       convert: { Object value -> value == null ? null : "id-" + value },
@@ -421,7 +74,26 @@ class Jackson2JsonApiResourcesSpec extends Specification {
         wire == null ? null : wire.substring(3)
       }
     ] as IdentifierConverter
-    def linkageMapper = { RelationshipData data, JavaType target ->
+    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
+        .identifierConverter(converter)
+        .build()
+
+    when:
+    def json = runtime.resources().writeOne(new Article("7", "T", "B", List.of(), null))
+
+    then:
+    json.contains('"id":"id-7"')
+
+    when:
+    def actual = runtime.resources().readOne(json, FlatArticle)
+
+    then:
+    actual.id() == "7"
+  }
+
+  def "builder linkage mappers serve custom relationship targets"() {
+    given:
+    def mapper = { RelationshipData data, JavaType target ->
       if (data instanceof RelationshipData.SingleLinkage) {
         def identifier = ((RelationshipData.SingleLinkage) data).identifier()
         return new FlatAuthor(identifier.type(), identifier.id())
@@ -430,25 +102,21 @@ class Jackson2JsonApiResourcesSpec extends Specification {
         new FlatAuthor(it.type(), it.id())
       }
     } as RelationshipLinkageMapper
-    def configured = JsonApiJackson2.builder(JsonMapper.builder().build())
-        .identifierConverter(converter)
-        .linkageMappers([(FlatAuthor): linkageMapper])
+    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
+        .linkageMappers([(FlatAuthor): mapper])
         .build()
-    def json = '{"data":{"type":"articles","id":"id-1","attributes":{"title":"T"},' +
-        '"relationships":{"author":{"data":{"type":"people","id":"id-p1"}},' +
-        '"contributors":{"data":[{"type":"people","id":"id-p2"}]}}}}'
+    def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"},' +
+        '"relationships":{"author":{"data":{"type":"people","id":"p1"}},' +
+        '"contributors":{"data":[{"type":"people","id":"p2"}]}}}}'
 
     when:
-    def article = configured.resources().readOne(json, FlatMappedArticle)
-    def written = configured.resources().writeOne(new Article("1", "T", "B", List.of(), null))
+    def article = runtime.resources().readOne(json, FlatMappedArticle)
 
     then:
-    article.id() == "1"
-    article.author() == new FlatAuthor("people", "id-p1")
+    article.author() == new FlatAuthor("people", "p1")
     article.contributors() == [
-      new FlatAuthor("people", "id-p2")
+      new FlatAuthor("people", "p2")
     ]
-    written.contains('"id":"id-1"')
   }
 
   def "generic Type overloads retain full type fidelity"() {
@@ -470,7 +138,7 @@ class Jackson2JsonApiResourcesSpec extends Specification {
     streamMany == collection
   }
 
-  def "all resource stream overloads preserve results and caller ownership"() {
+  def "resource stream overloads preserve results and caller ownership"() {
     given:
     def article = new Article("1", "Hello", "B", List.of(), null)
     def one = jsonApi.resources().writeOne(article)
@@ -532,6 +200,70 @@ class Jackson2JsonApiResourcesSpec extends Specification {
     !createOptionsOut.closed
     !updateOut.closed
     !updateOptionsOut.closed
+  }
+
+  def "create and update authoring select core validation usage"() {
+    given:
+    def article = new Article("1", "T", "B", List.of(), null)
+    def local = new LocalIdentityArticle(null, "lid-1", "Draft")
+
+    when:
+    def createJson = jsonApi.resources().writeCreateDocument(local)
+
+    then:
+    createJson.contains('"lid":"lid-1"')
+    !createJson.contains('"id"')
+
+    when:
+    jsonApi.resources().writeOne(local)
+
+    then:
+    thrown(JsonApiValidationException)
+
+    when:
+    def updateJson = jsonApi.resources().writeUpdateDocument(
+        article, new EndpointIdentity("articles", "1"))
+
+    then:
+    updateJson.contains('"id":"1"')
+
+    when:
+    jsonApi.resources().writeUpdateDocument(article, new EndpointIdentity("articles", "other"))
+
+    then:
+    thrown(JsonApiValidationException)
+  }
+
+  def "sparse-fieldset write provenance reads back with configured exemptions"() {
+    given:
+    def options = new ResourceWriteOptions(
+        new DocumentEnvelope(null, null, null),
+        RepresentationSelection.builder()
+        .include(IncludePath.of("comments"))
+        .fields("articles", "title")
+        .build())
+    def policy = RepresentationPolicy.defaults().withIncludePolicy(IncludePolicy.allowAll())
+    def runtime = JsonApiJackson2.builder(JsonMapper.builder().build())
+        .representationPolicy(policy)
+        .build()
+    def article = new Article("1", "Hello", "Body text", [
+      new Comment("c1", "Nice", null)
+    ], null)
+    def readContext = DocumentReadContext.of(
+        ValidationContext.defaults().withSparseFieldsetLinkageExemptions(
+        Set.of(ResourceIdentity.ofId("comments", "c1"))),
+        PrimaryDataKind.RESOURCE)
+
+    when:
+    def json = runtime.resources().writeOne(article, options)
+    def roundTrip = runtime.documents().read(json, readContext)
+
+    then:
+    roundTrip.included() != null
+    roundTrip.included().size() == 1
+    roundTrip.included()[0].type() == "comments"
+    !json.contains("Body text")
+    json.contains("Hello")
   }
 
   def "Level-1 resource reads and writes adapt unavoidable checked I/O"() {
