@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.json.JsonMapper
 import com.kazforge.jsonapi.annotation.JsonApiAttribute
 import com.kazforge.jsonapi.annotation.JsonApiId
 import com.kazforge.jsonapi.annotation.JsonApiResource
+import com.kazforge.jsonapi.core.model.Attributes
+import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.mapping.IdentifierConverter
@@ -14,12 +16,34 @@ import com.kazforge.jsonapi.jackson2.JacksonFeatureFixtures.ArticleWithFormatted
 import com.kazforge.jsonapi.jackson2.JacksonFeatureFixtures.CreatorBasedArticle
 import com.kazforge.jsonapi.jackson2.JacksonFeatureFixtures.FormattedTitle
 import com.kazforge.jsonapi.fixtures.domainwrite.Article
+import com.kazforge.jsonapi.fixtures.domainwrite.BlogWithJsonProperty
+import com.kazforge.jsonapi.fixtures.domainwrite.ConventionalId
 import spock.lang.Specification
 
 // Jackson 2 mechanism probes: mix-ins, @JsonIgnore, naming strategies, @JsonCreator, custom
 // serializers, and identifier-converter wiring. Major-neutral Optional/array/inheritance/
 // mixed-relationship semantics are exercised by direct adapter-owned cases.
 class ResourceMappingJacksonFeaturesSpec extends Specification {
+
+  def "Jackson conventional id property becomes the resource identifier"() {
+    when:
+    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build())
+        .toResource(new ConventionalId("42", "name value"))
+
+    then:
+    resource == new ResourceObject("conventionals", "42", null,
+        Attributes.ofAttributes([name: "name value"]), null, null, null, Map.of())
+  }
+
+  def "direct @JsonProperty naming determines attribute and identifier members"() {
+    when:
+    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build())
+        .toResource(new BlogWithJsonProperty("b1", "My Blog"))
+
+    then:
+    resource == new ResourceObject("blogs", "b1", null,
+        Attributes.ofAttributes([blog_title: "My Blog"]), null, null, null, Map.of())
+  }
 
   @JsonApiResource(type = "things")
   static class ThingWithIgnored {

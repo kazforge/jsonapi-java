@@ -151,11 +151,17 @@ class MappingBasicResourceWriterSpec extends Specification {
     def domain = domain('id': '1', 'title': 'T', 'body': 'B', 'author': first, 'editor': second)
 
     when:
-    def resource = writer.writeBasic(domain, 'articles', ['body', 'editor', 'author'] as Set, false)
+    def resource = writer.writeBasic(domain, 'articles', [
+      'body',
+      'editor',
+      'author',
+      'title'
+    ] as Set, false)
 
     then:
-    resource.attributes().attributes() == [body: 'converted:B']
-    resource.relationships().relationships().keySet() == ['author', 'editor'] as Set
+    resource.attributes().attributes().keySet().toList() == ['title', 'body']
+    resource.attributes().attributes() == [title: 'converted:T', body: 'converted:B']
+    resource.relationships().relationships().keySet().toList() == ['author', 'editor']
     (resource.relationships().relationships().get('author').data() as RelationshipData.SingleLinkage).identifier() ==
         ResourceIdentifier.of('people', 'p1')
     (resource.relationships().relationships().get('editor').data() as RelationshipData.SingleLinkage).identifier() ==
@@ -187,6 +193,37 @@ class MappingBasicResourceWriterSpec extends Specification {
     def failure = thrown(JsonApiMappingException)
     failure.diagnostic() == MappingDiagnostic.DENIED_FIELDSET_FIELD
     failure.message == 'Fieldset field denied for articles.title'
+  }
+
+  def "an unknown fieldset field takes precedence over field-policy denial"() {
+    given:
+    backend.define('articles', property(ID, 'id', 'id', 'id'), property(ATTRIBUTE, 'title', 'title', 'title'))
+
+    when:
+    writer.validateFieldset(domain([:]), 'articles', ['unknown', 'title'], FieldPolicy.denyAll())
+
+    then:
+    def failure = thrown(JsonApiMappingException)
+    failure.diagnostic() == MappingDiagnostic.INVALID_FIELDSET_FIELD
+  }
+
+  def "a renamed relationship accepts only its JSON:API member name in a fieldset"() {
+    given:
+    backend.define('articles', property(ID, 'id', 'id', 'id'),
+        property(RELATIONSHIP, 'writtenBy', 'written-by', 'written-by'))
+
+    when:
+    writer.validateFieldset(domain([:]), 'articles', ['writtenBy'], FieldPolicy.allowAll())
+
+    then:
+    def failure = thrown(JsonApiMappingException)
+    failure.diagnostic() == MappingDiagnostic.INVALID_FIELDSET_FIELD
+
+    when:
+    writer.validateFieldset(domain([:]), 'articles', ['written-by'], FieldPolicy.allowAll())
+
+    then:
+    noExceptionThrown()
   }
 
   def "does not consult the field policy for an empty fieldset"() {

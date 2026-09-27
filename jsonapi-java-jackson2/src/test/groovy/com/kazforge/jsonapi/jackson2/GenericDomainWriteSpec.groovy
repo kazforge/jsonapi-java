@@ -1,7 +1,12 @@
 package com.kazforge.jsonapi.jackson2
 
 import com.kazforge.jsonapi.core.model.DocumentData
+import com.kazforge.jsonapi.core.model.Link
+import com.kazforge.jsonapi.core.model.Links
 import com.kazforge.jsonapi.core.model.RelationshipData
+import com.kazforge.jsonapi.mapping.ResourceDecoration
+import com.kazforge.jsonapi.mapping.ResourceDecorator
+import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry
 import com.kazforge.jsonapi.representation.IncludePath
 import com.kazforge.jsonapi.representation.IncludePolicy
 import com.kazforge.jsonapi.representation.RepresentationPolicy
@@ -28,6 +33,39 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.json.JsonMapper
 
 class GenericDomainWriteSpec extends Specification {
+
+  def "parameterized root specialization looks up decoration by raw resource class"() {
+    given:
+    def links = Links.ofLinks([self: new Link.StringLink("https://example.test/generic-resources/r1")])
+    ResourceDecorator<GenericResource<GenericThing>> decorator = { r -> ResourceDecoration.ofLinks(links) }
+    def registry = ResourceDecoratorRegistry.builder().register(GenericResource, decorator).build()
+    def base = JsonMapper.builder().build()
+    def mapper = JsonApiJackson2.resourceMapper(base, registry)
+    def type = parameterized(base, GenericResource, GenericThing)
+    def root = new GenericResource<GenericThing>("r1", null, null, [], Optional.empty())
+
+    when:
+    def resource = mapper.toResource(root, type)
+
+    then:
+    resource.links() == links
+  }
+
+  def "declared base type uses the runtime subtype's decorator"() {
+    given:
+    def links = Links.ofLinks([self: new Link.StringLink("https://example.test/moderated-comments/m1")])
+    ResourceDecorator<ModeratedComment> decorator = { c -> ResourceDecoration.ofLinks(links) }
+    def registry = ResourceDecoratorRegistry.builder().register(ModeratedComment, decorator).build()
+    def base = JsonMapper.builder().build()
+    def mapper = JsonApiJackson2.resourceMapper(base, registry)
+
+    when:
+    def resource = mapper.toResource(
+        new ModeratedComment("m1", "Moderated", null), base.constructType(BaseComment))
+
+    then:
+    resource.links() == links
+  }
 
   def "ordinary concrete resource writes remain convenient"() {
     given:

@@ -253,6 +253,40 @@ class MappingCompoundInclusionEngineSpec extends Specification {
     result.sparseFieldsetLinkageExemptions().isEmpty()
   }
 
+  def "discovers included resources primary by primary before the next primary's paths"() {
+    given:
+    backend.relationships['articles'] = [author: 'people', comments: 'comments']
+    backend.domainRelationshipValues('a1', 'author', 'p1')
+    backend.domainRelationshipValues('a1', 'comments', 'c1')
+    backend.domainRelationshipValues('a2', 'author', 'p2')
+    backend.domainRelationshipValues('a2', 'comments', 'c2')
+    backend.identifiers['p1'] = ResourceIdentifier.of('people', 'p1')
+    backend.identifiers['p2'] = ResourceIdentifier.of('people', 'p2')
+    backend.identifiers['c1'] = ResourceIdentifier.of('comments', 'c1')
+    backend.identifiers['c2'] = ResourceIdentifier.of('comments', 'c2')
+    backend.rendered['p1'] = ResourceObject.of('people', 'p1')
+    backend.rendered['p2'] = ResourceObject.of('people', 'p2')
+    backend.rendered['c1'] = ResourceObject.of('comments', 'c1')
+    backend.rendered['c2'] = ResourceObject.of('comments', 'c2')
+
+    when:
+    def result = engine.collectIncluded(['a1', 'a2'], ['articles', 'articles'],
+    [
+      primary('articles', '1'),
+      primary('articles', '2')
+    ], null,
+    representation(['author', 'comments']))
+
+    then:
+    result.included()*.type() == [
+      'people',
+      'comments',
+      'people',
+      'comments'
+    ]
+    result.included()*.id() == ['p1', 'c1', 'p2', 'c2']
+  }
+
   def "prefix-overlapping include paths emit each identity once"() {
     given:
     nestedCommentBackend()
@@ -433,6 +467,34 @@ class MappingCompoundInclusionEngineSpec extends Specification {
     result.included()*.id() == ['p1']
     result.sparseFieldsetLinkageExemptions() == [
       ResourceIdentity.ofId('people', 'p1')
+    ] as Set
+  }
+
+  def "nested inclusion records exemptions for linkage omitted by the included type's fieldset"() {
+    given:
+    backend.relationships['articles'] = [comments: 'comments']
+    backend.relationships['comments'] = [author: 'people']
+    backend.relationshipValues('articles', 'comments', 'c1', 'c2')
+    backend.domainRelationshipValues('c1', 'author', 'p1')
+    backend.domainRelationshipValues('c2', 'author', 'p2')
+    backend.identifiers['c1'] = ResourceIdentifier.of('comments', 'c1')
+    backend.identifiers['c2'] = ResourceIdentifier.of('comments', 'c2')
+    backend.identifiers['p1'] = ResourceIdentifier.of('people', 'p1')
+    backend.identifiers['p2'] = ResourceIdentifier.of('people', 'p2')
+    backend.rendered['c1'] = ResourceObject.of('comments', 'c1')
+    backend.rendered['c2'] = ResourceObject.of('comments', 'c2')
+    backend.rendered['p1'] = ResourceObject.of('people', 'p1')
+    backend.rendered['p2'] = ResourceObject.of('people', 'p2')
+
+    when:
+    def result = engine.collectIncluded(['a1'], ['articles'], [primary('articles', '1')], null,
+    representation(['comments.author'], IncludePolicy.allowAll(), ['comments': ['body']]))
+
+    then:
+    result.included()*.id() == ['c1', 'c2', 'p1', 'p2']
+    result.sparseFieldsetLinkageExemptions() == [
+      ResourceIdentity.ofId('people', 'p1'),
+      ResourceIdentity.ofId('people', 'p2')
     ] as Set
   }
 
