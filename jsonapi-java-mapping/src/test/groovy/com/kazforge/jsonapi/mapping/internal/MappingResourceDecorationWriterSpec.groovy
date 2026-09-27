@@ -164,6 +164,23 @@ class MappingResourceDecorationWriterSpec extends Specification {
     decorated.is(base)
   }
 
+  def "decorates a relationship retained by the fieldset"() {
+    given:
+    def registry = registry(String, { s ->
+      ResourceDecoration.builder().relationship('comments', RelationshipDecoration.of(COMMENTS_LINKS)).build()
+    })
+
+    when:
+    def decorated = decorate(baseResource(), registry, ['title', 'comments'] as Set)
+
+    then:
+    decorated.relationships().relationships().get('comments').links() == COMMENTS_LINKS
+    (decorated.relationships().relationships().get('comments').data() as RelationshipData.IdentifierCollectionLinkage)
+        .identifiers() == [
+          ResourceIdentifier.of('comments', 'c1')
+        ]
+  }
+
   def "fails a non-relationship decoration target"() {
     given:
     def registry = registry(String, { s ->

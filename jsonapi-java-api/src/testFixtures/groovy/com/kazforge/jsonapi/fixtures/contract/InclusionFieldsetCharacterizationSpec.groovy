@@ -3,11 +3,15 @@ package com.kazforge.jsonapi.fixtures.contract
 // Shared inclusion and fieldset characterization contract; see the fixture package-info.
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceObject
+import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
+import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.fixtures.compoundwrite.WrappedLinkageArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
 import com.kazforge.jsonapi.fixtures.domainwrite.Article
 import com.kazforge.jsonapi.fixtures.domainwrite.Comment
 import com.kazforge.jsonapi.fixtures.domainwrite.Person
 import com.kazforge.jsonapi.fixtures.sparsefieldset.ArticleWithRenamedAuthor
+import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import com.kazforge.jsonapi.api.JsonApi
 import com.kazforge.jsonapi.api.ResourceWriteOptions
 import com.kazforge.jsonapi.representation.RepresentationSelection
@@ -80,6 +84,52 @@ abstract class InclusionFieldsetCharacterizationSpec extends Specification {
     included*.id == ["c1", "c2", "p1", "p2"]
   }
 
+  def "includes targets wrapped in relationship linkage"() {
+    given:
+    def article = new WrappedLinkageArticle(
+        "1",
+        new RelationshipLinkage<>(new Person("p1", "Ann"), null),
+        List.of(new RelationshipLinkage<>(new Comment("c1", "Nice", null), null)))
+    def selection = RepresentationSelection.builder().include("author").include("comments").build()
+
+    when:
+    def document = parse(api().resources().writeOne(
+        article, ResourceWriteOptions.defaults().withSelection(selection)))
+
+    then:
+    document.included*.type == ["people", "comments"]
+    document.included*.id == ["p1", "c1"]
+  }
+
+  def "resolves an include through the configured relationship member name"() {
+    given:
+    def selection = RepresentationSelection.builder().include("written-by").build()
+
+    when:
+    def document = parse(api().resources().writeOne(
+        new ArticleWithRenamedAuthor("1", "T", new Person("p1", "Ann")),
+        ResourceWriteOptions.defaults().withSelection(selection)))
+
+    then:
+    document.data.relationships.keySet() == ["written-by"] as Set
+    document.included*.type == ["people"]
+    document.included*.id == ["p1"]
+  }
+
+  def "rejects a Java property name as an include alias for a renamed relationship"() {
+    given:
+    def selection = RepresentationSelection.builder().include("author").build()
+
+    when:
+    api().resources().writeOne(
+        new ArticleWithRenamedAuthor("1", "T", new Person("p1", "Ann")),
+        ResourceWriteOptions.defaults().withSelection(selection))
+
+    then:
+    def failure = thrown(JsonApiMappingException)
+    failure.diagnostic() == MappingDiagnostic.INVALID_INCLUDE_PATH
+  }
+
   def "writes an explicit include request that resolves to no resources as an empty included member"() {
     given:
     def selection = RepresentationSelection.builder().includeRequested().build()
@@ -99,6 +149,22 @@ abstract class InclusionFieldsetCharacterizationSpec extends Specification {
 
     expect:
     document.data.attributes == ["title": "T"]
+    !document.data.containsKey("relationships")
+  }
+
+  def "an explicitly empty fieldset writes only primary identity"() {
+    given:
+    def selection = RepresentationSelection.builder().fields("articles").build()
+
+    when:
+    def document = parse(api().resources().writeOne(
+        new Article("1", "T", "B", comments(), new Person("p1", "Ann")),
+        ResourceWriteOptions.defaults().withSelection(selection)))
+
+    then:
+    document.data.type == "articles"
+    document.data.id == "1"
+    !document.data.containsKey("attributes")
     !document.data.containsKey("relationships")
   }
 
@@ -134,6 +200,46 @@ abstract class InclusionFieldsetCharacterizationSpec extends Specification {
       ["body": "Nice"],
       ["body": "Also"]
     ]
+  }
+
+  def "nested included resources apply their own type's fieldset"() {
+    given:
+    def linkedComments = List.of(
+        new Comment("c1", "Nice", new Person("p1", "Ann")),
+        new Comment("c2", "Also", new Person("p2", "Bea")))
+    def selection = RepresentationSelection.builder()
+        .include("comments.author")
+        .fields("articles", "title")
+        .fields("comments", "body")
+        .fields("people")
+        .build()
+
+    when:
+    def document = parse(api().resources().writeOne(
+        new Article("1", "T", "B", linkedComments, null),
+        ResourceWriteOptions.defaults().withSelection(selection)))
+    def included = document.included as List
+
+    then:
+    document.data.attributes == [title: "T"]
+    !document.data.containsKey("relationships")
+    included*.type == [
+      "comments",
+      "comments",
+      "people",
+      "people"
+    ]
+    included*.id == ["c1", "c2", "p1", "p2"]
+    included.take(2)*.attributes == [
+      [body: "Nice"],
+      [body: "Also"]
+    ]
+    !included.get(0).containsKey("relationships")
+    !included.get(1).containsKey("relationships")
+    !included.get(2).containsKey("attributes")
+    !included.get(3).containsKey("attributes")
+    !included.get(2).containsKey("relationships")
+    !included.get(3).containsKey("relationships")
   }
 
   def "reads included resources as core resource objects in wire order"() {

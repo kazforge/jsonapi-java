@@ -11,12 +11,8 @@ import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.Relationships
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.model.ResourceObject
-import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.document.DocumentEnvelope
 import com.kazforge.jsonapi.mapping.RelationshipLinkage
-import com.kazforge.jsonapi.representation.RepresentationPolicy
-import com.kazforge.jsonapi.representation.RepresentationSelection
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMapMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMeta
@@ -28,19 +24,13 @@ import com.kazforge.jsonapi.fixtures.domainpatch.CommentIdMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.CommentsRelationshipMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.WholeMetaTargetFixtures
 import com.kazforge.jsonapi.fixtures.domainwrite.Article
-import com.kazforge.jsonapi.fixtures.domainwrite.ArticleWithSet
-import com.kazforge.jsonapi.fixtures.domainwrite.ArticleWithUnannotatedExtra
-import com.kazforge.jsonapi.fixtures.domainwrite.BlogWithJsonProperty
 import com.kazforge.jsonapi.fixtures.domainwrite.Comment
-import com.kazforge.jsonapi.fixtures.domainwrite.ConventionalId
 import com.kazforge.jsonapi.fixtures.domainwrite.InheritedBlogFixtures
 import com.kazforge.jsonapi.fixtures.domainwrite.Person
 import com.kazforge.jsonapi.fixtures.domainwrite.RelationshipContainerFixtures
 import com.kazforge.jsonapi.fixtures.domainwrite.RelationshipLinkageContainerFixtures
 import com.kazforge.jsonapi.fixtures.domainwrite.SamplePojo
-import com.kazforge.jsonapi.fixtures.domainwrite.Tag
 import com.kazforge.jsonapi.fixtures.domainwrite.WriteDiagnosticsFixtures
-import com.kazforge.jsonapi.fixtures.localid.LocalIdentityArticle
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -59,18 +49,13 @@ class ResourceMapperSpec extends Specification {
   private static final String EDITOR = "editor"
   private static final String ROLE = "role"
   private static final String DISPLAY_NAME = "displayName"
-  private static final String TAGS = "tags"
   private static final String AUTHOR = "author"
   private static final String TITLE_TEXT = "Title"
   private static final String MY_BLOG = "My Blog"
-  private static final String GREAT = "Great"
   private static final String PINNED = "pinned"
   private static final String EXT_HREF = "ext:href"
   private static final String EXAMPLE_HREF = "https://example.test/p1"
   private static final String SOURCE = "source"
-
-  private static final Set<Tag> TAGS_SET =
-  Collections.unmodifiableSet(new LinkedHashSet<>(List.of(new Tag("java"), new Tag("groovy"))))
 
   private static final Links ENVELOPE_LINKS = Links.ofLinks(Collections.singletonMap("self", null))
   private static final Meta ENVELOPE_META = Meta.of(Map.of("key", "value"))
@@ -86,15 +71,6 @@ class ResourceMapperSpec extends Specification {
 
     where:
     id | input | expected
-    "explicit @JsonApiId and @JsonApiAttribute" | new Article("1", "Hello", "Body text", List.of(), null) | articleResource("1", "Hello", "Body text", List.of(), null)
-    "attribute name override" | new Article("1", TITLE_TEXT, "Content", List.of(), null) | articleResource("1", TITLE_TEXT, "Content", List.of(), null)
-    "conventional id property" | new ConventionalId("42", "name value") | new ResourceObject("conventionals", "42", null, Attributes.ofAttributes(singleAttribute("name", "name value")), null, null, null, Map.of())
-    "unannotated extra property is not an attribute" | new ArticleWithUnannotatedExtra("1", TITLE_TEXT, "secret") | attributesOnlyArticle("1", Map.of(TITLE, TITLE_TEXT))
-    "maps @JsonProperty naming" | new BlogWithJsonProperty("b1", MY_BLOG) | new ResourceObject("blogs", "b1", null, Attributes.ofAttributes(singleAttribute("blog_title", MY_BLOG)), null, null, null, Map.of())
-    "nullable to-one relationship to null linkage" | new Article("1", "T", "B", List.of(), null) | articleResource("1", "T", "B", List.of(), null)
-    "to-one relationship to single linkage" | new Article("1", "T", "B", List.of(), new Person("p1", ALICE)) | articleResource("1", "T", "B", List.of(), new Person("p1", ALICE))
-    "empty to-many relationship to empty linkage" | new Article("1", "T", "B", List.of(), null) | articleResource("1", "T", "B", List.of(), null)
-    "populated to-many relationship" | new Article("1", "T", "B", List.of(new Comment("c1", "Nice", null), new Comment("c2", GREAT, null)), null) | articleResource("1", "T", "B", List.of(new Comment("c1", "Nice", null), new Comment("c2", GREAT, null)), null)
     "mutable POJO" | new SamplePojo("p1", "Example", List.of()) | new ResourceObject("pojos", "p1", null, Attributes.ofAttributes(singleAttribute("display-name", "Example")), Relationships.ofRelationships(Map.of(COMMENTS, relationship(RelationshipData.IdentifierCollectionLinkage.empty()))), null, null, Map.of())
     "to-one identifier meta onto linkage" | new ArticleWithRelationshipLinkage("1", "T", new RelationshipLinkage<>(ResourceIdentifier.of(PEOPLE, "p1"), new AuthorIdMeta(EDITOR)), List.of(), null, null) | identifierMetaArticle(identifier(PEOPLE, "p1", Meta.of(Map.of(ROLE, EDITOR))), null, List.of(), null)
     "to-many identifier meta with each wrapper element" | new ArticleWithRelationshipLinkage("1", "T", null, List.of(new RelationshipLinkage<>(ResourceIdentifier.of(COMMENTS, "c1"), new CommentIdMeta(true)), new RelationshipLinkage<>(ResourceIdentifier.of(COMMENTS, "c2"), null)), null, null) | identifierMetaArticle(null, null, List.of(identifier(COMMENTS, "c1", Meta.of(Map.of(PINNED, true))), ResourceIdentifier.of(COMMENTS, "c2")), null)
@@ -119,40 +95,12 @@ class ResourceMapperSpec extends Specification {
     "Optional-wrapped bean meta writes unwrapped members" | new ArticleWithOptionalMeta("1", "T", null, Optional.of(new ArticleMeta("cms", "n")), Optional.of(new AuthorMeta(ALICE))) | articleWithMetaResource(Meta.of(Map.of(SOURCE, "cms", "note", "n")), null, Meta.of(Map.of(DISPLAY_NAME, ALICE)))
     "present Optional attribute is unwrapped" | new RelationshipContainerFixtures.ArticleWithOptionalAttribute("1", TITLE_TEXT, Optional.of("Sub")) | attributesOnlyArticle("1", Map.of(TITLE, TITLE_TEXT, "subtitle", "Sub"))
     "empty Optional attribute is omitted" | new RelationshipContainerFixtures.ArticleWithOptionalAttribute("1", TITLE_TEXT, Optional.empty()) | attributesOnlyArticle("1", Map.of(TITLE, TITLE_TEXT))
-    "array to-many relationship produces collection linkage" | new RelationshipContainerFixtures.ArticleWithCommentArray("1", "T", [
-      new Comment("c1", "Nice", null),
-      new Comment("c2", GREAT, null)
-    ] as Comment[]) | titledCommentsArticle("T", List.of(ResourceIdentifier.of(COMMENTS, "c1"), ResourceIdentifier.of(COMMENTS, "c2")))
-    "present Optional to-one relationship produces single linkage" | new RelationshipContainerFixtures.ArticleWithOptionalRelationship("1", Optional.of(new Comment("c1", "Nice", null))) | commentRelationshipArticle(new RelationshipData.SingleLinkage(ResourceIdentifier.of(COMMENTS, "c1")))
-    "empty Optional to-one relationship produces null linkage" | new RelationshipContainerFixtures.ArticleWithOptionalRelationship("1", Optional.empty()) | commentRelationshipArticle(RelationshipData.NullLinkage.INSTANCE)
     "present Optional id is unwrapped to the identifier string" | new RelationshipContainerFixtures.ArticleWithOptionalId(Optional.of("99"), TITLE_TEXT) | attributesOnlyArticle("99", Map.of(TITLE, TITLE_TEXT))
     "inherited properties from a base class are mapped" | new InheritedBlogFixtures.ExtendedBlog("b1", MY_BLOG, "A description") | new ResourceObject("blogs", "b1", null, Attributes.ofAttributes(Map.of("name", MY_BLOG, "description", "A description")), null, null, null, Map.of())
-    "leading null in a to-many ResourceIdentifier collection is skipped" | new RelationshipContainerFixtures.ArticleWithNullableIdentifierList("1", nullableList((ResourceIdentifier) null, ResourceIdentifier.of(COMMENTS, "1"))) | itemsRelationshipArticle(List.of(ResourceIdentifier.of(COMMENTS, "1")))
-    "leading null in a to-many ResourceIdentifier array is skipped" | new RelationshipContainerFixtures.ArticleWithNullableIdentifierArray("1", [
-      null,
-      ResourceIdentifier.of(COMMENTS, "1")
-    ] as ResourceIdentifier[]) | itemsRelationshipArticle(List.of(ResourceIdentifier.of(COMMENTS, "1")))
     "broad declared element type short-circuits native validation for an empty collection" | new WriteDiagnosticsFixtures.ObjectElementListRelEntity("1", List.of()) | itemsRelationshipArticle(List.of())
     "broad declared element type short-circuits native validation for direct identifiers" | new WriteDiagnosticsFixtures.ObjectElementListRelEntity("1", List.of(ResourceIdentifier.of(COMMENTS, "1"))) | itemsRelationshipArticle(List.of(ResourceIdentifier.of(COMMENTS, "1")))
   }
 
-
-  def "maps Set-based relationships without depending on Set iteration order"() {
-    when:
-    def actual = mapper.toResource(new ArticleWithSet("1", "T", TAGS_SET))
-
-    then:
-    actual.type() == ARTICLES
-    actual.id() == "1"
-    actual.attributes().attributes() == [title: "T"]
-    def linkage = actual.relationships().relationships().tags.data()
-    linkage instanceof RelationshipData.IdentifierCollectionLinkage
-    linkage.identifiers().size() == 2
-    new HashSet<ResourceIdentifier>(linkage.identifiers()) ==
-        new HashSet<>(List.of(
-        ResourceIdentifier.of(TAGS, "java"),
-        ResourceIdentifier.of(TAGS, "groovy")))
-  }
 
   def "maps Set RelationshipLinkage meta without depending on Set iteration order"() {
     given:
@@ -170,7 +118,7 @@ class ResourceMapperSpec extends Specification {
     def linkage = actual.relationships().relationships().comments.data()
     linkage instanceof RelationshipData.IdentifierCollectionLinkage
     linkage.identifiers().size() == 1
-    new HashSet<ResourceIdentifier>(linkage.identifiers()) ==
+    linkage.identifiers().toSet() ==
         Set.of(identifier(COMMENTS, "c1", Meta.of(Map.of(PINNED, true))))
   }
 
@@ -383,39 +331,6 @@ class ResourceMapperSpec extends Specification {
         ARTICLES, id, null, Attributes.ofAttributes(attributes), null, null, null, Map.of())
   }
 
-  private static ResourceObject titledCommentsArticle(
-      String title, List<ResourceIdentifier> comments) {
-    return new ResourceObject(
-        ARTICLES,
-        "1",
-        null,
-        Attributes.ofAttributes(singleAttribute(TITLE, title)),
-        Relationships.ofRelationships(
-        Map.of(
-        COMMENTS,
-        new Relationship(
-        new RelationshipData.IdentifierCollectionLinkage(comments),
-        null,
-        null,
-        Map.of()))),
-        null,
-        null,
-        Map.of())
-  }
-
-  private static ResourceObject commentRelationshipArticle(RelationshipData data) {
-    return new ResourceObject(
-        ARTICLES,
-        "1",
-        null,
-        null,
-        Relationships.ofRelationships(
-        Map.of("comment", new Relationship(data, null, null, Map.of()))),
-        null,
-        null,
-        Map.of())
-  }
-
   private static ResourceObject itemsRelationshipArticle(List<ResourceIdentifier> items) {
     return new ResourceObject(
         ARTICLES,
@@ -433,34 +348,5 @@ class ResourceMapperSpec extends Specification {
         null,
         null,
         Map.of())
-  }
-
-  def "toMappedCreateDocument omits absent primary identity while ordinary mapping requires it"() {
-    given:
-    def draft = new LocalIdentityArticle(null, null, "Draft")
-    def declared = JsonMapper.builder().build().constructType(LocalIdentityArticle)
-
-    when:
-    def mapped = mapper.toMappedCreateDocument(
-        draft, declared, null, RepresentationSelection.none(), RepresentationPolicy.defaults())
-
-    then:
-    def primary = (mapped.document().data() as DocumentData.SingleResource).resource()
-    !primary.hasId()
-    !primary.hasLid()
-
-    when:
-    mapper.toMappedDocument(draft, null, RepresentationSelection.none(), RepresentationPolicy.defaults())
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.MISSING_IDENTIFIER
-  }
-
-  @SafeVarargs
-  private static <T> List<T> nullableList(T... values) {
-    List<T> list = new ArrayList<>(values.length)
-    Collections.addAll(list, values)
-    return list
   }
 }
