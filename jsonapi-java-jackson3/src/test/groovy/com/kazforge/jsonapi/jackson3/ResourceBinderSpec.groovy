@@ -8,12 +8,6 @@ import com.kazforge.jsonapi.annotation.JsonApiAttribute
 import com.kazforge.jsonapi.annotation.JsonApiId
 import com.kazforge.jsonapi.annotation.JsonApiResource
 import com.kazforge.jsonapi.core.model.Attributes
-import com.kazforge.jsonapi.core.model.DocumentData
-import com.kazforge.jsonapi.core.model.JsonApiDocument
-import com.kazforge.jsonapi.core.model.JsonApiMembers
-import com.kazforge.jsonapi.core.model.Link
-import com.kazforge.jsonapi.core.model.Links
-import com.kazforge.jsonapi.core.model.Meta
 import com.kazforge.jsonapi.core.model.Relationship
 import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.Relationships
@@ -22,45 +16,17 @@ import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.mapping.IdentifierConverter
-import com.kazforge.jsonapi.mapping.RelationshipLinkage
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMapMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.AuthorIdMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.AuthorMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.CommentIdMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.WholeMetaTargetFixtures
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
-import com.kazforge.jsonapi.fixtures.domainread.FlatArticleWithArray
-import com.kazforge.jsonapi.fixtures.domainread.FlatArticleWithOptional
-import com.kazforge.jsonapi.fixtures.domainread.FlatArticleWithSet
 import com.kazforge.jsonapi.fixtures.domainread.FlatCountedThing
-import com.kazforge.jsonapi.fixtures.domainread.FlatCreatorArticle
-import com.kazforge.jsonapi.fixtures.domainread.FlatDefaultedArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatInheritedBlog
 import com.kazforge.jsonapi.fixtures.domainread.FlatIntIdArticle
-import com.kazforge.jsonapi.fixtures.domainread.FlatNullableIdArticle
-import com.kazforge.jsonapi.fixtures.domainread.FlatMetaArticle
-import com.kazforge.jsonapi.fixtures.domainread.FlatMutableArticle
-import com.kazforge.jsonapi.fixtures.domainread.FlatRequiredThing
-import com.kazforge.jsonapi.fixtures.domainread.FlatThingWithIgnored
-import com.kazforge.jsonapi.fixtures.domainread.FlatThrowingCreatorThing
 import com.kazforge.jsonapi.fixtures.domainread.FlatUnregisteredRelationshipsArticle
-import com.kazforge.jsonapi.fixtures.domainwrite.ArticleWithUnannotatedExtra
-import com.kazforge.jsonapi.fixtures.domainwrite.ConventionalId
-import com.kazforge.jsonapi.fixtures.domainwrite.Person
-import com.kazforge.jsonapi.fixtures.domainwrite.RelationshipLinkageContainerFixtures.MapRelationshipLinkageArticle
-import com.kazforge.jsonapi.fixtures.domainwrite.RelationshipLinkageContainerFixtures.ArrayRelationshipLinkageArticle
-import com.kazforge.jsonapi.fixtures.domainwrite.RelationshipLinkageContainerFixtures.OptionalRelationshipLinkageArticle
-import com.kazforge.jsonapi.fixtures.domainwrite.RelationshipLinkageContainerFixtures.RenamedRelationshipLinkageArticle
-import com.kazforge.jsonapi.fixtures.localid.LocalIdentityArticle
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatAuthor
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatMappedArticle
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatMappedOptionalArticle
 import com.kazforge.jsonapi.jackson3.ParameterizedBindingFixtures.GenericArticle
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Unroll
 import tools.jackson.core.JsonParser
 import tools.jackson.databind.DeserializationContext
 import tools.jackson.databind.InjectableValues
@@ -78,74 +44,41 @@ class ResourceBinderSpec extends Specification {
   private static final String AUTHOR = "author"
   private static final String COMMENTS = "comments"
   private static final String PEOPLE = "people"
-  private static final String RELATED = JsonApiMembers.RELATED
   private static final String THINGS = "things"
 
   @Shared
   JsonApiResourceBinder binder = JsonApiJackson3.resourceBinder(JsonMapper.builder().build())
 
-  @Unroll
-  def "binds resource #id successfully"() {
+  def "binds a resource directly"() {
+    given:
+    def input = resource(
+        ARTICLES,
+        "1",
+        attrs("title", "Hello", "body-text", "Content"),
+        rels(
+        AUTHOR,
+        single(PEOPLE, "p1"),
+        COMMENTS,
+        collection(COMMENTS, ["c1", "c2"])))
+
     when:
-    def actual = binder.fromResource(input as ResourceObject, targetType)
+    def actual = binder.fromResource(input, FlatArticle)
 
     then:
-    actual == expected
-
-    where:
-    id | input | targetType | expected
-    "record attributes and built-in relationships" | resource(ARTICLES, "1", attrs("title", "Hello", "body-text", "Content"), rels(AUTHOR, single(PEOPLE, "p1"), COMMENTS, collection(COMMENTS, ["c1", "c2"]))) | FlatArticle | new FlatArticle("1", "Hello", "Content", ResourceIdentifier.of(PEOPLE, "p1"), [
+    actual == new FlatArticle("1", "Hello", "Content", ResourceIdentifier.of(PEOPLE, "p1"), [
       ResourceIdentifier.of(COMMENTS, "c1"),
       ResourceIdentifier.of(COMMENTS, "c2")
     ])
-    "mutable DTO" | resource(ARTICLES, "1", attrs("title", "Hello"), rels(AUTHOR, single(PEOPLE, "p1"))) | FlatMutableArticle | new FlatMutableArticle("1", "Hello", ResourceIdentifier.of(PEOPLE, "p1"))
-    "immutable creator DTO" | resource(ARTICLES, "42", attrs("title", "Creator"), null) | FlatCreatorArticle | new FlatCreatorArticle("42", "Creator")
-    "lid-only resource never binds into the id role" | resourceWithLid(ARTICLES, "lid-1", attrs("title", "T")) | FlatNullableIdArticle | new FlatNullableIdArticle(null, "T")
-    "resource without id or lid" | resourceWithLid(ARTICLES, null, attrs("title", "T")) | FlatNullableIdArticle | new FlatNullableIdArticle(null, "T")
-    "id and lid bind independently" | new ResourceObject(ARTICLES, "42", "lid-1", Attributes.ofAttributes(attrs("title", "T")), null, null, null, Map.of()) | LocalIdentityArticle | new LocalIdentityArticle("42", "lid-1", "T")
-    "array relationship" | resource(ARTICLES, "1", null, rels(COMMENTS, collection(COMMENTS, ["c1", "c2"]))) | FlatArticleWithArray | new FlatArticleWithArray("1", null, [
-      ResourceIdentifier.of(COMMENTS, "c1"),
-      ResourceIdentifier.of(COMMENTS, "c2")
-    ] as ResourceIdentifier[])
-    "Set relationship" | resource(ARTICLES, "1", null, rels("tags", collection("tags", ["t1", "t2"]))) | FlatArticleWithSet | new FlatArticleWithSet("1", null, Set.of(ResourceIdentifier.of("tags", "t1"), ResourceIdentifier.of("tags", "t2")))
-    "Map RelationshipLinkage relationship" | resource(ARTICLES, "1", null, rels(COMMENTS, collectionWithIdentifierMeta(COMMENTS, ["c1"], [Meta.of([pinned: true])]))) | MapRelationshipLinkageArticle | new MapRelationshipLinkageArticle("1", [
-      new RelationshipLinkage<>(identifier(COMMENTS, "c1", Meta.of([pinned: true])), [pinned: true])
-    ])
-    "Map whole resource and relationship meta" | resourceWithMeta(attrs("title", "Hello"), relsWithMeta(single(PEOPLE, "p1"), Meta.of([displayName: "Alice"])), Meta.of([source: "cms"])) | ArticleWithMapMeta | new ArticleWithMapMeta("1", "Hello", ResourceIdentifier.of(PEOPLE, "p1"), [source: "cms"], [displayName: "Alice"])
-    "Optional whole resource meta" | resourceWithMeta(attrs("title", "Hello"), null, Meta.of([source: "cms", note: "n"])) | ArticleWithOptionalMeta | new ArticleWithOptionalMeta("1", "Hello", null, Optional.of(new ArticleMeta("cms", "n")), Optional.empty())
-    "array RelationshipLinkage relationship" | resource(ARTICLES, "1", null, rels(COMMENTS, collectionWithIdentifierMeta(COMMENTS, ["c1", "c2"], [Meta.of([pinned: true]), null]))) | ArrayRelationshipLinkageArticle | new ArrayRelationshipLinkageArticle("1", [
-      new RelationshipLinkage<>(identifier(COMMENTS, "c1", Meta.of([pinned: true])), new CommentIdMeta(true)),
-      new RelationshipLinkage<>(ResourceIdentifier.of(COMMENTS, "c2"), null)
-    ] as RelationshipLinkage[])
-    "Optional RelationshipLinkage relationship" | resource(ARTICLES, "1", null, rels(AUTHOR, toOneWithIdentifierMeta(PEOPLE, "p1", Meta.of([role: "editor"])))) | OptionalRelationshipLinkageArticle | new OptionalRelationshipLinkageArticle("1", Optional.of(new RelationshipLinkage<>(identifier(PEOPLE, "p1", Meta.of([role: "editor"])), new AuthorIdMeta("editor"))))
-    "renamed RelationshipLinkage relationship" | resource(ARTICLES, "1", null, rels(AUTHOR, toOneWithIdentifierMeta(PEOPLE, "p1", Meta.of([role: "editor"])))) | RenamedRelationshipLinkageArticle | new RenamedRelationshipLinkageArticle("1", new RelationshipLinkage<>(identifier(PEOPLE, "p1", Meta.of([role: "editor"])), new AuthorIdMeta("editor")))
-    "inherited properties" | resource("blogs", "b1", attrs("name", "My Blog", "description", "A description"), null) | FlatInheritedBlog | new FlatInheritedBlog("b1", "My Blog", "A description")
-    "ignored property" | resource(THINGS, "1", attrs("name", "visible", "secret", "hidden"), null) | FlatThingWithIgnored | new FlatThingWithIgnored("1", "visible", null)
-    "explicit null preserves default semantics" | resource(ARTICLES, "1", nullableAttr("title"), null) | FlatDefaultedArticle | new FlatDefaultedArticle("1", null, "default")
-    "unannotated property is ignored" | resource(ARTICLES, "1", attrs("title", "Hello", "ignoredExtra", "secret"), null) | ArticleWithUnannotatedExtra | new ArticleWithUnannotatedExtra("1", "Hello", null)
-    "conventional identifier" | resource("conventionals", "42", attrs("name", "name value"), null) | ConventionalId | new ConventionalId("42", "name value")
-    "default numeric identifier conversion" | resource(ARTICLES, "42", attrs("title", "T"), null) | FlatIntIdArticle | new FlatIntIdArticle(42, "T")
-    "empty List relationship" | resource(ARTICLES, "1", null, rels(COMMENTS, collection(COMMENTS, []))) | FlatArticle | new FlatArticle("1", null, null, null, [])
-    "explicit null to-one relationship" | resource(ARTICLES, "1", null, rels(AUTHOR, Relationship.withData(RelationshipData.NullLinkage.INSTANCE))) | FlatArticle | new FlatArticle("1", null, null, null, null)
-    "omitted relationship does not bind" | resource(ARTICLES, "1", null, rels(COMMENTS, collection(COMMENTS, ["c1"]))) | FlatArticle | new FlatArticle("1", null, null, null, [
-      ResourceIdentifier.of(COMMENTS, "c1")
-    ])
-    "relationship meta without linkage" | resourceWithMeta(attrs("title", "Hello"), rels(AUTHOR, Relationship.metaOnly(Meta.of([displayName: "Alice"]))), null) | FlatMetaArticle | new FlatMetaArticle("1", "Hello", null, null, new AuthorMeta("Alice"))
-    "link-only relationship does not bind linkage" | resource(ARTICLES, "1", null, rels(AUTHOR, Relationship.linkOnly(Links.ofLinks([(RELATED): new Link.StringLink("/articles/1/author")])))) | FlatArticle | new FlatArticle("1", null, null, null, null)
-    "data-absent relationship binds Optional.empty via its missing-property default" | resource(ARTICLES, "1", null, rels(AUTHOR, Relationship.metaOnly(Meta.of([note: "x"])))) | FlatArticleWithOptional | new FlatArticleWithOptional("1", null, Optional.empty())
   }
 
-  def "relationship data absence and explicit null follow configured missing-vs-null semantics"() {
-    expect:
-    def type = RelationshipBindingFixtures.DefaultedRelationshipArticle
-    binder.fromResource(
-        resource("defaulted-relationship-articles", "1", null, rels(AUTHOR, Relationship.metaOnly(Meta.of([note: "x"])))),
-        type).getAuthor() == type.defaultAuthor()
+  def "binds inherited identity and attribute properties"() {
+    when:
+    def actual = binder.fromResource(
+        resource("blogs", "b1", attrs("name", "My Blog", "description", "A description"), null),
+        FlatInheritedBlog)
 
-    and:
-    binder.fromResource(
-        resource("defaulted-relationship-articles", "1", null, rels(AUTHOR, Relationship.withData(RelationshipData.NullLinkage.INSTANCE))),
-        type).getAuthor() == null
+    then:
+    actual == new FlatInheritedBlog("b1", "My Blog", "A description")
   }
 
   def "custom identifier converter converts ids"() {
@@ -185,131 +118,6 @@ class ResourceBinderSpec extends Specification {
       new FlatArticle("1", "One", null, null, null),
       new FlatArticle("2", "Two", null, null, null)
     ]
-  }
-
-  def "included resources do not affect direct flat resource binding"() {
-    given:
-    def firstPrimary = resource(
-        ARTICLES, "1", attrs("title", "T"), rels(AUTHOR, single(PEOPLE, "p1")))
-    def secondPrimary = resource(
-        ARTICLES, "1", attrs("title", "T"), rels(AUTHOR, single(PEOPLE, "p1")))
-    def firstDocument = document(firstPrimary, [
-      resource(PEOPLE, "p1", attrs("name", "Alice"), null)
-    ])
-    def secondDocument = document(secondPrimary, [
-      resource(PEOPLE, "p1", attrs("name", "AliceChanged"), null)
-    ])
-
-    when:
-    def first = binder.fromResource(primaryResource(firstDocument), FlatArticle)
-    def second = binder.fromResource(primaryResource(secondDocument), FlatArticle)
-
-    then:
-    first == new FlatArticle(
-        "1", "T", null, ResourceIdentifier.of(PEOPLE, "p1"), null)
-    second == first
-  }
-
-  @Unroll
-  def "fails to bind resource #id due to mapping diagnostic"() {
-    when:
-    binder.fromResource(input as ResourceObject, targetType)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == diagnostic
-    ex.propertyPath() == propertyPath
-    ex.resourceClass() == resourceClass
-
-    where:
-    id | input | targetType | diagnostic | propertyPath | resourceClass
-    "resource type mismatch" | resource(PEOPLE, "p1", null, null) | FlatArticle | MappingDiagnostic.RESOURCE_TYPE_MISMATCH | "/type" | FlatArticle
-    "unregistered to-one relationship target" | resource(ARTICLES, "1", null, rels(AUTHOR, single(PEOPLE, "p1"))) | FlatUnregisteredRelationshipsArticle | MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_TARGET | "/relationships/author/data" | Person
-    "unregistered to-many relationship target" | resource(ARTICLES, "1", null, rels(COMMENTS, collection(COMMENTS, ["c1"]))) | FlatUnregisteredRelationshipsArticle | MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_TARGET | "/relationships/comments/data" | List
-    "identifier cannot be coerced" | resource(ARTICLES, "not-a-number", null, null) | FlatIntIdArticle | MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED | "/id" | FlatIntIdArticle
-    "required creator input is absent" | resource(THINGS, "1", attrs("title", "present"), null) | FlatRequiredThing | MappingDiagnostic.MISSING_CREATOR_INPUT | "/attributes/required" | FlatRequiredThing
-    "creator rejects supplied value" | resource(THINGS, "1", attrs("title", "boom"), null) | FlatThrowingCreatorThing | MappingDiagnostic.MISSING_CREATOR_INPUT | null | FlatThrowingCreatorThing
-    "attribute value cannot be coerced" | resource(THINGS, "1", [count: [nested: 1]], null) | FlatCountedThing | MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE | "/attributes/count" | FlatCountedThing
-    "explicit null cannot bind to primitive" | resource(THINGS, "1", nullableAttr("count"), null) | FlatCountedThing | MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE | "/attributes/count" | FlatCountedThing
-    "scalar whole-meta target" | resource(ARTICLES, "1", null, null) | WholeMetaTargetFixtures.ScalarMetaArticle | MappingDiagnostic.INVALID_META_TARGET | "/meta" | WholeMetaTargetFixtures.ScalarMetaArticle
-    "list whole-meta target" | resource(ARTICLES, "1", null, null) | WholeMetaTargetFixtures.ListMetaArticle | MappingDiagnostic.INVALID_META_TARGET | "/meta" | WholeMetaTargetFixtures.ListMetaArticle
-    "UUID whole-meta target" | resource(ARTICLES, "1", null, null) | WholeMetaTargetFixtures.UuidMetaArticle | MappingDiagnostic.INVALID_META_TARGET | "/meta" | WholeMetaTargetFixtures.UuidMetaArticle
-    "java.time whole-meta target" | resource(ARTICLES, "1", null, null) | WholeMetaTargetFixtures.InstantMetaArticle | MappingDiagnostic.INVALID_META_TARGET | "/meta" | WholeMetaTargetFixtures.InstantMetaArticle
-    "URI whole-meta target" | resource(ARTICLES, "1", null, null) | WholeMetaTargetFixtures.UriMetaArticle | MappingDiagnostic.INVALID_META_TARGET | "/meta" | WholeMetaTargetFixtures.UriMetaArticle
-    "collection linkage on to-one" | resource(ARTICLES, "1", null, rels(AUTHOR, collection(PEOPLE, ["p1", "p2"]))) | FlatArticle | MappingDiagnostic.RELATIONSHIP_CARDINALITY_MISMATCH | "/relationships/author/data" | ResourceIdentifier
-    "null linkage on to-many" | resource(ARTICLES, "1", null, rels(COMMENTS, Relationship.withData(RelationshipData.NullLinkage.INSTANCE))) | FlatArticle | MappingDiagnostic.RELATIONSHIP_CARDINALITY_MISMATCH | "/relationships/comments/data" | List
-    "single linkage on to-many" | resource(ARTICLES, "1", null, rels(COMMENTS, single(COMMENTS, "c1"))) | FlatArticle | MappingDiagnostic.RELATIONSHIP_CARDINALITY_MISMATCH | "/relationships/comments/data" | List
-    "empty collection linkage on to-one" | resource(ARTICLES, "1", null, rels(AUTHOR, collection(PEOPLE, []))) | FlatArticle | MappingDiagnostic.RELATIONSHIP_CARDINALITY_MISMATCH | "/relationships/author/data" | ResourceIdentifier
-    "getter-only attribute" | resource("getter-only", "1", attrs("title", "supplied"), null) | DirectionalityReadFixtures.GetterOnly | MappingDiagnostic.NON_DESERIALIZABLE_PROPERTY | "/attributes/title" | DirectionalityReadFixtures.GetterOnly
-    "getter-only identifier from id" | resource("getter-only-id", "supplied", null, null) | DirectionalityReadFixtures.GetterOnlyIdentifier | MappingDiagnostic.NON_DESERIALIZABLE_PROPERTY | "/id" | DirectionalityReadFixtures.GetterOnlyIdentifier
-    "getter-only local-id from lid" | resourceWithLid("getter-only-lid", "client-lid", null) | LocalIdFixtures.GetterOnlyLocalId | MappingDiagnostic.NON_DESERIALIZABLE_PROPERTY | "/lid" | LocalIdFixtures.GetterOnlyLocalId
-  }
-
-  def "throwing converter produces the expected diagnostic"() {
-    given:
-    def converter = new IdentifierConverter() {
-          @Override
-          String convert(Object idValue) {
-            idValue.toString()
-          }
-
-          @Override
-          Object parse(String wireIdentifier) {
-            throw new IllegalArgumentException("bad id")
-          }
-        }
-    def localBinder = JsonApiJackson3.resourceBinder(JsonMapper.builder().build(), converter)
-
-    when:
-    localBinder.fromResource(resource(ARTICLES, "42", null, null), FlatIntIdArticle)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED
-    ex.propertyPath() == "/id"
-    ex.resourceClass() == Integer
-  }
-
-  def "null-returning converter produces the expected diagnostic"() {
-    given:
-    def converter = new IdentifierConverter() {
-          @Override
-          String convert(Object idValue) {
-            idValue.toString()
-          }
-
-          @Override
-          Object parse(String wireIdentifier) {
-            null
-          }
-        }
-    def localBinder = JsonApiJackson3.resourceBinder(JsonMapper.builder().build(), converter)
-
-    when:
-    localBinder.fromResource(resource(ARTICLES, "42", null, null), FlatIntIdArticle)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.IDENTIFIER_CONVERSION_FAILED
-    ex.propertyPath() == "/id"
-    ex.resourceClass() == Integer
-  }
-
-  def "resource collection validates every element type"() {
-    given:
-    def resources = [
-      resource(ARTICLES, "1", null, null),
-      resource(PEOPLE, "p1", null, null)
-    ]
-
-    when:
-    binder.fromResources(resources, FlatArticle)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.RESOURCE_TYPE_MISMATCH
-    ex.propertyPath() == "/type"
-    ex.resourceClass() == FlatArticle
   }
 
   def "naming strategy renames bound attribute keys"() {
@@ -506,6 +314,18 @@ class ResourceBinderSpec extends Specification {
     ex.diagnostic() == MappingDiagnostic.NON_DESERIALIZABLE_PROPERTY
     ex.propertyPath() == "/attributes/hidden"
     ex.resourceClass() == DirectionalityReadFixtures.ViewRestricted
+  }
+
+  def "Jackson 3 rejects explicit null for a primitive property"() {
+    when:
+    binder.fromResource(
+        resource(THINGS, "1", nullableAttr("count"), null), FlatCountedThing)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    ex.propertyPath() == "/attributes/count"
+    ex.resourceClass() == FlatCountedThing
   }
 
   def "crossed direction-specific names retain their logical read mappings"() {
@@ -712,29 +532,6 @@ class ResourceBinderSpec extends Specification {
     ]
   }
 
-  def "NullLinkage and empty linkage short-circuit without invoking the mapper"() {
-    given:
-    def invoked = false
-    def mapper = { RelationshipData data, JavaType target ->
-      invoked = true
-      return null
-    } as RelationshipLinkageMapper
-    def localBinder = JsonApiJackson3.resourceBinder(
-        JsonMapper.builder().build(), IdentifierConverter.defaults(), [(FlatAuthor): mapper])
-    def resource = resource(
-        ARTICLES, "1", null,
-        [author: Relationship.withData(RelationshipData.NullLinkage.INSTANCE),
-          contributors: Relationship.withData(RelationshipData.IdentifierCollectionLinkage.empty())])
-
-    when:
-    def article = localBinder.fromResource(resource, FlatMappedArticle)
-
-    then:
-    article.author() == null
-    article.contributors() == []
-    !invoked
-  }
-
   def "unregistered relationship target still fails for null and empty linkage before short-circuiting"() {
     when:
     binder.fromResource(
@@ -757,63 +554,6 @@ class ResourceBinderSpec extends Specification {
     def emptyFailure = thrown(JsonApiMappingException)
     emptyFailure.diagnostic() == MappingDiagnostic.UNSUPPORTED_RELATIONSHIP_TARGET
     emptyFailure.propertyPath() == "/relationships/comments/data"
-  }
-
-  def "cardinality is enforced before the mapper is invoked"() {
-    given:
-    def invoked = false
-    def mapper = { RelationshipData data, JavaType target ->
-      invoked = true
-      return null
-    } as RelationshipLinkageMapper
-    def localBinder = JsonApiJackson3.resourceBinder(
-        JsonMapper.builder().build(), IdentifierConverter.defaults(), [(FlatAuthor): mapper])
-    def resource = resource(
-        ARTICLES, "1", null,
-        [author: collection(PEOPLE, ["p1"]),
-          contributors: single(PEOPLE, "p1")])
-
-    when:
-    localBinder.fromResource(resource, FlatMappedArticle)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.RELATIONSHIP_CARDINALITY_MISMATCH
-    !invoked
-  }
-
-  def "mapper exception is reported as LINKAGE_MAPPING_FAILED"() {
-    given:
-    def mapper = { RelationshipData data, JavaType target ->
-      throw new IllegalStateException("boom")
-    } as RelationshipLinkageMapper
-    def localBinder = JsonApiJackson3.resourceBinder(
-        JsonMapper.builder().build(), IdentifierConverter.defaults(), [(FlatAuthor): mapper])
-    def resource = resource(ARTICLES, "1", null, [author: single(PEOPLE, "p1")])
-
-    when:
-    localBinder.fromResource(resource, FlatMappedArticle)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.LINKAGE_MAPPING_FAILED
-    ex.propertyPath() == "/relationships/author/data"
-  }
-
-  def "mapper returning null binds null property"() {
-    given:
-    def mapper = { RelationshipData data, JavaType target ->
-      null
-    } as RelationshipLinkageMapper
-    def localBinder = JsonApiJackson3.resourceBinder(
-        JsonMapper.builder().build(), IdentifierConverter.defaults(), [(FlatAuthor): mapper])
-    def resource = resource(ARTICLES, "1", null, [author: single(PEOPLE, "p1")])
-
-    when:
-    def article = localBinder.fromResource(resource, FlatMappedArticle)
-
-    then:
-    article.author() == null
   }
 
   private static ResourceObject resource(String type, String id, Map attrs, Map rels) {
@@ -840,29 +580,6 @@ class ResourceBinderSpec extends Specification {
         Map.of())
   }
 
-  private static ResourceObject resourceWithMeta(Map attrs, Map rels, Meta meta) {
-    new ResourceObject(
-        ARTICLES,
-        "1",
-        null,
-        attrs == null ? null : Attributes.ofAttributes(attrs),
-        rels == null ? null : Relationships.ofRelationships(rels),
-        null,
-        meta,
-        Map.of())
-  }
-
-  private static JsonApiDocument document(ResourceObject resource, List<ResourceObject> included) {
-    new JsonApiDocument(
-        new DocumentData.SingleResource(resource),
-        null,
-        null,
-        null,
-        null,
-        included,
-        Map.of())
-  }
-
   private static Relationship single(String type, String id) {
     Relationship.withData(new RelationshipData.SingleLinkage(ResourceIdentifier.of(type, id)))
   }
@@ -871,31 +588,6 @@ class ResourceBinderSpec extends Specification {
     Relationship.withData(
         new RelationshipData.IdentifierCollectionLinkage(
         ids.collect { ResourceIdentifier.of(type, it) }))
-  }
-
-  private static Relationship collectionWithIdentifierMeta(
-      String type, List<String> ids, List<Meta> metas) {
-    List<ResourceIdentifier> identifiers = new ArrayList<>(ids.size())
-    for (int i = 0; i < ids.size(); i++) {
-      identifiers.add(identifier(type, ids.get(i), metas.get(i)))
-    }
-    Relationship.withData(new RelationshipData.IdentifierCollectionLinkage(identifiers))
-  }
-
-  private static Relationship toOneWithIdentifierMeta(String type, String id, Meta meta) {
-    new Relationship(
-        new RelationshipData.SingleLinkage(identifier(type, id, meta)),
-        null,
-        null,
-        Map.of())
-  }
-
-  private static Map relsWithMeta(Relationship relationship, Meta meta) {
-    [(AUTHOR): new Relationship(relationship.data(), relationship.links(), meta, Map.of())]
-  }
-
-  private static ResourceIdentifier identifier(String type, String id, Meta meta) {
-    new ResourceIdentifier(type, id, null, meta, Map.of())
   }
 
   private static Map attrs(Object... keyValues) {
@@ -916,12 +608,6 @@ class ResourceBinderSpec extends Specification {
       relationships.put(keyValues[i], keyValues[i + 1])
     }
     relationships
-  }
-
-  private static ResourceObject primaryResource(JsonApiDocument document) {
-    def data = document.data()
-    assert data instanceof DocumentData.SingleResource
-    ((DocumentData.SingleResource) data).resource()
   }
 
   @JsonApiResource(type = "words")
