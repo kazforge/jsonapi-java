@@ -332,6 +332,22 @@ class MappingCompoundInclusionEngineSpec extends Specification {
     result.included() == []
   }
 
+  def "includes a lid-only related occurrence with its local identity"() {
+    given:
+    backend.relationships['articles'] = [comments: 'comments']
+    backend.relationshipValues('articles', 'comments', 'c1')
+    backend.identifiers['c1'] = ResourceIdentifier.withLid('comments', 'local-c1')
+    backend.rendered['c1'] = primary('comments', null, 'local-c1')
+
+    when:
+    def result = engine.collectIncluded(['a1'], ['articles'], [primary('articles', '1')], null,
+    representation(['comments']))
+
+    then:
+    result.included()*.id() == [null]
+    result.included()*.lid() == ['local-c1']
+  }
+
   def "visits a shared intermediate occurrence at the same traversal position once"() {
     given:
     backend.relationships['articles'] = [comments: 'comments']

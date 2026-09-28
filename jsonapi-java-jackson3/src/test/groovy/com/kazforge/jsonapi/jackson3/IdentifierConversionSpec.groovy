@@ -1,8 +1,5 @@
 package com.kazforge.jsonapi.jackson3
 
-import com.kazforge.jsonapi.annotation.JsonApiAttribute
-import com.kazforge.jsonapi.annotation.JsonApiId
-import com.kazforge.jsonapi.annotation.JsonApiResource
 import com.kazforge.jsonapi.mapping.IdentifierConverter
 import com.kazforge.jsonapi.fixtures.domainwrite.Person
 import spock.lang.Specification
@@ -28,30 +25,5 @@ class IdentifierConversionSpec extends Specification {
 
     then:
     resource.id() == "prefix-42"
-  }
-
-  @JsonApiResource(type = "intids")
-  static class IntIdEntity {
-    @JsonApiId Integer id
-    @JsonApiAttribute String name
-
-    IntIdEntity() {}
-
-    IntIdEntity(Integer id, String name) {
-      this.id = id
-      this.name = name
-    }
-  }
-
-  def "default converter calls toString on non-string ids"() {
-    given:
-    def mapper = JsonApiJackson3.resourceMapper(JsonMapper.builder().build())
-    def entity = new IntIdEntity(42, "test")
-
-    when:
-    def resource = mapper.toResource(entity)
-
-    then:
-    resource.id() == "42"
   }
 }

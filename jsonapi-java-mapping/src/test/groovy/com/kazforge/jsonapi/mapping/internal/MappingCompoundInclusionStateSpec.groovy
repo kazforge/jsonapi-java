@@ -59,6 +59,19 @@ class MappingCompoundInclusionStateSpec extends Specification {
     state.result().included() == [first, second]
   }
 
+  def "deduplicates equivalent lid-only representations by local identity"() {
+    given:
+    def state = new CompoundInclusionState(RepresentationPolicy.defaults())
+    def comment = includedLocalResource('local-1', 'First')
+
+    when:
+    state.offerIncluded(comment, 'comments')
+    state.offerIncluded(includedLocalResource('local-1', 'First'), 'featured')
+
+    then:
+    state.result().included() == [comment]
+  }
+
   def "skips offered resources carrying no identity alias"() {
     given:
     def state = new CompoundInclusionState(RepresentationPolicy.defaults())
@@ -77,6 +90,21 @@ class MappingCompoundInclusionStateSpec extends Specification {
 
     when:
     state.offerIncluded(includedResource('p1', 'Different'), 'reviewer')
+
+    then:
+    def exception = thrown(RuntimeException)
+    exception.diagnostic() == MappingDiagnostic.CONFLICTING_INCLUDED_REPRESENTATION
+    exception.propertyPath() == null
+    exception.message.contains("include path 'reviewer'")
+  }
+
+  def "reports conflicting representations sharing a local identity alias"() {
+    given:
+    def state = new CompoundInclusionState(RepresentationPolicy.defaults())
+    state.offerIncluded(includedResource('p1', 'Ada', 'local-1'), 'author')
+
+    when:
+    state.offerIncluded(includedResource('p2', 'Bea', 'local-1'), 'reviewer')
 
     then:
     def exception = thrown(RuntimeException)
@@ -175,8 +203,12 @@ class MappingCompoundInclusionStateSpec extends Specification {
     thrown(NullPointerException)
   }
 
-  private static ResourceObject includedResource(String id, String name) {
+  private static ResourceObject includedResource(String id, String name, String lid = null) {
     new ResourceObject(
-        'people', id, null, Attributes.ofAttributes([name: name]), null, null, null, Map.of())
+        'people', id, lid, Attributes.ofAttributes([name: name]), null, null, null, Map.of())
+  }
+
+  private static ResourceObject includedLocalResource(String lid, String name) {
+    includedResource(null, name, lid)
   }
 }

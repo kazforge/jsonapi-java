@@ -3,27 +3,36 @@ package com.kazforge.jsonapi.fixtures.contract
 import com.kazforge.jsonapi.api.JsonApi
 import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
+import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.fixtures.compoundwrite.WrappedLinkageArticle
 import com.kazforge.jsonapi.fixtures.domainwrite.ArticleWithSet
 import com.kazforge.jsonapi.fixtures.domainwrite.Comment
 import com.kazforge.jsonapi.fixtures.domainwrite.Person
 import com.kazforge.jsonapi.fixtures.domainwrite.RelationshipContainerFixtures
 import com.kazforge.jsonapi.fixtures.domainwrite.Tag
+import com.kazforge.jsonapi.fixtures.localid.IdentifiedComment
+import com.kazforge.jsonapi.fixtures.localid.LocalIdOnlyComment
+import com.kazforge.jsonapi.fixtures.localid.LocalIdentityRelationshipArticle
 import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 /**
- * Advanced relationship-linkage write characterization contract observed through the Level-1 {@code
- * writeOne} entry point: direct {@code ResourceIdentifier} values pass through with their own
- * identifier meta, direct to-one {@code RelationshipData} values are carried through as linkage,
- * transparent {@code RelationshipLinkage} targets with absent wrapper meta map like the ordinary
- * target, and present/empty to-one {@code Optional} values and array/set to-many containers keep
- * their linkage states. Concrete adapter subclasses supply the configured runtime.
+ * Advanced relationship-linkage write characterization contract. Wire-valid states are observed
+ * through the Level-1 {@code writeOne} entry point; local-identifier linkage states that response
+ * validation excludes are observed through the adapter's native resource-mapping hook. Direct
+ * {@code ResourceIdentifier} values pass through with their own identifier meta, direct to-one
+ * {@code RelationshipData} values are carried through as linkage, transparent {@code
+ * RelationshipLinkage} targets with absent wrapper meta map like the ordinary target, identity
+ * members remain independent, and present/empty to-one {@code Optional} values and array/set
+ * to-many containers keep their linkage states. Concrete adapter subclasses supply the configured
+ * runtime and native mapping invocation.
  */
 abstract class AdvancedLinkageCharacterizationSpec extends Specification {
 
   protected abstract JsonApi api()
+
+  protected abstract ResourceObject mapResource(Object value)
 
   private static Map<String, Object> parse(String json) {
     new JsonSlurper().parseText(json) as Map<String, Object>
@@ -91,6 +100,46 @@ abstract class AdvancedLinkageCharacterizationSpec extends Specification {
       ["type": "comments", "id": "c1"],
       ["type": "comments", "id": "c2"],
     ]
+  }
+
+  def "writes a lid-only to-one related target without promoting lid to id"() {
+    given:
+    def article = new LocalIdentityRelationshipArticle(
+        "1", new LocalIdOnlyComment("local-1", "Featured"), List.of(), null)
+    def resource = mapResource(article)
+
+    expect:
+    resource.relationships().relationships().featured.data().identifier() ==
+        new ResourceIdentifier("comments", null, "local-1", null, Map.of())
+  }
+
+  def "writes lid-only to-many related targets in linkage order"() {
+    given:
+    def article = new LocalIdentityRelationshipArticle(
+        "1",
+        null,
+        List.of(
+        new LocalIdOnlyComment("local-1", "First"),
+        new LocalIdOnlyComment("local-2", "Second")),
+        null)
+    def resource = mapResource(article)
+
+    expect:
+    resource.relationships().relationships().comments.data().identifiers() == [
+      new ResourceIdentifier("comments", null, "local-1", null, Map.of()),
+      new ResourceIdentifier("comments", null, "local-2", null, Map.of()),
+    ]
+  }
+
+  def "writes both identity members on a dual-identity related target"() {
+    given:
+    def article = new LocalIdentityRelationshipArticle(
+        "1", null, List.of(), new IdentifiedComment("99", "local-99", "Identified"))
+    def resource = mapResource(article)
+
+    expect:
+    resource.relationships().relationships().identified.data().identifier() ==
+        new ResourceIdentifier("comments", "99", "local-99", null, Map.of())
   }
 
   def "writes present and empty Optional to-one relationships as their linkage states"() {

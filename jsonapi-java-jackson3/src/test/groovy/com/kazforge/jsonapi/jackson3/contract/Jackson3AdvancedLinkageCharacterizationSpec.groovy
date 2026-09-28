@@ -1,6 +1,7 @@
 package com.kazforge.jsonapi.jackson3.contract
 
 import com.kazforge.jsonapi.api.JsonApi
+import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.fixtures.contract.AdvancedLinkageCharacterizationSpec
 import com.kazforge.jsonapi.jackson3.JsonApiJackson3
 import tools.jackson.databind.json.JsonMapper
@@ -11,5 +12,10 @@ class Jackson3AdvancedLinkageCharacterizationSpec extends AdvancedLinkageCharact
   @Override
   protected JsonApi api() {
     JsonApiJackson3.jsonApi(JsonMapper.builder().build())
+  }
+
+  @Override
+  protected ResourceObject mapResource(Object value) {
+    JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(value)
   }
 }
