@@ -48,6 +48,8 @@ abstract class StructuredPatchCharacterizationSpec extends Specification {
         ArticleWithAddressPatch)
     def empty = api().patches().readPatch(
         '{"data":{"type":"articles","id":"1","attributes":{"address":{}}}}', ArticleWithAddressPatch)
+    def wholeNull = api().patches().readPatch(
+        '{"data":{"type":"articles","id":"1","attributes":{"address":null}}}', ArticleWithAddressPatch)
 
     then:
     omitted.address() == PatchPresence.omitted()
@@ -57,6 +59,7 @@ abstract class StructuredPatchCharacterizationSpec extends Specification {
         PatchPresence.present(new AddressPatch(PatchPresence.present("S"), PatchPresence.present(null)))
     empty.address() ==
         PatchPresence.present(new AddressPatch(PatchPresence.omitted(), PatchPresence.omitted()))
+    wholeNull.address() == PatchPresence.present(null)
   }
 
   def "projects low-level structured attribute omission, explicit null, and supplied empty object"() {
@@ -69,6 +72,8 @@ abstract class StructuredPatchCharacterizationSpec extends Specification {
         ArticleWithOptionalAddress)
     def empty = api().patches().readCommand(
         '{"data":{"type":"articles","id":"1","attributes":{"address":{}}}}', ArticleWithOptionalAddress)
+    def wholeNull = api().patches().readCommand(
+        '{"data":{"type":"articles","id":"1","attributes":{"address":null}}}', ArticleWithOptionalAddress)
 
     then:
     omitted.changes() == []
@@ -89,6 +94,9 @@ abstract class StructuredPatchCharacterizationSpec extends Specification {
     ]
     empty.changes() == [
       new PatchChange.AttributeChange("address", "address", new StructuredPatch([]))
+    ]
+    wholeNull.changes() == [
+      new PatchChange.AttributeChange("address", "address", null)
     ]
   }
 

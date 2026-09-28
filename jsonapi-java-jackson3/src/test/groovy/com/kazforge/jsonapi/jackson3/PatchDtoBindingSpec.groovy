@@ -111,10 +111,6 @@ class PatchDtoBindingSpec extends Specification {
     ]))
     "patch-dto-identity-only" | "identity-other-id" | ArticlePatch.class | new ArticlePatch("7", PatchPresence.omitted(), PatchPresence.omitted(), PatchPresence.omitted(), PatchPresence.omitted())
     "patch-dto-conventional-id" | "title-only" | ConventionalIdPatch.class | new ConventionalIdPatch("1", PatchPresence.present("T"))
-    "patch-dto-nested-partial-structured-object" | "address-street-new-street" | ArticleWithAddressPatch.class | new ArticleWithAddressPatch("1", PatchPresence.present(new AddressPatch(PatchPresence.present("New Street"), PatchPresence.omitted())))
-    "patch-dto-nested-empty-structured-object" | "address-empty-object" | ArticleWithAddressPatch.class | new ArticleWithAddressPatch("1", PatchPresence.present(new AddressPatch(PatchPresence.omitted(), PatchPresence.omitted())))
-    "patch-dto-nested-explicit-null" | "address-explicit-null" | ArticleWithAddressPatch.class | new ArticleWithAddressPatch("1", PatchPresence.present(null))
-    "patch-dto-nested-omitted" | "identity-only" | ArticleWithAddressPatch.class | new ArticleWithAddressPatch("1", PatchPresence.omitted())
     "patch-dto-nested-multi-level" | "address-street-and-geo-lat" | ArticleWithGeoPatch.class | new ArticleWithGeoPatch("1", PatchPresence.present(new AddressWithGeoPatch(PatchPresence.present("S"), PatchPresence.present(new GeoPatch(PatchPresence.present("1"), PatchPresence.omitted())))))
     "patch-dto-nested-optional-object" | "address-street" | ArticleWithOptionalAddressPatch.class | new ArticleWithOptionalAddressPatch("1", PatchPresence.present(Optional.of(new AddressPatch(PatchPresence.present("S"), PatchPresence.omitted()))))
     "patch-dto-nested-optional-null" | "address-explicit-null" | ArticleWithOptionalAddressPatch.class | new ArticleWithOptionalAddressPatch("1", PatchPresence.present(Optional.empty()))
@@ -167,8 +163,6 @@ class PatchDtoBindingSpec extends Specification {
     "patch-dto-declaration-unannotated-member" | "note-attribute" | UnannotatedPatch.class | MappingDiagnostic.UNKNOWN_PATCH_MEMBER | "/attributes/note"
     "patch-dto-declaration-presence-id" | "identity-only" | PresenceIdPatch.class | MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE | "/id"
     "patch-dto-nested-non-object-wire" | "address-scalar-wire" | ArticleWithAddressPatch.class | MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE | "/attributes/address"
-    "patch-dto-nested-unknown-member" | "address-unknown-member" | ArticleWithAddressPatch.class | MappingDiagnostic.UNKNOWN_PATCH_MEMBER | "/attributes/address/bogus"
-    "patch-dto-nested-declaration-mixed" | "address-street-city" | ArticleWithMixedAddressPatch.class | MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE | "/attributes/address"
     "patch-dto-nested-declaration-raw" | "address-street-city" | ArticleWithRawAddressPatch.class | MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE | "/attributes/address"
     "patch-dto-nested-declaration-direct-present" | "address-street-city" | ArticleWithDirectPresentAddressPatch.class | MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE | "/attributes/address"
     "patch-dto-unknown-resource-meta" | "title-with-meta-source" | com.kazforge.jsonapi.fixtures.domainpatch.WholeMetaTargetFixtures.NoMetaPatch.class | MappingDiagnostic.UNKNOWN_PATCH_MEMBER | "/meta"

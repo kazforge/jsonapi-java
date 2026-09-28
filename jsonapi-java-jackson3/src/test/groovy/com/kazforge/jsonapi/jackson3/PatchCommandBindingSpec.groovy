@@ -21,7 +21,6 @@ import com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.mapping.IdentifierConverter
-import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import com.kazforge.jsonapi.patch.PatchChange
 import com.kazforge.jsonapi.patch.PatchCommand
 import com.kazforge.jsonapi.patch.StructuredMember
@@ -40,12 +39,9 @@ import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithDimensions
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithGeoAddress
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMapMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalAddress
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalCity
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithRelationshipLinkage
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithTags
-import com.kazforge.jsonapi.fixtures.domainpatch.AuthorIdMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.MutableArticle
 import com.kazforge.jsonapi.fixtures.domainpatch.PatchPresenceAddressArticle
 import com.kazforge.jsonapi.fixtures.domainpatch.PatchPresenceAddressPatchArticle
@@ -69,7 +65,7 @@ import tools.jackson.databind.annotation.JsonDeserialize
 import tools.jackson.databind.deser.std.StdDeserializer
 import tools.jackson.databind.json.JsonMapper
 
-class PatchBindingSpec extends Specification {
+class PatchCommandBindingSpec extends Specification {
 
   @Unroll
   def "binds patch #id into an explicit command"() {
@@ -85,23 +81,10 @@ class PatchBindingSpec extends Specification {
 
     where:
     id | resource | targetType | expected
-    "patch-omitted-and-supplied-attributes" | "omitted-and-supplied-attributes" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.AttributeChange("title", "title", "Hello"))
-    "patch-explicit-null-attribute" | "explicit-null-attribute" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.AttributeChange("title", "title", null))
-    "patch-attribute-rename" | "attribute-rename" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.AttributeChange("body-text", "body", "Content"))
     "patch-ignored-unmapped-omitted-from-changes" | "ignored-unmapped-attributes" | FlatThingWithIgnored.class | patch(FlatThingWithIgnored.class, "1", new PatchChange.AttributeChange("name", "name", "visible"))
-    "patch-relationship-null-linkage" | "relationship-null-linkage" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.RelationshipChange("author", "author", null))
-    "patch-relationship-single-linkage" | "relationship-single-linkage" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.RelationshipChange("author", "author", ResourceIdentifier.of("people", "p1")))
-    "patch-relationship-empty-collection" | "relationship-empty-collection" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.RelationshipChange("comments", "comments", []))
-    "patch-relationship-non-empty-collection" | "relationship-non-empty-collection" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.RelationshipChange("comments", "comments", [
-      ResourceIdentifier.of("comments", "c1"),
-      ResourceIdentifier.of("comments", "c2")
-    ]))
     "patch-compound-included-ignored" | "compound-included-ignored" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.AttributeChange("title", "title", "T"), new PatchChange.RelationshipChange("author", "author", ResourceIdentifier.of("people", "p1")))
     "patch-ordinary-domain-nested-partial" | "address-street-new-street" | Article.class | patch(Article.class, "1", new PatchChange.AttributeChange("address", "address", structured(atomic("street", "New Street"))))
     "patch-ordinary-domain-nested-multi-level" | "address-street-and-geo-lat" | ArticleWithGeoAddress.class | patch(ArticleWithGeoAddress.class, "1", new PatchChange.AttributeChange("address", "address", structured(atomic("street", "S"), nested("geo", atomic("lat", "1")))))
-    "patch-ordinary-domain-optional-object" | "address-street-new-street" | ArticleWithOptionalAddress.class | patch(ArticleWithOptionalAddress.class, "1", new PatchChange.AttributeChange("address", "address", structured(atomic("street", "New Street"))))
-    "patch-ordinary-domain-optional-empty-object" | "address-empty-object" | ArticleWithOptionalAddress.class | patch(ArticleWithOptionalAddress.class, "1", new PatchChange.AttributeChange("address", "address", structured()))
-    "patch-ordinary-domain-optional-null" | "address-explicit-null" | ArticleWithOptionalAddress.class | patch(ArticleWithOptionalAddress.class, "1", new PatchChange.AttributeChange("address", "address", null))
     "patch-ordinary-domain-nested-optional-member" | "address-street-city-null" | ArticleWithOptionalCity.class | patch(ArticleWithOptionalCity.class, "1", new PatchChange.AttributeChange("address", "address", structured(atomic("street", "S"), atomic("city", Optional.empty()))))
     "patch-ordinary-domain-unknown-nested-skip" | "address-bogus-and-street" | Article.class | patch(Article.class, "1", new PatchChange.AttributeChange("address", "address", structured(atomic("street", "S"))))
     "patch-ordinary-domain-container-atomic" | "tags-top-level" | ArticleWithTags.class | patch(ArticleWithTags.class, "1", new PatchChange.AttributeChange("tags", "tags", ["a", "b"]))
@@ -116,12 +99,6 @@ class PatchBindingSpec extends Specification {
     "patch-resource-meta-atomic-map" | "title-with-meta-source" | ArticleWithMapMeta.class | patch(ArticleWithMapMeta.class, "1", new PatchChange.ResourceMetaChange("meta", "meta", [source: "cms"]), new PatchChange.AttributeChange("title", "title", "T"))
     "patch-relationship-meta-with-data" | "author-meta-with-data" | ArticleWithMeta.class | patch(ArticleWithMeta.class, "1", new PatchChange.RelationshipChange("author", "author", ResourceIdentifier.of("people", "p1")), new PatchChange.RelationshipMetaChange("author", "authorMeta", structured(atomic("displayName", "Alice"))))
     "patch-resource-meta-supplied-unmapped-skipped" | "title-with-meta-source" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.AttributeChange("title", "title", "T"))
-    "patch-whole-linkage-to-one-identifier-meta" | "author-identifier-meta" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.RelationshipChange("author", "author", identifier("people", "p1", [role: "editor"])))
-    "patch-whole-linkage-to-many-identifier-meta" | "comments-identifier-meta" | FlatArticle.class | patch(FlatArticle.class, "1", new PatchChange.RelationshipChange("comments", "comments", [
-      identifier("comments", "c1", [pinned: true]),
-      ResourceIdentifier.of("comments", "c2")
-    ]))
-    "patch-wrapper-whole-linkage-is-not-an-independent-change" | "author-identifier-meta" | ArticleWithRelationshipLinkage.class | patch(ArticleWithRelationshipLinkage.class, "1", new PatchChange.RelationshipChange("author", "author", new RelationshipLinkage(identifier("people", "p1", [role: "editor"]), new AuthorIdMeta("editor"))))
     "patch-set-to-many-identifier-meta" | "tags-identifier-meta" | FlatArticleWithSet.class | patch(FlatArticleWithSet.class, "1", new PatchChange.RelationshipChange("tags", "tags", [
       identifier("tags", "t1", [pinned: true])
     ] as Set))

@@ -11,8 +11,9 @@ import java.util.Optional;
 /**
  * Fixture family for {@link RelationshipLinkageMapper} mechanics across the adapter entry points
  * that accept registered mappers (resource binder, typed envelope reader, PATCH readers). Owned by
- * {@code ResourceBinderSpec}, {@code DomainDocumentReaderSpec}, and {@code PatchBindingSpec}; these
- * shapes exist to prove mapper registration/dispatch behavior, not shared wire semantics.
+ * {@code ResourceBinderSpec}, {@code DomainDocumentReaderSpec}, and {@code
+ * PatchCommandBindingSpec}; these shapes exist to prove mapper registration/dispatch behavior, not
+ * shared wire semantics.
  */
 public final class LinkageMapperFixtures {
 
