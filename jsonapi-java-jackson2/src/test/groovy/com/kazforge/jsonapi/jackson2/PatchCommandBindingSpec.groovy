@@ -414,6 +414,7 @@ class PatchCommandBindingSpec extends Specification {
 
     then:
     command.resourceType() == FlatArticleWithArray
+    command.changes()[0].value() instanceof ResourceIdentifier[]
     Arrays.equals(command.changes()[0].value() as ResourceIdentifier[], ([
       identifier("comments", "c1", [pinned: true]),
       ResourceIdentifier.of("comments", "c2")
@@ -458,15 +459,17 @@ class PatchCommandBindingSpec extends Specification {
     given:
     def base = JsonMapper.builder().build()
     def reader = JsonApiJackson2.patchCommandReader(base)
-    def javaType = base.typeFactory.constructParametricType(ParameterizedBindingFixtures.GenericValue, String)
-    def json = '{"data":{"type":"things","id":"1","attributes":{"value":"v"}}}'
+    def javaType = base.typeFactory.constructParametricType(ParameterizedBindingFixtures.GenericValue, Integer)
+    def json = '{"data":{"type":"things","id":"1","attributes":{"value":42}}}'
 
     when:
     def command = reader.readValue(json, javaType)
 
     then:
     command.resourceType() == ParameterizedBindingFixtures.GenericValue
-    command.changes().size() == 1
+    command.changes() == [
+      new PatchChange.AttributeChange("value", "value", 42)
+    ]
   }
 
   def "identifier converter returning null fails with identifier diagnostic"() {

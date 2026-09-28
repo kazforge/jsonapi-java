@@ -4,18 +4,15 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.fixtures.domainpatch.AddressPatch
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticlePatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithAddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithBoxPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithDirectPresentAddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalAddressPatch
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalMetaPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithRawAddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithTags
 import com.kazforge.jsonapi.fixtures.domainpatch.BoxPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.MutableArticle
-import com.kazforge.jsonapi.fixtures.domainpatch.WholeMetaTargetFixtures
 import com.kazforge.jsonapi.jackson2.PatchStructureFixtures.SerializeCustomizedAddressPatchDto
 import com.kazforge.jsonapi.jackson2.PatchStructureFixtures.ThrowingGeoPatchDto
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
@@ -31,9 +28,8 @@ import spock.lang.Unroll
 
 /**
  * Jackson 2 structured PATCH binding: native container, generic, and JavaBean nested shapes plus
- * typed-orchestration seams for {@code Optional}-wrapped whole meta, nested-presence meta
- * declaration rejection, deep construction-failure pointer translation through resolved
- * presence-aware shapes, and wrapper-level serialization customization rejection on nested shape
+ * typed-orchestration seams for deep construction-failure pointer translation through resolved
+ * presence-aware shapes and wrapper-level serialization customization rejection on nested shape
  * entry.
  */
 class PatchStructuredBindingSpec extends Specification {
@@ -93,36 +89,6 @@ class PatchStructuredBindingSpec extends Specification {
 
     then:
     patch.title() == PatchPresence.present("T")
-  }
-
-  def "binds optional typed resource meta and omits it"() {
-    given:
-    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
-
-    when:
-    def supplied = reader.readValue(
-        '{"data":{"type":"articles","id":"1","meta":{"source":"cms","note":"n"}}}',
-        ArticleWithOptionalMetaPatch)
-    def omitted = reader.readValue('{"data":{"type":"articles","id":"1"}}', ArticleWithOptionalMetaPatch)
-
-    then:
-    supplied.meta() == PatchPresence.present(Optional.of(new ArticleMeta("cms", "n")))
-    omitted.meta() == PatchPresence.omitted()
-  }
-
-  def "rejects a nested-presence meta declaration at the meta pointer"() {
-    given:
-    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
-
-    when:
-    reader.readValue(
-        '{"data":{"type":"articles","id":"1","meta":{"source":"cms"}}}',
-        WholeMetaTargetFixtures.NestedPresenceMetaPatch)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.INVALID_META_TARGET
-    ex.propertyPath() == "/meta"
   }
 
   def "translates a deep construction failure to the nested wire pointer"() {

@@ -125,6 +125,7 @@ class PatchCommandBindingSpec extends Specification {
     change instanceof PatchChange.RelationshipChange
     change.jsonapiName() == "comments"
     change.logicalName() == "comments"
+    change.value() instanceof ResourceIdentifier[]
     Arrays.equals(change.value() as ResourceIdentifier[], expected)
 
     where:

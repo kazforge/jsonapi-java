@@ -25,10 +25,12 @@ import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.core.validation.DocumentUsage
 import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
+import com.kazforge.jsonapi.fixtures.domainpatch.ArticleMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleMetaPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticlePatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithAddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMetaPatch
+import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalMetaPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.AuthorMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.WholeMetaTargetFixtures
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
@@ -407,6 +409,36 @@ class PatchDtoBindingSpec extends Specification {
 
     then:
     patch.authorMeta() == PatchPresence.present(new AuthorMeta("Alice"))
+  }
+
+  def "binds optional typed resource meta and omits it"() {
+    given:
+    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
+
+    when:
+    def supplied = reader.readValue(
+        '{"data":{"type":"articles","id":"1","meta":{"source":"cms","note":"n"}}}',
+        ArticleWithOptionalMetaPatch)
+    def omitted = reader.readValue('{"data":{"type":"articles","id":"1"}}', ArticleWithOptionalMetaPatch)
+
+    then:
+    supplied.meta() == PatchPresence.present(Optional.of(new ArticleMeta("cms", "n")))
+    omitted.meta() == PatchPresence.omitted()
+  }
+
+  def "rejects a nested-presence meta declaration at the meta pointer"() {
+    given:
+    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
+
+    when:
+    reader.readValue(
+        '{"data":{"type":"articles","id":"1","meta":{"source":"cms"}}}',
+        WholeMetaTargetFixtures.NestedPresenceMetaPatch)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.INVALID_META_TARGET
+    ex.propertyPath() == "/meta"
   }
 
   def "binds whole-linkage identifier meta on the typed path"() {
