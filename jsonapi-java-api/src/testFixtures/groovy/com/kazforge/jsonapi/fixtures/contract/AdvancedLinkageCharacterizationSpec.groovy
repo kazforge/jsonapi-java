@@ -142,6 +142,18 @@ abstract class AdvancedLinkageCharacterizationSpec extends Specification {
         new ResourceIdentifier("comments", "99", "local-99", null, Map.of())
   }
 
+  def "serializes both identity members on a dual-identity related target"() {
+    given:
+    def json = api().resources().writeOne(
+        new LocalIdentityRelationshipArticle(
+        "1", null, List.of(), new IdentifiedComment("99", "local-99", "Identified")))
+    def document = parse(json)
+
+    expect:
+    document.data.relationships.identified.data ==
+        ["type": "comments", "id": "99", "lid": "local-99"]
+  }
+
   def "writes present and empty Optional to-one relationships as their linkage states"() {
     when:
     def present = parse(api().resources().writeOne(

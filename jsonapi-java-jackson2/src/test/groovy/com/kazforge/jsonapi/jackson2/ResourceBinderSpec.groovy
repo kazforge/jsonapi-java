@@ -19,6 +19,7 @@ import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.mapping.IdentifierConverter
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatCountedThing
+import com.kazforge.jsonapi.fixtures.domainread.FlatInheritedBlog
 import com.kazforge.jsonapi.fixtures.domainread.FlatIntIdArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatUnregisteredRelationshipsArticle
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatAuthor
@@ -71,6 +72,16 @@ class ResourceBinderSpec extends Specification {
       ResourceIdentifier.of(COMMENTS, "c1"),
       ResourceIdentifier.of(COMMENTS, "c2")
     ])
+  }
+
+  def "binds inherited identity and attribute properties"() {
+    when:
+    def actual = binder.fromResource(
+        resource("blogs", "b1", attrs("name", "My Blog", "description", "A description"), null),
+        FlatInheritedBlog)
+
+    then:
+    actual == new FlatInheritedBlog("b1", "My Blog", "A description")
   }
 
   def "custom identifier converter converts ids"() {
