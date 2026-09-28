@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Fixture family for {@link RelationshipLinkageMapper} mechanics for the flat DTO resource binder.
- * Owned by {@code ResourceBinderSpec}; these shapes exist to prove mapper registration/dispatch
- * behavior, not shared wire semantics.
+ * Fixture family for {@link RelationshipLinkageMapper} mechanics across the adapter entry points
+ * that accept registered mappers. Owned by {@code ResourceBinderSpec} and {@code
+ * PatchCommandBindingSpec}; these shapes exist to prove mapper registration/dispatch behavior, not
+ * shared wire semantics.
  */
 public final class LinkageMapperFixtures {
 

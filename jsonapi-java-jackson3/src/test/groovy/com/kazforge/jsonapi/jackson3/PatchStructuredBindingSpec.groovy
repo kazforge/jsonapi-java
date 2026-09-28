@@ -24,14 +24,12 @@ import com.kazforge.jsonapi.jackson3.StructuredRecursionFixtures.ExtendedProfile
 import com.kazforge.jsonapi.jackson3.StructuredRecursionFixtures.OuterWithCreatorCustomDetails
 import com.kazforge.jsonapi.jackson3.StructuredRecursionFixtures.OuterWithSetterAsProfile
 import com.kazforge.jsonapi.jackson3.StructuredRecursionFixtures.OuterWithSetterCustomDetails
-import com.kazforge.jsonapi.fixtures.domainpatch.AddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.AddressWithContainersPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithAddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithBox
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithBoxPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithContainerAddress
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithContainerAddressPatch
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalAddress
 import com.kazforge.jsonapi.fixtures.domainpatch.BoxPatch
 import spock.lang.Specification
 import tools.jackson.databind.PropertyNamingStrategies
@@ -334,41 +332,6 @@ class PatchStructuredBindingSpec extends Specification {
     // No Jackson member names on the failure path, so the location is absent — never "/" or "".
     ex.location() == null
     ex.propertyPath() == null
-  }
-
-  def "typed and low-level paths express the same nested presence for the same request"() {
-    given:
-    def typedReader = JsonApiJackson3.patchDtoReader(JsonMapper.builder().build())
-    def lowLevelReader = JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
-    def partial = '{"data":{"type":"articles","id":"1","attributes":{"address":{"street":"New Street"}}}}'
-    def withNull = '{"data":{"type":"articles","id":"1","attributes":{"address":{"street":"S","city":null}}}}'
-    def empty = '{"data":{"type":"articles","id":"1","attributes":{"address":{}}}}'
-
-    when:
-    def typedPartial = typedReader.readValue(partial, ArticleWithAddressPatch)
-    def lowPartial = lowLevelReader.readValue(partial, ArticleWithOptionalAddress)
-    def typedNull = typedReader.readValue(withNull, ArticleWithAddressPatch)
-    def lowNull = lowLevelReader.readValue(withNull, ArticleWithOptionalAddress)
-    def typedEmpty = typedReader.readValue(empty, ArticleWithAddressPatch)
-    def lowEmpty = lowLevelReader.readValue(empty, ArticleWithOptionalAddress)
-
-    then: // nested Present(value) <-> Atomic(value); nested Omitted <-> absent member
-    ((PatchPresence.Present) typedPartial.address()).value() ==
-        new AddressPatch(PatchPresence.present("New Street"), PatchPresence.omitted())
-    ((StructuredPatch) lowPartial.changes()[0].value()).members() == [
-      new StructuredMember("street", "street", new StructuredMemberState.Atomic("New Street"))
-    ]
-    then: // nested Present(null) <-> Atomic(null)
-    ((PatchPresence.Present) typedNull.address()).value() ==
-        new AddressPatch(PatchPresence.present("S"), PatchPresence.present(null))
-    ((StructuredPatch) lowNull.changes()[0].value()).members() == [
-      new StructuredMember("street", "street", new StructuredMemberState.Atomic("S")),
-      new StructuredMember("city", "city", new StructuredMemberState.Atomic(null))
-    ]
-    then: // Present(empty object) <-> empty StructuredPatch
-    ((PatchPresence.Present) typedEmpty.address()).value() ==
-        new AddressPatch(PatchPresence.omitted(), PatchPresence.omitted())
-    ((StructuredPatch) lowEmpty.changes()[0].value()).members().isEmpty()
   }
 
   def "typed nested setter-level @JsonDeserialize on a presence-aware member is rejected"() {

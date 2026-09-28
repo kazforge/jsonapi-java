@@ -4,19 +4,17 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.kazforge.jsonapi.fixtures.TestFixtureResources
 import com.kazforge.jsonapi.fixtures.domainpatch.AddressPatch
-import com.kazforge.jsonapi.fixtures.domainpatch.Article
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticlePatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithAddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithBoxPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithDirectPresentAddressPatch
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMixedAddressPatch
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalAddress
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalAddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithRawAddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithTags
 import com.kazforge.jsonapi.fixtures.domainpatch.BoxPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.MutableArticle
-import com.kazforge.jsonapi.fixtures.domainpatch.PatchPresenceAddressPatchArticle
+import com.kazforge.jsonapi.jackson2.PatchStructureFixtures.SerializeCustomizedAddressPatchDto
+import com.kazforge.jsonapi.jackson2.PatchStructureFixtures.ThrowingGeoPatchDto
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.patch.PatchChange
@@ -28,59 +26,23 @@ import com.kazforge.jsonapi.patch.StructuredPatch
 import spock.lang.Specification
 import spock.lang.Unroll
 
+/**
+ * Jackson 2 structured PATCH binding: native container, generic, and JavaBean nested shapes plus
+ * typed-orchestration seams for deep construction-failure pointer translation through resolved
+ * presence-aware shapes and wrapper-level serialization customization rejection on nested shape
+ * entry.
+ */
 class PatchStructuredBindingSpec extends Specification {
-
-  @Unroll
-  def "low-level structured binding #id"() {
-    given:
-    def reader = JsonApiJackson2.patchCommandReader(JsonMapper.builder().build())
-    def json = TestFixtureResources.readCorpusUtf8("patch/${resource}.json")
-
-    when:
-    def actual = reader.readValue(json, Article)
-
-    then:
-    actual == expected
-
-    where:
-    id | resource | expected
-    "nested-partial" | "address-street-new-street" | patch(Article, "1", new PatchChange.AttributeChange("address", "address", structured(atomic("street", "New Street"))))
-    "empty-object" | "address-empty-object" | patch(Article, "1", new PatchChange.AttributeChange("address", "address", structured()))
-    "explicit-null" | "address-explicit-null" | patch(Article, "1", new PatchChange.AttributeChange("address", "address", null))
-    "unknown-nested-skipped" | "address-bogus-and-street" | patch(Article, "1", new PatchChange.AttributeChange("address", "address", structured(atomic("street", "S"))))
-  }
 
   def "low-level optional, container, generic, and javabean shapes"() {
     given:
     def reader = JsonApiJackson2.patchCommandReader(JsonMapper.builder().build())
 
     expect:
-    reader.readValue(TestFixtureResources.readCorpusUtf8("patch/address-street-new-street.json"), ArticleWithOptionalAddress) ==
-        patch(ArticleWithOptionalAddress, "1", new PatchChange.AttributeChange("address", "address", structured(atomic("street", "New Street"))))
     reader.readValue(TestFixtureResources.readCorpusUtf8("patch/tags-top-level.json"), ArticleWithTags) ==
         patch(ArticleWithTags, "1", new PatchChange.AttributeChange("tags", "tags", ["a", "b"]))
     reader.readValue(TestFixtureResources.readCorpusUtf8("patch/address-street.json"), MutableArticle) ==
         patch(MutableArticle, "1", new PatchChange.AttributeChange("address", "address", structured(atomic("street", "S"))))
-  }
-
-  @Unroll
-  def "typed structured binding #id"() {
-    given:
-    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
-    def json = TestFixtureResources.readCorpusUtf8("patch/${resource}.json")
-
-    when:
-    def actual = reader.readValue(json, ArticleWithAddressPatch)
-
-    then:
-    actual == expected
-
-    where:
-    id | resource | expected
-    "nested-partial" | "address-street-new-street" | new ArticleWithAddressPatch("1", PatchPresence.present(new AddressPatch(PatchPresence.present("New Street"), PatchPresence.omitted())))
-    "nested-empty-object" | "address-empty-object" | new ArticleWithAddressPatch("1", PatchPresence.present(new AddressPatch(PatchPresence.omitted(), PatchPresence.omitted())))
-    "nested-explicit-null" | "address-explicit-null" | new ArticleWithAddressPatch("1", PatchPresence.present(null))
-    "nested-omitted" | "identity-only" | new ArticleWithAddressPatch("1", PatchPresence.omitted())
   }
 
   def "typed optional, container, and generic nested shapes"() {
@@ -111,37 +73,9 @@ class PatchStructuredBindingSpec extends Specification {
 
     where:
     id | resource | targetType | expectedDiagnostic
-    "mixed-shape" | "address-street-city" | ArticleWithMixedAddressPatch | MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE
     "raw-shape" | "address-street-city" | ArticleWithRawAddressPatch | MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE
     "direct-present-shape" | "address-street-city" | ArticleWithDirectPresentAddressPatch | MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE
     "scalar-wire" | "address-scalar-wire" | ArticleWithAddressPatch | MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
-  }
-
-  def "typed unknown nested member fails with escaped location"() {
-    given:
-    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
-    def json = TestFixtureResources.readCorpusUtf8("patch/address-unknown-member.json")
-
-    when:
-    reader.readValue(json, ArticleWithAddressPatch)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.UNKNOWN_PATCH_MEMBER
-    ex.location().pointer() == "/attributes/address/bogus"
-  }
-
-  def "low-level presence-aware nested shape is rejected"() {
-    given:
-    def reader = JsonApiJackson2.patchCommandReader(JsonMapper.builder().build())
-    def json = TestFixtureResources.readCorpusUtf8("patch/address-street.json")
-
-    when:
-    reader.readValue(json, PatchPresenceAddressPatchArticle)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE
   }
 
   def "marker invariant survives caller naming strategy"() {
@@ -155,6 +89,36 @@ class PatchStructuredBindingSpec extends Specification {
 
     then:
     patch.title() == PatchPresence.present("T")
+  }
+
+  def "translates a deep construction failure to the nested wire pointer"() {
+    given:
+    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
+
+    when:
+    reader.readValue(
+        '{"data":{"type":"articles","id":"1","attributes":{"address":{"street":"S","geo":{"lat":"1"}}}}}',
+        ThrowingGeoPatchDto)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.MISSING_CREATOR_INPUT
+    ex.propertyPath() == "/attributes/address/geo"
+  }
+
+  def "rejects wrapper-level serialization customization on a nested presence-aware member"() {
+    given:
+    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
+
+    when:
+    reader.readValue(
+        '{"data":{"type":"articles","id":"1","attributes":{"address":{"street":"S","city":"C"}}}}',
+        SerializeCustomizedAddressPatchDto)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE
+    ex.propertyPath() == "/attributes/address/city"
   }
 
   private static PatchCommand patch(Class targetType, Object identity, PatchChange... changes) {

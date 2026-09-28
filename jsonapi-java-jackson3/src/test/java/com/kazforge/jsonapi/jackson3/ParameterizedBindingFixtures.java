@@ -9,7 +9,7 @@ import com.kazforge.jsonapi.patch.PatchPresence;
 /**
  * Generic DTO shapes whose mapped member types must resolve from an explicitly bound parameterized
  * {@code JavaType}. Owned by the {@code JavaType}/generics entry-point tests in {@code
- * ResourceBinderSpec}, {@code PatchBindingSpec}, and {@code PatchDtoBindingSpec}.
+ * ResourceBinderSpec}, {@code PatchCommandBindingSpec}, and {@code PatchDtoBindingSpec}.
  */
 public final class ParameterizedBindingFixtures {
 
