@@ -1,6 +1,7 @@
 package com.kazforge.jsonapi.architecture
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 
 import com.tngtech.archunit.core.domain.JavaClasses
 import com.tngtech.archunit.core.importer.ClassFileImporter
@@ -28,6 +29,16 @@ class SharedFixtureDependencyRulesSpec extends Specification {
   @Shared
   JavaClasses sharedFixtureClasses = new ClassFileImporter()
   .importPackages("com.kazforge.jsonapi.fixtures..")
+
+  def "shared fixtures do not depend on mapping implementation details"() {
+    expect:
+    noClasses()
+        .that().resideInAPackage("com.kazforge.jsonapi.fixtures..")
+        .should().dependOnClassesThat()
+        .resideInAPackage("com.kazforge.jsonapi.mapping.internal..")
+        .allowEmptyShould(false)
+        .check(sharedFixtureClasses)
+  }
 
   def "shared passive fixtures outside the contract package depend only on allowed packages"() {
     expect:
