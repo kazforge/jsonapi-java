@@ -35,7 +35,8 @@ class QueryArchitectureSpec extends Specification {
     expect:
     queryClasses.collectMany { candidate ->
       candidate.directDependenciesFromSelf.findAll { dependency ->
-        dependency.targetClass.packageName.startsWith("com.kazforge.jsonapi.core.validation") &&
+        (dependency.targetClass.packageName == "com.kazforge.jsonapi.core.validation" ||
+            dependency.targetClass.packageName.startsWith("com.kazforge.jsonapi.core.validation.")) &&
             dependency.targetClass.fullName != MemberNames.name
       }
     }.isEmpty()

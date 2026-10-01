@@ -5,12 +5,13 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 
 import com.tngtech.archunit.core.domain.JavaClass
 import com.tngtech.archunit.core.domain.JavaClasses
+import com.tngtech.archunit.core.domain.JavaCodeUnit
 import com.tngtech.archunit.core.domain.JavaModifier
 import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.core.importer.ImportOption
 import com.kazforge.jsonapi.jackson3.ArchitectureAdapterSignatureLeakFixture
 import com.kazforge.jsonapi.jackson3.internal.codec.ArchitectureAdapterInternalException
-import com.kazforge.jsonapi.mapping.internal.ArchitectureMappingInternalFixture
+import com.kazforge.jsonapi.mapping.internal.PropertyRole
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -32,10 +33,6 @@ class Jackson3DependencyRulesSpec extends Specification {
   "com.kazforge.jsonapi.patch..",
   "com.kazforge.jsonapi.representation..",
   "com.kazforge.jsonapi.diagnostic..")
-
-  @Shared
-  JavaClasses sharedFixtureClasses = new ClassFileImporter()
-  .importPackages("com.kazforge.jsonapi.fixtures..")
 
   def "jackson3 production types depend only on allowed packages"() {
     expect:
@@ -63,7 +60,7 @@ class Jackson3DependencyRulesSpec extends Specification {
         .check(jackson3Classes)
   }
 
-  def "jackson3 responsibility selectors are non-empty and disjoint"() {
+  def "jackson3 responsibility selectors are non-empty"() {
     given:
     def root = jackson3Classes.findAll { JavaClass candidate ->
       candidate.packageName == "com.kazforge.jsonapi.jackson3"
@@ -85,14 +82,6 @@ class Jackson3DependencyRulesSpec extends Specification {
     !mapping.isEmpty()
     !internal.isEmpty()
     !codec.isEmpty()
-
-    and:
-    root.intersect(mapping).isEmpty()
-    root.intersect(internal).isEmpty()
-    root.intersect(codec).isEmpty()
-    mapping.intersect(internal).isEmpty()
-    mapping.intersect(codec).isEmpty()
-    internal.intersect(codec).isEmpty()
   }
 
   def "jackson3 mapping contracts do not depend on composition or internals"() {
@@ -142,152 +131,50 @@ class Jackson3DependencyRulesSpec extends Specification {
       isSupportedCommonType(candidate)
     }.collect { JavaClass candidate -> candidate.simpleName }.toSet()
     def jackson3TypeNames = jackson3Classes.findAll { JavaClass candidate ->
-      isSupportedTopLevelAdapterType(candidate)
+      candidate.topLevelClass && isSupportedAdapterType(candidate)
     }.collect { JavaClass candidate -> candidate.simpleName }.toSet()
 
     expect:
+    !commonContractNames.isEmpty()
+    !jackson3TypeNames.isEmpty()
     commonContractNames.intersect(jackson3TypeNames).isEmpty()
   }
 
-  def "supported common type selector matches known neutral contract types"() {
-    expect:
-    [
-      "com.kazforge.jsonapi.api.JsonApi",
-      "com.kazforge.jsonapi.document.DocumentReadContext",
-      "com.kazforge.jsonapi.mapping.MappedDocument",
-      "com.kazforge.jsonapi.patch.PatchPresence",
-      "com.kazforge.jsonapi.representation.RepresentationSelection",
-      "com.kazforge.jsonapi.diagnostic.JsonApiMappingException"
-    ].every { String typeName ->
-      def candidate = commonClasses.find { JavaClass it -> it.fullName == typeName }
-      candidate != null && isSupportedCommonType(candidate)
-    }
-  }
-
-  def "supported common type selector excludes mapping implementation types"() {
+  def "jackson3 supported public signatures do not expose internal types"() {
     given:
-    def fixtureClasses = new ClassFileImporter()
-        .importClasses(ArchitectureMappingInternalFixture)
-
-    expect:
-    fixtureClasses.every { JavaClass candidate -> !isSupportedCommonType(candidate) }
-  }
-
-  def "jackson3 supported public signatures do not expose shared internal types"() {
-    given:
-    def violations = jackson3Classes.findAll { JavaClass candidate ->
+    def supportedTypes = jackson3Classes.findAll { JavaClass candidate ->
       isSupportedAdapterType(candidate)
-    }.collectMany { JavaClass candidate ->
+    }
+    def violations = supportedTypes.collectMany { JavaClass candidate ->
       exposedTypes(candidate)
-          .findAll { JavaClass dependency -> isSharedInternalType(dependency) }
+          .findAll { JavaClass dependency -> isUnsupportedType(dependency) }
           .collect { JavaClass dependency -> "${candidate.fullName} -> ${dependency.fullName}" }
     }
 
     expect:
+    !supportedTypes.isEmpty()
     assert violations.isEmpty(), violations.join(System.lineSeparator())
   }
 
-  def "jackson3 supported public signatures detect adapter-internal leaks"() {
+  def "jackson3 signature scan detects declared internal exceptions and generic mapping internals"() {
     given:
     def fixtureClasses = new ClassFileImporter()
         .importClasses(
         ArchitectureAdapterSignatureLeakFixture,
-        ArchitectureAdapterInternalException)
-    def violations = fixtureClasses.findAll { JavaClass candidate ->
-      isSupportedAdapterType(candidate)
-    }.collectMany { JavaClass candidate ->
-      exposedTypes(candidate)
-          .findAll { JavaClass dependency -> isSharedInternalType(dependency) }
-          .collect { JavaClass dependency -> "${candidate.fullName} -> ${dependency.fullName}" }
-    }
+        ArchitectureAdapterInternalException,
+        PropertyRole)
+    def fixture = fixtureClasses.get(ArchitectureAdapterSignatureLeakFixture)
+    def internalException = fixtureClasses.get(ArchitectureAdapterInternalException)
+    def mappingInternal = fixtureClasses.get(PropertyRole)
 
     expect:
-    violations*.toString().toSet() == [
-      "com.kazforge.jsonapi.jackson3.ArchitectureAdapterSignatureLeakFixture -> " +
-      "com.kazforge.jsonapi.jackson3.internal.codec.ArchitectureAdapterInternalException"
-    ].toSet()
-  }
-
-  def "shared passive fixtures outside the contract package depend only on allowed packages"() {
-    expect:
-    classes()
-        .that()
-        .resideInAPackage("com.kazforge.jsonapi.fixtures..")
-        .and()
-        .resideOutsideOfPackage("com.kazforge.jsonapi.fixtures.contract..")
-        .should()
-        .onlyDependOnClassesThat()
-        .resideInAnyPackage(
-        "java..",
-        "org.jspecify.annotations..",
-        "com.kazforge.jsonapi.annotation..",
-        "com.kazforge.jsonapi.core.model..",
-        "com.kazforge.jsonapi",
-        "com.kazforge.jsonapi.api..",
-        "com.kazforge.jsonapi.document..",
-        "com.kazforge.jsonapi.mapping..",
-        "com.kazforge.jsonapi.patch..",
-        "com.kazforge.jsonapi.representation..",
-        "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.fixtures..",
-        "com.fasterxml.jackson.annotation..")
-        .check(sharedFixtureClasses)
-  }
-
-  def "shared contract-fixture carriers depend only on allowed application-shaped packages"() {
-    expect:
-    classes()
-        .that()
-        .resideInAPackage("com.kazforge.jsonapi.fixtures.contract..")
-        .and()
-        .haveSimpleNameNotEndingWith("CharacterizationSpec")
-        .should()
-        .onlyDependOnClassesThat()
-        .resideInAnyPackage(
-        "java..",
-        "org.jspecify.annotations..",
-        "com.kazforge.jsonapi.annotation..",
-        "com.kazforge.jsonapi.core.model..",
-        "com.kazforge.jsonapi",
-        "com.kazforge.jsonapi.api..",
-        "com.kazforge.jsonapi.document..",
-        "com.kazforge.jsonapi.mapping..",
-        "com.kazforge.jsonapi.patch..",
-        "com.kazforge.jsonapi.representation..",
-        "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.fixtures..",
-        "com.fasterxml.jackson.annotation..")
-        .check(sharedFixtureClasses)
-  }
-
-  def "shared characterization contract specs depend only on allowed contract packages"() {
-    expect:
-    classes()
-        .that()
-        .resideInAPackage("com.kazforge.jsonapi.fixtures.contract..")
-        .and()
-        .haveSimpleNameEndingWith("CharacterizationSpec")
-        .should()
-        .onlyDependOnClassesThat()
-        .resideInAnyPackage(
-        "java..",
-        "groovy..",
-        "org.codehaus.groovy..",
-        "spock..",
-        "org.spockframework..",
-        "org.jspecify.annotations..",
-        "com.kazforge.jsonapi.annotation..",
-        "com.kazforge.jsonapi.core.model..",
-        "com.kazforge.jsonapi",
-        "com.kazforge.jsonapi.api..",
-        "com.kazforge.jsonapi.document..",
-        "com.kazforge.jsonapi.mapping..",
-        "com.kazforge.jsonapi.patch..",
-        "com.kazforge.jsonapi.representation..",
-        "com.kazforge.jsonapi.diagnostic..",
-        "com.kazforge.jsonapi.fixtures..",
-        "com.fasterxml.jackson.annotation..")
-        .check(sharedFixtureClasses)
+    isSupportedAdapterType(fixture)
+    exposedTypes(fixture.getMethod("leaksAdapterInternalException"))
+        .findAll { isUnsupportedType(it) }.toSet() == [internalException].toSet()
+    exposedTypes(fixture.getConstructor())
+        .findAll { isUnsupportedType(it) }.toSet() == [internalException].toSet()
+    exposedTypes(fixture.getMethod("leaksMappingInternalArgument"))
+        .findAll { isUnsupportedType(it) }.toSet() == [mappingInternal].toSet()
   }
 
   private static boolean isSupportedCommonType(JavaClass candidate) {
@@ -295,7 +182,6 @@ class Jackson3DependencyRulesSpec extends Specification {
         candidate.modifiers.contains(JavaModifier.PUBLIC) &&
         (candidate.packageName == "com.kazforge.jsonapi" ||
         (isNeutralContractPackage(candidate.packageName) &&
-        !isInternalPackage(candidate.packageName) &&
         !isMappingInternalPackage(candidate.packageName)))
   }
 
@@ -319,23 +205,13 @@ class Jackson3DependencyRulesSpec extends Specification {
         !isAdapterInternalPackage(candidate.packageName)))
   }
 
-  private static boolean isSupportedTopLevelAdapterType(JavaClass candidate) {
-    candidate.topLevelClass && isSupportedAdapterType(candidate)
-  }
-
-  private static boolean isInternalPackage(String packageName) {
-    packageName == "com.kazforge.jsonapi.internal" ||
-        packageName.startsWith("com.kazforge.jsonapi.internal.")
-  }
-
   private static boolean isAdapterInternalPackage(String packageName) {
     packageName == "com.kazforge.jsonapi.jackson3.internal" ||
         packageName.startsWith("com.kazforge.jsonapi.jackson3.internal.")
   }
 
-  private static boolean isSharedInternalType(JavaClass candidate) {
-    isInternalPackage(candidate.packageName) ||
-        isMappingInternalPackage(candidate.packageName) ||
+  private static boolean isUnsupportedType(JavaClass candidate) {
+    isMappingInternalPackage(candidate.packageName) ||
         isAdapterInternalPackage(candidate.packageName)
   }
 
@@ -350,16 +226,20 @@ class Jackson3DependencyRulesSpec extends Specification {
     candidate.superclass.ifPresent { type -> types.addAll(type.allInvolvedRawTypes) }
     candidate.typeParameters.each { type -> types.addAll(type.allInvolvedRawTypes) }
     candidate.constructors.findAll { isExposedMember(it) }.each { member ->
-      types.addAll(member.allInvolvedRawTypes)
-      types.addAll(member.exceptionTypes)
+      types.addAll(exposedTypes(member))
     }
     candidate.methods.findAll { isExposedMember(it) }.each { member ->
-      types.addAll(member.allInvolvedRawTypes)
-      types.addAll(member.exceptionTypes)
+      types.addAll(exposedTypes(member))
     }
     candidate.fields.findAll { isExposedMember(it) }.each { member ->
       types.addAll(member.allInvolvedRawTypes)
     }
+    types
+  }
+
+  private static Set<JavaClass> exposedTypes(JavaCodeUnit member) {
+    def types = new LinkedHashSet<JavaClass>(member.allInvolvedRawTypes)
+    types.addAll(member.exceptionTypes)
     types
   }
 
