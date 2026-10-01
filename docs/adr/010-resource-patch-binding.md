@@ -1,4 +1,4 @@
-# ADR-011: Presence-Aware Resource PATCH Binding
+# ADR-010: Presence-Aware Resource PATCH Binding
 
 **Status:** Accepted
 **Date:** 2026-07-30
@@ -41,10 +41,10 @@ arrays, and maps replace as whole values. Nested null follows declared conversio
 primitives); it is never a generic remove operation. Configured property-scoped conversion can keep
 an otherwise bean-shaped value atomic. Outer attributes may be null, but object-valued meta may
 not. Relationships remain atomic linkage replacements, including identifier meta carried by that
-linkage ([ADR-014](014-flat-whole-object-meta-mapping.md)).
+linkage ([ADR-011](011-flat-whole-object-meta-mapping.md)).
 
 Backend-neutral orchestration is shared; native shape discovery, conversion, and DTO construction
-remain with each adapter ([ADR-022](022-responsibility-based-mapping-and-native-wire-codecs.md)).
+remain with each adapter ([ADR-015](015-responsibility-based-mapping-and-native-wire-codecs.md)).
 
 ## Consequences
 

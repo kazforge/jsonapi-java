@@ -51,4 +51,4 @@ recognizes both aliases of a resource without conflating their protocol meanings
 - Local identifiers remain document-scoped protocol identity, not inferred persistence state.
 - DTO linkage properties are not a lossless view of relationship presence; the core document retains
   all wire states. Mapping and inclusion semantics are shared in `jsonapi-java-mapping`, while native
-  property and conversion mechanics remain adapter-owned ([ADR-022](022-responsibility-based-mapping-and-native-wire-codecs.md)).
+  property and conversion mechanics remain adapter-owned ([ADR-015](015-responsibility-based-mapping-and-native-wire-codecs.md)).

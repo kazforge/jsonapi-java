@@ -35,7 +35,7 @@ ArticlePatch patch = api.patches().readPatch(updateJson, ArticlePatch.class);
 
 `JsonApi` groups ordinary resource, linkage-document, raw-document, and PATCH operations. Advanced
 major-specific readers, writers, mapping/binding, parameterized Jackson types, and heterogeneous
-typed envelopes remain adapter capabilities. [ADR-018](../docs/adr/018-level-one-application-api-contract.md)
+typed envelopes remain adapter capabilities. [ADR-012](../docs/adr/012-level-one-application-api-contract.md)
 owns that split.
 
 ## Boundary
@@ -45,7 +45,7 @@ owns that split.
 - This artifact ships only supported contract packages. Cross-artifact mapping helpers live in
   `jsonapi-java-mapping`'s unsupported internal namespace, and native wire/codec helpers stay in
   each adapter's internal package; neither may appear in supported public signatures per
-  [ADR-022](../docs/adr/022-responsibility-based-mapping-and-native-wire-codecs.md).
+  [ADR-015](../docs/adr/015-responsibility-based-mapping-and-native-wire-codecs.md).
 
 ## Shared test fixtures
 

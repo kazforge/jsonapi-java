@@ -21,7 +21,7 @@ Typed envelopes preserve primary-data shape and bind included resources independ
 explicit resource-type registry; an unregistered included type fails rather than being guessed.
 Neither path resolves arbitrary annotated domain graphs or performs persistence lookup, identity-map
 mutation, or cycle resolution. Presence-aware updates remain separate from complete DTO binding
-([ADR-011](011-resource-patch-binding.md)).
+([ADR-010](010-resource-patch-binding.md)).
 
 The codec remains capable of reading request and response document shapes; this decision limits the target Java representation, not JSON:API wire coverage.
 

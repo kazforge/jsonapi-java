@@ -52,7 +52,7 @@ for property and type discovery, names, construction, conversion, native diagnos
 parser/generator behavior. Its token-driven wire codec stays local to that Jackson major; there is
 no generic JSON tree/IR codec, runtime-major detection, or supported Gson backend. This is a
 responsibility boundary, not a lowest-common-denominator Jackson abstraction.
-[ADR-022](adr/022-responsibility-based-mapping-and-native-wire-codecs.md) owns the rationale.
+[ADR-015](adr/015-responsibility-based-mapping-and-native-wire-codecs.md) owns the rationale.
 Framework integrations, when added, depend on lower-layer public contracts; no lower layer depends
 on a framework.
 
@@ -109,7 +109,7 @@ The neutral Level-1 `JsonApi` contract coordinates common resource, relationship
 PATCH operations; the strict primary-data shape policy those operations apply lives in
 `jsonapi-java-mapping`. Major-specific capability APIs remain public for explicit codec, mapping,
 parameterized-type, heterogeneous-envelope, and policy control.
-[ADR-018](adr/018-level-one-application-api-contract.md) owns that boundary.
+[ADR-012](adr/012-level-one-application-api-contract.md) owns that boundary.
 
 ## Authority boundaries
 
@@ -134,12 +134,12 @@ Ordinary mapped relationships always carry `data`; links-only and meta-only form
 through the core/document path ([ADR-005](adr/005-domain-mapping-and-inclusion.md)). Resource meta,
 relationship meta, and identifier meta remain distinct locations. Identifier meta uses opt-in
 `RelationshipLinkage<T, M>` and changes only with whole-linkage replacement
-([ADR-014](adr/014-flat-whole-object-meta-mapping.md)).
+([ADR-011](adr/011-flat-whole-object-meta-mapping.md)).
 
 Low-level `PatchCommand` and typed `PatchPresence<T>` DTOs are two projections of a validated update
 document. Both preserve omission versus explicit null; applications authorize and apply the result.
 Recursive structured changes and atomic-container boundaries are owned by
-[ADR-011](adr/011-resource-patch-binding.md).
+[ADR-010](adr/010-resource-patch-binding.md).
 
 ## Diagnostics
 

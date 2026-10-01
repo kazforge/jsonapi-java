@@ -1,4 +1,4 @@
-# ADR-022: Share Mapping Semantics, Keep Native Wire Codecs
+# ADR-015: Share Mapping Semantics, Keep Native Wire Codecs
 
 **Status:** Accepted
 **Date:** 2026-09-24
