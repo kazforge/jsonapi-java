@@ -29,7 +29,8 @@ shared fixtures, and query parsing. In particular:
   leak through supported public signatures; the mapping implementation namespace is treated as
   shared internal implementation for that signature check;
 - shared fixtures remain passive application-shaped data and resources, apart from the neutral
-  resource loader; behavioral orchestration and assertions remain adapter-local;
+  resource loader; behavioral orchestration and assertions remain adapter-local. The API module
+  owns the shared-fixture architecture checks;
 - shared characterization contract specs under `com.kazforge.jsonapi.fixtures.contract` are the
   sanctioned shared-assertion exception: abstract Spock specs asserting neutral Level-1 observable
   semantics, executed through adapter-supplied concrete subclasses, depending only on Groovy, Spock,
