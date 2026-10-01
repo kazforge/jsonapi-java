@@ -2,7 +2,7 @@
 
 One coherent release lifecycle for the unified release train. Change and
 version semantics are owned by
-[ADR-021](adr/021-unified-release-train.md); this page owns the mechanics.
+[ADR-014](adr/014-unified-release-train.md); this page owns the mechanics.
 
 ```
 Conventional Commits

@@ -1,4 +1,4 @@
-# ADR-018: Major-Neutral Level-1 Application API Contract
+# ADR-012: Major-Neutral Level-1 Application API Contract
 
 **Status:** Accepted
 **Date:** 2026-09-04

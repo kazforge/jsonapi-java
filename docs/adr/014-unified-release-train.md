@@ -1,4 +1,4 @@
-# ADR-021: Unified Release Train and Version Semantics
+# ADR-014: Unified Release Train and Version Semantics
 
 **Status:** Accepted
 **Date:** 2026-09-18
@@ -9,7 +9,7 @@ The repository ships a completed, non-Spring artifact set from a single root ver
 first public 0.x release, the project needs one recorded policy for how artifact versions and
 public change semantics work, so release automation can implement it mechanically instead of
 re-deciding the model. Maven coordinates and the Java package base are already permanent
-([ADR-020](020-kazforge-namespace.md)); this record consumes that decision and does not change any
+([ADR-013](013-kazforge-namespace.md)); this record consumes that decision and does not change any
 module boundary, coordinate, or API.
 
 ## Decision

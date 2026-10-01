@@ -22,4 +22,4 @@ its configured native mechanics.
 See the [architecture overview](../docs/architecture.md),
 [ADR-005](../docs/adr/005-domain-mapping-and-inclusion.md),
 [ADR-007](../docs/adr/007-module-boundaries.md), and
-[ADR-022](../docs/adr/022-responsibility-based-mapping-and-native-wire-codecs.md).
+[ADR-015](../docs/adr/015-responsibility-based-mapping-and-native-wire-codecs.md).

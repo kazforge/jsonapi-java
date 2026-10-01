@@ -14,4 +14,4 @@ Both are checked because squash merge uses the PR title while rebase merge keeps
 the individual commit messages. The `Conventional Commits` CI check enforces this
 on pull requests to `main`; a maintainer makes it mandatory via branch
 protection (or ruleset) on `main`. Release and version-bump semantics are owned by
-[ADR-021](docs/adr/021-unified-release-train.md).
+[ADR-014](docs/adr/014-unified-release-train.md).

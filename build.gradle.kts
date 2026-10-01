@@ -15,7 +15,7 @@ sonar {
         // Exclude only substantial Jackson 2 implementations paired with Jackson 3: token-level
         // readers; configured-Jackson construction, property discovery, conversion, and module
         // bridges; and the adapter's document, resource, and PATCH operation coordinators. These
-        // remain separately compiled to preserve native codec and mapper authority (ADR-022).
+        // remain separately compiled to preserve native codec and mapper authority (ADR-015).
         // Neutral mapping orchestration lives in jsonapi-java-mapping. The paired public typed
         // envelope types stay excluded because metaAs(JavaType) is Jackson-major. Small codec
         // utilities, property records, and thin public delegates participate in CPD; do not exclude

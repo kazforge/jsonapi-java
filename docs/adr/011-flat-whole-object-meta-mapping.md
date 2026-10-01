@@ -1,4 +1,4 @@
-# ADR-014: Distinct Whole-Object Meta Locations
+# ADR-011: Distinct Whole-Object Meta Locations
 
 **Status:** Accepted
 **Date:** 2026-08-19
@@ -28,7 +28,7 @@ Absent meta leaves the property unbound and an empty object remains present.
 Normal read/write and low-level PATCH accept an ordinary bean, map, or object target with at most one
 `Optional` wrapper. Typed PATCH requires exactly `PatchPresence<T>` before that target. Atomic
 map-like targets remain whole replacements; traversable beans reuse the recursive contract from
-[ADR-011](011-resource-patch-binding.md).
+[ADR-010](010-resource-patch-binding.md).
 
 Resource meta is independent of sparse fieldsets. Relationship meta rides its relationship and is
 omitted when the relationship is fieldset-excluded. On PATCH, relationship meta participates only
@@ -44,7 +44,7 @@ value converts through declared `M`: non-emission preserves existing meta, emitt
 and an emitted object replaces it wholesale; other emitted shapes fail. On read, each identifier's
 meta converts to declared `M` while its target follows ordinary relationship binding. The shared
 mapping writer owns the overlay policy; configured conversion stays adapter-owned
-([ADR-022](022-responsibility-based-mapping-and-native-wire-codecs.md)).
+([ADR-015](015-responsibility-based-mapping-and-native-wire-codecs.md)).
 
 ## Consequences
 
