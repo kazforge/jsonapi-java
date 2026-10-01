@@ -1,70 +1,19 @@
 package com.kazforge.jsonapi.jackson2
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.kazforge.jsonapi.annotation.JsonApiAttribute
 import com.kazforge.jsonapi.annotation.JsonApiId
 import com.kazforge.jsonapi.annotation.JsonApiResource
-import com.kazforge.jsonapi.core.model.Attributes
-import com.kazforge.jsonapi.core.model.ResourceObject
-import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.mapping.IdentifierConverter
 import com.kazforge.jsonapi.jackson2.JacksonFeatureFixtures.ArticleWithFormattedTitle
 import com.kazforge.jsonapi.jackson2.JacksonFeatureFixtures.CreatorBasedArticle
 import com.kazforge.jsonapi.jackson2.JacksonFeatureFixtures.FormattedTitle
-import com.kazforge.jsonapi.fixtures.domainwrite.Article
-import com.kazforge.jsonapi.fixtures.domainwrite.BlogWithJsonProperty
-import com.kazforge.jsonapi.fixtures.domainwrite.ConventionalId
 import spock.lang.Specification
 
-// Jackson 2 mechanism probes: mix-ins, @JsonIgnore, naming strategies, @JsonCreator, custom
-// serializers, and identifier-converter wiring. Major-neutral Optional/array/inheritance/
-// mixed-relationship semantics are exercised by direct adapter-owned cases.
+// Jackson 2 mechanism probes: configured mix-ins, naming strategies, @JsonCreator, custom
+// serializers, and unwrapping. Shared characterization specs own ordinary identity and attributes.
 class ResourceMappingJacksonFeaturesSpec extends Specification {
-
-  def "Jackson conventional id property becomes the resource identifier"() {
-    when:
-    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build())
-        .toResource(new ConventionalId("42", "name value"))
-
-    then:
-    resource == new ResourceObject("conventionals", "42", null,
-        Attributes.ofAttributes([name: "name value"]), null, null, null, Map.of())
-  }
-
-  def "direct @JsonProperty naming determines attribute and identifier members"() {
-    when:
-    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build())
-        .toResource(new BlogWithJsonProperty("b1", "My Blog"))
-
-    then:
-    resource == new ResourceObject("blogs", "b1", null,
-        Attributes.ofAttributes([blog_title: "My Blog"]), null, null, null, Map.of())
-  }
-
-  @JsonApiResource(type = "things")
-  static class ThingWithIgnored {
-    @JsonApiId String id
-    @JsonIgnore
-    @JsonApiAttribute @JsonProperty("secret") String confidential
-    @JsonApiAttribute String name
-  }
-
-  def "@JsonIgnore excludes property from mapping"() {
-    given:
-    def mapper = JsonApiJackson2.resourceMapper(JsonMapper.builder().build())
-    def thing = new ThingWithIgnored(id: "1", confidential: "hidden", name: "visible")
-
-    when:
-    def resource = mapper.toResource(thing)
-
-    then:
-    resource.attributes().attributes().containsKey("name")
-    !resource.attributes().attributes().containsKey("secret")
-  }
 
   @JsonApiResource(type = "named")
   static class NamedThing {
@@ -129,7 +78,7 @@ class ResourceMappingJacksonFeaturesSpec extends Specification {
     resource.attributes().attributes().title == "Hello"
   }
 
-  def "custom ValueSerializer honored via convertValue"() {
+  def "custom value serializer is honored through property-scoped serialization"() {
     given:
     def mapper = JsonApiJackson2.resourceMapper(JsonMapper.builder().build())
     def article = new ArticleWithFormattedTitle("1", new FormattedTitle("Hello"))
@@ -174,42 +123,5 @@ class ResourceMappingJacksonFeaturesSpec extends Specification {
     // Same property-scoped collapse as above; the custom-introspector transformer drives the
     // dynamic-serializer resolution inside the raw path.
     resource.attributes().attributes() == [details: "iv"]
-  }
-
-  def "identifier converter returning null is rejected"() {
-    given:
-    def converter = new IdentifierConverter() {
-          @Override
-          String convert(Object idValue) {
-            return null
-          }
-        }
-    def mapper = JsonApiJackson2.resourceMapper(JsonMapper.builder().build(), converter)
-    def article = new Article("1", "T", "B", List.of(), null)
-
-    when:
-    mapper.toResource(article)
-
-    then:
-    def ex = thrown(JsonApiMappingException)
-    ex.diagnostic() == MappingDiagnostic.MISSING_IDENTIFIER
-  }
-
-  def "identifier converter throwing RuntimeException is propagated"() {
-    given:
-    def converter = new IdentifierConverter() {
-          @Override
-          String convert(Object idValue) {
-            throw new IllegalArgumentException("bad id")
-          }
-        }
-    def mapper = JsonApiJackson2.resourceMapper(JsonMapper.builder().build(), converter)
-    def article = new Article("1", "T", "B", List.of(), null)
-
-    when:
-    mapper.toResource(article)
-
-    then:
-    thrown(IllegalArgumentException)
   }
 }

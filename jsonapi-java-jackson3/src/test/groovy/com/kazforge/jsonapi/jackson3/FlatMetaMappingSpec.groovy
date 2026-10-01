@@ -36,19 +36,10 @@ import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMetaPatch
 import spock.lang.Specification
 import tools.jackson.databind.json.JsonMapper
 
-// Jackson 3 mechanism probes for whole-meta: TypeDeserializer / polymorphic conversion, JavaType
-// MetaBox preservation, property null providers, renamed-wire construction pointers, codec
-// rejection of wire-level meta null, and fromDocument data-less relationship meta. Major-neutral
-// whole-meta write/read/PATCH/fieldset semantics are exercised by direct adapter-owned cases.
+// Jackson 3 whole-meta PATCH and codec mechanism probes: polymorphic conversion, generic JavaType
+// preservation, property null providers, renamed-wire construction pointers, wire-level meta-null
+// rejection, and data-less relationship meta. Ordinary polymorphism lives in PolymorphicWholeMetaSpec.
 class FlatMetaMappingSpec extends Specification {
-
-  static def mapper() {
-    JsonApiJackson3.resourceMapper(JsonMapper.builder().build())
-  }
-
-  static def binder() {
-    JsonApiJackson3.resourceBinder(JsonMapper.builder().build())
-  }
 
   static def patchCommandReader() {
     JsonApiJackson3.patchCommandReader(JsonMapper.builder().build())
@@ -146,35 +137,29 @@ class FlatMetaMappingSpec extends Specification {
     ]
   }
 
-  def "concrete root-polymorphic whole-meta POJO is a valid declaration and binds"() {
+  def "low-level PATCH binds a concrete root-polymorphic whole-meta POJO"() {
     given:
     def json =
         '{"data":{"type":"articles","id":"1","meta":{"kind":"concrete","value":"v"}}}'
 
     when: // the root TypeDeserializer decoration must not disqualify the decorated POJO
-    def bound = binder().fromResource(mapper().toResource(new ConcreteTypedMetaArticle(
-        "1", new ConcreteTypedMeta("v"))), ConcreteTypedMetaArticle)
     def command = patchCommandReader().readValue(json, ConcreteTypedMetaArticle)
 
     then:
-    bound.meta() == new ConcreteTypedMeta("v")
     command.changes() == [
       new PatchChange.ResourceMetaChange("meta", "meta", new ConcreteTypedMeta("v"))
     ]
   }
 
-  def "abstract polymorphic whole-meta base materializes the subtype on read and low-level patch"() {
+  def "low-level PATCH materializes the subtype of an abstract polymorphic whole-meta base"() {
     given:
     def json =
         '{"data":{"type":"articles","id":"1","meta":{"kind":"source","source":"cms","note":"n"}}}'
 
     when: // the TypeDeserializer selects the concrete subtype from the discriminator
-    def bound = binder().fromResource(mapper().toResource(new PolyMetaArticle(
-        "1", new SourceMeta("cms", "n"))), PolyMetaArticle)
     def command = patchCommandReader().readValue(json, PolyMetaArticle)
 
     then:
-    bound.meta() == new SourceMeta("cms", "n")
     command.changes() == [
       new PatchChange.ResourceMetaChange("meta", "meta", new SourceMeta("cms", "n"))
     ]

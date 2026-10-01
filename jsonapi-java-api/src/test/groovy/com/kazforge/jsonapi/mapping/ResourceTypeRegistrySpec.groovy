@@ -31,6 +31,18 @@ class ResourceTypeRegistrySpec extends Specification {
     thrown(UnsupportedOperationException)
   }
 
+  def "registers the same class under different explicit wire keys in independent registries"() {
+    given:
+    def articles = ResourceTypeRegistry.builder().register("articles", String).build()
+    def posts = ResourceTypeRegistry.builder().register("posts", String).build()
+
+    expect:
+    articles.resolve("articles").targetType() == String
+    articles.resolve("posts") == null
+    posts.resolve("posts").targetType() == String
+    posts.resolve("articles") == null
+  }
+
   @Unroll
   def "rejects explicit wire type #wireType as invalid without a location"() {
     when:
@@ -56,6 +68,7 @@ class ResourceTypeRegistrySpec extends Specification {
     then:
     def duplicate = thrown(JsonApiMappingException)
     duplicate.diagnostic() == MappingDiagnostic.CONFLICTING_TYPE_REGISTRATION
+    duplicate.resourceClass() == Integer
     duplicate.location() == null
   }
 

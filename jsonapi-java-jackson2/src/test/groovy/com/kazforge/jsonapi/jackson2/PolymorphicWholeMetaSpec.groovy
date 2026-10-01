@@ -10,9 +10,8 @@ import com.fasterxml.jackson.databind.json.JsonMapper
 
 // Jackson 2 mechanism probes for whole-meta: root TypeDeserializer decoration for concrete and
 // abstract polymorphic meta targets must not disqualify an otherwise object-shaped whole-meta
-// declaration. Major-neutral whole-meta write and fieldset semantics live in direct adapter-owned
-// cases; typed-PATCH parts of the corresponding Jackson 3 spec are outside this increment.
-class PolymorphicMetaSpec extends Specification {
+// declaration. Shared characterization specs own ordinary whole-meta write and fieldset semantics.
+class PolymorphicWholeMetaSpec extends Specification {
 
   def "concrete root-polymorphic whole-meta POJO is a valid declaration and maps"() {
     given:

@@ -1,75 +1,66 @@
-package com.kazforge.jsonapi.jackson2
+package com.kazforge.jsonapi.jackson3
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.kazforge.jsonapi.annotation.JsonApiAttribute
 import com.kazforge.jsonapi.annotation.JsonApiId
 import com.kazforge.jsonapi.annotation.JsonApiMeta
 import com.kazforge.jsonapi.annotation.JsonApiRelationship
-import com.kazforge.jsonapi.annotation.JsonApiResource
 import com.kazforge.jsonapi.annotation.JsonApiRelationshipMeta
+import com.kazforge.jsonapi.annotation.JsonApiResource
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
+import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMapMeta
 import spock.lang.Specification
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.databind.BeanDescription
-import com.fasterxml.jackson.databind.JsonSerializer
-import com.fasterxml.jackson.databind.SerializationConfig
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.SerializerProvider
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.databind.ser.BeanPropertyWriter
-import com.fasterxml.jackson.databind.ser.BeanSerializerModifier
-import java.io.IOException
+import tools.jackson.core.JsonGenerator
+import tools.jackson.databind.BeanDescription
+import tools.jackson.databind.SerializationConfig
+import tools.jackson.databind.SerializationContext
+import tools.jackson.databind.SerializationFeature
+import tools.jackson.databind.ValueSerializer
+import tools.jackson.databind.annotation.JsonSerialize
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.module.SimpleModule
+import tools.jackson.databind.ser.BeanPropertyWriter
+import tools.jackson.databind.ser.ValueSerializerModifier
 
-// Jackson 2 mechanism probes for property-scoped serialization authority: property serializers,
-// null serializers (property- and module-assigned), inclusion, one accessor read per local member
-// render, mix-in serializers, and root-wrapping isolation. Flat-read binder specs cover identifier
-// conversion and deserialization authority.
-class PropertyScopedAuthoritySpec extends Specification {
+class PropertyScopedWriteAuthoritySpec extends Specification {
 
   def "attribute and both meta locations use direct property serializers"() {
     given:
     def article = new DirectPropertyArticle(
-        "1",
-        "title",
-        new StructuredValue("detail"),
-        new MetaValue("resource"),
-        ResourceIdentifier.of("people", "p1"),
-        new MetaValue("relationship"))
+        "1", "title", new StructuredValue("detail"), new MetaValue("resource"),
+        ResourceIdentifier.of("people", "p1"), new MetaValue("relationship"))
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build()).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
 
     then:
-    resource.attributes().attributes() == [
-      title: "property:title",
-      details: [encoded: "detail"]
-    ]
+    resource.attributes().attributes() == [title: "property:title", details: [encoded: "detail"]]
     resource.meta().members() == [encoded: "resource"]
     resource.relationships().relationships().author.meta().members() == [encoded: "relationship"]
   }
 
-  def "ordinary uncustomized scalar attributes retain their value"() {
+  def "populated map meta converts resource and relationship members independently"() {
     given:
-    def article = new OrdinaryPropertyArticle("1", "title")
+    def article = new ArticleWithMapMeta(
+        "1", "T", ResourceIdentifier.of("people", "p1"),
+        Map.of("source", "cms"), Map.of("displayName", "Alice"))
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build()).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
 
     then:
-    resource.attributes().attributes() == [title: "title"]
+    resource.meta().members() == [source: "cms"]
+    resource.relationships().relationships().author.meta().members() == [displayName: "Alice"]
   }
 
   def "property-scoped writes retain runtime subtype fields for concrete base values"() {
     given:
-    def article = new RuntimeSubtypeArticle(
-        "1", new ConcreteSubtypeValue("base", "subclass"))
+    def article = new RuntimeSubtypeArticle("1", new ConcreteSubtypeValue("base", "subclass"))
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build()).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
 
     then:
     resource.attributes().attributes() == [details: [base: "base", extra: "subclass"]]
@@ -80,7 +71,7 @@ class PropertyScopedAuthoritySpec extends Specification {
     def article = new NullSerializedArticle("1", null)
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build()).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
 
     then:
     resource.attributes().attributes() == [title: "property:null"]
@@ -88,13 +79,11 @@ class PropertyScopedAuthoritySpec extends Specification {
 
   def "ordinary null attributes use a module-assigned property null serializer"() {
     given:
-    def mapper = JsonMapper.builder()
-        .addModule(new ModuleNullSerializerModule())
-        .build()
+    def mapper = JsonMapper.builder().addModule(new ModuleNullSerializerModule()).build()
     def article = new ModuleNullSerializedArticle("1", null)
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(mapper).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(mapper).toResource(article)
 
     then:
     resource.attributes().attributes() == [title: "module:null"]
@@ -105,7 +94,7 @@ class PropertyScopedAuthoritySpec extends Specification {
     def article = new IncludedPropertyArticle("1", "", null, null)
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build()).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
 
     then:
     resource.attributes().attributes() == [explicitNull: null]
@@ -116,7 +105,7 @@ class PropertyScopedAuthoritySpec extends Specification {
     def article = new SingleReadIncludedArticle("1")
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build()).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
 
     then:
     article.titleReads() == 1
@@ -125,13 +114,11 @@ class PropertyScopedAuthoritySpec extends Specification {
 
   def "attribute and resource meta mix-in serializers remain property-scoped"() {
     given:
-    def mapper = JsonMapper.builder()
-        .addMixIn(MixinPropertyArticle, PropertyCustomizationMixIn)
-        .build()
+    def mapper = JsonMapper.builder().addMixIn(MixinPropertyArticle, PropertyCustomizationMixIn).build()
     def article = new MixinPropertyArticle("1", "title", new MetaValue("resource"))
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(mapper).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(mapper).toResource(article)
 
     then:
     resource.attributes().attributes() == [title: "mixin:title"]
@@ -140,19 +127,13 @@ class PropertyScopedAuthoritySpec extends Specification {
 
   def "root wrapping does not leak into property-scoped writes"() {
     given:
-    def mapper = JsonMapper.builder()
-        .enable(SerializationFeature.WRAP_ROOT_VALUE)
-        .build()
+    def mapper = JsonMapper.builder().enable(SerializationFeature.WRAP_ROOT_VALUE).build()
     def article = new DirectPropertyArticle(
-        "1",
-        "title",
-        new StructuredValue("detail"),
-        new MetaValue("resource"),
-        ResourceIdentifier.of("people", "p1"),
-        new MetaValue("relationship"))
+        "1", "title", new StructuredValue("detail"), new MetaValue("resource"),
+        ResourceIdentifier.of("people", "p1"), new MetaValue("relationship"))
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(mapper).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(mapper).toResource(article)
 
     then:
     resource.attributes().attributes() == [title: "property:title", details: [encoded: "detail"]]
@@ -164,7 +145,7 @@ class PropertyScopedAuthoritySpec extends Specification {
     def article = new JsonApiOwnedIdentifier("1")
 
     when:
-    def resource = JsonApiJackson2.resourceMapper(JsonMapper.builder().build()).toResource(article)
+    def resource = JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
 
     then:
     resource.id() == "1"
@@ -175,7 +156,7 @@ class PropertyScopedAuthoritySpec extends Specification {
     def article = new ScalarSerializedMetaArticle("1", new MetaValue("resource"))
 
     when:
-    JsonApiJackson2.resourceMapper(JsonMapper.builder().build()).toResource(article)
+    JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
 
     then:
     def ex = thrown(JsonApiMappingException)
@@ -188,7 +169,7 @@ class PropertyScopedAuthoritySpec extends Specification {
     def article = new JsonNullSerializedMetaArticle("1", new MetaValue("resource"))
 
     when:
-    JsonApiJackson2.resourceMapper(JsonMapper.builder().build()).toResource(article)
+    JsonApiJackson3.resourceMapper(JsonMapper.builder().build()).toResource(article)
 
     then:
     def ex = thrown(JsonApiMappingException)
@@ -197,72 +178,64 @@ class PropertyScopedAuthoritySpec extends Specification {
     ex.message == "Converted meta value is not an object (expected a JSON object, got null)"
   }
 
-  static class PropertySerializer extends JsonSerializer<Object> {
+  static class PropertySerializer extends ValueSerializer<Object> {
     @Override
-    void serialize(Object value, JsonGenerator generator, SerializerProvider context)
-    throws IOException {
+    void serialize(Object value, JsonGenerator generator, SerializationContext context) {
       generator.writeString("property:" + value)
     }
   }
 
-  static class NullPropertySerializer extends JsonSerializer<Object> {
+  static class NullPropertySerializer extends ValueSerializer<Object> {
     @Override
-    void serialize(Object value, JsonGenerator generator, SerializerProvider context)
-    throws IOException {
+    void serialize(Object value, JsonGenerator generator, SerializationContext context) {
       generator.writeString("property:null")
     }
   }
 
-  static class ModuleNullPropertySerializer extends JsonSerializer<Object> {
+  static class ModuleNullPropertySerializer extends ValueSerializer<Object> {
     @Override
-    void serialize(Object value, JsonGenerator generator, SerializerProvider context)
-    throws IOException {
+    void serialize(Object value, JsonGenerator generator, SerializationContext context) {
       generator.writeString("module:null")
     }
   }
 
-  static class MixinPropertySerializer extends JsonSerializer<Object> {
+  static class MixinPropertySerializer extends ValueSerializer<Object> {
     @Override
-    void serialize(Object value, JsonGenerator generator, SerializerProvider context)
-    throws IOException {
+    void serialize(Object value, JsonGenerator generator, SerializationContext context) {
       generator.writeString("mixin:" + value)
     }
   }
 
-  static class StructuredSerializer extends JsonSerializer<StructuredValue> {
+  static class StructuredSerializer extends ValueSerializer<StructuredValue> {
     @Override
-    void serialize(StructuredValue value, JsonGenerator generator, SerializerProvider context)
-    throws IOException {
+    void serialize(StructuredValue value, JsonGenerator generator, SerializationContext context) {
       generator.writeStartObject()
-      generator.writeFieldName("encoded")
+      generator.writeName("encoded")
       generator.writeString(value.value)
       generator.writeEndObject()
     }
   }
 
-  static class MetaSerializer extends JsonSerializer<MetaValue> {
+  static class MetaSerializer extends ValueSerializer<MetaValue> {
     @Override
-    void serialize(MetaValue value, JsonGenerator generator, SerializerProvider context)
-    throws IOException {
+    void serialize(MetaValue value, JsonGenerator generator, SerializationContext context) {
       generator.writeStartObject()
-      generator.writeFieldName("encoded")
+      generator.writeName("encoded")
       generator.writeString(value.value)
       generator.writeEndObject()
     }
   }
 
-  static class ScalarMetaSerializer extends JsonSerializer<MetaValue> {
+  static class ScalarMetaSerializer extends ValueSerializer<MetaValue> {
     @Override
-    void serialize(MetaValue value, JsonGenerator generator, SerializerProvider context)
-    throws IOException {
+    void serialize(MetaValue value, JsonGenerator generator, SerializationContext context) {
       generator.writeString(value.value)
     }
   }
 
-  static class JsonNullMetaSerializer extends JsonSerializer<MetaValue> {
+  static class JsonNullMetaSerializer extends ValueSerializer<MetaValue> {
     @Override
-    void serialize(MetaValue value, JsonGenerator generator, SerializerProvider context)
-    throws IOException {
+    void serialize(MetaValue value, JsonGenerator generator, SerializationContext context) {
       generator.writeNull()
     }
   }
@@ -274,12 +247,10 @@ class PropertyScopedAuthoritySpec extends Specification {
     }
   }
 
-  static class ModuleNullSerializerModifier extends BeanSerializerModifier {
+  static class ModuleNullSerializerModifier extends ValueSerializerModifier {
     @Override
     List<BeanPropertyWriter> changeProperties(
-        SerializationConfig config,
-        BeanDescription beanDesc,
-        List<BeanPropertyWriter> properties) {
+        SerializationConfig config, BeanDescription.Supplier beanDesc, List<BeanPropertyWriter> properties) {
       def title = properties.find { it.name == "title" }
       if (title != null) {
         title.assignNullSerializer(new ModuleNullPropertySerializer())
@@ -298,29 +269,14 @@ class PropertyScopedAuthoritySpec extends Specification {
     @JsonApiRelationshipMeta(relationship = "author") @JsonSerialize(using = MetaSerializer) MetaValue authorMeta
 
     DirectPropertyArticle(
-    String id,
-    String title,
-    StructuredValue details,
-    MetaValue meta,
-    ResourceIdentifier author,
-    MetaValue authorMeta) {
+    String id, @JsonApiAttribute String title, StructuredValue details, MetaValue meta,
+    ResourceIdentifier author, MetaValue authorMeta) {
       this.id = id
       this.title = title
       this.details = details
       this.meta = meta
       this.author = author
       this.authorMeta = authorMeta
-    }
-  }
-
-  @JsonApiResource(type = "ordinary-articles")
-  static class OrdinaryPropertyArticle {
-    @JsonApiId String id
-    @JsonApiAttribute String title
-
-    OrdinaryPropertyArticle(String id, String title) {
-      this.id = id
-      this.title = title
     }
   }
 

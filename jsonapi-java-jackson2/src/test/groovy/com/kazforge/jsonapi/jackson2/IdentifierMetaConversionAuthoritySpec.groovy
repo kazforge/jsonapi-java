@@ -23,10 +23,10 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.json.JsonMapper
 
 // Jackson 2 mechanism probes for identifier-meta: JavaType preservation, naming strategies, custom
-// serializers (including non-emission and invalid scalar emission). Major-neutral RelationshipLinkage
-// container, overlay, and inclusion semantics live in direct adapter-owned cases. Flat-read binder
-// specs cover custom linkage mappers.
-class IdentifierMetaMappingSpec extends Specification {
+// serializers (including non-emission, JSON-null emission, and invalid scalar emission). Shared
+// characterization and mapping specs own ordinary meta placement and overlay policy. Flat-read
+// binder specs cover custom linkage mappers.
+class IdentifierMetaConversionAuthoritySpec extends Specification {
 
   static def mapper() {
     JsonApiJackson2.resourceMapper(JsonMapper.builder().build())

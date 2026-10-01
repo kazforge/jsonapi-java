@@ -9,9 +9,9 @@ import com.kazforge.jsonapi.patch.PatchPresence;
 import java.util.Objects;
 
 /**
- * Jackson 3 polymorphic whole-meta targets owned by {@code FlatMetaMappingSpec}: root {@code
- * TypeDeserializer} decoration for concrete and abstract {@code @JsonTypeInfo} meta types.
- * Major-neutral whole-meta declaration and bind semantics live in direct adapter-owned cases.
+ * Jackson 3 polymorphic whole-meta targets for {@code PolymorphicWholeMetaSpec} and the PATCH
+ * probes in {@code FlatMetaMappingSpec}: root {@code TypeDeserializer} decoration for concrete and
+ * abstract {@code @JsonTypeInfo} meta types.
  */
 @SuppressWarnings({"unused", "NullAway"})
 public final class WholeMetaTargetFixtures {
