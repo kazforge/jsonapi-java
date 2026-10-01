@@ -1,8 +1,5 @@
-package com.kazforge.jsonapi
+package com.kazforge.jsonapi.diagnostic
 
-import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
-import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
-import com.kazforge.jsonapi.diagnostic.MappingLocation
 import spock.lang.Specification
 
 /** Escaping, parsing, and composition invariants of the mapping-diagnostic location type. */
