@@ -35,9 +35,9 @@ import tools.jackson.databind.json.JsonMapper
 
 // Jackson 3 mechanism probes for identifier-meta: JavaType preservation, naming strategies,
 // custom serializers (including non-emission and invalid scalar emission), and linkage-mapper
-// wiring. Major-neutral RelationshipLinkage container, overlay, inclusion, and PATCH semantics
-// live in direct adapter-owned cases.
-class IdentifierMetaMappingSpec extends Specification {
+// wiring. Major-neutral wrapper and overlay semantics live in shared characterization and mapping
+// tests.
+class IdentifierMetaConversionAuthoritySpec extends Specification {
 
   static def mapper() {
     JsonApiJackson3.resourceMapper(JsonMapper.builder().build())
@@ -182,37 +182,6 @@ class IdentifierMetaMappingSpec extends Specification {
     byId.c1.meta().pinned() == true
     byId.c2.target() == new FlatAuthor("comments", "c2")
     byId.c2.meta().pinned() == false
-  }
-
-  def "null mapper result for a wrapped to-many occurrence is LINKAGE_MAPPING_FAILED"() {
-    given:
-    def linkageMapper = { RelationshipData data, JavaType target ->
-      null
-    } as RelationshipLinkageMapper
-    def binder = JsonApiJackson3.resourceBinder(
-        JsonMapper.builder().build(), IdentifierConverter.defaults(), [(FlatAuthor): linkageMapper])
-    def resource = new ResourceObject(
-        "articles",
-        "1",
-        null,
-        null,
-        Relationships.ofRelationships(
-        [comments: Relationship.withData(
-          new RelationshipData.IdentifierCollectionLinkage([
-            new ResourceIdentifier("comments", "c1", null, Meta.of([pinned: true]), [:]),
-            new ResourceIdentifier("comments", "c2", null, null, [:])
-          ]))]),
-        null,
-        null,
-        [:])
-
-    when:
-    binder.fromResource(resource, WrappedMappedSetArticle)
-
-    then:
-    def e = thrown(JsonApiMappingException)
-    e.diagnostic == MappingDiagnostic.LINKAGE_MAPPING_FAILED
-    e.propertyPath() == "/relationships/comments/data/0"
   }
 
   def "serializer-emitted JSON null clears existing to-one identifier meta"() {

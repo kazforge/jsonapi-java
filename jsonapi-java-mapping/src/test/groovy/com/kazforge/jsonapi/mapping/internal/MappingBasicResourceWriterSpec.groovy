@@ -77,7 +77,7 @@ class MappingBasicResourceWriterSpec extends Specification {
   def "reports a present identity value that converts to no wire string at its own role"() {
     given:
     articlesWithIdentity()
-    backend.unconvertibleIdentity('tmp-1')
+    backend.unconvertibleIdentity(value)
 
     when:
     writer.writeBasic(domain('id': '1', 'localId': 'tmp-1'), 'articles', null, false)
@@ -85,8 +85,27 @@ class MappingBasicResourceWriterSpec extends Specification {
     then:
     def failure = thrown(JsonApiMappingException)
     failure.diagnostic() == MappingDiagnostic.MISSING_IDENTIFIER
-    failure.propertyPath() == '/lid'
-    failure.message == "Local-id converter returned null for property 'localId'"
+    failure.propertyPath() == propertyPath
+    failure.message == message
+
+    where:
+    value   | propertyPath | message
+    '1'     | '/id'        | "Identifier converter returned null for property 'id'"
+    'tmp-1' | '/lid'       | "Local-id converter returned null for property 'localId'"
+  }
+
+  def "propagates the same exception instance from a throwing id converter"() {
+    given:
+    articlesWithIdentity()
+    def callbackFailure = new IllegalArgumentException('bad id')
+    backend.failIdentifierConversion('1', callbackFailure)
+
+    when:
+    writer.writeBasic(domain('id': '1', 'localId': 'tmp-1'), 'articles', null, false)
+
+    then:
+    def failure = thrown(IllegalArgumentException)
+    failure.is(callbackFailure)
   }
 
   def "writes converted attributes under their JSON:API names in declaration order"() {

@@ -349,6 +349,25 @@ class DomainDocumentReaderSpec extends Specification {
     fiveArg.location() == null
   }
 
+  def "domain reader eagerly rejects an override registry key under plain configured metadata"() {
+    given:
+    def registry = ResourceTypeRegistry.builder()
+        .register("override-articles", FlatArticle)
+        .build()
+
+    when:
+    JsonApiJackson3.domainDocumentReader(
+        JsonMapper.builder().build(), DocumentReadContext.resourceDefaults(), registry)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.RESOURCE_TYPE_MISMATCH
+    ex.resourceClass() == FlatArticle
+    ex.location() == null
+    ex.message.contains("articles")
+    ex.message.contains("override-articles")
+  }
+
   def "JavaType registrations keep their binding target under an equivalent mapper"() {
     given:
     def registryMapper = JsonMapper.builder().build()

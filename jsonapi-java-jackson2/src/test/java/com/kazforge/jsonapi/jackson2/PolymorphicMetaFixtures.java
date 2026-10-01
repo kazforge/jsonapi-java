@@ -8,7 +8,7 @@ import com.kazforge.jsonapi.annotation.JsonApiResource;
 import java.util.Objects;
 
 /**
- * Jackson 2 polymorphic whole-meta targets owned by {@code PolymorphicMetaSpec}: root {@code
+ * Jackson 2 polymorphic whole-meta targets owned by {@code PolymorphicWholeMetaSpec}: root {@code
  * TypeDeserializer} decoration for concrete and abstract polymorphic meta types. Adapter-local
  * Jackson 2 copy of the shared shapes.
  */

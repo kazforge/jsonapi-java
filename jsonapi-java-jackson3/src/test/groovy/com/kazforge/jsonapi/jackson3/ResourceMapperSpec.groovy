@@ -14,8 +14,6 @@ import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.document.DocumentEnvelope
 import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMapMeta
-import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithOptionalMeta
 import com.kazforge.jsonapi.fixtures.domainpatch.ArticleWithRelationshipLinkage
 import com.kazforge.jsonapi.fixtures.domainpatch.AuthorIdMeta
@@ -86,11 +84,6 @@ class ResourceMapperSpec extends Specification {
     "renamed RelationshipLinkage identifier meta onto the wire name" | new RelationshipLinkageContainerFixtures.RenamedRelationshipLinkageArticle("1", new RelationshipLinkage<>(ResourceIdentifier.of(PEOPLE, "p1"), new AuthorIdMeta(EDITOR))) | authorOnlyArticle(identifier(PEOPLE, "p1", Meta.of(Map.of(ROLE, EDITOR))))
     "identifier-meta overlay preserves ResourceIdentifier lid" | new ArticleWithRelationshipLinkage("1", "T", new RelationshipLinkage<>(identifier(PEOPLE, null, "lid-1", null, Map.of()), new AuthorIdMeta(EDITOR)), List.of(), null, null) | identifierMetaArticle(identifier(PEOPLE, null, "lid-1", Meta.of(Map.of(ROLE, EDITOR)), Map.of()), null, List.of(), null)
     "identifier-meta overlay preserves additional members" | new ArticleWithRelationshipLinkage("1", "T", new RelationshipLinkage<>(identifier(PEOPLE, "p1", null, Meta.of(Map.of(ROLE, "old")), Map.of(EXT_HREF, EXAMPLE_HREF)), new AuthorIdMeta(EDITOR)), List.of(), null, null) | identifierMetaArticle(identifier(PEOPLE, "p1", null, Meta.of(Map.of(ROLE, EDITOR)), Map.of(EXT_HREF, EXAMPLE_HREF)), null, List.of(), null)
-    "resource meta and relationship meta" | new ArticleWithMeta("1", "T", ResourceIdentifier.of(PEOPLE, "p1"), new ArticleMeta("cms", "n"), new AuthorMeta(ALICE)) | articleWithMetaResource(Meta.of(Map.of(SOURCE, "cms", "note", "n")), ResourceIdentifier.of(PEOPLE, "p1"), Meta.of(Map.of(DISPLAY_NAME, ALICE)))
-    "null meta properties omit meta members" | new ArticleWithMeta("1", "T", null, null, null) | articleWithMetaResource(null, null, null)
-    "empty map meta emits empty members" | new ArticleWithMapMeta("1", "T", null, Map.of(), null) | articleWithMetaResource(Meta.empty(), null, null)
-    "populated map meta writes resource and relationship members" | new ArticleWithMapMeta("1", "T", ResourceIdentifier.of(PEOPLE, "p1"), Map.of(SOURCE, "cms"), Map.of(DISPLAY_NAME, ALICE)) | articleWithMetaResource(Meta.of(Map.of(SOURCE, "cms")), ResourceIdentifier.of(PEOPLE, "p1"), Meta.of(Map.of(DISPLAY_NAME, ALICE)))
-    "renamed relationship meta onto the wire name" | new WholeMetaTargetFixtures.RenamedRelationshipMetaArticle("1", "T", ResourceIdentifier.of(PEOPLE, "p1"), new ArticleMeta("cms", "n"), new AuthorMeta(ALICE)) | articleWithMetaResource(Meta.of(Map.of(SOURCE, "cms", "note", "n")), ResourceIdentifier.of(PEOPLE, "p1"), Meta.of(Map.of(DISPLAY_NAME, ALICE)))
     "Object whole-meta target writes a map value" | new WholeMetaTargetFixtures.ObjectMetaArticle("1", Map.of(SOURCE, "cms")) | objectMetaArticle(Meta.of(Map.of(SOURCE, "cms")))
     "Optional-wrapped bean meta writes unwrapped members" | new ArticleWithOptionalMeta("1", "T", null, Optional.of(new ArticleMeta("cms", "n")), Optional.of(new AuthorMeta(ALICE))) | articleWithMetaResource(Meta.of(Map.of(SOURCE, "cms", "note", "n")), null, Meta.of(Map.of(DISPLAY_NAME, ALICE)))
     "present Optional attribute is unwrapped" | new RelationshipContainerFixtures.ArticleWithOptionalAttribute("1", TITLE_TEXT, Optional.of("Sub")) | attributesOnlyArticle("1", Map.of(TITLE, TITLE_TEXT, "subtitle", "Sub"))

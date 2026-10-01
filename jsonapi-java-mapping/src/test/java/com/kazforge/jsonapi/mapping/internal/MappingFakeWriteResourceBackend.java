@@ -28,6 +28,7 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
   final Map<Object, String> effectiveTypes = new LinkedHashMap<>();
   final Set<String> omittedAttributes = new LinkedHashSet<>();
   final Set<Object> unconvertibleValues = new LinkedHashSet<>();
+  final Map<Object, RuntimeException> identifierConversionFailures = new LinkedHashMap<>();
 
   /** Declared relationship shapes by relationship property token. */
   final Map<String, RelationshipShape<String>> relationshipShapes = new LinkedHashMap<>();
@@ -120,6 +121,11 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
     unconvertibleValues.add(value);
   }
 
+  /** Configures a raw value whose identifier conversion throws the supplied exception. */
+  void failIdentifierConversion(Object value, RuntimeException failure) {
+    identifierConversionFailures.put(value, failure);
+  }
+
   /** Registers the declared shape of one relationship property. */
   void relationshipShape(String propertyToken, RelationshipShape<String> shape) {
     relationshipShapes.put(propertyToken, shape);
@@ -162,6 +168,10 @@ final class MappingFakeWriteResourceBackend implements WriteResourceBackend<Stri
 
   @Override
   public @Nullable String convertIdentifier(@Nullable Object value) {
+    RuntimeException failure = identifierConversionFailures.get(value);
+    if (failure != null) {
+      throw failure;
+    }
     if (value == null || unconvertibleValues.contains(value)) {
       return null;
     }
