@@ -399,6 +399,8 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
     return definitions.computeIfAbsent(declaredType, this::buildDefinition);
   }
 
+  // Accumulate nullable projections through every phase; definition construction rejects nulls.
+  @SuppressWarnings("java:S9391")
   private WriteResourceDefinition<MappingProperty> buildDefinition(JavaType declaredType) {
     ResourceMapping mapping = mappingFor(declaredType);
     List<WriteProperty<MappingProperty>> attributes = new ArrayList<>(mapping.attributes().size());

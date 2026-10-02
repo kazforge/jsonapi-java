@@ -11,6 +11,7 @@ import com.kazforge.jsonapi.mapping.RelationshipLinkage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -198,13 +199,10 @@ public final class RelationshipLinkageBinder<T, P extends RelationshipBindingPro
       case RelationshipData.NullLinkage ignored -> null;
       case RelationshipData.SingleLinkage(ResourceIdentifier identifier) ->
           IdentifierMetaSupport.copyLinkageIdentifier(identifier);
-      case RelationshipData.IdentifierCollectionLinkage(List<ResourceIdentifier> identifiers) -> {
-        List<Object> values = new ArrayList<>(identifiers.size());
-        for (ResourceIdentifier identifier : identifiers) {
-          values.add(IdentifierMetaSupport.copyLinkageIdentifier(identifier));
-        }
-        yield values;
-      }
+      case RelationshipData.IdentifierCollectionLinkage(List<ResourceIdentifier> identifiers) ->
+          identifiers.stream()
+              .map(IdentifierMetaSupport::copyLinkageIdentifier)
+              .collect(Collectors.toCollection(ArrayList::new));
     };
   }
 

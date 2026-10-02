@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -76,12 +77,8 @@ public final class BasicResourceWriter<T, P> {
     }
     WriteResourceDefinition<P> definition = backend.definition(declaredType);
     Set<String> mappedNames = new HashSet<>();
-    for (WriteProperty<P> property : definition.attributes()) {
-      mappedNames.add(property.jsonapiName());
-    }
-    for (WriteProperty<P> property : definition.relationships()) {
-      mappedNames.add(property.jsonapiName());
-    }
+    definition.attributes().stream().map(WriteProperty::jsonapiName).forEach(mappedNames::add);
+    definition.relationships().stream().map(WriteProperty::jsonapiName).forEach(mappedNames::add);
     for (String name : fields) {
       if (!mappedNames.contains(name)) {
         // Fieldset specification failures have no document member location; the offending field
@@ -439,6 +436,9 @@ public final class BasicResourceWriter<T, P> {
         identifier, metaFromConverted(converted.value(), resource, location));
   }
 
+  // The Iterable loop directly builds the same ordered, mutable, null-tolerant snapshot as the
+  // other branches.
+  @SuppressWarnings("java:S9391")
   static List<@Nullable Object> materializeToMany(
       Object value, @Nullable MappingLocation relationshipLocation) {
     return switch (value) {
@@ -638,12 +638,11 @@ public final class BasicResourceWriter<T, P> {
     if (definition.relationships().isEmpty()) {
       return Relationships.empty();
     }
-    List<WriteProperty<P>> selected = new ArrayList<>();
-    for (WriteProperty<P> property : definition.relationships()) {
-      if (allowedFields == null || allowedFields.contains(property.jsonapiName())) {
-        selected.add(property);
-      }
-    }
+    List<WriteProperty<P>> selected =
+        definition.relationships().stream()
+            .filter(
+                property -> allowedFields == null || allowedFields.contains(property.jsonapiName()))
+            .collect(Collectors.toCollection(ArrayList::new));
     if (selected.isEmpty()) {
       return Relationships.empty();
     }

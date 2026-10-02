@@ -12,12 +12,12 @@ import com.kazforge.jsonapi.representation.IncludePolicy;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -112,14 +112,7 @@ public final class CompoundInclusionEngine<T> {
   }
 
   private static <T> List<T> distinctTypesInOrder(List<T> primaryTypes) {
-    Set<T> seen = new LinkedHashSet<>();
-    List<T> types = new ArrayList<>();
-    for (T type : primaryTypes) {
-      if (seen.add(type)) {
-        types.add(type);
-      }
-    }
-    return types;
+    return primaryTypes.stream().distinct().collect(Collectors.toCollection(ArrayList::new));
   }
 
   private void preValidate(

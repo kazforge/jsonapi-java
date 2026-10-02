@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Immutable exact allow-list for parsed include paths, sparse fields, and sort fields.
@@ -91,10 +92,10 @@ public record QueryAllowList(
 
   private static Set<String> copySet(Set<String> values, String name) {
     Objects.requireNonNull(values, name);
-    LinkedHashSet<String> copy = new LinkedHashSet<>();
-    for (String value : values) {
-      copy.add(Objects.requireNonNull(value, name + " member"));
-    }
+    LinkedHashSet<String> copy =
+        values.stream()
+            .map(value -> Objects.requireNonNull(value, name + " member"))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
     return Collections.unmodifiableSet(copy);
   }
 
