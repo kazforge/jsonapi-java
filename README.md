@@ -11,7 +11,8 @@ Maven group: `com.kazforge`. Java packages: `com.kazforge.jsonapi.*`.
 
 ## Requirements
 
-- JDK 21 (enforced via Gradle toolchain)
+- Java 21 is the runtime and build minimum. Building from source requires a locally installed
+  JDK 21 for the Gradle compilation toolchain.
 
 ## Build
 
