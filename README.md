@@ -13,12 +13,25 @@ Maven group: `com.kazforge`. Java packages: `com.kazforge.jsonapi.*`.
 
 - Java 21 is the runtime and build minimum. Building from source requires a locally installed
   JDK 21 for the Gradle compilation toolchain.
+- Jackson requirements are adapter-specific: see [Jackson 2 support](jsonapi-java-jackson2/README.md#jackson-support)
+  or [Jackson 3 support](jsonapi-java-jackson3/README.md#jackson-support).
 
 ## Build
 
 ```bash
 ./gradlew clean build
 ```
+
+The default build compiles and tests against each adapter's published Jackson minimum. To test both
+adapters against the separate Renovate-maintained current versions in the
+[version catalog](gradle/libs.versions.toml):
+
+```bash
+./gradlew :jsonapi-java-jackson2:test :jsonapi-java-jackson3:test -PjacksonTestVersion=current
+```
+
+The current selector changes test classpaths only; production compilation and published dependency
+versions retain the minimums.
 
 `check` (and therefore `build`) enforces a fixed 80% JaCoCo line and branch coverage floor for
 library modules. `jsonapi-java-annotations` is exempt because it is annotation-only and has no

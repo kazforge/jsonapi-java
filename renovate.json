@@ -11,6 +11,31 @@
       "matchDatasources": ["java-version"],
       "matchPackageNames": ["java", "java-jdk", "java-jre"],
       "enabled": false
+    },
+    {
+      "description": "Jackson minimum versions, including shared annotations, are explicit compatibility baselines.",
+      "matchManagers": ["gradle"],
+      "matchJsonata": ["sharedVariableName in ['jackson2.minimum', 'jackson3.minimum', 'jackson.annotations.minimum']"],
+      "enabled": false
+    },
+    {
+      "description": "Keep the current Jackson 2 compatibility test dependencies on major 2.",
+      "matchManagers": ["gradle"],
+      "matchJsonata": ["sharedVariableName = 'jackson2.current'"],
+      "allowedVersions": "/^2\\./"
+    },
+    {
+      "description": "Keep the current Jackson 3 compatibility test dependencies on major 3.",
+      "matchManagers": ["gradle"],
+      "matchJsonata": ["sharedVariableName = 'jackson3.current'"],
+      "allowedVersions": "/^3\\./"
+    },
+    {
+      "description": "Keep the Jackson 2 JSON Schema validator on major 2.",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["com.networknt:json-schema-validator"],
+      "matchJsonata": ["sharedVariableName = 'json.schema.validator2'"],
+      "allowedVersions": "/^2\\./"
     }
   ]
 }
