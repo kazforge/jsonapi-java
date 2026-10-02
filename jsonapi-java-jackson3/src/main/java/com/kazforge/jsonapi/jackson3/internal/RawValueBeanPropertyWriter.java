@@ -1,5 +1,6 @@
 package com.kazforge.jsonapi.jackson3.internal;
 
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
@@ -133,7 +134,16 @@ final class RawValueBeanPropertyWriter extends BeanPropertyWriter {
       return serializer;
     }
     if (delegate instanceof UnwrappingBeanPropertyWriter unwrappingProperty) {
-      return unwrappingProperty.findUnwrappingSerializer(context);
+      // Native rename(NOP) copies the effective transformer, including prior rename composition.
+      // Assign only on that copy so Jackson 3.1 unwraps without mutating the resolved writer.
+      UnwrappingBeanPropertyWriter copy = unwrappingProperty.rename(NameTransformer.NOP);
+      ValueSerializer<Object> resolved =
+          _nonTrivialBaseType == null
+              ? context.findPrimaryPropertySerializer(value.getClass(), copy)
+              : context.findPrimaryPropertySerializer(
+                  context.constructSpecializedType(_nonTrivialBaseType, value.getClass()), copy);
+      copy.assignSerializer(resolved);
+      return Objects.requireNonNull(copy.getSerializer());
     }
     Class<?> rawType = value.getClass();
     PropertySerializerMap serializers = _dynamicSerializers;

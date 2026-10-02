@@ -36,19 +36,28 @@ entire `jsonapi-java-mapping` artifact are unsupported implementation detail.
 Normal API review assesses source and binary compatibility and documented observable behavior.
 Internal changes have no separate compatibility promise, but changes to supported behavior still
 require normal classification. Raising a supported runtime/dependency minimum or withdrawing a
-supported line is breaking; [ADR-014](adr/014-unified-release-train.md) owns version and deprecation
-rules. This policy relies on documented boundaries and review, not a bespoke signature-compatibility
-mechanism.
+supported line requires an explicit maintainer decision and is breaking;
+[ADR-014](adr/014-unified-release-train.md) owns version and deprecation rules. This policy relies on
+documented boundaries and review, not a bespoke signature-compatibility mechanism.
 
 Java 21 is the runtime and build minimum. CI deliberately exercises a newer LTS without
 automatically raising that minimum. Jackson 2 and Jackson 3 are separate supported dependency lines;
-concrete minimum/current versions and verification remain to be established and publicly documented
-in a separate dependency-baseline increment before publication. Current catalog versions are build
-inputs, not declared minimums or proof of compatibility with older versions.
+the [Jackson 2](../jsonapi-java-jackson2/README.md#jackson-support) and
+[Jackson 3](../jsonapi-java-jackson3/README.md#jackson-support) adapter READMEs own their concrete
+minimums and sustainable LTS baselines.
 
-Consumer/framework dependency management is authoritative within supported lines; `jsonapi-java`
-must not pin applications to the repository's currently tested Jackson version. The future
-Spring/Spring Boot integration owns its own tested Spring/Jackson compatibility matrix.
+Production compilation, the default build, and published Jackson dependency declarations use those
+minimums. Separate [version-catalog references](../gradle/libs.versions.toml) supply
+Renovate-maintained current-test versions for test classpaths only. Advancing a current-test version
+does not change published metadata or the support floor; the [build commands](../README.md#build)
+exercise each selection.
+
+Consumer/framework dependency management may select newer compatible Jackson versions within the
+appropriate major. Published dependencies use ordinary version declarations, without strict
+constraints, forced versions, platforms, or version ranges. Baselines follow sustainable Jackson LTS
+lines rather than older affected patches managed by Spring Boot. The future Spring integration owns
+its tested Spring/Jackson compatibility matrix; adapter compatibility does not establish tested
+Spring Boot integration.
 
 ## Modules and dependency direction
 

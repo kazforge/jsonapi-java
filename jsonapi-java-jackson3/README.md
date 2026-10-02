@@ -3,6 +3,18 @@
 Native Jackson 3 implementation of the major-neutral Level-1 JSON:API contract, plus advanced
 document codec, mapping, flat binding, typed-envelope, and PATCH capabilities.
 
+## Jackson support
+
+The minimum supported and published dependency baseline is **Jackson 3.1.7** for
+`jackson-databind`, on the sustainable **3.1 LTS line**. Consumer or framework dependency management
+may select newer compatible Jackson 3 versions.
+
+The separate current-test Jackson 3 version reference lives in the
+[version catalog](../gradle/libs.versions.toml). Renovate maintains that reference without raising
+the published minimum. See the [build commands](../README.md#build) for minimum and current test
+runs and the [dependency policy](../docs/architecture.md#public-api-ownership) for publication and
+framework boundaries.
+
 ## Packages
 
 | Package | Responsibility |

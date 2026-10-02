@@ -40,13 +40,35 @@ Publish job (same workflow run)
 1. Review the release PR (`gradle.properties`, `CHANGELOG.md`, manifest) and
    merge it. Check [supported API and behavior changes](architecture.md#public-api-ownership),
    including support-floor or support-line changes, are classified in Conventional Commits and
-   release notes according to ADR-014. Before publication, establish, verify, and publicly document
-   concrete Jackson minimum/current support lines. Merging is the release decision.
+   release notes according to ADR-014. Review the documented
+   [Jackson 2](../jsonapi-java-jackson2/README.md#jackson-support) and
+   [Jackson 3](../jsonapi-java-jackson3/README.md#jackson-support) support baselines and their
+   [verification commands](../README.md#build). Merging is the release decision.
 2. release-please creates the `v<version>` tag and GitHub Release; the publish
    job checks out that tag, then builds, signs, and uploads the bundle to the
    Central Portal with automatic publishing.
 3. Verify the deployment under the `com.kazforge` namespace. Published
    releases are immutable; fixes ship as the next train version.
+
+## Dependency-baseline acceptance
+
+When changing a Jackson minimum or test-version selection, verify both
+[minimum and current test runs](../README.md#build). Generate consumer metadata through the existing
+publication convention:
+
+```bash
+./gradlew :jsonapi-java-jackson2:generatePomFileForMavenJavaPublication \
+  :jsonapi-java-jackson2:generateMetadataFileForMavenJavaPublication \
+  :jsonapi-java-jackson3:generatePomFileForMavenJavaPublication \
+  :jsonapi-java-jackson3:generateMetadataFileForMavenJavaPublication
+```
+
+Repeat with `-PjacksonTestVersion=current`. Compare each adapter's
+`build/publications/mavenJava/pom-default.xml` and `module.json` from both selections using `xmllint`
+and `jq`: published Jackson dependency versions must retain the documented minimums, with ordinary
+version declarations and no strict constraints, forced versions, platforms, or version ranges. This
+metadata inspection is an acceptance check for baseline changes; the existing publication convention
+remains unchanged.
 
 ## Failure and retry
 
