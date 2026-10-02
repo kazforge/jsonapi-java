@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -277,10 +278,10 @@ public final class MappingDefinitionInvariants {
       List<? extends SemanticPropertyCarrier> attributeProperties,
       List<? extends SemanticPropertyCarrier> relationshipProperties,
       Class<?> rawType) {
-    Set<String> relationshipNames = new HashSet<>();
-    for (SemanticPropertyCarrier relationship : relationshipProperties) {
-      relationshipNames.add(relationship.jsonapiName());
-    }
+    Set<String> relationshipNames =
+        relationshipProperties.stream()
+            .map(SemanticPropertyCarrier::jsonapiName)
+            .collect(Collectors.toCollection(HashSet::new));
     for (SemanticPropertyCarrier attribute : attributeProperties) {
       if (relationshipNames.contains(attribute.jsonapiName())) {
         // The colliding name could live under either container; no single member location applies.

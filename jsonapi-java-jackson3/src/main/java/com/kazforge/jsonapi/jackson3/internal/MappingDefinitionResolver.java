@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.BeanDescription;
 import tools.jackson.databind.deser.SettableBeanProperty;
@@ -466,10 +467,10 @@ final class MappingDefinitionResolver {
 
   private static List<PropertyPair> mergeProperties(
       BeanDescription deserializationDescription, BeanDescription serializationDescription) {
-    List<PropertyPair> pairs = new ArrayList<>();
-    for (BeanPropertyDefinition definition : deserializationDescription.findProperties()) {
-      pairs.add(new PropertyPair(definition, null));
-    }
+    List<PropertyPair> pairs =
+        deserializationDescription.findProperties().stream()
+            .map(definition -> new PropertyPair(definition, null))
+            .collect(Collectors.toCollection(ArrayList::new));
     for (BeanPropertyDefinition definition : serializationDescription.findProperties()) {
       // Logical identity takes precedence because externally configured names can cross between
       // properties. External names are only a fallback when they identify one deserialization

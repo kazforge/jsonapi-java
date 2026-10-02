@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Backend-independent immutable per-operation selection of include paths and sparse fieldsets. The
@@ -83,10 +84,10 @@ public final class RepresentationSelection {
     for (Map.Entry<String, List<String>> entry : fieldsets.entrySet()) {
       String resourceType = Objects.requireNonNull(entry.getKey(), "fieldset resource type");
       List<String> fields = Objects.requireNonNull(entry.getValue(), "fieldset fields");
-      LinkedHashSet<String> unique = new LinkedHashSet<>();
-      for (String fieldName : fields) {
-        unique.add(Objects.requireNonNull(fieldName, "fieldset field name"));
-      }
+      LinkedHashSet<String> unique =
+          fields.stream()
+              .map(fieldName -> Objects.requireNonNull(fieldName, "fieldset field name"))
+              .collect(Collectors.toCollection(LinkedHashSet::new));
       copy.put(resourceType, List.copyOf(unique));
     }
     return Collections.unmodifiableMap(copy);

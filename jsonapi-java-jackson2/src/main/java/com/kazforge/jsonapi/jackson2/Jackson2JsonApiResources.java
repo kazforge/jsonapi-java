@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -299,10 +300,10 @@ final class Jackson2JsonApiResources implements JsonApiResources {
       JsonApiDocument document, JavaType javaType, @Nullable Class<T> type) {
     List<ResourceObject> resources = PrimaryDataShape.requireResourceCollection(document);
     List<Object> bound = resourceBinder.fromResources(resources, javaType);
-    List<T> narrowed = new ArrayList<>(bound.size());
-    for (Object item : bound) {
-      narrowed.add(type == null ? castUnchecked(item) : type.cast(item));
-    }
+    List<T> narrowed =
+        bound.stream()
+            .map(item -> type == null ? castUnchecked(item) : type.cast(item))
+            .collect(Collectors.toCollection(ArrayList::new));
     return List.copyOf(narrowed);
   }
 

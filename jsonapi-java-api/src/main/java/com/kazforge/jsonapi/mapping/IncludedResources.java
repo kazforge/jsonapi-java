@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Independently bound {@code included} resources of a domain document envelope.
@@ -84,10 +85,12 @@ public final class IncludedResources {
 
   private static List<Set<ResourceIdentity>> copyIdentities(
       List<Set<ResourceIdentity>> identitiesByPosition) {
-    List<Set<ResourceIdentity>> copied = new ArrayList<>(identitiesByPosition.size());
-    for (Set<ResourceIdentity> identities : identitiesByPosition) {
-      copied.add(Set.copyOf(Objects.requireNonNull(identities, "identities at a position")));
-    }
+    List<Set<ResourceIdentity>> copied =
+        identitiesByPosition.stream()
+            .map(
+                identities ->
+                    Set.copyOf(Objects.requireNonNull(identities, "identities at a position")))
+            .collect(Collectors.toCollection(ArrayList::new));
     return List.copyOf(copied);
   }
 

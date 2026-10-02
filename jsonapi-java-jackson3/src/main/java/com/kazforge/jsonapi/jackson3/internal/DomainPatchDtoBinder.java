@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.json.JsonMapper;
@@ -91,11 +92,9 @@ public final class DomainPatchDtoBinder implements TypedPatchBackend<MappingProp
 
   private List<TypedPatchProperty<MappingProperty, JavaType>> typedProperties(
       List<MappingProperty> properties, boolean meta) {
-    List<TypedPatchProperty<MappingProperty, JavaType>> typed = new ArrayList<>(properties.size());
-    for (MappingProperty property : properties) {
-      typed.add(typedProperty(property, meta));
-    }
-    return typed;
+    return properties.stream()
+        .map(property -> typedProperty(property, meta))
+        .collect(Collectors.toCollection(ArrayList::new));
   }
 
   private @Nullable TypedPatchProperty<MappingProperty, JavaType> typedOrNull(
