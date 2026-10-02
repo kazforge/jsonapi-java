@@ -38,7 +38,10 @@ Publish job (same workflow run)
 ## Maintainer runbook
 
 1. Review the release PR (`gradle.properties`, `CHANGELOG.md`, manifest) and
-   merge it. Merging is the release decision.
+   merge it. Check [supported API and behavior changes](architecture.md#public-api-ownership),
+   including support-floor or support-line changes, are classified in Conventional Commits and
+   release notes according to ADR-014. Before publication, establish, verify, and publicly document
+   concrete Jackson minimum/current support lines. Merging is the release decision.
 2. release-please creates the `v<version>` tag and GitHub Release; the publish
    job checks out that tag, then builds, signs, and uploads the bundle to the
    Central Portal with automatic publishing.

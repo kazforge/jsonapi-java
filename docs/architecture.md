@@ -25,6 +25,31 @@ The library represents, validates, reads, and writes JSON:API documents. Optiona
 application values and parse query selections. Applications retain persistence, endpoints,
 authorization, query execution, relationship mutation, and application of PATCH results.
 
+## Public API ownership
+
+The supported consumer API is the documented consumer-facing surface under `com.kazforge.jsonapi`,
+including intended public/protected extension points. Module READMEs identify that surface; package
+documentation and Javadoc own its responsibilities and contracts. Java visibility or artifact
+publication alone does not imply consumer support. Packages beneath an `internal` segment and the
+entire `jsonapi-java-mapping` artifact are unsupported implementation detail.
+
+Normal API review assesses source and binary compatibility and documented observable behavior.
+Internal changes have no separate compatibility promise, but changes to supported behavior still
+require normal classification. Raising a supported runtime/dependency minimum or withdrawing a
+supported line is breaking; [ADR-014](adr/014-unified-release-train.md) owns version and deprecation
+rules. This policy relies on documented boundaries and review, not a bespoke signature-compatibility
+mechanism.
+
+Java 21 is the runtime and build minimum. CI deliberately exercises a newer LTS without
+automatically raising that minimum. Jackson 2 and Jackson 3 are separate supported dependency lines;
+concrete minimum/current versions and verification remain to be established and publicly documented
+in a separate dependency-baseline increment before publication. Current catalog versions are build
+inputs, not declared minimums or proof of compatibility with older versions.
+
+Consumer/framework dependency management is authoritative within supported lines; `jsonapi-java`
+must not pin applications to the repository's currently tested Jackson version. The future
+Spring/Spring Boot integration owns its own tested Spring/Jackson compatibility matrix.
+
 ## Modules and dependency direction
 
 `settings.gradle.kts` is the build-membership authority. The implemented modules compose downward:
