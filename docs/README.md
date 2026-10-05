@@ -7,6 +7,7 @@ This repository keeps user-facing documentation separate from repository-mainten
 | [`site/`](site/) | Public `jsonapi-java` documentation source, built by MkDocs and published through GitHub Pages |
 | [`architecture.md`](architecture.md) | Current cross-module composition and authority boundaries |
 | [`conformance.md`](conformance.md) | Current JSON:API support status by feature and layer |
+| [`security.md`](security.md) | Repository security signals, ownership, and vulnerability triage policy |
 | [`vision.md`](vision.md) | Stable product direction |
 | [`adr/`](adr/README.md) | Consequential architectural rationale |
 | [`../AGENTS.md`](../AGENTS.md) and [`.agents/skills/`](../.agents/skills/) | Repository workflow, task routing, and completion gates |

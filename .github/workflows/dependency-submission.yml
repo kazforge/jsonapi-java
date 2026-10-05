@@ -1,0 +1,22 @@
+name: Submit dependency graph
+
+on:
+  workflow_run:
+    workflows: ['Generate dependency graph']
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  dependency-submission:
+    name: Submit dependency graph
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      # Trusted consumer: download the official artifact, never check out or run PR code.
+      - uses: gradle/actions/dependency-submission@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          dependency-graph: download-and-submit
+          dependency-graph-continue-on-failure: false
