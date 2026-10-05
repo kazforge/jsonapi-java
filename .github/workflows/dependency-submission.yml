@@ -12,7 +12,8 @@ permissions:
 jobs:
   dependency-submission:
     name: Submit dependency graph
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # A skipped same-repository PR producer has no artifact to consume.
+    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.event != 'pull_request' || github.event.workflow_run.head_repository.full_name != github.repository) }}
     runs-on: ubuntu-latest
     steps:
       # Trusted consumer: download the official artifact, never check out or run PR code.
