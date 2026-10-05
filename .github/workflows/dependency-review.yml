@@ -39,8 +39,7 @@ jobs:
           fail-on-scopes: runtime, development, unknown
           vulnerability-check: true
           warn-only: false
-          # Only fork PRs wait for the separate trusted workflow_run submission.
-          retry-on-snapshot-warnings: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+          retry-on-snapshot-warnings: true
           retry-on-snapshot-warnings-timeout: 600
           license-check: false
           show-openssf-scorecard: false
