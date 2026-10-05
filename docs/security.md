@@ -5,13 +5,6 @@ vulnerability signal; Renovate is the sole dependency-update and security-fix PR
 provides code vulnerability findings. Inspect GitHub's Security tab and native Actions results
 when assessing these signals.
 
-Renovate execution is owned by KazForge and runs on GitHub-hosted Actions runners
-using a dedicated GitHub App with repository-scoped, short-lived installation tokens.
-`renovate.json` remains the dependency-update policy source. The runner permits the
-Gradle wrapper to generate verification metadata as part of dependency updates;
-normal builds and CI continue to enforce dependency verification. This execution
-trust is limited to `kazforge/jsonapi-java` and its maintainer-controlled build code.
-
 Dependency Review blocks introduced High/Critical dependency vulnerabilities. High/Critical
 CodeQL security findings block merging through code-scanning protection. Maintainers triage
 Moderate/Low findings without an automatic merge block.

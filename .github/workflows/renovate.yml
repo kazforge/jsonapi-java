@@ -7,14 +7,11 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: renovate
-  cancel-in-progress: false
+concurrency: renovate
 
 jobs:
   renovate:
     if: >-
-      github.repository == 'kazforge/jsonapi-java' &&
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'workflow_dispatch' || vars.RENOVATE_SCHEDULE_ENABLED == 'true')
     runs-on: ubuntu-latest
@@ -26,8 +23,8 @@ jobs:
         with:
           client-id: ${{ vars.RENOVATE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RENOVATE_APP_PRIVATE_KEY }}
-          owner: kazforge
-          repositories: jsonapi-java
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
           permission-checks: write
           permission-statuses: write
           permission-contents: write
@@ -43,15 +40,11 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           renovate-image: ghcr.io/renovatebot/renovate:44.138.0@sha256:32027ed5e5e450f76ee372fcd6e72c8114db7fdb28c97c520515a03ea4a0d77b
         env:
-          RENOVATE_PLATFORM: github
-          RENOVATE_REPOSITORIES: kazforge/jsonapi-java
-          RENOVATE_AUTODISCOVER: 'false'
-          RENOVATE_REQUIRE_CONFIG: required
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_ALLOWED_UNSAFE_EXECUTIONS: gradleWrapper
           RENOVATE_BRANCH_PREFIX: renovate-actions/
           # Disable fallback adoption of Mend's renovate/ branches during overlap.
           RENOVATE_BRANCH_PREFIX_OLD: renovate-actions/
-          RENOVATE_BINARY_SOURCE: install
           # The Java 21 toolchain is declared in shared build logic, not the root build file.
           RENOVATE_CONSTRAINTS: '{"java":"21"}'
           RENOVATE_EXIT_CODE_FOR_ERRORS: 'true'
