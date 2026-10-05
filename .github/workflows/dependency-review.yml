@@ -40,7 +40,6 @@ jobs:
           vulnerability-check: true
           warn-only: false
           retry-on-snapshot-warnings: true
-          retry-on-snapshot-warnings-timeout: 600
           license-check: false
           show-openssf-scorecard: false
           comment-summary-in-pr: never
