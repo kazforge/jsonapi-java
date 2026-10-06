@@ -4,24 +4,41 @@ on:
   push:
     branches: [main]
 
+permissions: {}
+
 jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    permissions: {}
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      # PAT so release PRs receive the normal required CI checks.
+      - name: Require release GitHub App credentials
+        env:
+          RELEASE_APP_CLIENT_ID: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+        run: |
+          test -n "$RELEASE_APP_CLIENT_ID" || { echo "RELEASE_APP_CLIENT_ID repository variable is not set." >&2; exit 1; }
+          test -n "$RELEASE_APP_PRIVATE_KEY" || { echo "RELEASE_APP_PRIVATE_KEY repository secret is not set." >&2; exit 1; }
+      - name: Create repository-scoped release App token
+        id: release-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: kazforge
+          repositories: jsonapi-java
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          token: ${{ steps.release-app-token.outputs.token }}
 
   publish:
     name: Build, sign, and publish to Maven Central

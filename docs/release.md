@@ -30,9 +30,9 @@ Publish job (same workflow run)
   version.
 - Tags are named `v<version>`; the changelog is the root `CHANGELOG.md`,
   both maintained by release-please.
-- One `Release` workflow runs both jobs. release-please runs with a personal
-  access token so its release PRs receive the normal required checks; the
-  publish job checks out the finalized tag and only receives the
+- One `Release` workflow runs both jobs. release-please uses a repository-scoped,
+  short-lived GitHub App token so its release PRs receive the normal required
+  checks; the publish job checks out the finalized tag and only receives the
   Central/signing secrets.
 
 ## Maintainer runbook
