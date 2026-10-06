@@ -3,6 +3,7 @@ spock = "2.4-groovy-5.0"
 junit-platform = "6.1.3"
 sonarqube = "7.5.0.8588"
 spotless = "8.10.3"
+cyclonedx = "3.5.0"
 jspecify = "1.0.1"
 errorprone = "2.50.0"
 nullaway = "0.14.2"
@@ -43,3 +44,4 @@ json-schema-validator2 = { module = "com.networknt:json-schema-validator", versi
 
 [plugins]
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
+cyclonedx = { id = "org.cyclonedx.bom", version.ref = "cyclonedx" }

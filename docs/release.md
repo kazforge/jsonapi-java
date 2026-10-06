@@ -17,7 +17,9 @@ Git tag v<version> + GitHub Release
         ↓
 Publish job (same workflow run)
 - checkout tag
-- Gradle build / sign / Maven Central publish
+- Gradle build, sign, and stage Maven publications
+- generate aggregate SBOM and attest primary release JARs
+- assemble and upload the Central bundle
 ```
 
 ## Single root release
@@ -33,7 +35,24 @@ Publish job (same workflow run)
 - One `Release` workflow runs both jobs. release-please uses a repository-scoped,
   short-lived GitHub App token so its release PRs receive the normal required
   checks; the publish job checks out the finalized tag and only receives the
-  Central/signing secrets.
+  Central/signing secrets. The publish job also has only the GitHub OIDC and
+  attestation permissions required for signed release evidence.
+
+## Release evidence
+
+- Each published module's `mavenJava` publication includes a Direct CycloneDX
+  JSON SBOM as the `cyclonedx` classifier. It covers the compile and runtime
+  classpaths (including compile-only inputs), is PGP-signed with the rest of the
+  publication, and is staged with the module's other Maven artifacts.
+- The publish job generates one Aggregate CycloneDX JSON SBOM for the release
+  train after staging by combining the generated Direct SBOMs. It then creates
+  GitHub Artifact Attestations for SLSA build provenance and the aggregate SBOM,
+  both over only the primary binary release JARs directly in the staging tree
+  (not sources, Javadoc, or test-fixtures JARs). Attestations use the pinned
+  `actions/attest` action and GitHub's short-lived OIDC/Sigstore signing.
+- The Central bundle is assembled and uploaded only after all evidence steps
+  succeed. The aggregate SBOM is an attestation predicate, not an additional
+  Maven artifact.
 
 ## Maintainer runbook
 

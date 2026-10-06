@@ -47,6 +47,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -67,6 +69,25 @@ jobs:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew publish
+      - name: Generate release-train CycloneDX SBOM
+        run: ./gradlew cyclonedxBom
+      - name: Attest primary release JAR build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            build/staging-deploy/com/kazforge/jsonapi-java-*/*/*.jar
+            !build/staging-deploy/**/*-sources.jar
+            !build/staging-deploy/**/*-javadoc.jar
+            !build/staging-deploy/**/*-test-fixtures.jar
+      - name: Attest primary release JARs with the aggregate CycloneDX SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            build/staging-deploy/com/kazforge/jsonapi-java-*/*/*.jar
+            !build/staging-deploy/**/*-sources.jar
+            !build/staging-deploy/**/*-javadoc.jar
+            !build/staging-deploy/**/*-test-fixtures.jar
+          sbom-path: build/reports/cyclonedx/bom.json
       - name: Assemble Central Portal bundle
         run: |
           test -d build/staging-deploy
