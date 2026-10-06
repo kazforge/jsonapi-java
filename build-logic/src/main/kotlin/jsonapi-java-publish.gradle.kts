@@ -9,10 +9,17 @@ java {
     withJavadocJar()
 }
 
+val cyclonedxDirectBom = tasks.named("cyclonedxDirectBom")
+
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
+            artifact(cyclonedxDirectBom.map { it.outputs.files.singleFile }) {
+                classifier = "cyclonedx"
+                extension = "json"
+                builtBy(cyclonedxDirectBom)
+            }
             pom {
                 name.set(project.name)
                 description.set(
