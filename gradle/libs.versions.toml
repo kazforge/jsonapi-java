@@ -7,7 +7,7 @@ jspecify = "1.0.1"
 errorprone = "2.50.0"
 nullaway = "0.14.2"
 errorprone-plugin = "5.1.1"
-nullaway-plugin = "3.2.0"
+nullaway-plugin = "3.3.0"
 archunit = "1.5.1"
 # Published compatibility floors: changes require an explicit maintainer decision.
 jackson2-minimum = "2.21.7"
