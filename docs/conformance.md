@@ -47,7 +47,7 @@ relationship endpoint role) are independent choices.
 | Identity | supported | Resource `id` is required; lid-only updates are rejected |
 | Supplied relationships | supported | Each supplied primary relationship contains replacement `data` |
 | Replacement linkage | supported | Null, single, empty collection, and non-empty collection are valid |
-| Presence preservation | supported | Omitted/present-empty wrappers and explicit-null attributes are not normalized |
+| Presence preservation | supported | JSON:API attribute-level presence; omitted/present-empty wrappers and explicit-null attributes are not normalized |
 | Expected endpoint identity | supported | Optional comparison through validation context |
 | Scope | supported | Update-specific rules apply to the primary resource; included resources and linkage retain general response rules |
 | Route identity, mutation, and command application | out of scope | Applications derive route context, authorize, and apply changes |
@@ -120,7 +120,8 @@ Schema provenance, pins, and fixture-specific invariants live in the
 | Typed domain envelopes | supported | Advanced explicit type registry; included resources bind independently in wire order and are not injected into relationships |
 | Presence-aware PATCH commands | supported | Low-level supplied-change projection in both adapters |
 | Direct typed PATCH DTOs | supported | `PatchPresence` preserves omitted, explicit-null, and supplied states in both adapters |
-| Recursive structured PATCH | supported | Neutral `StructuredPatch`; typed and low-level paths preserve their distinct declaration rules |
+| Recursive structured PATCH | supported | `jsonapi-java` mapping feature beyond JSON:API attribute-level presence; neutral `StructuredPatch` and opt-in nested typed `PatchPresence` shapes ([ADR-010](adr/010-resource-patch-binding.md)) |
+| PATCH container values | supported | `List`, `Set`, arrays, and maps are atomic whole-value replacements; no element-addressed collection PATCH semantics |
 | Domain graph hydration | out of scope | Linkage resolution remains application policy |
 | Domain/persistence mutation | out of scope | Applications authorize and apply projected changes |
 
