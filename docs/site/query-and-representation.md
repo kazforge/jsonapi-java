@@ -44,7 +44,7 @@ Map<String, List<String>> parameters = Map.of(
     "include", List.of("author"),
     "fields[articles]", List.of("title,author")
 );
-JsonApiQuery selected = parser.parseDecoded(parameters);
+JsonApiQuery selected = new JsonApiQueryParser().parseDecoded(parameters);
 ```
 
 `include`, each `fields[TYPE]`, and `sort` require **one value occurrence**, with comma-separated
@@ -149,10 +149,10 @@ List<ResourceObject> included = result.included();
 `primaryArticle.author()` still contains only the `people` / `p1` identifier. `included` contains
 the separate person resource with Ada's name; it is not injected into the DTO's relationship.
 
-The runtime defaults deny include traversal, allow selected sparse fields, and bound traversal.
-Selections use wire names, and policy allowances name the owning resource type. Nested paths need
-permission at each segment. Inclusion does not cause persistence fetching: supply already available
-objects or implement application lookup before writing.
+The runtime defaults deny include traversal, allow selected sparse fields, and enforce traversal
+bounds. Selections use wire names, and policy allowances name the owning resource type. Nested paths
+need permission at each segment. Inclusion does not cause persistence fetching: supply already
+available objects or implement application lookup before writing.
 
 !!! warning "Selection is not permission"
     An include request cannot override application representation policy. Policy is not a substitute
@@ -160,9 +160,7 @@ objects or implement application lookup before writing.
     public endpoint merely to make a query work.
 
 Sparse fieldsets shape output per resource type. Inclusion and linkage remain separate: requesting
-`included` can retain resources even when a fieldset omits their linking relationship. Mapped writes
-carry the necessary validation provenance internally; do not unwrap a `MappedDocument` and discard
-that provenance when composing advanced writes.
+`included` can retain resources even when a fieldset omits their linking relationship.
 
 ## What stays with the application
 

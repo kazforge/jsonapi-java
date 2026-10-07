@@ -76,9 +76,9 @@ String proposedTitle = switch (titleChange) {
 For this request, `proposedTitle` is null. Your business rules decide whether a null title is allowed.
 An omitted title would preserve `currentTitle` instead.
 
-The library validates and projects the request. You compare endpoint identity, authorize fields,
-check business invariants/concurrency, and apply changes. For validated endpoint comparison before
-binding, reuse a document:
+The application provides the expected endpoint identity, and the library validates the update against
+it. The application still owns authorization, business rules, concurrency, and applying changes. To
+validate endpoint identity before binding:
 
 ```java
 import com.kazforge.jsonapi.core.aggregate.ValidationContext;
@@ -100,8 +100,8 @@ var validated = api.documents().read(updateBody, context);
 ArticlePatch checked = api.patches().bindPatch(validated, ArticlePatch.class);
 ```
 
-`checked` has the same presence states as the earlier patch. A different resource type or id fails
-endpoint-identity validation before binding.
+`checked` has the same presence states as the earlier patch. A type or id that does not match `target`
+fails endpoint-identity validation before binding.
 
 `bindPatch`/`bindCommand` assume an already validated update document; they do not revalidate it.
 
@@ -170,7 +170,7 @@ tags:             present empty list
 
 !!! warning "Containers are whole replacements"
     Lists, sets, arrays, maps, and relationship linkage are atomic. There is no element-addressed
-    collection PATCH. A structured `{}` is a supplied empty object, not clear-all; an atomic `[]`
+    collection PATCH. A structured `{}` is a supplied empty object, not a clear-all request; an atomic `[]`
     or `{}` replaces the entire container with an empty one. Null is not a generic remove operation.
 
 Recursion follows configured Jackson property/conversion semantics. Typed nested shapes reject

@@ -1,6 +1,6 @@
 # jsonapi-java
 
-Read and write [JSON:API 1.1](https://jsonapi.org/) documents in Java 21 without handing over your
+Read and write [JSON:API 1.1](https://jsonapi.org/) documents in Java 21+ without handing over your
 endpoints, persistence, or application architecture.
 
 The permanent coordinates are `com.kazforge:jsonapi-java-jackson3` or
@@ -33,5 +33,5 @@ You own HTTP/media-type handling, persistence, authorization, query execution, r
 and applying updates. An annotation does not fetch a relationship; parsing `filter` does not run a
 query; reading a PATCH does not mutate an entity.
 
-Spring integration is a separate project and is not shipped here. The core 0.x release does not
-wait for it. No controller, ORM, or repository integration is required to use this library.
+Spring integration is a separate project and is not shipped here; it is not required to use the core
+library. No controller, ORM, or repository integration is required to use this library.

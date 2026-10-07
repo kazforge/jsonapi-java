@@ -2,8 +2,8 @@
 
 ## Choose an artifact
 
-Use Java 21 or newer. Pick **one** native Jackson adapter for the mapper your application already
-uses; the library does not detect or switch Jackson majors at runtime.
+Use Java 21+. Pick **one** native Jackson adapter for the mapper your application already uses; the
+library does not detect or switch Jackson majors at runtime.
 
 | Artifact (`com.kazforge`) | When to use it |
 |---------------------------|----------------|
@@ -22,7 +22,8 @@ Jackson 2 and 3 are separate supported lines. Concrete minimums and LTS baseline
 the [Jackson 2 support section](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson2/README.md#jackson-support)
 and [Jackson 3 support section](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson3/README.md#jackson-support).
 Compatible newer versions can be selected by your dependency management; the adapter does not
-force a platform or override your application's Jackson version. That is not a tested Spring Boot matrix.
+force a platform or override your application's Jackson version. The supported Jackson lines are not
+a Spring Boot compatibility matrix.
 
 ## Dependency declarations
 
@@ -64,7 +65,7 @@ separately if you need [query parsing](query-and-representation.md).
 
 ### Before the first release
 
-No public artifact is available yet. With Git and a local JDK 21, install this checkout's artifacts
+No public artifact is available yet. With Git and a local JDK 21+, install this checkout's artifacts
 in your local Maven repository:
 
 ```bash
@@ -73,8 +74,8 @@ cd jsonapi-java
 ./gradlew publishToMavenLocal
 ```
 
-Use the checkout's `version` from `gradle.properties` in place of `RELEASE_VERSION` (currently
-`0.1.0`). This is a **local build**, not evidence that `0.1.0` was released. Maven reads the local
+Read the checkout's `version` from `gradle.properties` and use it in place of `RELEASE_VERSION`.
+This is a **local build**, not evidence that the version was publicly released. Maven reads the local
 repository automatically; for a Gradle consumer, use:
 
 ```kotlin
@@ -103,9 +104,7 @@ thread-safe runtime for your application's lifetime. Factories do not mutate you
     JsonMapper mapper = JsonMapper.builder()
         .build();
 
-    JsonApi api = JsonApiJackson3.builder(mapper)
-        .jsonApiVersion("1.1")
-        .build();
+    JsonApi api = JsonApiJackson3.jsonApi(mapper);
     ```
 
 === "Jackson 2"
@@ -118,15 +117,14 @@ thread-safe runtime for your application's lifetime. Factories do not mutate you
     JsonMapper mapper = JsonMapper.builder()
         .build();
 
-    JsonApi api = JsonApiJackson2.builder(mapper)
-        .jsonApiVersion("1.1")
-        .build();
+    JsonApi api = JsonApiJackson2.jsonApi(mapper);
     ```
 
-The builder holds application policy, identifier conversion, linkage mappers, decorators, and an
-optional resource-write `jsonapi.version`. Selection and document envelopes belong to each operation.
-If you need only defaults, use `JsonApiJackson3.jsonApi(mapper)` or `JsonApiJackson2.jsonApi(mapper)`.
-Emitting `jsonapi.version` is optional; it does not implement HTTP content negotiation.
+For application-lifetime configuration, build the runtime with `JsonApiJackson3.builder(mapper)` or
+`JsonApiJackson2.builder(mapper)` instead. The builder holds representation policy, identifier
+conversion, linkage mappers, decorators, and an optional resource-write `jsonapi.version`. Selection
+and document envelopes belong to each operation. Emitting `jsonapi.version` is optional; it does not
+implement HTTP content negotiation.
 
 ## Read and write an article
 

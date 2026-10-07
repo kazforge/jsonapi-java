@@ -35,10 +35,10 @@ ResourceIdentifier linkedAuthor = api.relationships().readToOne(authorJson);
 
 ### Null to-one linkage
 
-Use null to clear to-one linkage:
+A null identifier represents no to-one linkage:
 
 ```java
-String clearedAuthorJson = api.relationships().writeToOne(null);
+String noAuthorJson = api.relationships().writeToOne(null);
 ```
 
 Result:
@@ -174,6 +174,9 @@ Ordinary mapped relationships always carry `data`. For a response that intention
 construct the relationship in the core model:
 
 ```java
+import com.kazforge.jsonapi.core.aggregate.ValidationContext;
+import com.kazforge.jsonapi.core.model.DocumentData;
+import com.kazforge.jsonapi.core.model.JsonApiDocument;
 import com.kazforge.jsonapi.core.model.Link;
 import com.kazforge.jsonapi.core.model.Links;
 import com.kazforge.jsonapi.core.model.Meta;
@@ -265,6 +268,7 @@ and HTTP response policy:
 ```java
 import com.kazforge.jsonapi.core.model.ErrorObject;
 import com.kazforge.jsonapi.core.model.ErrorSource;
+import com.kazforge.jsonapi.core.model.JsonApiDocument;
 
 ErrorSource source = ErrorSource.builder()
     .pointer("/data/attributes/title")
@@ -301,7 +305,11 @@ Result:
 Read error documents through the document facet, not a resource DTO operation:
 
 ```java
-JsonApiDocument readErrors = api.documents().read(errorJson, resourceContext);
+import com.kazforge.jsonapi.document.DocumentReadContext;
+import java.util.List;
+
+DocumentReadContext responseContext = DocumentReadContext.resourceDefaults();
+JsonApiDocument readErrors = api.documents().read(errorJson, responseContext);
 List<ErrorObject> reportedErrors = readErrors.errors();
 ```
 
@@ -321,8 +329,8 @@ It does not convert every library exception into an HTTP error automatically.
 Keep these families separate. A successfully decoded document can still fail DTO binding. Locations
 may be absent when no member coordinate is meaningful; do not expose payloads or internal exception
 messages as client-facing detail by default. See the
-[diagnostic API Javadoc](https://github.com/kazforge/jsonapi-java/tree/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/diagnostic)
-and [validation API Javadoc](https://github.com/kazforge/jsonapi-java/tree/main/jsonapi-java-core/src/main/java/com/kazforge/jsonapi/core/validation).
+[diagnostic API source documentation](https://github.com/kazforge/jsonapi-java/tree/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/diagnostic)
+and [validation API source documentation](https://github.com/kazforge/jsonapi-java/tree/main/jsonapi-java-core/src/main/java/com/kazforge/jsonapi/core/validation).
 
 ## Ordinary or Advanced?
 

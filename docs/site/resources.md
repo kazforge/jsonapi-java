@@ -1,5 +1,8 @@
 # Resources
 
+[Getting started](getting-started.md) covered a simple resource. This page adds relationships,
+collections, create/update authoring, and document-level state.
+
 Use the configured `JsonApi api` from [getting started](getting-started.md#configure-a-runtime).
 
 ## Write relationships, read linkage
@@ -163,7 +166,7 @@ identifier role falls back to the other.
 
 ## Author an update document
 
-An update requires `type` and `id`. Supply an expected endpoint identity when you have one:
+An update requires `type` and `id`. Supply the expected endpoint identity when one is known:
 
 ```java
 import com.kazforge.jsonapi.core.validation.EndpointIdentity;
@@ -253,6 +256,7 @@ on Jackson before creating the runtime; role annotations do not override Jackson
 DTO mapping is not a lossless representation of member presence.
 
 Reads validate the whole document before binding. Malformed/invalid input and DTO mapping problems
-remain [distinct failure families](relationships-and-documents.md#diagnostics).
-[`JsonApiResources` Javadoc](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/api/JsonApiResources.java)
-owns generic-type and stream overload contracts; caller-supplied streams remain open.
+remain [distinct failure families](relationships-and-documents.md#diagnostics). The
+[`JsonApiResources`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/api/JsonApiResources.java)
+source API documentation owns generic-type and stream overload contracts; caller-supplied streams
+remain open.
