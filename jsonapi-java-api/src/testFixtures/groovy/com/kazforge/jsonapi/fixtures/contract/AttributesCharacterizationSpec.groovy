@@ -1,6 +1,5 @@
 package com.kazforge.jsonapi.fixtures.contract
 
-import com.kazforge.jsonapi.core.model.ResourceIdentifier
 import com.kazforge.jsonapi.fixtures.domainread.FlatArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatDefaultedArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatThingWithIgnored
