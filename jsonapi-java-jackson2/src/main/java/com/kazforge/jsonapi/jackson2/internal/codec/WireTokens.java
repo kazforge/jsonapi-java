@@ -122,33 +122,27 @@ final class WireTokens {
     return token == null ? ReadLocations.current(parser) : ReadLocations.token(parser);
   }
 
-  @SuppressWarnings("NullAway") // core type-use @Nullable Map values not visible across jars
   static Map<String, @Nullable Object> newNullableMap() {
     return new LinkedHashMap<>();
   }
 
-  @SuppressWarnings("NullAway")
   static Map<String, @Nullable Relationship> newNullableRelationshipMap() {
     return new LinkedHashMap<>();
   }
 
-  @SuppressWarnings("NullAway")
   static Map<String, @Nullable Link> newNullableLinkMap() {
     return new LinkedHashMap<>();
   }
 
-  @SuppressWarnings("NullAway")
   static void putOpen(Map<String, @Nullable Object> map, String name, @Nullable Object value) {
     map.put(name, value);
   }
 
-  @SuppressWarnings("NullAway")
   static void putRelationship(
       Map<String, @Nullable Relationship> map, String name, Relationship value) {
     map.put(name, value);
   }
 
-  @SuppressWarnings("NullAway")
   static void putLink(Map<String, @Nullable Link> map, String name, @Nullable Link value) {
     map.put(name, value);
   }

@@ -17,10 +17,8 @@ import com.kazforge.jsonapi.representation.RepresentationPolicy;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.json.JsonMapper;
@@ -114,14 +112,14 @@ final class Jackson3JsonApiResources implements JsonApiResources {
   public List<Object> readMany(String json, Type type) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(type, "type");
-    return bindCollection(resourceReader.readValue(json), baseMapper.constructType(type), null);
+    return bindCollection(resourceReader.readValue(json), baseMapper.constructType(type));
   }
 
   @Override
   public List<Object> readMany(InputStream json, Type type) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(type, "type");
-    return bindCollection(resourceReader.readValue(json), baseMapper.constructType(type), null);
+    return bindCollection(resourceReader.readValue(json), baseMapper.constructType(type));
   }
 
   @Override
@@ -274,20 +272,14 @@ final class Jackson3JsonApiResources implements JsonApiResources {
     return resourceBinder.fromResource(resource, javaType);
   }
 
-  private <T> List<T> bindCollection(
-      JsonApiDocument document, JavaType javaType, @Nullable Class<T> type) {
-    List<ResourceObject> resources = PrimaryDataShape.requireResourceCollection(document);
-    List<Object> bound = resourceBinder.fromResources(resources, javaType);
-    List<T> narrowed =
-        bound.stream()
-            .map(item -> type == null ? castUnchecked(item) : type.cast(item))
-            .collect(Collectors.toCollection(ArrayList::new));
+  private <T> List<T> bindCollection(JsonApiDocument document, JavaType javaType, Class<T> type) {
+    List<T> narrowed = bindCollection(document, javaType).stream().map(type::cast).toList();
     return List.copyOf(narrowed);
   }
 
-  @SuppressWarnings("unchecked")
-  private static <T> T castUnchecked(Object item) {
-    return (T) item;
+  private List<Object> bindCollection(JsonApiDocument document, JavaType javaType) {
+    List<ResourceObject> resources = PrimaryDataShape.requireResourceCollection(document);
+    return List.copyOf(resourceBinder.fromResources(resources, javaType));
   }
 
   private <T> ResourceDocument<T> documentSingle(JsonApiDocument document, Class<T> type) {

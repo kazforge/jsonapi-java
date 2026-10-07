@@ -227,7 +227,6 @@ public final class DirectionalityReadFixtures {
 
     @JsonView(ExcludedFromReadView.class)
     @JsonApiAttribute
-    @SuppressWarnings("unused")
     public String hidden;
   }
 }

@@ -50,7 +50,6 @@ public final class RelationshipContainerFixtures {
       @JsonApiRelationship @Nullable RelationshipData author) {}
 
   @JsonApiResource(type = "articles")
-  @SuppressWarnings({"ArrayRecordComponent", "java:S6218"})
   public record ArticleWithCommentArray(
       @JsonApiId String id,
       @JsonApiAttribute String title,
@@ -88,7 +87,6 @@ public final class RelationshipContainerFixtures {
       @JsonApiId String id, @JsonApiRelationship List<@Nullable ResourceIdentifier> items) {}
 
   @JsonApiResource(type = "articles")
-  @SuppressWarnings({"ArrayRecordComponent", "java:S6218"})
   public record ArticleWithNullableIdentifierArray(
       @JsonApiId String id, @JsonApiRelationship @Nullable ResourceIdentifier[] items) {
 

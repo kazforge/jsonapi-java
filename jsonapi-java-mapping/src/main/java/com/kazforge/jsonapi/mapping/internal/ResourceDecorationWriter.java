@@ -52,6 +52,8 @@ public final class ResourceDecorationWriter {
    * @param allowedFields the selected JSON:API field names, or {@code null} when not selective
    * @param decoratorRegistry the configured decorator registry
    */
+  // Nullable map values are preserved; NullAway misreads cross-artifact record constructors and
+  // rejects widening the non-null relationship map to the core factory's nullable-value input.
   @SuppressWarnings("NullAway")
   public static ResourceObject decorate(
       ResourceObject base,
@@ -73,8 +75,7 @@ public final class ResourceDecorationWriter {
     }
     String resourceType = definition.resourceType();
     ResourceDecoration decoration = requireDecoration(domain, decorator, resourceType);
-    Map<String, RelationshipDecoration> decorationRelationships =
-        requireDecorationRelationships(domain, decoration, resourceType);
+    Map<String, RelationshipDecoration> decorationRelationships = decoration.relationships();
     LinkedHashMap<String, Relationship> decoratedRelationships =
         resolveRelationshipDecorations(
             domain, definition, base, decorationRelationships, allowedFields);
@@ -126,23 +127,7 @@ public final class ResourceDecorationWriter {
     return decoration;
   }
 
-  @SuppressWarnings("java:S2583")
-  private static Map<String, RelationshipDecoration> requireDecorationRelationships(
-      Object domain, ResourceDecoration decoration, String resourceType) {
-    Map<String, RelationshipDecoration> decorationRelationships;
-    try {
-      decorationRelationships = decoration.relationships();
-    } catch (RuntimeException e) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.INVALID_DECORATION_STATE,
-          domain.getClass(),
-          "Invalid decoration relationships for " + resourceType);
-    }
-    // ResourceDecoration is final with a validated private constructor, so relationships() cannot
-    // return null; no defensive null branch is needed here.
-    return decorationRelationships;
-  }
-
+  // NullAway loses Relationship's constructor map-value annotation across artifacts.
   @SuppressWarnings("NullAway")
   private static @Nullable LinkedHashMap<String, Relationship> resolveRelationshipDecorations(
       Object domain,
@@ -164,7 +149,6 @@ public final class ResourceDecorationWriter {
     for (Map.Entry<String, RelationshipDecoration> entry : decorationRelationships.entrySet()) {
       String logicalName = entry.getKey();
       RelationshipDecoration relationshipDecoration = entry.getValue();
-      validateDecorationEntry(domain, logicalName, relationshipDecoration);
       String wireName = wireNames.get(logicalName);
       if (wireName == null) {
         throwInvalidTarget(domain, definition.resourceType(), logicalName, nonRelationshipKind);
@@ -214,31 +198,6 @@ public final class ResourceDecorationWriter {
       nonRelationshipKind.put(property.logicalName(), "relationship meta");
     }
     return nonRelationshipKind;
-  }
-
-  @SuppressWarnings("java:S2583")
-  private static void validateDecorationEntry(
-      Object domain,
-      @Nullable String logicalName,
-      @Nullable RelationshipDecoration relationshipDecoration) {
-    if (logicalName == null) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.INVALID_DECORATION_STATE,
-          domain.getClass(),
-          "Decoration contains null relationship property");
-    }
-    if (logicalName.isEmpty()) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.INVALID_DECORATION_STATE,
-          domain.getClass(),
-          "Decoration contains empty relationship property");
-    }
-    if (relationshipDecoration == null) {
-      throw JsonApiMappingException.withoutLocation(
-          MappingDiagnostic.INVALID_DECORATION_STATE,
-          domain.getClass(),
-          "Decoration for relationship '" + logicalName + "' is null");
-    }
   }
 
   private static void throwInvalidTarget(

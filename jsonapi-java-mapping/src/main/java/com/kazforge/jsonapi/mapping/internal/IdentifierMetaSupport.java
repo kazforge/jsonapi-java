@@ -37,6 +37,7 @@ public final class IdentifierMetaSupport {
     return copyPreservingAdditionalMembers(identifier, meta);
   }
 
+  // NullAway loses the record constructor's nullable map-value annotation across artifacts.
   @SuppressWarnings("NullAway")
   private static ResourceIdentifier copyPreservingAdditionalMembers(
       ResourceIdentifier identifier, @Nullable Meta meta) {

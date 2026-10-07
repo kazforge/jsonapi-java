@@ -63,7 +63,7 @@ public final class PatchCommandBinder<T, N> {
    * Binds one resource object into a presence-aware patch command for {@code rawType}. The caller
    * supplies the dedicated inbound PATCH definition and its opaque native bean type token.
    */
-  @SuppressWarnings({"rawtypes", "unchecked", "java:S1452"})
+  @SuppressWarnings("java:S1452") // The raw-class token carries no statically known DTO type.
   public PatchCommand<?> bind(
       ResourceObject resource,
       PatchResourceDefinition<N> definition,
@@ -80,7 +80,7 @@ public final class PatchCommandBinder<T, N> {
     bindResourceMeta(resource, definition, beanType, rawType, changes);
     bindAttributes(resource, definition, beanType, rawType, changes);
     bindRelationships(resource, definition, beanType, rawType, changes);
-    return new PatchCommand(rawType, identity, changes);
+    return new PatchCommand<>(rawType, identity, changes);
   }
 
   private Object convertIdentity(

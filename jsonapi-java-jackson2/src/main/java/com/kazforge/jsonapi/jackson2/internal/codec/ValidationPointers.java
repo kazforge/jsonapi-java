@@ -25,8 +25,9 @@ public final class ValidationPointers {
   }
 
   /**
-   * Adapts open-value maps for public core constructors. Core declares type-use {@code @Nullable}
-   * on map values; that annotation is not visible to NullAway across the published JAR boundary.
+   * Bridges nullable open-value maps to core record constructors. NullAway still loses their nested
+   * nullable-value annotation across artifacts, even with javac's type-annotation fix. This changes
+   * no values and must only be used at that constructor boundary.
    */
   @SuppressWarnings({"NullAway", "NullableProblems"})
   public static Map<String, Object> forCore(Map<String, @Nullable Object> map) {

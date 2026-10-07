@@ -61,10 +61,9 @@ public final class CompoundInclusionState {
   }
 
   /** Records the preferred id-or-lid identity for a fieldset-omitted inbound linkage. */
-  @SuppressWarnings("NullableProblems")
   public void addLinkageExemption(ResourceIdentifier identifier) {
     Objects.requireNonNull(identifier, IDENTIFIER_PARAMETER);
-    @Nullable ResourceIdentity preferred = preferredIdentityValue(identifier);
+    ResourceIdentity preferred = preferredIdentityValue(identifier);
     if (preferred != null) {
       linkageExemptions.add(preferred);
     }
