@@ -13,7 +13,6 @@ For source or build changes, run from the checkout root:
 
 These format, compile, test, and enforce the [build checks](README.md#build).
 For Markdown-only changes, review links, consistency, and section order; no Gradle build is required.
-See [completion gates](AGENTS.md#completion-gates) for other change types.
 All applicable CI checks must pass before merge; Sonar analysis runs in CI.
 
 Open a PR against `main` for one coherent change, with focused tests where applicable and a short
