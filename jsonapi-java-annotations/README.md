@@ -1,7 +1,8 @@
 # jsonapi-java-annotations
 
 Runtime-visible, dependency-free annotations that assign JSON:API semantic roles to domain classes,
-records, and properties for later adapter mapping.
+records, and properties for later adapter mapping. User examples belong to
+[Resources](https://jsonapi.kazforge.com/resources/).
 
 The public API is the
 [`com.kazforge.jsonapi.annotation`](src/main/java/com/kazforge/jsonapi/annotation/package-info.java)
@@ -12,19 +13,6 @@ package: [`@JsonApiResource`](src/main/java/com/kazforge/jsonapi/annotation/Json
 [`@JsonApiRelationship`](src/main/java/com/kazforge/jsonapi/annotation/JsonApiRelationship.java),
 [`@JsonApiMeta`](src/main/java/com/kazforge/jsonapi/annotation/JsonApiMeta.java), and
 [`@JsonApiRelationshipMeta`](src/main/java/com/kazforge/jsonapi/annotation/JsonApiRelationshipMeta.java).
-
-## Usage
-
-```java
-@JsonApiResource(type = "articles")
-public record Article(
-    @JsonApiId String id,
-    @JsonApiLocalId String localId,
-    @JsonApiAttribute String title,
-    @JsonApiRelationship String writtenBy,
-    @JsonApiMeta ArticleMeta meta,
-    @JsonApiRelationshipMeta(relationship = "writtenBy") AuthorMeta authorMeta) {}
-```
 
 Annotations assign roles only. Configured Jackson owns property discovery, visibility, external
 names, mix-ins, creators, and conversion. `@JsonApiResource.type()` is JSON:API semantic data rather

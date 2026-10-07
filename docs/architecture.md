@@ -7,9 +7,10 @@ how the current modules compose; it is neither design history nor a proposal for
 
 | Surface | Owns |
 |---------|------|
-| Root [`README.md`](../README.md) | Repository overview, module registry, documentation navigation |
+| Root [`README.md`](../README.md) | Public repository landing page and current module inventory |
 | This page | Current cross-module composition, flows, and authority boundaries |
-| `<module>/README.md` | Current module capability, entry points, and module-local maintenance constraints |
+| [`site/`](site/) | Canonical user guide: installation and task-oriented examples |
+| `<module>/README.md` | Module ownership, entry points, and module-local maintenance constraints |
 | [`docs/adr/`](adr/README.md) | Consequential architectural rationale |
 | [`docs/conformance.md`](conformance.md) | Current JSON:API feature support by layer |
 | [`docs/vision.md`](vision.md) | Stable product direction, distinct from this snapshot |
@@ -49,8 +50,8 @@ minimums and sustainable LTS baselines.
 Production compilation, the default build, and published Jackson dependency declarations use those
 minimums. Separate [version-catalog references](../gradle/libs.versions.toml) supply
 Renovate-maintained current-test versions for test classpaths only. Advancing a current-test version
-does not change published metadata or the support floor; the [build commands](../README.md#build)
-exercise each selection.
+does not change published metadata or the support floor;
+[dependency-baseline acceptance](release.md#dependency-baseline-acceptance) exercises each selection.
 
 Consumer/framework dependency management may select newer compatible Jackson versions within the
 appropriate major. Published dependencies use ordinary version declarations, without strict
@@ -196,6 +197,12 @@ internal packages, core and adapter package DAGs, and the passive shared-fixture
 also enforces formatting, compilation, tests, and coverage. Exact rules live with the modules they
 protect; changes to the protected architecture require [ADR-009](adr/009-architectural-tests.md) to
 change with them.
+
+`check` (and therefore `build`) enforces a fixed 80% JaCoCo line and branch coverage floor;
+`jsonapi-java-annotations` is exempt because it has no executable coverage. The thresholds live only
+in the [shared library convention](../build-logic/src/main/kotlin/jsonapi-java-library.gradle.kts),
+not measured-value ratchets. `check` also validates consumer-facing Javadoc; `build` assembles each
+module's Javadoc JAR. Standard contributor commands are in [CONTRIBUTING](../CONTRIBUTING.md).
 
 Current JSON:API support and draft-schema caveats are tracked in
 [`docs/conformance.md`](conformance.md).

@@ -11,7 +11,7 @@ For source or build changes, run from the checkout root:
 ./gradlew clean build
 ```
 
-These format, compile, test, and enforce the [build checks](README.md#build).
+These format, compile, test, and enforce the [repository checks](docs/architecture.md#enforcement).
 For Markdown-only changes, review links, consistency, and section order; no Gradle build is required.
 All applicable CI checks must pass before merge; Sonar analysis runs in CI.
 

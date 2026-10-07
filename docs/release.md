@@ -62,7 +62,7 @@ Publish job (same workflow run)
    release notes according to ADR-014. Review the documented
    [Jackson 2](../jsonapi-java-jackson2/README.md#jackson-support) and
    [Jackson 3](../jsonapi-java-jackson3/README.md#jackson-support) support baselines and their
-   [verification commands](../README.md#build). Merging is the release decision.
+   [verification commands](#dependency-baseline-acceptance). Merging is the release decision.
 2. release-please creates the `v<version>` tag and GitHub Release; the publish
    job checks out that tag, then builds, signs, and uploads the bundle to the
    Central Portal with automatic publishing.
@@ -71,9 +71,17 @@ Publish job (same workflow run)
 
 ## Dependency-baseline acceptance
 
-When changing a Jackson minimum or test-version selection, verify both
-[minimum and current test runs](../README.md#build). Generate consumer metadata through the existing
-publication convention:
+When changing a Jackson minimum or test-version selection, verify both minimum and current versions:
+
+```bash
+./gradlew clean build
+./gradlew :jsonapi-java-jackson2:test :jsonapi-java-jackson3:test -PjacksonTestVersion=current
+```
+
+The default build compiles and tests against each adapter's published minimum. The current selector
+uses separate Renovate-maintained [version-catalog references](../gradle/libs.versions.toml) on test
+classpaths only; production compilation and published dependencies retain the minimums.
+Generate consumer metadata through the existing publication convention:
 
 ```bash
 ./gradlew :jsonapi-java-jackson2:generatePomFileForMavenJavaPublication \

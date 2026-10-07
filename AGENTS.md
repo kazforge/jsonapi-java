@@ -5,7 +5,7 @@
 - Primary token-free verification: `./gradlew clean build`. It compiles, runs Spock/JUnit and
   ArchUnit tests, produces JaCoCo reports, enforces the fixed 80% JaCoCo line/branch floor
   through `check` (numbers only in `build-logic/.../jsonapi-java-library.gradle.kts`; policy in the
-  root README Build section), and runs `spotlessCheck` through `check`.
+  `docs/architecture.md` Enforcement section), and runs `spotlessCheck` through `check`.
 - Coverage thresholds are repository policy, not measured-value ratchets. Do not raise or lower the
   fixed coverage floor to match current coverage or make CI pass. Address failures with meaningful
   tests unless the user explicitly authorizes a policy change.
@@ -31,8 +31,9 @@
 
 # Repository Shape
 
-- `settings.gradle.kts` is the only source of truth for present modules; the root README also lists
-  planned modules, which have no usable entry points. Read the affected module README before code.
+- `settings.gradle.kts` is the only source of truth for present modules; the root README lists that
+  current inventory. Planned modules have no usable entry points. Read the affected module README
+  before code.
 - Sources are under `<module>/src/main/`; Spock specs are under `src/test/groovy/`, with some Java
   test fixtures under `src/test/java/`.
 - `build-logic/` owns shared Java/test/nullness/coverage and Spotless configuration. Dependency

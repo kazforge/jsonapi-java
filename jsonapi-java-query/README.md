@@ -2,7 +2,8 @@
 
 Framework- and Jackson-major-neutral parsing of JSON:API query selection. The module parses
 `include`, `fields[TYPE]`, and `sort`, while preserving `page`, `filter`, and unknown parameters as
-ordered opaque values.
+ordered opaque values. User examples belong to
+[Query and representation](https://jsonapi.kazforge.com/query-and-representation/).
 
 The [`com.kazforge.jsonapi.query`](src/main/java/com/kazforge/jsonapi/query/package-info.java) package
 provides [`JsonApiQueryParser`](src/main/java/com/kazforge/jsonapi/query/JsonApiQueryParser.java),
@@ -10,19 +11,7 @@ provides [`JsonApiQueryParser`](src/main/java/com/kazforge/jsonapi/query/JsonApi
 [`QueryAllowList`](src/main/java/com/kazforge/jsonapi/query/QueryAllowList.java) policy, sort values,
 and stable query diagnostics.
 
-## Usage
-
-```java
-JsonApiQuery query = new JsonApiQueryParser().parseRaw(
-    "?include=comments.author&fields[articles]=title,comments&sort=-created"
-        + "&page[number]=2&filter[articles][status]=draft");
-
-query.selection().includePaths();
-query.selection().fieldsets();
-query.sortFields();
-query.pageParameters();
-query.filterParameters();
-```
+## Integration seam
 
 `parseDecoded(Map<String, List<String>>)` is the canonical framework-integration seam. `parseRaw`
 handles an optional leading `?`, query delimiters, and UTF-8 form decoding before delegating to the
