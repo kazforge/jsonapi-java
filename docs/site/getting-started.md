@@ -33,7 +33,9 @@ Use the same version for every `jsonapi-java-*` artifact; there is no BOM.
 === "Gradle Kotlin DSL"
 
     ```kotlin
-    repositories { mavenCentral() }
+    repositories {
+        mavenCentral()
+    }
 
     dependencies {
         implementation("com.kazforge:jsonapi-java-jackson3:RELEASE_VERSION")
@@ -98,8 +100,12 @@ thread-safe runtime for your application's lifetime. Factories do not mutate you
     import com.kazforge.jsonapi.jackson3.JsonApiJackson3;
     import tools.jackson.databind.json.JsonMapper;
 
-    JsonMapper mapper = JsonMapper.builder().build();
-    JsonApi api = JsonApiJackson3.builder(mapper).jsonApiVersion("1.1").build();
+    JsonMapper mapper = JsonMapper.builder()
+        .build();
+
+    JsonApi api = JsonApiJackson3.builder(mapper)
+        .jsonApiVersion("1.1")
+        .build();
     ```
 
 === "Jackson 2"
@@ -109,8 +115,12 @@ thread-safe runtime for your application's lifetime. Factories do not mutate you
     import com.kazforge.jsonapi.jackson2.JsonApiJackson2;
     import com.fasterxml.jackson.databind.json.JsonMapper;
 
-    JsonMapper mapper = JsonMapper.builder().build();
-    JsonApi api = JsonApiJackson2.builder(mapper).jsonApiVersion("1.1").build();
+    JsonMapper mapper = JsonMapper.builder()
+        .build();
+
+    JsonApi api = JsonApiJackson2.builder(mapper)
+        .jsonApiVersion("1.1")
+        .build();
     ```
 
 The builder holds application policy, identifier conversion, linkage mappers, decorators, and an
@@ -120,9 +130,8 @@ Emitting `jsonapi.version` is optional; it does not implement HTTP content negot
 
 ## Read and write an article
 
-Save this complete Jackson 3 example as `Example.java` in your consumer project and run its `main`
-method. For Jackson 2, change only the two native-major imports and the factory call. Later pages
-use Java assertions to show results; enable them with `-ea` when running those examples.
+This complete Jackson 3 application writes an article, reads it back, and prints its title.
+For Jackson 2, change only the two native-major imports and the factory call.
 
 ```java
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
@@ -134,23 +143,46 @@ import tools.jackson.databind.json.JsonMapper;
 
 public class Example {
     @JsonApiResource(type = "articles")
-    public record Article(@JsonApiId String id, @JsonApiAttribute String title) {}
+    public record Article(
+        @JsonApiId String id,
+        @JsonApiAttribute String title
+    ) {}
 
     public static void main(String[] args) {
-        JsonApi api = JsonApiJackson3.jsonApi(JsonMapper.builder().build());
-        Article article = new Article("1", "Working with JSON:API");
+        JsonMapper mapper = JsonMapper.builder()
+            .build();
+        JsonApi api = JsonApiJackson3.jsonApi(mapper);
+
+        Article article = new Article(
+            "1",
+            "Working with JSON:API"
+        );
         String json = api.resources().writeOne(article);
+
         Article readBack = api.resources().readOne(json, Article.class);
-        if (!article.equals(readBack)) throw new AssertionError(readBack);
-        System.out.println(json);
+        System.out.println(readBack.title());
     }
 }
 ```
 
-Output:
+Console output:
+
+```text
+Working with JSON:API
+```
+
+The serialized document, formatted for display:
 
 ```json
-{"data":{"type":"articles","id":"1","attributes":{"title":"Working with JSON:API"}}}
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "Working with JSON:API"
+    }
+  }
+}
 ```
 
 Role annotations identify JSON:API members. Jackson still owns visibility, property names, creators,

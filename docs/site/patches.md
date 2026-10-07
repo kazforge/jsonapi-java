@@ -6,7 +6,7 @@ whose patchable members use `PatchPresence<T>`.
 
 ## Typed update presence
 
-Nest these public records in your example class; put operation snippets in a method:
+Declare a schema for the fields your application accepts in an article update:
 
 ```java
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
@@ -20,17 +20,37 @@ import com.kazforge.jsonapi.patch.PatchPresence;
 public record ArticlePatch(
     @JsonApiId String id,
     @JsonApiAttribute PatchPresence<String> title,
-    @JsonApiRelationship PatchPresence<ResourceIdentifier> author) {}
+    @JsonApiRelationship PatchPresence<ResourceIdentifier> author
+) {}
 ```
 
+This request body (`updateBody`) supplies a null title and omits the author:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": null
+    }
+  }
+}
+```
+
+Bind it to the PATCH schema:
+
 ```java
-String request = """
-    {"data":{"type":"articles","id":"1","attributes":{"title":null}}}
-    """;
-ArticlePatch patch = api.patches().readPatch(request, ArticlePatch.class);
-assert patch.id().equals("1");
-assert patch.title().equals(PatchPresence.present(null));
-assert patch.author().isOmitted();
+ArticlePatch patch = api.patches().readPatch(updateBody, ArticlePatch.class);
+PatchPresence<String> titleChange = patch.title();
+PatchPresence<ResourceIdentifier> authorChange = patch.author();
+```
+
+The patch identity is `1`. Its member states are:
+
+```text
+title:  present null
+author: omitted
 ```
 
 | Input member | Bound state | Requested change |
@@ -43,16 +63,18 @@ The identity is unwrapped and comes from `id`, not `lid`. Typed PATCH rejects un
 members and invalid wrapper declarations. An inner `Optional<T>` does not replace the outer
 presence marker: configured conversion may turn supplied null into `Optional.empty()`.
 
-Inspect presence before applying application policy:
+After authorizing the update, use presence to choose the proposed title without changing domain state:
 
 ```java
-String action = switch (patch.title()) {
-    case PatchPresence.Omitted<String> ignored -> "leave title unchanged";
-    case PatchPresence.Present<String> supplied ->
-        supplied.value() == null ? "request null title" : "request title: " + supplied.value();
+String currentTitle = "Working with JSON:API";
+String proposedTitle = switch (titleChange) {
+    case PatchPresence.Omitted<String> ignored -> currentTitle;
+    case PatchPresence.Present<String> supplied -> supplied.value();
 };
-assert action.equals("request null title");
 ```
+
+For this request, `proposedTitle` is null. Your business rules decide whether a null title is allowed.
+An omitted title would preserve `currentTitle` instead.
 
 The library validates and projects the request. You compare endpoint identity, authorize fields,
 check business invariants/concurrency, and apply changes. For validated endpoint comparison before
@@ -65,13 +87,21 @@ import com.kazforge.jsonapi.core.validation.EndpointIdentity;
 import com.kazforge.jsonapi.document.DocumentReadContext;
 import com.kazforge.jsonapi.document.PrimaryDataKind;
 
-var context = DocumentReadContext.of(ValidationContext.defaults()
+EndpointIdentity target = new EndpointIdentity("articles", "1");
+ValidationContext updateValidation = ValidationContext.defaults()
     .withDocumentUsage(DocumentUsage.UPDATE_REQUEST)
-    .withExpectedEndpointIdentity(new EndpointIdentity("articles", "1")), PrimaryDataKind.RESOURCE);
-var validated = api.documents().read(request, context);
+    .withExpectedEndpointIdentity(target);
+DocumentReadContext context = DocumentReadContext.of(
+    updateValidation,
+    PrimaryDataKind.RESOURCE
+);
+
+var validated = api.documents().read(updateBody, context);
 ArticlePatch checked = api.patches().bindPatch(validated, ArticlePatch.class);
-assert checked.equals(patch);
 ```
+
+`checked` has the same presence states as the earlier patch. A different resource type or id fails
+endpoint-identity validation before binding.
 
 `bindPatch`/`bindCommand` assume an already validated update document; they do not revalidate it.
 
@@ -90,26 +120,52 @@ not JSON Merge Patch. Opt in to typed recursion with a nested shape made of pres
 ```java
 import java.util.List;
 
-public record DetailsPatch(PatchPresence<String> summary, PatchPresence<String> language) {}
+public record DetailsPatch(
+    PatchPresence<String> summary,
+    PatchPresence<String> language
+) {}
 
 @JsonApiResource(type = "articles")
 public record StructuredArticlePatch(
     @JsonApiId String id,
     @JsonApiAttribute PatchPresence<DetailsPatch> details,
-    @JsonApiAttribute PatchPresence<List<String>> tags) {}
+    @JsonApiAttribute PatchPresence<List<String>> tags
+) {}
+```
+
+This request body (`structuredBody`) changes only the summary within `details`, and supplies an
+empty replacement for `tags`:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "details": {
+        "summary": "Short version"
+      },
+      "tags": []
+    }
+  }
+}
 ```
 
 ```java
-String structuredRequest = """
-    {"data":{"type":"articles","id":"1","attributes":{
-      "details":{"summary":"Short version"},"tags":[]}}}
-    """;
 StructuredArticlePatch structured = api.patches().readPatch(
-    structuredRequest, StructuredArticlePatch.class);
-var details = (PatchPresence.Present<DetailsPatch>) structured.details();
-assert details.value().summary().equals(PatchPresence.present("Short version"));
-assert details.value().language().isOmitted();
-assert structured.tags().equals(PatchPresence.present(List.of()));
+    structuredBody,
+    StructuredArticlePatch.class
+);
+PatchPresence<DetailsPatch> detailsChange = structured.details();
+PatchPresence<List<String>> tagsChange = structured.tags();
+```
+
+The projected member states are:
+
+```text
+details.summary:  present "Short version"
+details.language: omitted
+tags:             present empty list
 ```
 
 !!! warning "Containers are whole replacements"
@@ -129,10 +185,15 @@ Reuse `ArticleView` from [resources](resources.md#write-relationships-read-linka
 ```java
 import com.kazforge.jsonapi.patch.PatchCommand;
 
-PatchCommand<ArticleView> command = api.patches().readCommand(request, ArticleView.class);
-assert command.identity().equals("1");
-assert command.changes().size() == 1;
+PatchCommand<ArticleView> command = api.patches().readCommand(
+    updateBody,
+    ArticleView.class
+);
+Object identity = command.identity();
 ```
+
+For the null-title request above, `identity` is `1` and the command contains one supplied change:
+the title's explicit null. There is no author change.
 
 Commands contain only supplied mapped changes; they do not construct a complete DTO. Unknown members
 are skipped, unlike typed PATCH. Traversable ordinary bean attributes/resource-side meta produce

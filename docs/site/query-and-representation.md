@@ -6,19 +6,33 @@ of Jackson major and HTTP framework. Use the article/people write model and `Art
 
 ## Parse a request
 
-Put this snippet in a method; it parses input, not a persistence query:
+For a query string (`requestQuery`) such as:
+
+```text
+?include=author&fields[articles]=title,author&sort=-title&page[number]=2&filter[status]=published
+```
+
+Parse the requested selection and opaque parameters:
 
 ```java
 import com.kazforge.jsonapi.query.JsonApiQuery;
 import com.kazforge.jsonapi.query.JsonApiQueryParser;
 
-JsonApiQuery query = new JsonApiQueryParser().parseRaw(
-    "?include=author&fields[articles]=title,author&sort=-title"
-        + "&page[number]=2&filter[status]=published");
-assert query.selection().includePaths().size() == 1;
-assert query.sortFields().size() == 1;
-assert query.pageParameters().get("page[number]").equals(java.util.List.of("2"));
+JsonApiQueryParser parser = new JsonApiQueryParser();
+JsonApiQuery query = parser.parseRaw(requestQuery);
 ```
+
+Result:
+
+```text
+include:          author
+fields[articles]: title, author
+sort:             title (descending)
+page[number]:     [2]
+filter[status]:   [published]
+```
+
+These are requested values, not an executed persistence query.
 
 For framework parameters that are already decoded, use `parseDecoded`; do not URL-decode twice:
 
@@ -26,14 +40,17 @@ For framework parameters that are already decoded, use `parseDecoded`; do not UR
 import java.util.List;
 import java.util.Map;
 
-JsonApiQuery selected = new JsonApiQueryParser().parseDecoded(Map.of(
-    "include", List.of("author"), "fields[articles]", List.of("title,author")));
+Map<String, List<String>> parameters = Map.of(
+    "include", List.of("author"),
+    "fields[articles]", List.of("title,author")
+);
+JsonApiQuery selected = parser.parseDecoded(parameters);
 ```
 
 `include`, each `fields[TYPE]`, and `sort` require **one value occurrence**, with comma-separated
-tokens inside that value. Names are exact JSON:API tokens, not trimmed Java property names. Explicit `include=` or
-`fields[articles]=` stays distinct from omission. `QueryAllowList` can reject unpermitted include,
-field, or sort tokens, but a successful parse grants no access to a resource or field.
+tokens inside that value. Names are exact JSON:API tokens, not trimmed Java property names.
+Explicit `include=` or `fields[articles]=` stays distinct from omission. `QueryAllowList` can reject
+unpermitted include, field, or sort tokens, but a successful parse grants no access to a resource or field.
 
 ## Apply selection with policy
 
@@ -50,23 +67,87 @@ import com.kazforge.jsonapi.representation.RepresentationPolicy;
 import java.util.Set;
 import tools.jackson.databind.json.JsonMapper;
 
+RelationshipAllowance authorAllowance = RelationshipAllowance.of("articles", "author");
+IncludePolicy allowedIncludes = IncludePolicy.allowing(Set.of(authorAllowance));
+
 RepresentationPolicy policy = RepresentationPolicy.defaults()
-    .withIncludePolicy(IncludePolicy.allowing(Set.of(
-        RelationshipAllowance.of("articles", "author"))))
+    .withIncludePolicy(allowedIncludes)
     .withMaxIncludeDepth(1)
     .withMaxIncludedResources(10);
-JsonApi selectedApi = JsonApiJackson3.builder(JsonMapper.builder().build())
-    .representationPolicy(policy).build();
-
-ArticleWithAuthor article = new ArticleWithAuthor("1", "Working with JSON:API",
-    new Person("p1", "Ada"));
-String json = selectedApi.resources().writeOne(article,
-    ResourceWriteOptions.defaults().withSelection(selected.selection()));
-var result = selectedApi.resources().readOneDocument(json, ArticleView.class);
-assert result.included().size() == 1;
-assert result.included().getFirst().type().equals("people");
-assert result.resource().author().id().equals("p1");
 ```
+
+Bind that application policy to the configured runtime:
+
+```java
+JsonMapper mapper = JsonMapper.builder()
+    .build();
+JsonApi selectedApi = JsonApiJackson3.builder(mapper)
+    .representationPolicy(policy)
+    .build();
+```
+
+Use the decoded selection for this write, with the author's data already available:
+
+```java
+Person ada = new Person("p1", "Ada");
+ArticleWithAuthor article = new ArticleWithAuthor(
+    "1",
+    "Working with JSON:API",
+    ada
+);
+ResourceWriteOptions options = ResourceWriteOptions.defaults()
+    .withSelection(selected.selection());
+
+String json = selectedApi.resources().writeOne(article, options);
+```
+
+Result, formatted for display:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "Working with JSON:API"
+    },
+    "relationships": {
+      "author": {
+        "data": {
+          "type": "people",
+          "id": "p1"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "people",
+      "id": "p1",
+      "attributes": {
+        "name": "Ada"
+      }
+    }
+  ]
+}
+```
+
+Read the primary DTO and included core resources together:
+
+```java
+import com.kazforge.jsonapi.api.ResourceDocument;
+import com.kazforge.jsonapi.core.model.ResourceObject;
+
+ResourceDocument<ArticleView> result = selectedApi.resources().readOneDocument(
+    json,
+    ArticleView.class
+);
+ArticleView primaryArticle = result.resource();
+List<ResourceObject> included = result.included();
+```
+
+`primaryArticle.author()` still contains only the `people` / `p1` identifier. `included` contains
+the separate person resource with Ada's name; it is not injected into the DTO's relationship.
 
 The runtime defaults deny include traversal, allow selected sparse fields, and bound traversal.
 Selections use wire names, and policy allowances name the owning resource type. Nested paths need

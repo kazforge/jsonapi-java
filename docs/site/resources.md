@@ -1,8 +1,6 @@
 # Resources
 
 Use the configured `JsonApi api` from [getting started](getting-started.md#configure-a-runtime).
-The following declarations can be nested public records in your example class; operation snippets
-go in a method using that runtime. Each snippet lists its additional imports.
 
 ## Write relationships, read linkage
 
@@ -17,34 +15,72 @@ import com.kazforge.jsonapi.annotation.JsonApiResource;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 
 @JsonApiResource(type = "people")
-public record Person(@JsonApiId String id, @JsonApiAttribute String name) {}
+public record Person(
+    @JsonApiId String id,
+    @JsonApiAttribute String name
+) {}
 
 @JsonApiResource(type = "articles")
 public record ArticleWithAuthor(
     @JsonApiId String id,
     @JsonApiAttribute String title,
-    @JsonApiRelationship Person author) {}
+    @JsonApiRelationship Person author
+) {}
 
 @JsonApiResource(type = "articles")
 public record ArticleView(
     @JsonApiId String id,
     @JsonApiAttribute String title,
-    @JsonApiRelationship ResourceIdentifier author) {}
+    @JsonApiRelationship ResourceIdentifier author
+) {}
 ```
 
+Write the article with an already available author object:
+
 ```java
-ArticleWithAuthor article = new ArticleWithAuthor("1", "Working with JSON:API",
-    new Person("p1", "Ada"));
-String one = api.resources().writeOne(article);
-ArticleView view = api.resources().readOne(one, ArticleView.class);
-assert view.author().equals(ResourceIdentifier.of("people", "p1"));
+Person ada = new Person("p1", "Ada");
+ArticleWithAuthor article = new ArticleWithAuthor(
+    "1",
+    "Working with JSON:API",
+    ada
+);
+
+String articleJson = api.resources().writeOne(article);
 ```
 
 The default write emits linkage, but no `included` author:
 
 ```json
-{"data":{"type":"articles","id":"1","attributes":{"title":"Working with JSON:API"},"relationships":{"author":{"data":{"type":"people","id":"p1"}}}}}
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "Working with JSON:API"
+    },
+    "relationships": {
+      "author": {
+        "data": {
+          "type": "people",
+          "id": "p1"
+        }
+      }
+    }
+  }
+}
 ```
+
+Read that document into the flat application view:
+
+```java
+ArticleView articleView = api.resources().readOne(
+    articleJson,
+    ArticleView.class
+);
+ResourceIdentifier author = articleView.author();
+```
+
+`author` identifies resource type `people`, id `p1`. It does not contain Ada's name.
 
 Built-in read targets include `ResourceIdentifier` and its optional/collection/array forms. Custom
 relationship targets need an explicit linkage mapper; mapping does not look up persisted people.
@@ -63,11 +99,20 @@ Using the `article` above:
 ```java
 import java.util.List;
 
-String many = api.resources().writeMany(List.of(article));
-List<ArticleView> views = api.resources().readMany(many, ArticleView.class);
-assert views.size() == 1;
-assert views.getFirst().id().equals("1");
+List<ArticleWithAuthor> articles = List.of(article);
+String collectionJson = api.resources().writeMany(articles);
 ```
+
+Read the resulting resource array with the collection operation:
+
+```java
+List<ArticleView> articleViews = api.resources().readMany(
+    collectionJson,
+    ArticleView.class
+);
+```
+
+The list contains one `ArticleView`, with id `1` and author linkage to `people` / `p1`.
 
 `readOne` requires one resource object; `readMany` requires a resource array, including `[]`.
 Neither coerces null, absent `data`, linkage documents, or errors into a DTO or an empty list.
@@ -85,14 +130,31 @@ import com.kazforge.jsonapi.annotation.JsonApiLocalId;
 public record NewArticle(
     @JsonApiId String id,
     @JsonApiLocalId String localId,
-    @JsonApiAttribute String title) {}
+    @JsonApiAttribute String title
+) {}
 ```
 
 ```java
-String create = api.resources().writeCreateDocument(
-    new NewArticle(null, "draft-1", "A draft"));
-assert create.contains("\"lid\":\"draft-1\"");
-assert !create.contains("\"id\"");
+NewArticle draft = new NewArticle(
+    null,
+    "draft-1",
+    "A draft"
+);
+String createJson = api.resources().writeCreateDocument(draft);
+```
+
+Result:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "lid": "draft-1",
+    "attributes": {
+      "title": "A draft"
+    }
+  }
+}
 ```
 
 Ordinary response writes still require `id`. Create allowances are not a nested-create protocol:
@@ -106,10 +168,12 @@ An update requires `type` and `id`. Supply an expected endpoint identity when yo
 ```java
 import com.kazforge.jsonapi.core.validation.EndpointIdentity;
 
-String update = api.resources().writeUpdateDocument(
-    article, new EndpointIdentity("articles", "1"));
-assert update.contains("\"id\":\"1\"");
+EndpointIdentity target = new EndpointIdentity("articles", "1");
+String updateJson = api.resources().writeUpdateDocument(article, target);
 ```
+
+The document has the same resource shape as the article write above, including `type: articles`
+and `id: 1`. This operation additionally validates it as an update request against `target`.
 
 An identity mismatch fails validation. This writes the selected DTO members; it does not calculate
 a diff or turn null DTO fields into omission. Use a [presence-aware PATCH schema](patches.md) to
@@ -126,14 +190,57 @@ import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.document.DocumentEnvelope;
 import java.util.Map;
 
-Meta meta = Meta.of(Map.of("request", "req-7"));
+Meta requestMeta = Meta.of(Map.of("request", "req-7"));
+DocumentEnvelope envelope = new DocumentEnvelope(
+    null,
+    requestMeta,
+    null
+);
 ResourceWriteOptions options = ResourceWriteOptions.defaults()
-    .withEnvelope(new DocumentEnvelope(null, meta, null));
-String enveloped = api.resources().writeOne(article, options);
-var result = api.resources().readOneDocument(enveloped, ArticleView.class);
-assert result.meta().equals(meta);
-assert result.resource().author().id().equals("p1");
+    .withEnvelope(envelope);
+
+String envelopeJson = api.resources().writeOne(article, options);
 ```
+
+This adds a top-level `meta` object to the resource document:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "Working with JSON:API"
+    },
+    "relationships": {
+      "author": {
+        "data": {
+          "type": "people",
+          "id": "p1"
+        }
+      }
+    }
+  },
+  "meta": {
+    "request": "req-7"
+  }
+}
+```
+
+Read the DTO and document-level state together:
+
+```java
+import com.kazforge.jsonapi.api.ResourceDocument;
+
+ResourceDocument<ArticleView> result = api.resources().readOneDocument(
+    envelopeJson,
+    ArticleView.class
+);
+ArticleView primaryArticle = result.resource();
+Meta documentMeta = result.meta();
+```
+
+`primaryArticle` has id `1`; `documentMeta` carries `request: req-7`.
 
 The typed document result carries `included` as validated core resources, not hydrated DTOs.
 Resource meta, relationship meta, and identifier meta are different locations; an envelope supplies
