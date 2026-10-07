@@ -5,11 +5,13 @@
 
 ## Context
 
-JSON:API resource updates are not JSON Merge Patch. An omitted member is not an explicit null, and
-constructing a complete DTO from a partial update can fabricate values for immutable objects.
+[JSON:API](https://jsonapi.org/format/1.1/#crud-updating-resource-attributes) defines update presence at
+the attribute level: omitted attributes retain their current values. Resource updates are not JSON
+Merge Patch. An omitted member is not an explicit null, and constructing a complete DTO from a
+partial update can fabricate values for immutable objects.
 Applying updates directly would also take on authorization, mutation, and persistence policy.
-Nested structured values require the same presence distinction without making relationship linkage
-an object-graph mutation protocol.
+Recursive nested-object presence is a `jsonapi-java` mapping feature, not a JSON:API requirement.
+It preserves nested omissions without making relationship linkage an object-graph mutation protocol.
 
 ## Decision
 
@@ -35,13 +37,14 @@ Offer two projections of the validated update:
 For traversable structured attributes and resource-side meta, represent supplied nested members as
 `StructuredPatch` with `StructuredMember` entries retaining configured wire name, logical property
 name, and atomic or nested state. A supplied empty object is not a clear-all. Typed recursion is
-opt-in through all-presence-aware nested shapes and rejects unknown members; low-level recursion
-traverses ordinary beans and skips unknown members. Scalars, custom atomic values, lists, sets,
-arrays, and maps replace as whole values. Nested null follows declared conversion (and fails for
-primitives); it is never a generic remove operation. Configured property-scoped conversion can keep
-an otherwise bean-shaped value atomic. Outer attributes may be null, but object-valued meta may
-not. Relationships remain atomic linkage replacements, including identifier meta carried by that
-linkage ([ADR-011](011-flat-whole-object-meta-mapping.md)).
+opt-in through nested shapes whose properties are all `PatchPresence` wrappers; it rejects unknown
+members. Low-level recursion traverses ordinary beans and skips unknown members. Scalars, custom
+atomic values, `List`, `Set`, arrays, and maps are atomic whole-value replacements; there are no
+element-addressed collection PATCH semantics. Nested null follows declared conversion (and fails
+for primitives); it is never a generic remove operation. Configured property-scoped conversion can
+keep an otherwise bean-shaped value atomic. Outer attributes may be null, but object-valued meta
+may not. Relationships remain atomic linkage replacements, including identifier meta carried by
+that linkage ([ADR-011](011-flat-whole-object-meta-mapping.md)).
 
 Backend-neutral orchestration is shared; native shape discovery, conversion, and DTO construction
 remain with each adapter ([ADR-015](015-responsibility-based-mapping-and-native-wire-codecs.md)).
@@ -51,4 +54,6 @@ remain with each adapter ([ADR-015](015-responsibility-based-mapping-and-native-
 - Omission, explicit null, supplied empty objects, and relationship replacement stay observable.
 - Typed PATCH DTOs are distinct from ordinary read/write DTOs; strict typed versus permissive
   low-level unknown-member handling is deliberate.
+- Value collections fit naturally as attributes; collections needing independently addressable
+  members may be better modeled as relationships.
 - Applications authorize, validate business invariants, and apply either projection themselves.
