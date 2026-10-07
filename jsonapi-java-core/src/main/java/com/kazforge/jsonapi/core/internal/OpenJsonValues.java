@@ -45,10 +45,6 @@ public final class OpenJsonValues {
     };
   }
 
-  public static @Nullable Object copy(@Nullable Object value) {
-    return copy(value, "");
-  }
-
   public static @Nullable Object copy(@Nullable Object value, String path) {
     return copy(value, path, new IdentityHashMap<>());
   }
@@ -70,23 +66,12 @@ public final class OpenJsonValues {
     };
   }
 
-  public static Map<String, @Nullable Object> copyMap(@Nullable Map<String, ?> source) {
-    return copyMap(source, "");
-  }
-
   public static Map<String, @Nullable Object> copyMap(
       @Nullable Map<String, ?> source, String path) {
     if (source == null || source.isEmpty()) {
       return Map.of();
     }
     return copyMapValue(source, path, new IdentityHashMap<>());
-  }
-
-  public static List<String> copyStringList(@Nullable List<String> source) {
-    if (source == null || source.isEmpty()) {
-      return List.of();
-    }
-    return List.copyOf(source);
   }
 
   private static boolean isValidList(List<?> list, IdentityHashMap<Object, Boolean> visiting) {
