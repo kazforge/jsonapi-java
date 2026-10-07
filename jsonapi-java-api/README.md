@@ -2,7 +2,7 @@
 
 Backend-independent application contracts and values implemented by the configured Jackson 2 and
 Jackson 3 runtimes. This module defines contracts and values; it has no standalone Jackson
-runtime.
+runtime. User workflows belong to the [public guide](https://jsonapi.kazforge.com/getting-started/).
 
 ## Packages and entry points
 
@@ -22,16 +22,6 @@ semantics, and backend-neutral mapping implementation lives in the unsupported
 [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) module.
 
 ## Level-1 contract
-
-An adapter supplies the implementation; application code can depend on the neutral interface:
-
-```java
-JsonApi api = /* Jackson 2 or Jackson 3 configured runtime */;
-
-Article article = api.resources().readOne(json, Article.class);
-String rendered = api.resources().writeOne(article);
-ArticlePatch patch = api.patches().readPatch(updateJson, ArticlePatch.class);
-```
 
 `JsonApi` groups ordinary resource, linkage-document, raw-document, and PATCH operations. Advanced
 major-specific readers, writers, mapping/binding, parameterized Jackson types, and heterogeneous

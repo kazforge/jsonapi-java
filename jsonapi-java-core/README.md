@@ -1,7 +1,8 @@
 # jsonapi-java-core
 
 Dependency-free Java representation of [JSON:API v1.1](https://jsonapi.org/) documents, with local
-construction invariants and aggregate document validation.
+construction invariants and aggregate document validation. User examples belong to
+[Relationships and documents](https://jsonapi.kazforge.com/relationships-and-documents/).
 
 ## Packages and entry points
 
@@ -12,15 +13,7 @@ construction invariants and aggregate document validation.
 | [`com.kazforge.jsonapi.core.aggregate`](src/main/java/com/kazforge/jsonapi/core/aggregate/package-info.java) | [`JsonApiDocumentValidator`](src/main/java/com/kazforge/jsonapi/core/aggregate/JsonApiDocumentValidator.java) and [`ValidationContext`](src/main/java/com/kazforge/jsonapi/core/aggregate/ValidationContext.java) |
 | [`com.kazforge.jsonapi.core.internal`](src/main/java/com/kazforge/jsonapi/core/internal/package-info.java) | Shared implementation helpers; unsupported API |
 
-## Usage
-
-```java
-ResourceObject resource = ResourceObject.of("articles", "1");
-JsonApiDocument document = JsonApiDocument.withData(
-    new DocumentData.SingleResource(resource));
-
-new JsonApiDocumentValidator().validate(document, ValidationContext.defaults());
-```
+## Validation and wire state
 
 Construct model values first; their constructors enforce invariants that need only the value being
 created. Run `JsonApiDocumentValidator` for identity uniqueness, full linkage, document usage,

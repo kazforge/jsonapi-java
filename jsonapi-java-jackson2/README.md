@@ -3,6 +3,8 @@
 Native Jackson 2 implementation of the major-neutral Level-1 JSON:API contract, plus advanced
 document codec, mapping, flat binding, typed-envelope, and PATCH capabilities.
 
+User setup and examples belong to the [public guide](https://jsonapi.kazforge.com/getting-started/).
+
 ## Jackson support
 
 The minimum supported and published dependency baseline is **Jackson 2.21.7** for
@@ -11,8 +13,9 @@ framework dependency management may select newer compatible Jackson 2 versions.
 
 The separate current-test Jackson 2 version reference lives in the
 [version catalog](../gradle/libs.versions.toml). Renovate maintains that reference without raising
-the published minimum. See the [build commands](../README.md#build) for minimum and current test
-runs and the [dependency policy](../docs/architecture.md#public-api-ownership) for publication and
+the published minimum. See
+[dependency-baseline acceptance](../docs/release.md#dependency-baseline-acceptance) for minimum and
+current test runs and the [dependency policy](../docs/architecture.md#public-api-ownership) for publication and
 framework boundaries.
 
 ## Packages
@@ -24,25 +27,12 @@ framework boundaries.
 | [`com.kazforge.jsonapi.jackson2.internal`](src/main/java/com/kazforge/jsonapi/jackson2/internal/package-info.java) | Mapping, binding, PATCH, and module implementation; unsupported API |
 | [`com.kazforge.jsonapi.jackson2.internal.codec`](src/main/java/com/kazforge/jsonapi/jackson2/internal/codec/package-info.java) | Self-contained token codec and wire-helper implementation; unsupported API |
 
-## Start with Level 1
+## Runtime entry point
 
-```java
-import com.fasterxml.jackson.databind.json.JsonMapper;
-
-JsonMapper mapper = JsonMapper.builder().build();
-Jackson2JsonApi api = JsonApiJackson2.jsonApi(mapper);
-
-String json = api.resources().writeOne(article);
-Article readBack = api.resources().readOne(json, Article.class);
-ArticlePatch patch = api.patches().readPatch(updateJson, ArticlePatch.class);
-```
-
-The runtime implements the neutral [`JsonApi`](../jsonapi-java-api/README.md) facets:
-resources, linkage relationships, raw documents, and PATCH. Resource reads are strict and
-homogeneous; create/update authoring selects the corresponding core validation usage. Use
-`JsonApiJackson2.builder(mapper)` for application-lifetime identifier conversion, linkage mappers,
-representation policy, decorators, or an optional default `jsonapi.version`. Selection, document
-envelopes, and expected update identity remain per-operation values.
+[`JsonApiJackson2`](src/main/java/com/kazforge/jsonapi/jackson2/JsonApiJackson2.java) creates the
+configured [`Jackson2JsonApi`](src/main/java/com/kazforge/jsonapi/jackson2/Jackson2JsonApi.java)
+runtime implementing neutral [`JsonApi`](../jsonapi-java-api/README.md). Its builder owns
+application-lifetime collaborators/policy; request selection and envelopes remain per operation.
 
 ## Advanced entry points
 
