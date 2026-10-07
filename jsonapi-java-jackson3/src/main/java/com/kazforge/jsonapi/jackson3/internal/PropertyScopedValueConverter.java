@@ -163,12 +163,12 @@ final class PropertyScopedValueConverter {
     rawValueProperty.serializeAsRawProperty(sourceBean, rawValue, buffer, context);
   }
 
-  @SuppressWarnings("resource")
   private TokenBuffer conversionBuffer(SerializationContextExt context) {
     TokenBuffer buffer = context.bufferForValueConversion();
-    return mapper.isEnabled(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
-        ? buffer.forceUseOfBigDecimal(true)
-        : buffer;
+    if (mapper.isEnabled(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)) {
+      buffer.forceUseOfBigDecimal(true);
+    }
+    return buffer;
   }
 
   /**

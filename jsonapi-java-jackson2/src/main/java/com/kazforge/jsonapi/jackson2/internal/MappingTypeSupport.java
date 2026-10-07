@@ -114,9 +114,7 @@ final class MappingTypeSupport {
     }
     Class<?> raw = unwrapped.getRawClass();
     if (Set.class.isAssignableFrom(raw)) {
-      @SuppressWarnings({"unchecked", "rawtypes"})
-      Class<? extends Collection> setType = (Class<? extends Collection>) raw;
-      return typeFactory.constructCollectionType(setType, target);
+      return typeFactory.constructCollectionType(raw.asSubclass(Collection.class), target);
     }
     return typeFactory.constructCollectionType(List.class, target);
   }

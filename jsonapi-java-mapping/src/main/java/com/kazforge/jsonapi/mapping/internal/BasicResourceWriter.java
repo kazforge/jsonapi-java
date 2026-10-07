@@ -138,6 +138,7 @@ public final class BasicResourceWriter<T, P> {
     return withMeta(base, meta);
   }
 
+  // NullAway loses the record constructor's nullable map-value annotation across artifacts.
   @SuppressWarnings("NullAway")
   private static ResourceObject withMeta(ResourceObject base, Meta meta) {
     return new ResourceObject(

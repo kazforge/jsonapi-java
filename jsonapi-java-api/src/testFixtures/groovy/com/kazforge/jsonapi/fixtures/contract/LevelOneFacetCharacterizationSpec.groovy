@@ -40,7 +40,6 @@ abstract class LevelOneFacetCharacterizationSpec extends Specification {
 
   // The passive canonical error fixture intentionally uses this valid HTTP URI.
   //noinspection HttpUrlsUsage
-  @SuppressWarnings("HttpUrlsUsage")
   private static final String ERROR_ABOUT_URL = "http://example.com/docs/errors/invalid"
 
   protected abstract JsonApi api(String jsonApiVersion)

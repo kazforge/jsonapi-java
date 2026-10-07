@@ -133,7 +133,9 @@ those capabilities are unavailable.
   (`tools.jackson.*` and `com.fasterxml.jackson.*`).
 - Preserve wire-visible distinctions: absent, explicit JSON `null`, and present-empty are different
   states. Explicit null data/linkage uses sealed model variants, not bare Java null.
-- Production Java packages are JSpecify `@NullMarked`; NullAway checks `compileJava` only. ArchUnit
+- Production Java packages are JSpecify `@NullMarked`; NullAway errors are enforced on `compileJava`.
+  The plugin also enables NullAway warnings on Java test compilation; shared Java test-fixture
+  compilation disables Error Prone. ArchUnit
   enforces module dependency allowlists. Do not weaken those rules without updating
   `docs/adr/009-architectural-tests.md`.
 

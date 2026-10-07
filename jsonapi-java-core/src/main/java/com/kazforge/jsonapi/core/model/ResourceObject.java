@@ -89,13 +89,14 @@ public record ResourceObject(
     return null;
   }
 
-  // NullAway misreads ResourceIdentifier's type-use @Nullable on class-path inputs during
-  // incremental compiles; the component types are identical and the conversion is safe.
   /**
    * Converts identity, meta, and additional members to a resource identifier. Attributes,
-   * relationships, and links are not identifier members. A type-only resource cannot be converted
-   * because a resource identifier requires {@code id} or {@code lid}.
+   * relationships, and links are not identifier members. Additional-member JSON null values are
+   * preserved. A type-only resource cannot be converted because a resource identifier requires
+   * {@code id} or {@code lid}.
    */
+  // Incremental compilation reads ResourceIdentifier from bytecode, where NullAway still loses
+  // the constructor's nullable map-value annotation. The identical component type is preserved.
   @SuppressWarnings("NullAway")
   public ResourceIdentifier toIdentifier() {
     return new ResourceIdentifier(type, id, lid, meta, additionalMembers);

@@ -102,28 +102,24 @@ public final class JsonApiPatchDtoReader {
   }
 
   /** Decodes, validates, and binds using a {@link JavaType}, preserving full parameterization. */
-  @SuppressWarnings("java:S1452")
   public Object readValue(String json, JavaType dtoType) {
     Objects.requireNonNull(dtoType, DTO_TYPE);
     return fromDocument(documentReader.readValue(json), dtoType);
   }
 
   /** Byte-array overload of {@link #readValue(String, JavaType)}. */
-  @SuppressWarnings("java:S1452")
   public Object readValue(byte[] utf8Json, JavaType dtoType) {
     Objects.requireNonNull(dtoType, DTO_TYPE);
     return fromDocument(documentReader.readValue(utf8Json), dtoType);
   }
 
   /** Stream overload of {@link #readValue(String, JavaType)}. */
-  @SuppressWarnings("java:S1452")
   public Object readValue(InputStream utf8Stream, JavaType dtoType) {
     Objects.requireNonNull(dtoType, DTO_TYPE);
     return fromDocument(documentReader.readValue(utf8Stream), dtoType);
   }
 
   /** Parser overload of {@link #readValue(String, JavaType)}. */
-  @SuppressWarnings("java:S1452")
   public Object readValue(JsonParser parser, JavaType dtoType) {
     Objects.requireNonNull(dtoType, DTO_TYPE);
     return fromDocument(documentReader.readValue(parser), dtoType);
@@ -134,10 +130,9 @@ public final class JsonApiPatchDtoReader {
    * {@link DocumentData.SingleResource} primary data; other primary-data states throw {@link
    * IllegalArgumentException}.
    */
-  @SuppressWarnings("unchecked")
   public <T> T fromDocument(JsonApiDocument document, Class<T> dtoType) {
     Objects.requireNonNull(dtoType, DTO_TYPE);
-    return (T) fromDocument(document, binderMapper.constructType(dtoType));
+    return dtoType.cast(fromDocument(document, binderMapper.constructType(dtoType)));
   }
 
   /**
@@ -145,7 +140,6 @@ public final class JsonApiPatchDtoReader {
    * JavaType} parameterization. Requires non-null {@link DocumentData.SingleResource} primary data;
    * other primary-data states throw {@link IllegalArgumentException}.
    */
-  @SuppressWarnings("java:S1452")
   public Object fromDocument(JsonApiDocument document, JavaType dtoType) {
     Objects.requireNonNull(document, "document");
     Objects.requireNonNull(dtoType, DTO_TYPE);

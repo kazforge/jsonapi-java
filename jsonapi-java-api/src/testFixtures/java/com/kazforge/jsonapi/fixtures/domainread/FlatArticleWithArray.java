@@ -15,7 +15,6 @@ import org.jspecify.annotations.Nullable;
  * array components by reference. This override is part of the shared bound-value contract.
  */
 @JsonApiResource(type = "articles")
-@SuppressWarnings({"ArrayRecordComponent", "java:S6218"})
 public record FlatArticleWithArray(
     @JsonApiId String id,
     @JsonApiAttribute @Nullable String title,
@@ -51,5 +50,16 @@ public record FlatArticleWithArray(
   @Override
   public int hashCode() {
     return Objects.hash(id, title, Arrays.hashCode(comments));
+  }
+
+  @Override
+  public String toString() {
+    return "FlatArticleWithArray[id="
+        + id
+        + ", title="
+        + title
+        + ", comments="
+        + Arrays.toString(comments)
+        + "]";
   }
 }

@@ -15,7 +15,7 @@ import java.util.Optional;
  * {@code GenericDomainWriteSpec}; these shapes exercise {@code JavaType}-based generic writes, not
  * shared wire semantics. Adapter-local Jackson 2 copy of the shared shapes.
  */
-@SuppressWarnings({"ClassCanBeRecord", "OptionalUsedAsFieldOrParameterType", "rawtypes", "unused"})
+@SuppressWarnings({"ClassCanBeRecord", "OptionalUsedAsFieldOrParameterType", "unused"})
 public final class GenericDomainWriteFixtures {
 
   private GenericDomainWriteFixtures() {}
@@ -147,6 +147,7 @@ public final class GenericDomainWriteFixtures {
   }
 
   @JsonApiResource(type = "raw-relationships")
+  @SuppressWarnings("rawtypes") // Missing type arguments are the declaration under test.
   public static final class RawRelationship {
 
     @JsonApiId private final String id;
@@ -187,6 +188,7 @@ public final class GenericDomainWriteFixtures {
   }
 
   @JsonApiResource(type = "raw-collection-relationships")
+  @SuppressWarnings("rawtypes") // Missing type arguments are the declaration under test.
   public static final class RawCollectionRelationship {
 
     @JsonApiId private final String id;

@@ -29,7 +29,6 @@ public final class RelationshipLinkageContainerFixtures {
    * because the generated record {@code equals} uses array identity.
    */
   @JsonApiResource(type = "articles")
-  @SuppressWarnings({"ArrayRecordComponent", "java:S6218"})
   public record ArrayRelationshipLinkageArticle(
       @JsonApiId String id,
       @JsonApiRelationship RelationshipLinkage<ResourceIdentifier, CommentIdMeta>[] comments) {
