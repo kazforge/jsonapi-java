@@ -65,6 +65,8 @@ entry points. Shared Gradle conventions live in `build-logic/`; maintainer docum
 
 ## Documentation
 
+- [Contributing](CONTRIBUTING.md) — prerequisites, checks, and scoped pull requests
+- [Security reporting](SECURITY.md) — private vulnerability reports and supported versions
 - [Documentation index](docs/README.md) — public-site source, maintainer-documentation ownership, and
   local authoring instructions
 - [Vision](docs/vision.md) — stable product direction and principles
