@@ -41,7 +41,7 @@ class OpenJsonValuesSpec extends Specification {
 
   def "preserves explicit null map values and list elements"() {
     when:
-    def mapCopy = OpenJsonValues.copyMap([a: null, b: 1], "/meta")
+    def mapCopy = OpenJsonValues.copy([a: null, b: 1], "/meta")
     def listCopy = OpenJsonValues.copy([null, "x"], "/meta") as List
 
     then:
@@ -54,7 +54,7 @@ class OpenJsonValuesSpec extends Specification {
 
   def "preserves encounter order for open maps"() {
     when:
-    def copy = OpenJsonValues.copyMap([z: 1, a: null, m: 2], "/meta")
+    def copy = OpenJsonValues.copy([z: 1, a: null, m: 2], "/meta")
 
     then:
     copy.keySet().toList() == ["z", "a", "m"]
@@ -71,20 +71,16 @@ class OpenJsonValuesSpec extends Specification {
 
   def "accepts immutable number types"() {
     expect:
-    OpenJsonValues.isValid(42)
-    OpenJsonValues.isValid(1L)
-    OpenJsonValues.isValid(1.5d)
-    OpenJsonValues.isValid(new BigDecimal("1.0"))
     OpenJsonValues.copy(42, "/n") == 42
+    OpenJsonValues.copy(1L, "/n") == 1L
+    OpenJsonValues.copy(1.5d, "/n") == 1.5d
+    OpenJsonValues.copy(new BigDecimal("1.0"), "/n") == new BigDecimal("1.0")
   }
 
   def "rejects cyclic lists with stable diagnostics"() {
     given:
     def cyclic = []
     cyclic.add(cyclic)
-
-    expect:
-    !OpenJsonValues.isValid(cyclic)
 
     when:
     OpenJsonValues.copy(cyclic, "/meta")
@@ -99,9 +95,6 @@ class OpenJsonValuesSpec extends Specification {
     given:
     def cyclic = [:]
     cyclic.self = cyclic
-
-    expect:
-    !OpenJsonValues.isValid(cyclic)
 
     when:
     OpenJsonValues.copy(cyclic, "/meta")
