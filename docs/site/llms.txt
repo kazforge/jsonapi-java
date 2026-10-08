@@ -1,0 +1,30 @@
+# jsonapi-java
+
+> JSON:API 1.1 for Java 21+ with native Jackson 2 and Jackson 3 runtimes: document read/write, DTO mapping, validation, relationship linkage, and presence-aware PATCH reading.
+
+Choose one adapter matching your application's Jackson major:
+`com.kazforge:jsonapi-java-jackson2` or `com.kazforge:jsonapi-java-jackson3`.
+Optional query parsing is provided separately by `com.kazforge:jsonapi-java-query`.
+For release availability, installation, and version selection, use Getting started below.
+
+Your application owns HTTP transport/controllers and media-type handling, persistence/ORM,
+authorization, query execution, relationship lookup, and applying updates. Query parsing does not
+execute queries; linkage does not fetch graphs; PATCH reading does not apply changes.
+
+The human-readable guides and API reference linked below are canonical. This file is a compact
+discovery index, not a separate API reference.
+
+## Guides
+
+- [Overview](https://jsonapi.kazforge.com/): Capabilities and application boundaries.
+- [Getting started](https://jsonapi.kazforge.com/getting-started/): Release availability, installation, adapter choice, compatibility, and a first DTO example.
+- [Configuration](https://jsonapi.kazforge.com/configuration/): Jackson setup, runtime defaults, linkage mappers, representation policy, and link decorators.
+- [Resources](https://jsonapi.kazforge.com/resources/): DTO read/write, collections, create/update authoring, and top-level metadata.
+- [Relationships and documents](https://jsonapi.kazforge.com/relationships-and-documents/): Linkage and error documents, absent/null/empty states, and ordinary versus advanced APIs.
+- [PATCH](https://jsonapi.kazforge.com/patches/): Omitted members, explicit null, supplied values, and application-owned update handling.
+- [Query and representation](https://jsonapi.kazforge.com/query-and-representation/): Include, sparse fieldset, sort, and opaque parameter parsing; representation selection and policy.
+- [Diagnostics](https://jsonapi.kazforge.com/diagnostics/): Failure families, stable codes, locations, and application-owned error responses.
+
+## API reference
+
+- [API reference and next steps](https://jsonapi.kazforge.com/getting-started/#api-reference-and-next-steps): Canonical reference links and where to find generated Javadoc.
