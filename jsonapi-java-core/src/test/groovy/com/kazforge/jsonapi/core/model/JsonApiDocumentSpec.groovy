@@ -1,6 +1,5 @@
 package com.kazforge.jsonapi.core.model
 
-import com.kazforge.jsonapi.core.internal.OpenJsonValues
 import com.kazforge.jsonapi.core.validation.JsonApiValidationException
 import com.kazforge.jsonapi.core.validation.ValidationRuleCode
 import spock.lang.Specification
@@ -124,7 +123,6 @@ class JsonApiDocumentSpec extends Specification {
 
     expect:
     ((List) ((Map) meta.members().nested).items).size() == 1
-    !OpenJsonValues.isValid(Double.POSITIVE_INFINITY)
   }
 
   def "meta preserves explicit null values and encounter order"() {

@@ -28,23 +28,6 @@ public final class OpenJsonValues {
 
   private OpenJsonValues() {}
 
-  public static boolean isValid(@Nullable Object value) {
-    return isValid(value, new IdentityHashMap<>());
-  }
-
-  private static boolean isValid(
-      @Nullable Object value, IdentityHashMap<Object, Boolean> visiting) {
-    return switch (value) {
-      case null -> true;
-      case String ignored -> true;
-      case Boolean ignored -> true;
-      case Number number -> isSupportedNumber(number);
-      case List<?> list -> isValidList(list, visiting);
-      case Map<?, ?> map -> isValidMap(map, visiting);
-      default -> false;
-    };
-  }
-
   public static @Nullable Object copy(@Nullable Object value, String path) {
     return copy(value, path, new IdentityHashMap<>());
   }
@@ -64,48 +47,6 @@ public final class OpenJsonValues {
               path,
               "Unsupported JSON value type: " + value.getClass().getName());
     };
-  }
-
-  public static Map<String, @Nullable Object> copyMap(
-      @Nullable Map<String, ?> source, String path) {
-    if (source == null || source.isEmpty()) {
-      return Map.of();
-    }
-    return copyMapValue(source, path, new IdentityHashMap<>());
-  }
-
-  private static boolean isValidList(List<?> list, IdentityHashMap<Object, Boolean> visiting) {
-    if (visiting.containsKey(list)) {
-      return false;
-    }
-    visiting.put(list, Boolean.TRUE);
-    try {
-      for (Object element : list) {
-        if (!isValid(element, visiting)) {
-          return false;
-        }
-      }
-      return true;
-    } finally {
-      visiting.remove(list);
-    }
-  }
-
-  private static boolean isValidMap(Map<?, ?> map, IdentityHashMap<Object, Boolean> visiting) {
-    if (visiting.containsKey(map)) {
-      return false;
-    }
-    visiting.put(map, Boolean.TRUE);
-    try {
-      for (Map.Entry<?, ?> entry : map.entrySet()) {
-        if (!(entry.getKey() instanceof String) || !isValid(entry.getValue(), visiting)) {
-          return false;
-        }
-      }
-      return true;
-    } finally {
-      visiting.remove(map);
-    }
   }
 
   private static Number copyNumber(Number number, String path) {
