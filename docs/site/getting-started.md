@@ -27,9 +27,13 @@ a Spring Boot compatibility matrix.
 
 ## Dependency declarations
 
-`RELEASE_VERSION` below is a placeholder, **not a published version**. After a release exists,
-replace it with a version verified in [Maven Central](https://central.sonatype.com/namespace/com.kazforge).
 Use the same version for every `jsonapi-java-*` artifact; there is no BOM.
+Verify public versions in [Maven Central](https://central.sonatype.com/namespace/com.kazforge).
+
+Until the first public release, the version below is an unpublished placeholder. Follow the
+[source-build guidance](#before-the-first-release) instead.
+
+<!-- x-release-please-start-version -->
 
 === "Gradle Kotlin DSL"
 
@@ -38,10 +42,12 @@ Use the same version for every `jsonapi-java-*` artifact; there is no BOM.
         mavenCentral()
     }
 
+    val jsonapiVersion = "0.0.0"
+
     dependencies {
-        implementation("com.kazforge:jsonapi-java-jackson3:RELEASE_VERSION")
+        implementation("com.kazforge:jsonapi-java-jackson3:$jsonapiVersion")
         // Optional:
-        implementation("com.kazforge:jsonapi-java-query:RELEASE_VERSION")
+        implementation("com.kazforge:jsonapi-java-query:$jsonapiVersion")
     }
     ```
 
@@ -49,7 +55,7 @@ Use the same version for every `jsonapi-java-*` artifact; there is no BOM.
 
     ```xml
     <properties>
-        <jsonapi.version>RELEASE_VERSION</jsonapi.version>
+        <jsonapi.version>0.0.0</jsonapi.version>
     </properties>
     <dependencies>
         <dependency>
@@ -60,8 +66,13 @@ Use the same version for every `jsonapi-java-*` artifact; there is no BOM.
     </dependencies>
     ```
 
+<!-- x-release-please-end -->
+
 For Jackson 2, replace the adapter artifact with `jsonapi-java-jackson2`. Add `jsonapi-java-query`
 separately if you need [query parsing](query-and-representation.md).
+
+Before 1.0, a breaking change ships in a minor release, never a patch release. Review release notes
+when upgrading across minors. Raising a supported Java or Jackson minimum is a breaking change too.
 
 ### Before the first release
 
@@ -74,7 +85,8 @@ cd jsonapi-java
 ./gradlew publishToMavenLocal
 ```
 
-Read the checkout's `version` from `gradle.properties` and use it in place of `RELEASE_VERSION`.
+Read the checkout's `version` from `gradle.properties` and use it for `jsonapiVersion` (Gradle) or
+`jsonapi.version` (Maven), replacing the placeholder above.
 This is a **local build**, not evidence that the version was publicly released. Maven reads the local
 repository automatically; for a Gradle consumer, use:
 
@@ -84,10 +96,6 @@ repositories {
     mavenCentral()
 }
 ```
-
-All artifacts use one version. Before 1.0, a breaking change ships in a minor release, never a
-patch release. Review release notes when upgrading across minors. Raising a supported Java or
-Jackson minimum is a breaking change too.
 
 ## Configure a runtime
 
