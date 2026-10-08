@@ -1,4 +1,9 @@
-# Getting started
+---
+title: "Install JSON:API for Java with Jackson 2 or Jackson 3"
+description: "Choose a jsonapi-java adapter for Java 21+ and Jackson 2 or Jackson 3, build locally before the first release, and read and write a resource DTO."
+---
+
+# Install JSON:API for Java with Jackson 2 or Jackson 3 {#getting-started}
 
 ## Choose an artifact
 

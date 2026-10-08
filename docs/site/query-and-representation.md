@@ -1,4 +1,9 @@
-# Query and representation
+---
+title: "Parse JSON:API queries, includes, and sparse fieldsets"
+description: "Parse JSON:API include, fields, and sort parameters in Java, then apply representation selection and policy. Query execution stays with your application."
+---
+
+# Parse JSON:API queries, includes, and sparse fieldsets {#query-and-representation}
 
 Add `com.kazforge:jsonapi-java-query` at the same version as your adapter. This module is independent
 of Jackson major and HTTP framework. Use the article/people write model and `ArticleView` from

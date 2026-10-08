@@ -1,4 +1,9 @@
-# Diagnostics
+---
+title: "Diagnose JSON:API validation, mapping, and query errors"
+description: "Diagnose JSON:API document validation, Java DTO mapping, and query parsing failures using stable codes and locations, with application-owned error responses."
+---
+
+# Diagnose JSON:API validation, mapping, and query errors {#diagnostics}
 
 Use structured diagnostics to distinguish **what failed** from **where it failed**. The library
 reports failures; your application decides whether they describe a client error, how to respond,

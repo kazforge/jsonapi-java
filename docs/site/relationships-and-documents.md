@@ -1,4 +1,9 @@
-# Relationships and documents
+---
+title: "JSON:API relationships, linkage, and documents"
+description: "Read and write JSON:API relationship linkage and error documents in Java. Preserve absent, null, and empty document states without loading related resources."
+---
+
+# JSON:API relationships, linkage, and documents {#relationships-and-documents}
 
 Use the configured `JsonApi api` from [getting started](getting-started.md#configure-a-runtime).
 

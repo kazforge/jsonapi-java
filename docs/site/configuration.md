@@ -1,4 +1,9 @@
-# Configuration
+---
+title: "Configure the JSON:API Jackson runtime"
+description: "Configure jsonapi-java with Jackson 2 or Jackson 3: identifier conversion, relationship linkage mappers, representation policy, and resource link decorators."
+---
+
+# Configure the JSON:API Jackson runtime {#configuration}
 
 Use `jsonApi(mapper)` when the [default runtime](getting-started.md#configure-a-runtime) is enough:
 ordinary identifier strings, built-in flat linkage targets, no include traversal, no link decorators,

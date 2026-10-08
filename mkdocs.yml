@@ -1,5 +1,5 @@
 site_name: jsonapi-java
-site_description: JSON:API v1.1 document, mapping, and validation library for Java.
+site_description: "JSON:API 1.1 for Java 21+ with Jackson 2 and Jackson 3: document read/write, DTO mapping, validation, presence-aware PATCH, relationships, and query parsing."
 site_url: https://jsonapi.kazforge.com/
 repo_name: kazforge/jsonapi-java
 repo_url: https://github.com/kazforge/jsonapi-java

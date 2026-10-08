@@ -1,4 +1,9 @@
-# Resources
+---
+title: "Read and write JSON:API resources as Java DTOs"
+description: "Map Java DTOs to JSON:API resources with Jackson. Read and write collections, relationship linkage, create/update documents, and top-level metadata."
+---
+
+# Read and write JSON:API resources as Java DTOs {#resources}
 
 [Getting started](getting-started.md) covered a simple resource. This page adds relationships,
 collections, create/update authoring, and document-level state.

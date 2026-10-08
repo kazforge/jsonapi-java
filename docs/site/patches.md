@@ -1,4 +1,9 @@
-# PATCH
+---
+title: "Read JSON:API PATCH updates with omission and null presence"
+description: "Read JSON:API partial updates into Java PATCH schemas. Distinguish omitted members, explicit null, and supplied values without applying changes to entities."
+---
+
+# Read JSON:API PATCH updates with omission and null presence {#patch}
 
 A partial update is not a complete read/write DTO. Use the configured `JsonApi api` from
 [getting started](getting-started.md#configure-a-runtime) and a separate application-owned schema

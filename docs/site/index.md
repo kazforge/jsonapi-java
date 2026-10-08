@@ -1,7 +1,14 @@
-# jsonapi-java
+---
+title: "JSON:API 1.1 for Java 21+"
+description: "Read and write JSON:API 1.1 in Java 21+ with Jackson 2 or Jackson 3. Map DTOs, validate documents, preserve PATCH presence, and parse queries."
+---
+
+# JSON:API 1.1 for Java 21+ {#jsonapi-java}
 
 Read and write [JSON:API 1.1](https://jsonapi.org/) documents in Java 21+ without handing over your
-endpoints, persistence, or application architecture.
+endpoints, persistence, or application architecture. jsonapi-java supports **Jackson 2 and Jackson 3**
+for DTO mapping, document validation, presence-aware PATCH, and relationship linkage, with a separate
+query parser for includes, sparse fieldsets, sort, and opaque parameters.
 
 The permanent coordinates are `com.kazforge:jsonapi-java-jackson3` or
 `com.kazforge:jsonapi-java-jackson2`. Choose the adapter for your application's Jackson major;
@@ -24,6 +31,7 @@ The 0.x line is intended for real library use, but public API refinement remains
 | Work with linkage, errors, or exact document state | [Relationships and documents](relationships-and-documents.md) |
 | Distinguish an omitted update from an explicit null | [PATCH](patches.md) |
 | Parse query parameters and select fields/included resources | [Query and representation](query-and-representation.md) |
+| Diagnose validation, mapping, or query failures | [Diagnostics](diagnostics.md) |
 
 Ordinary mapping follows your configured Jackson property model. Relationships carry identifiers,
 not automatically loaded graphs. The document APIs preserve wire states that a flat DTO cannot.
