@@ -86,7 +86,8 @@ ResourceIdentifier author = articleView.author();
 `author` identifies resource type `people`, id `p1`. It does not contain Ada's name.
 
 Built-in read targets include `ResourceIdentifier` and its optional/collection/array forms. Custom
-relationship targets need an explicit linkage mapper; mapping does not look up persisted people.
+relationship targets need an [explicit linkage mapper](configuration.md#custom-relationship-linkage-targets);
+mapping does not look up persisted people.
 Use [selection and policy](query-and-representation.md) to include author resources on writes.
 
 !!! warning "Mapped relationships carry data"

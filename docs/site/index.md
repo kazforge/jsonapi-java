@@ -19,6 +19,7 @@ The 0.x line is intended for real library use, but public API refinement remains
 | I need to… | Start here |
 |------------|------------|
 | Add a dependency and configure Jackson | [Getting started](getting-started.md) |
+| Change runtime defaults or distinguish per-operation settings | [Configuration](configuration.md) |
 | Read or write application DTOs; author create/update documents | [Resources](resources.md) |
 | Work with linkage, errors, or exact document state | [Relationships and documents](relationships-and-documents.md) |
 | Distinguish an omitted update from an explicit null | [PATCH](patches.md) |
