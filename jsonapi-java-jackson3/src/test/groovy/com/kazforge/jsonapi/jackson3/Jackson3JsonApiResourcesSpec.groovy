@@ -20,7 +20,7 @@ import com.kazforge.jsonapi.jackson3.CloseTrackingFixtures.TrackingInputStream
 import com.kazforge.jsonapi.jackson3.CloseTrackingFixtures.TrackingOutputStream
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatAuthor
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatMappedArticle
-import com.kazforge.jsonapi.jackson3.ParameterizedBindingFixtures.GenericValue
+import com.kazforge.jsonapi.fixtures.generic.ParameterizedBindingFixtures.GenericValue
 import com.kazforge.jsonapi.mapping.IdentifierConverter
 import com.kazforge.jsonapi.representation.IncludePath
 import com.kazforge.jsonapi.representation.IncludePolicy

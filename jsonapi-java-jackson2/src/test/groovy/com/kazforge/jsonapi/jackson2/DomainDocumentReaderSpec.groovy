@@ -25,7 +25,7 @@ import com.kazforge.jsonapi.fixtures.domainwrite.Comment
 import com.kazforge.jsonapi.fixtures.domainwrite.Person
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatAuthor
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatMappedArticle
-import com.kazforge.jsonapi.jackson2.ParameterizedBindingFixtures.GenericValue
+import com.kazforge.jsonapi.fixtures.generic.ParameterizedBindingFixtures.GenericValue
 import com.kazforge.jsonapi.mapping.DomainData
 import com.kazforge.jsonapi.mapping.IdentifierConverter
 import com.kazforge.jsonapi.mapping.ResourceTypeRegistry

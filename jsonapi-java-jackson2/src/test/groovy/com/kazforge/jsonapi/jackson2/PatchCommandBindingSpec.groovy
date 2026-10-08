@@ -45,6 +45,7 @@ import com.kazforge.jsonapi.fixtures.domainread.FlatCountedThing
 import com.kazforge.jsonapi.fixtures.domainread.FlatIntIdArticle
 import com.kazforge.jsonapi.fixtures.domainread.FlatThingWithIgnored
 import com.kazforge.jsonapi.fixtures.domainread.FlatUnregisteredRelationshipsArticle
+import com.kazforge.jsonapi.fixtures.generic.ParameterizedBindingFixtures
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatAuthor
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatMappedArticle
 import com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper

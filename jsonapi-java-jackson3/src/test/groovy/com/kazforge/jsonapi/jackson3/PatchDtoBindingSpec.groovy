@@ -27,7 +27,7 @@ import com.kazforge.jsonapi.mapping.IdentifierConverter
 import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import com.kazforge.jsonapi.patch.PatchPresence
 import com.kazforge.jsonapi.document.PrimaryDataKind
-import com.kazforge.jsonapi.jackson3.ParameterizedBindingFixtures.GenericPatch
+import com.kazforge.jsonapi.fixtures.generic.ParameterizedBindingFixtures.GenericPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.AddressPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.AddressWithContainersPatch
 import com.kazforge.jsonapi.fixtures.domainpatch.AddressWithGeoPatch
