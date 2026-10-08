@@ -35,8 +35,8 @@ Publish job (same workflow run)
   both maintained by release-please.
 - The dependency examples in `docs/site/getting-started.md` are a release-managed copy, not
   another version source. Generic `extra-files` markers update the Gradle and Maven values
-  together with `gradle.properties`; do not maintain them manually. Before the first release,
-  their numeric placeholder is intentionally not a published version.
+  together with `gradle.properties`; do not maintain them manually. Keep the version markers
+  around the dependency examples so release PRs continue to update both build-tool examples.
 - One `Release` workflow runs both jobs. release-please uses a repository-scoped,
   short-lived GitHub App token so its release PRs receive the normal required
   checks; the publish job checks out the finalized tag and only receives the
@@ -73,12 +73,7 @@ Publish job (same workflow run)
    Central Portal with automatic publishing.
 3. Verify the deployment under the `com.kazforge` namespace. Published
    releases are immutable; fixes ship as the next train version.
-
-For the first public release, remove the temporary placeholder warning and **Before the first
-release** section from `site/getting-started.md`, plus the pre-release notice in `site/index.md`.
-Keep the version markers around the dependency examples so later release PRs continue to update
-both build-tool examples automatically. Verify Central availability before telling users the
-artifacts are public.
+   Verify Central availability before telling users the artifacts are public.
 
 ## Dependency-baseline acceptance
 

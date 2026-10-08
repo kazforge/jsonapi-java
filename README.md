@@ -4,23 +4,22 @@ Read and write [JSON:API 1.1](https://jsonapi.org/) documents in **Java 21+**. M
 validate documents, and preserve PATCH presence with native Jackson 2 or Jackson 3 runtimes.
 Endpoints, persistence, authorization, query execution, and applying updates stay with your application.
 
-The first public 0.x release is not published yet. Public API refinement is possible before 1.0:
-minor releases may break compatibility; patch releases do not.
+Available from Maven Central. Public API refinement is possible before 1.0: minor releases may
+break compatibility; patch releases do not.
 
 ## Get started
 
 Choose `com.kazforge:jsonapi-java-jackson3` or `com.kazforge:jsonapi-java-jackson2` to match your
 Jackson major. Packages use `com.kazforge.jsonapi.*`.
 
-**[Install and run the first example](https://jsonapi.kazforge.com/getting-started/)** — including
-the local source-build path while artifacts remain unpublished. The
+**[Install and run the first example](https://jsonapi.kazforge.com/getting-started/)**. The
 [user guide](https://jsonapi.kazforge.com/) owns user workflows; its
 [API-reference section](https://jsonapi.kazforge.com/getting-started/#api-reference-and-next-steps)
 links Javadoc.
 
 ## Modules
 
-These seven implemented artifacts form the release train; none is publicly published yet.
+These seven artifacts are published together as one release train.
 
 | Module | Purpose |
 |--------|---------|

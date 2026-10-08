@@ -16,8 +16,8 @@ both implement the same `JsonApi` operations. [Install and run an example](getti
 
 ## Release status
 
-The first public 0.x release is not published yet. Use the
-[source-build path](getting-started.md#before-the-first-release) for now, not a guessed Maven version.
+Version 0.2.0 is the first public 0.x release and is available from
+[Maven Central](https://central.sonatype.com/namespace/com.kazforge).
 The 0.x line is intended for real library use, but public API refinement remains possible before
 1.0: minor releases may break compatibility; patch releases do not.
 

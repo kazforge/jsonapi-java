@@ -1,6 +1,6 @@
 ---
 title: "Install JSON:API for Java with Jackson 2 or Jackson 3"
-description: "Choose a jsonapi-java adapter for Java 21+ and Jackson 2 or Jackson 3, build locally before the first release, and read and write a resource DTO."
+description: "Install a jsonapi-java adapter from Maven Central for Java 21+ and Jackson 2 or Jackson 3, and read and write a resource DTO."
 ---
 
 # Install JSON:API for Java with Jackson 2 or Jackson 3 {#getting-started}
@@ -34,9 +34,6 @@ a Spring Boot compatibility matrix.
 
 Use the same version for every `jsonapi-java-*` artifact; there is no BOM.
 Verify public versions in [Maven Central](https://central.sonatype.com/namespace/com.kazforge).
-
-Until the first public release, the version below is an unpublished placeholder. Follow the
-[source-build guidance](#before-the-first-release) instead.
 
 <!-- x-release-please-start-version -->
 
@@ -78,29 +75,6 @@ separately if you need [query parsing](query-and-representation.md).
 
 Before 1.0, a breaking change ships in a minor release, never a patch release. Review release notes
 when upgrading across minors. Raising a supported Java or Jackson minimum is a breaking change too.
-
-### Before the first release
-
-No public artifact is available yet. With Git and a local JDK 21+, install this checkout's artifacts
-in your local Maven repository:
-
-```bash
-git clone https://github.com/kazforge/jsonapi-java.git
-cd jsonapi-java
-./gradlew publishToMavenLocal
-```
-
-Read the checkout's `version` from `gradle.properties` and use it for `jsonapiVersion` (Gradle) or
-`jsonapi.version` (Maven), replacing the placeholder above.
-This is a **local build**, not evidence that the version was publicly released. Maven reads the local
-repository automatically; for a Gradle consumer, use:
-
-```kotlin
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
-```
 
 ## Configure a runtime
 
@@ -204,10 +178,9 @@ The guide examples use four neutral facets: `resources()`, `relationships()`, `d
 `patches()`. Continue with [resources](resources.md); use
 [relationships and documents](relationships-and-documents.md#ordinary-or-advanced) to choose a lower-level path.
 
-Until published Javadoc is available, the source Javadoc for
+The source Javadoc for
 [`JsonApi`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/api/JsonApi.java),
 [`JsonApiJackson3`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson3/src/main/java/com/kazforge/jsonapi/jackson3/JsonApiJackson3.java),
 and [`JsonApiJackson2`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiJackson2.java)
-is the reference. The source-build command also generates HTML under each consumer-facing module's
-`build/docs/javadoc/index.html` and publishes a Javadoc JAR locally. Exhaustive method/overload
-contracts belong there, not in this guide.
+is the API reference. Published artifacts include Javadoc JARs. Exhaustive method/overload contracts
+belong in Javadoc, not in this guide.
