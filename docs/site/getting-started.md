@@ -47,7 +47,7 @@ Until the first public release, the version below is an unpublished placeholder.
         mavenCentral()
     }
 
-    val jsonapiVersion = "0.0.0"
+    val jsonapiVersion = "0.2.0"
 
     dependencies {
         implementation("com.kazforge:jsonapi-java-jackson3:$jsonapiVersion")
@@ -60,7 +60,7 @@ Until the first public release, the version below is an unpublished placeholder.
 
     ```xml
     <properties>
-        <jsonapi.version>0.0.0</jsonapi.version>
+        <jsonapi.version>0.2.0</jsonapi.version>
     </properties>
     <dependencies>
         <dependency>
