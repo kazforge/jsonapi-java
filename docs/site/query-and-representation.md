@@ -54,41 +54,15 @@ unpermitted include, field, or sort tokens, but a successful parse grants no acc
 
 ## Apply selection with policy
 
-Configure inclusion once on the runtime. The following Jackson 3 example permits only the article's
-`author` relationship; for Jackson 2 use its corresponding mapper/factory imports.
-
-```java
-import com.kazforge.jsonapi.api.JsonApi;
-import com.kazforge.jsonapi.api.ResourceWriteOptions;
-import com.kazforge.jsonapi.jackson3.JsonApiJackson3;
-import com.kazforge.jsonapi.representation.IncludePolicy;
-import com.kazforge.jsonapi.representation.RelationshipAllowance;
-import com.kazforge.jsonapi.representation.RepresentationPolicy;
-import java.util.Set;
-import tools.jackson.databind.json.JsonMapper;
-
-RelationshipAllowance authorAllowance = RelationshipAllowance.of("articles", "author");
-IncludePolicy allowedIncludes = IncludePolicy.allowing(Set.of(authorAllowance));
-
-RepresentationPolicy policy = RepresentationPolicy.defaults()
-    .withIncludePolicy(allowedIncludes)
-    .withMaxIncludeDepth(1)
-    .withMaxIncludedResources(10);
-```
-
-Bind that application policy to the configured runtime:
-
-```java
-JsonMapper mapper = JsonMapper.builder()
-    .build();
-JsonApi selectedApi = JsonApiJackson3.builder(mapper)
-    .representationPolicy(policy)
-    .build();
-```
+Use `selectedApi` from the [representation policy configuration](configuration.md#representation-policy),
+which permits article-author inclusion and the requested fields. Configure it once with either
+Jackson major, then pass selection separately for each write.
 
 Use the decoded selection for this write, with the author's data already available:
 
 ```java
+import com.kazforge.jsonapi.api.ResourceWriteOptions;
+
 Person ada = new Person("p1", "Ada");
 ArticleWithAuthor article = new ArticleWithAuthor(
     "1",
@@ -149,10 +123,8 @@ List<ResourceObject> included = result.included();
 `primaryArticle.author()` still contains only the `people` / `p1` identifier. `included` contains
 the separate person resource with Ada's name; it is not injected into the DTO's relationship.
 
-The runtime defaults deny include traversal, allow selected sparse fields, and enforce traversal
-bounds. Selections use wire names, and policy allowances name the owning resource type. Nested paths
-need permission at each segment. Inclusion does not cause persistence fetching: supply already
-available objects or implement application lookup before writing.
+Selection belongs to this write; it does not replace runtime policy. Inclusion does not cause
+persistence fetching: supply already available objects or implement application lookup before writing.
 
 !!! warning "Selection is not permission"
     An include request cannot override application representation policy. Policy is not a substitute

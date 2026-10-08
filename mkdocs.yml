@@ -63,6 +63,7 @@ extra_css:
 nav:
   - Overview: index.md
   - Getting started: getting-started.md
+  - Configuration: configuration.md
   - Resources: resources.md
   - Relationships and documents: relationships-and-documents.md
   - PATCH: patches.md

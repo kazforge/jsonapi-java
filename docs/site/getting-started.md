@@ -128,11 +128,10 @@ thread-safe runtime for your application's lifetime. Factories do not mutate you
     JsonApi api = JsonApiJackson2.jsonApi(mapper);
     ```
 
-For application-lifetime configuration, build the runtime with `JsonApiJackson3.builder(mapper)` or
-`JsonApiJackson2.builder(mapper)` instead. The builder holds representation policy, identifier
-conversion, linkage mappers, decorators, and an optional resource-write `jsonapi.version`. Selection
-and document envelopes belong to each operation. Emitting `jsonapi.version` is optional; it does not
-implement HTTP content negotiation.
+For non-default application-lifetime settings, use the [configuration guide](configuration.md).
+It covers the matching builder's identifier conversion, linkage mappers, representation policy,
+decorators, and optional resource-write `jsonapi.version`. Selection and document envelopes belong
+to each operation.
 
 ## Read and write an article
 
