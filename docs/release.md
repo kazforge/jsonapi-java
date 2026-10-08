@@ -11,6 +11,7 @@ release-please
         ↓
 Release PR
 - gradle.properties version
+- public guide dependency version
 - CHANGELOG.md
         ↓ merge
 Git tag v<version> + GitHub Release
@@ -32,6 +33,10 @@ Publish job (same workflow run)
   version.
 - Tags are named `v<version>`; the changelog is the root `CHANGELOG.md`,
   both maintained by release-please.
+- The dependency examples in `docs/site/getting-started.md` are a release-managed copy, not
+  another version source. Generic `extra-files` markers update the Gradle and Maven values
+  together with `gradle.properties`; do not maintain them manually. Before the first release,
+  their numeric placeholder is intentionally not a published version.
 - One `Release` workflow runs both jobs. release-please uses a repository-scoped,
   short-lived GitHub App token so its release PRs receive the normal required
   checks; the publish job checks out the finalized tag and only receives the
@@ -56,7 +61,7 @@ Publish job (same workflow run)
 
 ## Maintainer runbook
 
-1. Review the release PR (`gradle.properties`, `CHANGELOG.md`, manifest) and
+1. Review the release PR (`gradle.properties`, public guide dependency examples, `CHANGELOG.md`, manifest) and
    merge it. Check [supported API and behavior changes](architecture.md#public-api-ownership),
    including support-floor or support-line changes, are classified in Conventional Commits and
    release notes according to ADR-014. Review the documented
@@ -68,6 +73,12 @@ Publish job (same workflow run)
    Central Portal with automatic publishing.
 3. Verify the deployment under the `com.kazforge` namespace. Published
    releases are immutable; fixes ship as the next train version.
+
+For the first public release, remove the temporary placeholder warning and **Before the first
+release** section from `site/getting-started.md`, plus the pre-release notice in `site/index.md`.
+Keep the version markers around the dependency examples so later release PRs continue to update
+both build-tool examples automatically. Verify Central availability before telling users the
+artifacts are public.
 
 ## Dependency-baseline acceptance
 
