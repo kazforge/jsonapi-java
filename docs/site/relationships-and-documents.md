@@ -320,17 +320,9 @@ It does not convert every library exception into an HTTP error automatically.
 
 ## Diagnostics
 
-| Failure | Inspect | Meaning |
-|---------|---------|---------|
-| `JsonApiDocumentReadException` | `category()`, `jsonPointer()`, `sourceLocation()`, `ruleCode()` | Decode or read-time validation failed |
-| `JsonApiMappingException` | `diagnostic()`, `location()` | Mapping, binding, representation, or PATCH projection failed |
-| `JsonApiValidationException` | `ruleCode()`, `jsonPointer()` | Direct core construction/validation or a validated write failed |
-
-Keep these families separate. A successfully decoded document can still fail DTO binding. Locations
-may be absent when no member coordinate is meaningful; do not expose payloads or internal exception
-messages as client-facing detail by default. See the
-[diagnostic API source documentation](https://github.com/kazforge/jsonapi-java/tree/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/diagnostic)
-and [validation API source documentation](https://github.com/kazforge/jsonapi-java/tree/main/jsonapi-java-core/src/main/java/com/kazforge/jsonapi/core/validation).
+See [Diagnostics](diagnostics.md) for the four exception families, stable codes, location semantics,
+and selective application-owned JSON:API error attribution. A diagnostic path is not automatically
+a valid request `source.pointer`; public detail and HTTP policy stay with the application.
 
 ## Ordinary or Advanced?
 

@@ -67,3 +67,4 @@ nav:
   - Relationships and documents: relationships-and-documents.md
   - PATCH: patches.md
   - Query and representation: query-and-representation.md
+  - Diagnostics: diagnostics.md

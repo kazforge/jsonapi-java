@@ -173,6 +173,9 @@ Sparse fieldsets shape output per resource type. Inclusion and linkage remain se
 Parsing preserves repeated opaque values and encounter order. It does not calculate page links,
 interpret filters, run sorting, or choose an HTTP status. Query failures use `JsonApiQueryException`
 with `diagnostic()` and an optional `parameterName()`, separate from document/mapping failures.
+See [query attribution](diagnostics.md#query-parameters) for decoded parameter names and
+[application-owned error responses](diagnostics.md#build-an-application-owned-error-response) for
+selective use of `source.parameter`.
 
 See [`JsonApiQueryParser`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-query/src/main/java/com/kazforge/jsonapi/query/JsonApiQueryParser.java)
 and [`RepresentationPolicy`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/representation/RepresentationPolicy.java)
