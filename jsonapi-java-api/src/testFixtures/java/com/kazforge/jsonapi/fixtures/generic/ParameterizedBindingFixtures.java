@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.jackson2;
+package com.kazforge.jsonapi.fixtures.generic;
 
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
 import com.kazforge.jsonapi.annotation.JsonApiId;

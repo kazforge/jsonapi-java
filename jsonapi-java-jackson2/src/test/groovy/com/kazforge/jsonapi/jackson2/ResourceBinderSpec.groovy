@@ -25,8 +25,8 @@ import com.kazforge.jsonapi.fixtures.domainread.FlatUnregisteredRelationshipsArt
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatAuthor
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatMappedArticle
 import com.kazforge.jsonapi.jackson2.LinkageMapperFixtures.FlatMappedOptionalArticle
-import com.kazforge.jsonapi.jackson2.ParameterizedBindingFixtures.GenericArticle
-import com.kazforge.jsonapi.jackson2.ParameterizedBindingFixtures.GenericValue
+import com.kazforge.jsonapi.fixtures.generic.ParameterizedBindingFixtures.GenericArticle
+import com.kazforge.jsonapi.fixtures.generic.ParameterizedBindingFixtures.GenericValue
 import spock.lang.Shared
 import spock.lang.Specification
 

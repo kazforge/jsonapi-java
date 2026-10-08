@@ -6,7 +6,6 @@ plugins {
 
 java {
     withSourcesJar()
-    withJavadocJar()
 }
 
 val cyclonedxDirectBom = tasks.named("cyclonedxDirectBom")

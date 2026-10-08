@@ -27,7 +27,7 @@ import com.kazforge.jsonapi.patch.StructuredMember
 import com.kazforge.jsonapi.patch.StructuredMemberState
 import com.kazforge.jsonapi.patch.StructuredPatch
 import com.kazforge.jsonapi.document.PrimaryDataKind
-import com.kazforge.jsonapi.jackson3.ParameterizedBindingFixtures.GenericValue
+import com.kazforge.jsonapi.fixtures.generic.ParameterizedBindingFixtures.GenericValue
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatAuthor
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatMappedArticle
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatMappedOptionalArticle

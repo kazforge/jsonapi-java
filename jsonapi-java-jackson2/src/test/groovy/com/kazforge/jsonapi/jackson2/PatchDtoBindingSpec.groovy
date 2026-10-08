@@ -39,7 +39,7 @@ import com.kazforge.jsonapi.document.DocumentReadContext
 import com.kazforge.jsonapi.document.PrimaryDataKind
 import com.kazforge.jsonapi.mapping.IdentifierConverter
 import com.kazforge.jsonapi.patch.PatchPresence
-import com.kazforge.jsonapi.jackson2.ParameterizedBindingFixtures.GenericPatch
+import com.kazforge.jsonapi.fixtures.generic.ParameterizedBindingFixtures.GenericPatch
 import spock.lang.Specification
 import spock.lang.Unroll
 
