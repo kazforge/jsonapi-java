@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.1](https://github.com/kazforge/jsonapi-java/compare/v0.2.0...v0.2.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.diffplug.spotless:com.diffplug.spotless.gradle.plugin to v8.10.4 ([ddd8b37](https://github.com/kazforge/jsonapi-java/commit/ddd8b37ed3fd1433a25a764b442c6ff81f7f59ab))
+
+
+### Documentation
+
+* reflect the first public 0.2.0 release ([009b66e](https://github.com/kazforge/jsonapi-java/commit/009b66ef073dd321ee1d512afd67d2ccc0e11b57))
+
 ## [0.2.0](https://github.com/kazforge/jsonapi-java/compare/v0.1.0...v0.2.0) (2026-10-08)
 
 First public production-oriented release of jsonapi-java.
