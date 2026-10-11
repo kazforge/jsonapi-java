@@ -154,6 +154,6 @@ See [query attribution](diagnostics.md#query-parameters) for decoded parameter n
 [application-owned error responses](diagnostics.md#build-an-application-owned-error-response) for
 selective use of `source.parameter`.
 
-See [`JsonApiQueryParser`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-query/src/main/java/com/kazforge/jsonapi/query/JsonApiQueryParser.java)
-and [`RepresentationPolicy`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/representation/RepresentationPolicy.java)
+See [`JsonApiQueryParser`](https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.2.0/com/kazforge/jsonapi/query/JsonApiQueryParser.html)
+and [`RepresentationPolicy`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/representation/RepresentationPolicy.html)
 for exact parsing and policy contracts.

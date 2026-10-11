@@ -205,7 +205,7 @@ are skipped, unlike typed PATCH. Traversable ordinary bean attributes/resource-s
 recursive `StructuredPatch` members, while containers stay atomic. Both paths enforce update shape
 and preserve omission versus null; neither applies changes.
 
-See [`JsonApiPatches`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/api/JsonApiPatches.java),
-[`PatchPresence`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/patch/PatchPresence.java),
-and [`StructuredPatch`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/patch/StructuredPatch.java)
+See [`JsonApiPatches`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/api/JsonApiPatches.html),
+[`PatchPresence`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/patch/PatchPresence.html),
+and [`StructuredPatch`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/patch/StructuredPatch.html)
 for exact contracts.

@@ -339,8 +339,8 @@ a valid request `source.pointer`; public detail and HTTP policy stay with the ap
 | Heterogeneous typed primary/included resources | Advanced domain-document reader with explicit `ResourceTypeRegistry` |
 
 The advanced factories are on
-[`JsonApiJackson3`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson3/src/main/java/com/kazforge/jsonapi/jackson3/JsonApiJackson3.java)
-and [`JsonApiJackson2`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiJackson2.java).
+[`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.2.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html)
+and [`JsonApiJackson2`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson2/0.2.0/com/kazforge/jsonapi/jackson2/JsonApiJackson2.html).
 Advanced typed envelopes bind included resources independently, not into a relationship graph.
 Jackson 2 advanced I/O uses checked `IOException`; its Level-1 stream failures use
 `UncheckedIOException`. Jackson 3 follows its native unchecked exception model. Caller-owned sources

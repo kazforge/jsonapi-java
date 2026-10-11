@@ -178,9 +178,9 @@ The guide examples use four neutral facets: `resources()`, `relationships()`, `d
 `patches()`. Continue with [resources](resources.md); use
 [relationships and documents](relationships-and-documents.md#ordinary-or-advanced) to choose a lower-level path.
 
-The source Javadoc for
-[`JsonApi`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/api/JsonApi.java),
-[`JsonApiJackson3`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson3/src/main/java/com/kazforge/jsonapi/jackson3/JsonApiJackson3.java),
-and [`JsonApiJackson2`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson2/src/main/java/com/kazforge/jsonapi/jackson2/JsonApiJackson2.java)
-is the API reference. Published artifacts include Javadoc JARs. Exhaustive method/overload contracts
-belong in Javadoc, not in this guide.
+The [API Reference](api-reference.md) links rendered Javadoc for released artifacts, including
+[`JsonApi`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/api/JsonApi.html),
+[`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.2.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html),
+and [`JsonApiJackson2`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson2/0.2.0/com/kazforge/jsonapi/jackson2/JsonApiJackson2.html).
+These links target 0.2.0, not `main`. Exhaustive method/overload contracts belong in Javadoc,
+not in this guide.

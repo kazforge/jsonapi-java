@@ -38,6 +38,11 @@ on Maven Central under `com.kazforge` before announcing availability. Verify sig
 publications, per-module `cyclonedx` SBOMs, and GitHub provenance/SBOM attestations for
 the primary JARs. Published artifacts are immutable; corrections require a new train version.
 
+After publication, verify that javadocs.dev renders the new version for all six consumer artifacts,
+including class links and assets. Update `site/api-reference.md` and the guide's class links explicitly
+to that version; never use `latest`. If hosting is unavailable, use source Javadoc links pinned to the
+matching `v<version>` release tag and label them as source, not rendered documentation.
+
 ## Dependency-baseline acceptance
 
 When changing a Jackson minimum or test-version selection, test both selections:

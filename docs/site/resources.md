@@ -263,6 +263,6 @@ DTO mapping is not a lossless representation of member presence.
 
 Reads validate the whole document before binding. Malformed/invalid input and DTO mapping problems
 remain [distinct failure families](relationships-and-documents.md#diagnostics). The
-[`JsonApiResources`](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/api/JsonApiResources.java)
+[`JsonApiResources`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/api/JsonApiResources.html)
 source API documentation owns generic-type and stream overload contracts; caller-supplied streams
 remain open.
