@@ -31,8 +31,9 @@ These seven artifacts are published together as one release train.
 | [`jsonapi-java-jackson3`](jsonapi-java-jackson3/README.md) | Native Jackson 3 runtime |
 | [`jsonapi-java-jackson2`](jsonapi-java-jackson2/README.md) | Native Jackson 2 runtime |
 
-Spring integration is separate and not shipped here. Future direction lives in the
-[vision](docs/vision.md), not the consumer artifact inventory.
+Spring integration lives in the separate `kazforge/jsonapi-java-spring` companion repository,
+which has its own version and release train and consumes released public `jsonapi-java`
+contracts. It is not shipped here and is not part of the consumer artifact inventory.
 
 ## Project and development
 
