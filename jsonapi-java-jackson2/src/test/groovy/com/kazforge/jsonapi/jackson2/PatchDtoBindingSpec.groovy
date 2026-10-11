@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.kazforge.jsonapi.annotation.JsonApiAttribute
 import com.kazforge.jsonapi.annotation.JsonApiId
 import com.kazforge.jsonapi.annotation.JsonApiRelationship
@@ -115,6 +117,51 @@ class PatchDtoBindingSpec extends Specification {
     def ex = thrown(JsonApiMappingException)
     ex.diagnostic() == MappingDiagnostic.INVALID_PATCH_PROPERTY_TYPE
     ex.location().pointer() == "/attributes/title"
+  }
+
+  def "absent required creator input is a missing creator input"() {
+    given:
+    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
+    def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'
+
+    when:
+    reader.readValue(json, MissingCreatorPatch)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.MISSING_CREATOR_INPUT
+    ex.location() == null
+    ex.resourceClass() == MissingCreatorPatch
+  }
+
+  def "absent required primitive creator input is a missing creator input"() {
+    given:
+    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
+    def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'
+
+    when:
+    reader.readValue(json, MissingPrimitivePatch)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.MISSING_CREATOR_INPUT
+    ex.location() == null
+    ex.resourceClass() == MissingPrimitivePatch
+  }
+
+  def "invalid supplied attribute value remains an unsupported attribute value"() {
+    given:
+    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
+    def json = '{"data":{"type":"articles","id":"1","attributes":{"count":"not-an-int"}}}'
+
+    when:
+    reader.readValue(json, BadCountPatch)
+
+    then:
+    def ex = thrown(JsonApiMappingException)
+    ex.diagnostic() == MappingDiagnostic.UNSUPPORTED_ATTRIBUTE_VALUE
+    ex.location().pointer() == "/attributes/count"
+    ex.resourceClass() == BadCountPatch
   }
 
   def "wrapper-level customization on the presence member fails"() {
@@ -538,6 +585,46 @@ class PatchDtoBindingSpec extends Specification {
   static class PlainTitlePatch {
     @JsonApiId String id
     @JsonApiAttribute String title
+  }
+
+  @JsonApiResource(type = "articles")
+  static class MissingCreatorPatch {
+    final String id
+    final PatchPresence<String> title
+    final String secret
+
+    @JsonCreator
+    MissingCreatorPatch(
+    @JsonProperty("id") @JsonApiId String id,
+    @JsonProperty("title") @JsonApiAttribute PatchPresence<String> title,
+    @JsonProperty(value = "secret", required = true) String secret) {
+      this.id = id
+      this.title = title
+      this.secret = secret
+    }
+  }
+
+  @JsonApiResource(type = "articles")
+  static class MissingPrimitivePatch {
+    final String id
+    final PatchPresence<String> title
+    final int version
+
+    @JsonCreator
+    MissingPrimitivePatch(
+    @JsonProperty("id") @JsonApiId String id,
+    @JsonProperty("title") @JsonApiAttribute PatchPresence<String> title,
+    @JsonProperty(value = "version", required = true) int version) {
+      this.id = id
+      this.title = title
+      this.version = version
+    }
+  }
+
+  @JsonApiResource(type = "articles")
+  static class BadCountPatch {
+    @JsonApiId String id
+    @JsonApiAttribute PatchPresence<Integer> count
   }
 
   @JsonApiResource(type = "articles")

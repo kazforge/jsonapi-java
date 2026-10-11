@@ -158,7 +158,8 @@ public final class DomainPatchDtoBinder implements TypedPatchBackend<MappingProp
           rawType,
           (failure, ignored) ->
               structuredBinder.translateConstructionPath(
-                  BeanConstruction.pathNames(failure), startsByJacksonName));
+                  BeanConstruction.pathNames(failure), startsByJacksonName),
+          cache.creatorPropertyNames(targetType));
     } catch (JsonApiMappingException e) {
       if (isIdentifierConstructionFailure(e, identifierProperty)) {
         Throwable cause = e.getCause() == null ? e : e.getCause();

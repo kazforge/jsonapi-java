@@ -17,7 +17,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Shared bean construction from a synthetic property map with a single {@link
  * JsonMapper#convertValue(Object, JavaType)}, plus stable creator/coercion failure classification
- * used by the flat DTO binder.
+ * used by the flat DTO binder and the typed PATCH DTO binder.
  *
  * <p>The binder supplies a {@link FailurePathTranslator} so deep Jackson construction-failure paths
  * are translated into resource-relative {@link MappingLocation} pointers through the resource

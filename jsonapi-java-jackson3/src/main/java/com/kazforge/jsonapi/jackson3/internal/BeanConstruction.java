@@ -38,20 +38,14 @@ final class BeanConstruction {
 
   private BeanConstruction() {}
 
-  static Object convertBean(
-      JsonMapper mapper,
-      Map<String, @Nullable Object> properties,
-      JavaType targetType,
-      Class<?> rawType,
-      @Nullable FailurePathTranslator translator) {
-    return convertBean(mapper, properties, targetType, rawType, translator, null);
-  }
-
   /**
-   * Constructs the bean with a single {@code convertValue}, optionally classifying creator failures
-   * against the effective creator property names. The typed PATCH DTO binder keeps the
-   * message-based default classifier ({@code null} names); ordinary flat reads pass the read
-   * mapping's effective creator external names so a missing-input mismatch is message-independent.
+   * Constructs the bean with a single {@code convertValue}, classifying creator failures against
+   * the effective creator property names. A missing creator property surfaces as a {@link
+   * MismatchedInputException} whose first path names an effective creator property absent from the
+   * synthetic input; a supplied value whose shape does not match can surface through the same
+   * exception class, but such a value is present, so absence distinguishes missing creator input
+   * from a supplied-value failure. Creator/instantiation failures (including throwing creators)
+   * remain {@link ValueInstantiationException} and are always creator input problems.
    */
   static Object convertBean(
       JsonMapper mapper,
@@ -59,15 +53,13 @@ final class BeanConstruction {
       JavaType targetType,
       Class<?> rawType,
       @Nullable FailurePathTranslator translator,
-      @Nullable Set<String> creatorPropertyNames) {
+      Set<String> creatorPropertyNames) {
     try {
       return mapper.convertValue(properties, targetType);
     } catch (RuntimeException e) {
       Throwable failure = jacksonFailure(e);
       boolean creatorInputFailure =
-          creatorPropertyNames == null
-              ? isCreatorInputFailure(failure)
-              : isCreatorInputFailure(failure, properties, creatorPropertyNames);
+          isCreatorInputFailure(failure, properties, creatorPropertyNames);
       MappingDiagnostic diagnostic =
           creatorInputFailure
               ? MappingDiagnostic.MISSING_CREATOR_INPUT
@@ -103,27 +95,6 @@ final class BeanConstruction {
             && creatorPropertyNames.contains(names.getFirst());
       }
       return false;
-    }
-    return false;
-  }
-
-  /**
-   * Classifies bulk {@code convertValue} failures as creator/instantiation input problems.
-   *
-   * <p>Jackson 3.2 reports missing creator properties as {@link MismatchedInputException} with the
-   * "Missing required creator property" message, and creator/instantiation failures (including
-   * throwing creators) as {@link ValueInstantiationException}. Both mean the bean could not be
-   * constructed from the supplied inputs, so both map to {@link
-   * MappingDiagnostic#MISSING_CREATOR_INPUT}; all other coercion, type, or property failures map to
-   * {@link MappingDiagnostic#UNSUPPORTED_ATTRIBUTE_VALUE}.
-   */
-  private static boolean isCreatorInputFailure(Throwable failure) {
-    if (failure instanceof ValueInstantiationException) {
-      return true;
-    }
-    if (failure instanceof MismatchedInputException mismatched) {
-      String message = mismatched.getMessage();
-      return message != null && message.contains("Missing required creator property");
     }
     return false;
   }
