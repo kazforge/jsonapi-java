@@ -27,4 +27,4 @@ discovery index, not a separate API reference.
 
 ## API reference
 
-- [API reference and next steps](https://jsonapi.kazforge.com/getting-started/#api-reference-and-next-steps): Canonical reference links and where to find generated Javadoc.
+- [API Reference](https://jsonapi.kazforge.com/api-reference/): Version-specific rendered Javadoc for public consumer artifacts.

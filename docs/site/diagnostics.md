@@ -182,16 +182,16 @@ policy still owns HTTP status, safe detail, response emission, logging/redaction
 [`ErrorObject`][error-object] is only a core value. To wrap and serialize selected errors, use the
 existing [error-document example](relationships-and-documents.md#error-documents).
 
-[read-exception]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/diagnostic/JsonApiDocumentReadException.java
-[mapping-exception]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/diagnostic/JsonApiMappingException.java
-[validation-exception]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-core/src/main/java/com/kazforge/jsonapi/core/validation/JsonApiValidationException.java
-[query-exception]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-query/src/main/java/com/kazforge/jsonapi/query/JsonApiQueryException.java
-[codec-category]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/diagnostic/CodecFailureCategory.java
-[validation-code]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-core/src/main/java/com/kazforge/jsonapi/core/validation/ValidationRuleCode.java
-[mapping-code]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/diagnostic/MappingDiagnostic.java
-[query-code]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-query/src/main/java/com/kazforge/jsonapi/query/QueryDiagnostic.java
-[mapping-location]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/diagnostic/MappingLocation.java
-[source-location]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/diagnostic/SourceLocation.java
-[error-source]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-core/src/main/java/com/kazforge/jsonapi/core/model/ErrorSource.java
-[error-object]: https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-core/src/main/java/com/kazforge/jsonapi/core/model/ErrorObject.java
+[read-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/JsonApiDocumentReadException.html
+[mapping-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/JsonApiMappingException.html
+[validation-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.2.0/com/kazforge/jsonapi/core/validation/JsonApiValidationException.html
+[query-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.2.0/com/kazforge/jsonapi/query/JsonApiQueryException.html
+[codec-category]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/CodecFailureCategory.html
+[validation-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.2.0/com/kazforge/jsonapi/core/validation/ValidationRuleCode.html
+[mapping-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/MappingDiagnostic.html
+[query-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.2.0/com/kazforge/jsonapi/query/QueryDiagnostic.html
+[mapping-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/MappingLocation.html
+[source-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/SourceLocation.html
+[error-source]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.2.0/com/kazforge/jsonapi/core/model/ErrorSource.html
+[error-object]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.2.0/com/kazforge/jsonapi/core/model/ErrorObject.html
 [error-spec]: https://jsonapi.org/format/1.1/#error-objects
