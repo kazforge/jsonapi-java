@@ -6,7 +6,6 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
@@ -135,12 +134,9 @@ class PatchDtoBindingSpec extends Specification {
     ex.resourceClass() == MissingCreatorPatch
   }
 
-  def "absent primitive creator input under strict null policy is a missing creator input"() {
+  def "absent required primitive creator input is a missing creator input"() {
     given:
-    def mapper = JsonMapper.builder()
-        .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-        .build()
-    def reader = JsonApiJackson2.patchDtoReader(mapper)
+    def reader = JsonApiJackson2.patchDtoReader(JsonMapper.builder().build())
     def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'
 
     when:
@@ -618,7 +614,7 @@ class PatchDtoBindingSpec extends Specification {
     MissingPrimitivePatch(
     @JsonProperty("id") @JsonApiId String id,
     @JsonProperty("title") @JsonApiAttribute PatchPresence<String> title,
-    @JsonProperty("version") int version) {
+    @JsonProperty(value = "version", required = true) int version) {
       this.id = id
       this.title = title
       this.version = version

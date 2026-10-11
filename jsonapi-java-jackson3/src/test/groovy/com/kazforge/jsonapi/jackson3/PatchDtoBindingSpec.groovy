@@ -73,7 +73,6 @@ import spock.lang.Unroll
 import tools.jackson.core.JsonParser
 import tools.jackson.core.JsonGenerator
 import tools.jackson.databind.DeserializationContext
-import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.JavaType
 import tools.jackson.databind.PropertyNamingStrategies
 import tools.jackson.databind.SerializationContext
@@ -612,12 +611,9 @@ class PatchDtoBindingSpec extends Specification {
     ex.resourceClass() == MissingCreatorPatch
   }
 
-  def "absent primitive creator input under strict null policy is a missing creator input"() {
+  def "absent required primitive creator input is a missing creator input"() {
     given:
-    def mapper = JsonMapper.builder()
-        .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-        .build()
-    def reader = JsonApiJackson3.patchDtoReader(mapper)
+    def reader = JsonApiJackson3.patchDtoReader(JsonMapper.builder().build())
     def json = '{"data":{"type":"articles","id":"1","attributes":{"title":"T"}}}'
 
     when:
@@ -1126,7 +1122,7 @@ class PatchDtoBindingSpec extends Specification {
     MissingPrimitivePatch(
     @JsonProperty("id") @JsonApiId String id,
     @JsonProperty("title") @JsonApiAttribute PatchPresence<String> title,
-    @JsonProperty("version") int version) {
+    @JsonProperty(value = "version", required = true) int version) {
       this.id = id
       this.title = title
       this.version = version

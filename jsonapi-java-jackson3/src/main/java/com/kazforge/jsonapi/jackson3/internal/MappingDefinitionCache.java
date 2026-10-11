@@ -183,11 +183,10 @@ public final class MappingDefinitionCache {
   private EffectiveReadProperties effectiveReadProperties(
       JavaType javaType, BeanDescription description) {
     Map<String, SettableBeanProperty> targets = new java.util.LinkedHashMap<>();
-    java.util.Set<String> creatorExternalNames = new java.util.HashSet<>();
     ValueDeserializer<?> deserializer =
         mapper._deserializationContext().findNonContextualValueDeserializer(javaType);
     if (!(deserializer instanceof BeanDeserializerBase bean)) {
-      return new EffectiveReadProperties(targets, creatorExternalNames);
+      return new EffectiveReadProperties(targets, java.util.Set.of());
     }
     Class<?> activeView = mapper.deserializationConfig().getActiveView();
     for (var definition : description.findProperties()) {
@@ -199,14 +198,34 @@ public final class MappingDefinitionCache {
         targets.put(definition.getName(), property);
       }
     }
+    return new EffectiveReadProperties(targets, creatorExternalNames(bean, activeView));
+  }
+
+  /**
+   * Effective creator external names for an arbitrary type, resolved from the configured bean
+   * deserializer without building a full read mapping. Typed PATCH DTO construction reuses this so
+   * missing-creator-input classification stays message-independent like flat reads.
+   */
+  java.util.Set<String> creatorPropertyNames(JavaType javaType) {
+    ValueDeserializer<?> deserializer =
+        mapper._deserializationContext().findNonContextualValueDeserializer(javaType);
+    if (!(deserializer instanceof BeanDeserializerBase bean)) {
+      return java.util.Set.of();
+    }
+    return creatorExternalNames(bean, mapper.deserializationConfig().getActiveView());
+  }
+
+  private static java.util.Set<String> creatorExternalNames(
+      BeanDeserializerBase bean, @Nullable Class<?> activeView) {
+    java.util.Set<String> names = new java.util.HashSet<>();
     for (var creators = bean.creatorProperties(); creators.hasNext(); ) {
       SettableBeanProperty property = creators.next();
       if (!property.isInjectionOnly()
           && (activeView == null || property.visibleInView(activeView))) {
-        creatorExternalNames.add(property.getName());
+        names.add(property.getName());
       }
     }
-    return new EffectiveReadProperties(targets, java.util.Set.copyOf(creatorExternalNames));
+    return java.util.Set.copyOf(names);
   }
 
   /** Effective read properties plus the external names of every eligible effective creator. */
