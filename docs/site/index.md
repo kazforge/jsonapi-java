@@ -43,5 +43,6 @@ You own HTTP/media-type handling, persistence, authorization, query execution, r
 and applying updates. An annotation does not fetch a relationship; parsing `filter` does not run a
 query; reading a PATCH does not mutate an entity.
 
-Spring integration is a separate project and is not shipped here; it is not required to use the core
+Spring integration lives in the separate `kazforge/jsonapi-java-spring` companion repository with
+its own release train and is not shipped here; it is not required to use the core
 library. No controller, ORM, or repository integration is required to use this library.

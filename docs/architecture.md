@@ -56,9 +56,10 @@ does not change published metadata or the support floor;
 Consumer/framework dependency management may select newer compatible Jackson versions within the
 appropriate major. Published dependencies use ordinary version declarations, without strict
 constraints, forced versions, platforms, or version ranges. Baselines follow sustainable Jackson LTS
-lines rather than older affected patches managed by Spring Boot. The future Spring integration owns
-its tested Spring/Jackson compatibility matrix; adapter compatibility does not establish tested
-Spring Boot integration.
+lines rather than older affected patches managed by Spring Boot. The separate
+`kazforge/jsonapi-java-spring` companion consumes released public `jsonapi-java` contracts and
+owns its tested Spring Framework and `jsonapi-java` compatibility; adapter Jackson compatibility
+does not establish tested Spring Boot integration.
 
 ## Modules and dependency direction
 
@@ -88,8 +89,8 @@ parser/generator behavior. Its token-driven wire codec stays local to that Jacks
 no generic JSON tree/IR codec, runtime-major detection, or supported Gson backend. This is a
 responsibility boundary, not a lowest-common-denominator Jackson abstraction.
 [ADR-015](adr/015-responsibility-based-mapping-and-native-wire-codecs.md) owns the rationale.
-Framework integrations, when added, depend on lower-layer public contracts; no lower layer depends
-on a framework.
+The separate Spring companion depends on released lower-layer public contracts; no lower layer
+depends on a framework.
 
 Package direction inside core and each Jackson adapter is a module-local constraint stated in that
 module's README. [ADR-007](adr/007-module-boundaries.md) owns the module split and

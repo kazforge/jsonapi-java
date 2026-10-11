@@ -8,15 +8,14 @@ This document owns stable product direction. Current modules and capability live
 
 ## Product boundary
 
-`jsonapi-java` is a lightweight Java document library with optional domain-mapping, query-parsing,
-and framework integrations. The library owns:
+`jsonapi-java` is a lightweight Java document library with optional domain-mapping and query-parsing.
+Framework integration lives outside this library as a companion-product extension point. The library owns:
 
 - an immutable representation of JSON:API documents;
 - local and whole-document validation;
 - opt-in encoding, decoding, and flat application-value mapping;
 - presence-aware update projections that do not mutate application state;
-- optional parsing of standardized query selections;
-- thin optional framework integration for JSON:API transport concerns.
+- optional parsing of standardized query selections.
 
 Applications continue to own endpoints, persistence, transactions, authorization, query execution,
 relationship resolution, supported fields/includes/profiles/extensions, business validation, and
@@ -66,10 +65,12 @@ semantics. Extension-specific behavior requires an explicitly scoped feature.
 - Core remains free of functional third-party runtime dependencies; compile-only nullness metadata
   is allowed.
 - Domain mapping is opt-in and requires no inheritance or framework interface.
-- Jackson majors, query parsing, and framework integrations remain separate artifacts.
+- Jackson majors and query parsing remain separate artifacts in this repository; framework
+  integration is a separate companion product.
 - Native-major adapters share neutral semantic contracts without runtime detection or a
   lowest-common-denominator Jackson abstraction.
-- Framework adapters stay thin and depend on lower-layer public contracts, never the reverse.
+- A companion framework product stays thin and depends on released lower-layer public contracts,
+  never the reverse.
 - Planned modules have no usable entry point until they join the build. `settings.gradle.kts` owns
   current membership; the root README provides its human-readable inventory.
 

@@ -155,9 +155,9 @@ Schema provenance, pins, and fixture-specific invariants live in the
 |---------|--------|----------|
 | Include/field/profile/extension authorization | delegated | Application policy |
 | Persistence, relationship resolution, and update application | delegated | Application behavior |
-| Spring DTO/envelope and PATCH binding | deferred | No Spring module is a current build member |
+| Spring DTO/envelope and PATCH binding | out of scope | Separate `kazforge/jsonapi-java-spring` companion; no Spring module is in this repository |
 | Endpoint availability and operation semantics | out of scope | Application/framework responsibility |
-| HTTP status selection | out of scope | Except behavior explicitly guaranteed by a future adapter |
+| HTTP status selection | out of scope | Except behavior explicitly guaranteed by an adapter |
 | Content negotiation beyond adapter guarantees | out of scope | Application/framework responsibility |
 
 Behavioral proof lives in each module's `src/test` tree. `./gradlew clean build` executes those tests,
