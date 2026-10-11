@@ -7,8 +7,9 @@ description: "Install a jsonapi-java adapter from Maven Central for Java 21+ and
 
 ## Choose an artifact
 
-Use Java 21+. Pick **one** native Jackson adapter for the mapper your application already uses; the
-library does not detect or switch Jackson majors at runtime.
+Six artifacts are for your application to depend on. Pick **one** native Jackson adapter for the
+mapper your application already uses; the library does not detect or switch Jackson majors at
+runtime.
 
 | Artifact (`com.kazforge`) | When to use it |
 |---------------------------|----------------|
@@ -19,16 +20,26 @@ library does not detect or switch Jackson majors at runtime.
 | `jsonapi-java-api` | Neutral `JsonApi`, mapping, representation, and PATCH contracts; no runtime by itself |
 | `jsonapi-java-annotations` | Mapping role annotations without a runtime dependency |
 
-An adapter brings API, annotations, and core transitively. Its `jsonapi-java-mapping` dependency is
-an implementation artifact, not an API for application code. Packages containing `internal` are
+An adapter brings API, annotations, and core transitively. The public `com.kazforge.jsonapi.mapping`
+package ships in `jsonapi-java-api`; the similarly named `jsonapi-java-mapping` artifact is only an
+internal runtime dependency of the adapters, not consumer API. Packages containing `internal` are
 also unsupported. Java visibility alone is not a compatibility promise.
 
-Jackson 2 and 3 are separate supported lines. Concrete minimums and LTS baselines are maintained in
-the [Jackson 2 support section](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson2/README.md#jackson-support)
+## Compatibility
+
+| Requirement | Minimum supported |
+|-------------|-------------------|
+| Java | 21 |
+| Jackson 3 (`jsonapi-java-jackson3`) | `jackson-databind` 3.1.7 |
+| Jackson 2 (`jsonapi-java-jackson2`) | `jackson-databind` and `jackson-datatype-jdk8` 2.21.7 |
+
+Jackson 2 and 3 are separate supported lines; pick the adapter matching your application's Jackson
+major. Compatible newer versions can be selected by your dependency management; the adapter does not
+force a platform or override your application's Jackson version. LTS baselines and policy are
+maintained in the
+[Jackson 2 support section](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson2/README.md#jackson-support)
 and [Jackson 3 support section](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson3/README.md#jackson-support).
-Compatible newer versions can be selected by your dependency management; the adapter does not
-force a platform or override your application's Jackson version. The supported Jackson lines are not
-a Spring Boot compatibility matrix.
+The supported Jackson lines are not a Spring Boot compatibility matrix.
 
 ## Dependency declarations
 
@@ -48,8 +59,8 @@ Verify public versions in [Maven Central](https://central.sonatype.com/namespace
 
     dependencies {
         implementation("com.kazforge:jsonapi-java-jackson3:$jsonapiVersion")
-        // Optional:
-        implementation("com.kazforge:jsonapi-java-query:$jsonapiVersion")
+        // Optional: query parsing
+        // implementation("com.kazforge:jsonapi-java-query:$jsonapiVersion")
     }
     ```
 
@@ -65,6 +76,13 @@ Verify public versions in [Maven Central](https://central.sonatype.com/namespace
             <artifactId>jsonapi-java-jackson3</artifactId>
             <version>${jsonapi.version}</version>
         </dependency>
+        <!-- Optional: query parsing
+        <dependency>
+            <groupId>com.kazforge</groupId>
+            <artifactId>jsonapi-java-query</artifactId>
+            <version>${jsonapi.version}</version>
+        </dependency>
+        -->
     </dependencies>
     ```
 
