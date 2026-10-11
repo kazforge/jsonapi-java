@@ -61,8 +61,10 @@ Publish job (same workflow run)
 
 ## Maintainer runbook
 
-1. Review the release PR (`gradle.properties`, public guide dependency examples, `CHANGELOG.md`, manifest) and
-   merge it. Check [supported API and behavior changes](architecture.md#public-api-ownership),
+1. Keep the rolling release PR open as an accumulator. Merge it only when it contains meaningful
+   consumer-visible changes, not merely tooling updates or routine documentation. Review
+   `gradle.properties`, public guide dependency examples, `CHANGELOG.md`, and the manifest.
+   Check [supported API and behavior changes](architecture.md#public-api-ownership),
    including support-floor or support-line changes, are classified in Conventional Commits and
    release notes according to ADR-014. Review the documented
    [Jackson 2](../jsonapi-java-jackson2/README.md#jackson-support) and
@@ -73,7 +75,37 @@ Publish job (same workflow run)
    Central Portal with automatic publishing.
 3. Verify the deployment under the `com.kazforge` namespace. Published
    releases are immutable; fixes ship as the next train version.
-   Verify Central availability before telling users the artifacts are public.
+    Verify Central availability before telling users the artifacts are public.
+
+### Public notes hygiene
+
+The first public release is 0.2.0. Its curated changelog and GitHub release text describe shipped
+capabilities, not pre-public commit history or migrations from coordinates that were never released.
+Correcting release text does not change its tag, version, or published artifacts.
+
+Future notes show consumer features, fixes, performance improvements, dependency changes, and
+reverts. Routine `docs` and internal-only commit types are hidden. Scope-specific exclusions precede
+the general feature/fix sections; do not hide `deps` wholesale because runtime and security fixes
+must remain visible. Genuine breaking-change notes remain visible even on hidden commit types.
+
+Classify internal work as `chore`, `build`, `ci`, `test`, or another non-releasing type, not `feat`
+or `fix`. Hiding a changelog entry does not remove its effect on version selection when combined
+with releasable commits. Commits changing only files under `.agents/` are excluded from release
+processing altogether; mixed consumer/internal commits remain eligible. The path exclusion matches
+directories, not individual files: root `AGENTS.md` changes rely on internal commit classification.
+Renovate classifies known tooling/test dependencies and the Jackson current-version test selectors
+as `chore`; published Jackson minimums remain explicit maintainer decisions. Review dependency
+updates by their consumer effect rather than by bot authorship.
+
+For an already squash-merged PR with a misclassified commit, preserve its description and append a
+`BEGIN_COMMIT_OVERRIDE` / `END_COMMIT_OVERRIDE` block containing the corrected Conventional Commit
+message. Release-please uses that message on its next run; do not rewrite Git history. See
+[release-please's override instructions](https://github.com/googleapis/release-please#how-can-i-fix-release-notes).
+
+When no visible changes remain, release-please does not generate a new proposal or update the
+existing accumulator. Leave it open and unmerged; stale generated text is not evidence that a
+release is warranted. Once consumer-visible work arrives, review the regenerated notes before
+merging. Curate noteworthy consumer documentation in that release's notes when appropriate.
 
 ## Dependency-baseline acceptance
 

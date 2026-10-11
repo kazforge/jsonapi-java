@@ -4,7 +4,40 @@
     "config:recommended",
     "helpers:pinGitHubActionDigests"
   ],
+  "semanticCommits": "enabled",
   "packageRules": [
+    {
+      "description": "CI actions, the Gradle wrapper, and documentation dependencies are tooling, not consumer bug fixes.",
+      "matchManagers": ["github-actions", "gradle-wrapper", "pip_requirements"],
+      "semanticCommitType": "chore"
+    },
+    {
+      "description": "Known build and test dependencies do not change the consumer runtime. Keep other Gradle dependencies eligible for fix classification.",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": [
+        "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin",
+        "com.google.errorprone:error_prone_core",
+        "com.uber.nullaway:nullaway",
+        "net.ltgt.errorprone:net.ltgt.errorprone.gradle.plugin",
+        "net.ltgt.nullaway:net.ltgt.nullaway.gradle.plugin",
+        "org.sonarqube",
+        "org.sonarqube:org.sonarqube.gradle.plugin",
+        "org.cyclonedx.bom",
+        "org.cyclonedx.bom:org.cyclonedx.bom.gradle.plugin",
+        "org.spockframework:spock-core",
+        "org.apache.groovy:groovy-json",
+        "org.junit.platform:junit-platform-launcher",
+        "com.tngtech.archunit:archunit",
+        "com.networknt:json-schema-validator"
+      ],
+      "semanticCommitType": "chore"
+    },
+    {
+      "description": "Jackson current-version selectors are test-only, not published runtime dependencies.",
+      "matchManagers": ["gradle"],
+      "matchJsonata": ["sharedVariableName in ['jackson2.current', 'jackson3.current']"],
+      "semanticCommitType": "chore"
+    },
     {
       "description": "Java compatibility versions are explicit CI matrix intent, not Renovate-managed dependencies. Keep updating the setup-java action itself.",
       "matchManagers": ["github-actions"],
