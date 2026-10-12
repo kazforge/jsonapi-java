@@ -14,8 +14,8 @@ how the current modules compose; it is neither design history nor a proposal for
 | [`docs/adr/`](adr/README.md) | Consequential architectural rationale |
 | [`docs/conformance.md`](conformance.md) | Current JSON:API feature support by layer |
 | [`docs/vision.md`](vision.md) | Stable product direction, distinct from this snapshot |
-| [`AGENTS.md`](../AGENTS.md) | Repository-wide task routing, knowledge ownership, and completion gates |
-| [`.agents/skills/`](../.agents/skills/) | Workflow-specific contracts |
+| [`CONTRIBUTING.md`](../CONTRIBUTING.md) | Contributor setup, verification commands, and dependency-verification maintenance |
+| [`AGENTS.md`](../AGENTS.md) | Optional repository onboarding for agents |
 
 Package responsibilities live in `package-info.java`; public API semantics live in Javadoc; tests
 provide behavioral proof.

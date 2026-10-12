@@ -44,8 +44,10 @@ The `java-test-fixtures` variant provides passive, major-neutral application-sha
 [pinned draft schemas](src/testFixtures/resources/jsonapi/schema/vendor/1.1-pr1603/README.md), the
 neutral `TestFixtureResources` loader, and the shared characterization contract specs in
 [`com.kazforge.jsonapi.fixtures.contract`](src/testFixtures/java/com/kazforge/jsonapi/fixtures/contract/package-info.java),
-which every adapter runs through a concrete subclass. [`AGENTS.md`](../AGENTS.md) owns the fixture
-and contract-spec policy.
+which every adapter runs through a concrete subclass. The
+[fixture package documentation](src/testFixtures/java/com/kazforge/jsonapi/fixtures/package-info.java)
+and [ADR-009](../docs/adr/009-architectural-tests.md) describe the passive-fixture boundary and
+shared-contract exception.
 
 See the [architecture overview](../docs/architecture.md) and
 [conformance checklist](../docs/conformance.md).

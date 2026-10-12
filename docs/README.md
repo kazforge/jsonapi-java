@@ -11,7 +11,8 @@ This repository keeps user-facing documentation separate from repository-mainten
 | [`security.md`](security.md) | Repository security signals, ownership, and vulnerability triage policy |
 | [`vision.md`](vision.md) | Stable product direction |
 | [`adr/`](adr/README.md) | Consequential architectural rationale |
-| [`../AGENTS.md`](../AGENTS.md) and [`.agents/skills/`](../.agents/skills/) | Repository workflow, task routing, and completion gates |
+| [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | Contributor setup, verification commands, and dependency-verification maintenance |
+| [`../AGENTS.md`](../AGENTS.md) | Optional repository onboarding for agents |
 | Javadoc | Public API contracts and semantics |
 
 Do not add maintainer docs to `site/` merely because MkDocs can render Markdown. Public pages should

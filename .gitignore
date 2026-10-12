@@ -31,13 +31,6 @@ build/
 .kotlin/
 /.venv-docs/
 
-# Agent local working plans and session artifacts (not repository authority)
-/.agentWork/plans/
-/.agentWork/.session/
-
-# Maintainer-local coordination skill (not part of the public workflow)
-/.agents/skills/linear-coordination/
-
 # Eclipse / Java LSP
 .project
 .settings/

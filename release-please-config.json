@@ -5,7 +5,6 @@
       "release-type": "java",
       "package-name": "jsonapi-java",
       "changelog-path": "CHANGELOG.md",
-      "exclude-paths": [".agents"],
       "changelog-sections": [
         {"type": "feat", "scope": "agent", "section": "Internal", "hidden": true},
         {"type": "feat", "scope": "agents", "section": "Internal", "hidden": true},
