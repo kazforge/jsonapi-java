@@ -60,6 +60,15 @@ validation:
 extra_css:
   - assets/stylesheets/extra.css
 
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/kazforge/jsonapi-java
+      name: jsonapi-java on GitHub
+    - icon: fontawesome/solid/tags
+      link: https://github.com/kazforge/jsonapi-java/releases
+      name: Releases and release notes
+
 nav:
   - Overview: index.md
   - Getting started: getting-started.md
