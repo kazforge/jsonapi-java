@@ -18,6 +18,23 @@
   box-shadow: none;
 }
 
+/* Keep the collapsed desktop search aligned with the light header. */
+@media screen and (min-width: 60em) {
+  [data-md-color-scheme="default"] .md-search__form {
+    background-color: var(--md-primary-fg-color--light);
+    box-shadow: inset 0 0 0 1px #7b8b9e;
+  }
+
+  [data-md-color-scheme="default"] .md-search__form:hover {
+    box-shadow: inset 0 0 0 2px var(--md-primary-bg-color--light);
+  }
+
+  [data-md-color-scheme="default"] .md-search__form:focus-within {
+    outline: 2px solid var(--md-typeset-a-color);
+    outline-offset: 2px;
+  }
+}
+
 .md-header__button.md-logo {
   margin: 0;
   padding: 0.25rem 0.4rem;
