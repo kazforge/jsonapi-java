@@ -108,7 +108,11 @@ ArticlePatch checked = api.patches().bindPatch(validated, ArticlePatch.class);
 `checked` has the same presence states as the earlier patch. A type or id that does not match `target`
 fails endpoint-identity validation before binding.
 
-`bindPatch`/`bindCommand` assume an already validated update document; they do not revalidate it.
+`bindPatch` assumes an already validated update document; it does not revalidate it.
+[`bindCommand`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/api/JsonApiPatches.html#bindCommand(com.kazforge.jsonapi.core.model.JsonApiDocument,java.lang.Class))
+is the low-level alternative: it binds that document's supplied changes into a `PatchCommand<T>`
+rather than constructing a typed PATCH DTO, also without parsing or revalidation. See
+[low-level commands](#low-level-commands).
 
 ## Relationships replace linkage
 
@@ -165,7 +169,7 @@ PatchPresence<DetailsPatch> detailsChange = structured.details();
 PatchPresence<List<String>> tagsChange = structured.tags();
 ```
 
-The projected member states are:
+The bound member states are:
 
 ```text
 details.summary:  present "Short version"
@@ -184,7 +188,8 @@ may be null, but object-valued meta may not. Primitive nested targets cannot acc
 
 ## Low-level commands
 
-For infrastructure or generic supplied-change handling, project onto an ordinary resource schema.
+For infrastructure or generic supplied-change handling, bind changes using a regular resource schema
+whose members do not need `PatchPresence` wrappers.
 Reuse `ArticleView` from [resources](resources.md#write-relationships-read-linkage):
 
 ```java
@@ -201,7 +206,7 @@ For the null-title request above, `identity` is `1` and the command contains one
 the title's explicit null. There is no author change.
 
 Commands contain only supplied mapped changes; they do not construct a complete DTO. Unknown members
-are skipped, unlike typed PATCH. Traversable ordinary bean attributes/resource-side meta produce
+are skipped, unlike typed PATCH. Traversable bean attributes/resource-side meta produce
 recursive `StructuredPatch` members, while containers stay atomic. Both paths enforce update shape
 and preserve omission versus null; neither applies changes.
 

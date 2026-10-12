@@ -5,10 +5,10 @@ description: "Configure jsonapi-java with Jackson 2 or Jackson 3: identifier con
 
 # Configure the JSON:API Jackson runtime {#configuration}
 
-Use `jsonApi(mapper)` when the [default runtime](getting-started.md#configure-a-runtime) is enough:
-ordinary identifier strings, built-in flat linkage targets, no include traversal, no link decorators,
-and no default `jsonapi` object. Use the builder when your application needs to change one of those
-choices. Both Jackson majors expose the same five optional builder settings.
+Use `jsonApi(mapper)` for the [default runtime](getting-started.md#configure-a-runtime): default
+identifier conversion and built-in relationship identifier targets, with include requests denied,
+no link decorators, and no default `jsonapi` object. Use the builder to change those choices.
+Both Jackson versions expose the same five optional builder settings.
 
 ## Choose the configuration scope
 
@@ -20,19 +20,20 @@ choices. Both Jackson majors expose the same five optional builder settings.
 | Resource link decorators and optional `jsonapi.version` default | Explicit document read/validation context |
 
 Configure Jackson and shared collaborators before constructing the runtime. Reuse the resulting
-immutable, thread-safe `JsonApi`; do not rebuild it for each request. Shared callbacks must themselves
-be safe for concurrent invocation. The builder is mutable setup state, not a request container.
+immutable, thread-safe `JsonApi` across requests. Callbacks are retained and reused across calls;
+keep them safe for concurrent invocation and keep mutable request state outside them. Use the
+mutable builder only during setup.
 
 The examples below are **independent recipes**. Start each with a fresh `builder` from the matching
 bootstrap tab; they are not steps in an all-options configuration.
 
 ## Configure Jackson first
 
-Jackson remains authoritative for property discovery, visibility, external names, creators, mix-ins,
-serializers/deserializers, and value conversion. JSON:API annotations assign roles; they do not make
-an ignored Jackson property visible or automatically turn unannotated properties into attributes.
+Jackson controls property discovery, visibility, JSON property names, creators, mix-ins,
+serializers/deserializers, and value conversion. JSON:API annotations assign member roles to those
+properties. Jackson-ignored properties stay ignored, and attributes require role annotations.
 
-For example, if your DTO uses `bodyText` but your wire convention is `body_text`, configure Jackson's
+For example, if your DTO uses `bodyText` but your JSON naming convention is `body_text`, configure Jackson's
 naming strategy before creating the runtime:
 
 === "Jackson 3"
@@ -112,7 +113,7 @@ for every mapped identity, not an article-only prefix on a runtime also used for
 
 The `linkageMappers` registry is empty by default. Flat reads can use `ResourceIdentifier` and its
 built-in optional/collection/array shapes. Register a mapper when an application DTO instead needs
-its own reference type—for example, an `AuthorReference`, not a hydrated `Person`.
+its own reference type—for example, an `AuthorReference`, not a fully loaded `Person`.
 
 ```java
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
@@ -157,21 +158,21 @@ Reading the [article document](resources.md#write-relationships-read-linkage) in
 class or the wire resource type. This mapper is deliberately for to-one author references; support
 other linkage shapes explicitly if you use the same target in to-many properties.
 
-This callback is the one native-major boundary among these settings: `targetType` is the adapter's
-Jackson `JavaType`, even when a lambda does not use it. The mapper supplies values for flat binding
-and PATCH projection, not a write-side relationship serializer. It does not read `included`, fetch
-persisted people, or hydrate an object graph. Implement any application lookup explicitly; to include
-already available author objects on writes, use representation selection and policy instead.
+This is the only builder setting whose callback uses a Jackson-specific type: `targetType` is the
+matching Jackson version's `JavaType`, even when the lambda does not use it. The mapper converts
+relationship identifiers into DTO values on reads and when binding PATCH changes. It neither
+serializes relationships on writes nor reads `included` or fetches related objects. Your application
+owns any lookup; use representation selection and policy to include already available author objects
+on writes.
 
 ## Representation policy
 
-Set `representationPolicy` when you need to permit inclusion, restrict requested field names, or
-change traversal bounds. Policy decides what a request may select; it does not select anything by
-itself.
+Set `representationPolicy` to permit inclusion, restrict requested field names, or change traversal
+limits. Policy controls what a request may select; pass the actual selection separately on each write.
 
 | Setting | Default | Effect |
 |---------|---------|--------|
-| `includePolicy` | `IncludePolicy.denyAll()` | Rejects requested include traversal; ordinary relationship linkage is unaffected |
+| `includePolicy` | `IncludePolicy.denyAll()` | Rejects requested include traversal; relationship identifiers are still written |
 | `fieldPolicy` | `FieldPolicy.allowAll()` | Permits every selected **mapped** sparse-fieldset name, not arbitrary unknown names |
 | `maxIncludeDepth` | `10` | Maximum number of segments in an include path (`author` is 1; `author.articles` is 2) |
 | `maxIncludedResources` | `100` | Maximum distinct resources emitted in `included`, not the primary-resource count |
@@ -215,8 +216,8 @@ selection to `selectedApi` and observe the result.
 Include allowances pair the **owning resource type** with the relationship's **wire name**. A nested
 path needs permission at every segment: `author.articles` would also need the `people` / `articles`
 allowance and a depth of at least 2. Field allowances pair resource type with field wire name.
-An unknown or denied requested name fails; the library does not quietly remove it from the request.
-Inclusion traverses supplied objects, not a persistence query.
+An unknown or denied requested name fails rather than being silently removed. Inclusion traverses
+the objects your application supplies.
 
 !!! warning "Field policy is not global redaction or authorization"
     Field policy checks only names in a supplied sparse fieldset. **With no fieldset, mapped fields
@@ -260,9 +261,6 @@ Relationship decoration keys use the **logical Java/Jackson property identity**,
 selections and allowances. For a property `author` renamed to `article-author` on the wire, use
 `author` in `ResourceDecoration.builder().relationship(...)`; mapping resolves the wire name.
 
-Callbacks are retained and reused, not isolated per call. Keep this shared decorator safe for
-concurrent invocation; do not store mutable request state in it.
-
 ## Optional document version default
 
 By default, the runtime injects no `jsonapi` object. Set `jsonApiVersion` if your resource documents
@@ -273,8 +271,8 @@ JsonApi api = builder.jsonApiVersion("1.1").build();
 ```
 
 Writing an article now adds `"jsonapi":{"version":"1.1"}` at the top level. This default applies to
-resource-facet writes, including collections and create/update authoring. It does **not** apply to
-raw-document or minimal relationship-linkage writes.
+`api.resources()` writes, including collections and create/update authoring. `api.documents()` and
+`api.relationships()` writes do not inherit this default.
 
 A per-write envelope takes precedence. For example, to emit an explicit empty `jsonapi` object:
 
@@ -295,14 +293,14 @@ The result has `"jsonapi":{}`, not `"jsonapi":{"version":"1.1"}`. An explicit ob
 default completely—there is no merge. Leaving the envelope's `jsonapi` component absent (`null`)
 inherits the configured default, even if the envelope supplies other members.
 
-This is document `jsonapi.version`, not the library artifact version, business API versioning, HTTP
-content negotiation, or extension/profile support.
+`jsonapi.version` advertises the document's protocol version. It does not configure the library
+artifact version, business API versioning, HTTP content negotiation, or extension/profile support.
 
 ## Supply operation-scoped values at the call
 
-`ResourceWriteOptions` contains only selection and envelope, never representation policy. Its
-defaults request neither includes nor fieldsets and supply no envelope members. Omitted selections
-remain distinct from explicitly empty requests; they do not alter the runtime's policy.
+`ResourceWriteOptions` carries selection and envelope; representation policy belongs to the runtime.
+Its defaults leave include requests, fieldsets, and envelope members absent. Omitted selections
+remain distinct from explicitly empty requests.
 
 Keep task details on their owning pages:
 
@@ -314,6 +312,6 @@ Keep task details on their owning pages:
 | Expected identity for validated PATCH reads | [Typed update presence](patches.md#typed-update-presence) |
 | Explicit document read/validation context | [Preserve document state](relationships-and-documents.md#preserve-document-state) |
 
-For requirements beyond these Level-1 settings, use the
-[ordinary-or-advanced decision](relationships-and-documents.md#ordinary-or-advanced) and the relevant
-source Javadoc rather than rebuilding the ordinary pipeline yourself.
+For requirements beyond these `JsonApi` settings, see
+[choose an application or Jackson-specific API](relationships-and-documents.md#ordinary-or-advanced)
+and the relevant Javadoc.

@@ -96,7 +96,7 @@ mapping does not look up persisted people.
 Use [selection and policy](query-and-representation.md) to include author resources on writes.
 
 !!! warning "Mapped relationships carry data"
-    Every selected ordinary mapped relationship has `data`. A null to-one value becomes
+    Every selected DTO relationship has `data`. A null to-one value becomes
     `"data": null`; an empty to-many value becomes `"data": []`. An empty optional is not a
     links-only relationship. Use the [document path](relationships-and-documents.md#links-only-and-meta-only-relationships)
     when relationship `data` must be absent.
@@ -166,7 +166,7 @@ Result:
 }
 ```
 
-Ordinary response writes still require `id`. Create allowances are not a nested-create protocol:
+Response writes still require `id`. Create allowances are not a nested-create protocol:
 included resources and unrelated linkage need ids. No annotation infers `lid`, and neither
 identifier role falls back to the other.
 
@@ -187,7 +187,7 @@ and `id: 1`. This operation additionally validates it as an update request again
 An identity mismatch fails validation. This writes the selected DTO members; it does not calculate
 a diff or turn null DTO fields into omission. Use a [presence-aware PATCH schema](patches.md) to
 read partial update requests. Author partial updates with an explicitly chosen schema/selection
-or the advanced document writer, not a guessed full-object diff.
+or the Jackson-specific document writer, not a guessed full-object diff.
 
 ## Top-level state
 
@@ -251,9 +251,11 @@ Meta documentMeta = result.meta();
 
 `primaryArticle` has id `1`; `documentMeta` carries `request: req-7`.
 
-The typed document result carries `included` as validated core resources, not hydrated DTOs.
+The typed document result carries `included` as validated core resources, rather than binding them
+to DTOs.
 Resource meta, relationship meta, and identifier meta are different locations; an envelope supplies
-only top-level members. Full wire-state reads belong to the [document facet](relationships-and-documents.md).
+only top-level members. To preserve absent, explicit-null, and empty document members, use
+[`api.documents()`](relationships-and-documents.md#preserve-document-state).
 
 ## Naming and failures
 
