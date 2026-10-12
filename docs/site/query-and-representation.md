@@ -27,7 +27,7 @@ JsonApiQueryParser parser = new JsonApiQueryParser();
 JsonApiQuery query = parser.parseRaw(requestQuery);
 ```
 
-Result:
+Conceptual summary of the parsed values (not `JsonApiQuery.toString()` output):
 
 ```text
 include:          author

@@ -15,14 +15,14 @@ automatically safe public detail.
 | Exception family | Stage | Machine-readable properties |
 |------------------|-------|-----------------------------|
 | [`JsonApiDocumentReadException`][read-exception] | JSON decoding, local core construction, or aggregate validation during a document read | `category()`, document-relative `jsonPointer()`, non-null `sourceLocation()`, nullable `ruleCode()` |
-| [`JsonApiMappingException`][mapping-exception] | Resource mapping, DTO binding, registries, decoration/representation, or PATCH projection | `diagnostic()`, nullable `resourceClass()`, nullable `location()`; `propertyPath()` is the location's string view |
+| [`JsonApiMappingException`][mapping-exception] | Resource mapping, DTO binding, registries, link decoration, include/fieldset selection, or PATCH binding | `diagnostic()`, nullable `resourceClass()`, nullable `location()`; `propertyPath()` is the location's string view |
 | [`JsonApiValidationException`][validation-exception] | Direct core construction, explicit aggregate validation, or a validated write | `ruleCode()`, `jsonPointer()` |
 | [`JsonApiQueryException`][query-exception] | Raw/decoded query parsing or optional query allow-list checks | `diagnostic()`, nullable decoded `parameterName()` |
 
-A successfully decoded and validated core document can still fail DTO binding. That later failure
-is a mapping exception, not a document-read exception. Similarly, a representation-policy rejection
-while mapping is a mapping failure, not a query-parsing failure. None of these families alone tells
-you whether a failure originated in an incoming request, application configuration, or output data.
+A successfully decoded and validated core document can still fail DTO binding; that produces a
+mapping exception. Rejection by representation policy during mapping also produces a mapping
+exception, rather than a query-parsing failure. To decide how to respond, establish whether the
+failure came from an incoming request, application configuration, or output data.
 
 For document reads, `category()` distinguishes codec failures such as malformed JSON, unexpected
 tokens, and duplicate members from validation failures. `ruleCode()` carries a core validation rule
@@ -42,16 +42,16 @@ Document-read `jsonPointer()` values are document-relative RFC 6901 JSON Pointer
 `/data/relationships/author/data/type` addresses the author's linkage type, and
 `/included/0/type` addresses the first included resource's type. The empty string `""` denotes the
 document root. A malformed/truncated document may instead report an enclosing path such as `/data`;
-a diagnostic coordinate is not a guarantee that a complete value exists there.
+a reported path is not a guarantee that a complete value exists there.
 
 Core validation paths depend on the operation. Aggregate validation addresses the core document,
 but a constructor checks its own construction context. For example, an invalid `ErrorSource` pointer
-is reported at `/errors/source/pointer`; this does not establish a coordinate in an incoming request.
+is reported at `/errors/source/pointer`; this does not establish a location in an incoming request.
 Validated-write failures describe the document being written, not necessarily request data.
 
-### Mapping coordinates and wire names
+### Mapping paths and JSON member names {#mapping-coordinates-and-wire-names}
 
-[`MappingLocation`][mapping-location] is the canonical structural mapping coordinate:
+[`MappingLocation`][mapping-location] represents a mapping failure's path as JSON Pointer segments:
 `exception.location().pointer()` returns its text when `location()` is non-null.
 `exception.propertyPath()` returns the same text, or null when the location is absent.
 
@@ -60,7 +60,8 @@ Direct resource mapping and binding use **resource-relative** pointers, for exam
 in the path: a Java property named `title` that is renamed to `headline` is reported as
 `/attributes/headline`, not `/attributes/title`.
 
-Advanced typed-envelope readers compose document prefixes with those resource-local paths:
+Jackson-specific typed document readers, which bind primary and included resources through a
+`ResourceTypeRegistry`, prepend the resource's document path:
 
 | Resource occurrence | Example composed location |
 |---------------------|---------------------------|
@@ -68,12 +69,12 @@ Advanced typed-envelope readers compose document prefixes with those resource-lo
 | First resource in a primary collection | `/data/0/relationships/author/data` |
 | Second included resource | `/included/1/attributes/title` |
 
-An envelope failure can identify the enclosing resource, such as `/included/1`, even when no local
-member path is available. Do not infer the coordinate basis from the exception family or the fact
-that JSON was read: an ordinary Level-1 resource read can still expose a resource-relative mapping
-pointer. Use the contract of the operation you invoked.
+A typed document failure can identify the enclosing resource, such as `/included/1`, even when no
+local member path is available. Whether a pointer starts at the document or at one resource depends
+on the operation: `api.resources().readOne`, for example, can report a resource-relative mapping
+pointer even though it reads a JSON document. Check the invoked operation's contract.
 
-When no meaningful member coordinate applies, the mapping location is **null**, not `""`, `/`, or
+When no meaningful member path applies, the mapping location is **null**, not `""`, `/`, or
 a class name. `resourceClass()` is optional context, not a request pointer. In RFC 6901, `/` refers
 to a member with an empty name; it is not the document root or a placeholder for an absent location.
 
@@ -109,7 +110,7 @@ only `lineNumber()`, `columnNumber()`, `charOffset()`, and `byteOffset()`, never
 A negative component is unavailable. `SourceLocation.UNKNOWN` has no available components, and
 `isKnown()` means **at least one** is available, not that all four are usable.
 
-Adapters copy best-effort backend token/cursor positions. Availability and precision vary with
+Adapters copy best-effort parsing positions from Jackson. Availability and precision vary with
 Jackson major, input form, and failure; a byte offset need not accompany a character offset, and
 the reported position need not be the exact offending character. Treat positions as diagnostic
 context, not another spelling of a JSON Pointer. Line, column, and offsets are not standard JSON:API
@@ -125,11 +126,11 @@ The [JSON:API error-object specification][error-spec] requires `source.pointer` 
 an enclosing structure, application-created values, or output-side data. [`ErrorSource`][error-source]
 checks pointer syntax only; it does not resolve a pointer against a request.
 
-Before adding attribution, establish the failure's request-side origin, its coordinate basis, and
-the existing request value or parameter that caused it. Do not publish a missing-member pointer
-verbatim. An existing enclosing value may be appropriate when it is the source of the error;
-otherwise omit attribution. For malformed JSON, a diagnostic pointer alone does not establish an
-existing request value.
+Before adding `source`, verify that the failure came from the request, whether its path starts at the
+document or one resource, and which existing request value or parameter caused it. For a missing
+member, an existing enclosing value may be appropriate if it caused the error; otherwise omit
+attribution. For malformed JSON, a diagnostic pointer alone does not establish an existing request
+value.
 
 This deliberately selective example represents **one application's policy**, not a general
 exception converter. Call it only for failures from that application's request decoding/query
@@ -172,13 +173,10 @@ static Optional<ErrorObject> requestError(
 }
 ```
 
-The example uses stable diagnostics to select application-chosen codes and fixed public titles,
-never `getMessage()` or cause text. It omits unavailable query attribution and leaves unapproved
-failures to another application path. Other approved errors can be built without `source`; do not
-manufacture one merely to fill the response.
-
-Mapping, direct construction, and write failures are not automatically client errors. Application
-policy still owns HTTP status, safe detail, response emission, logging/redaction, and security.
+The example selects application-chosen codes and fixed public titles using stable diagnostics,
+rather than `getMessage()` or cause text. It omits unavailable query attribution; other approved
+errors can also be built without `source`. Unhandled failures need another application path.
+Your application owns HTTP status, safe detail, response emission, logging/redaction, and security.
 [`ErrorObject`][error-object] is only a core value. To wrap and serialize selected errors, use the
 existing [error-document example](relationships-and-documents.md#error-documents).
 

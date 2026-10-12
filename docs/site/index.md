@@ -41,8 +41,9 @@ The 0.x line is intended for real library use, but public API refinement remains
 | Parse query parameters and select fields/included resources | [Query and representation](query-and-representation.md) |
 | Diagnose validation, mapping, or query failures | [Diagnostics](diagnostics.md) |
 
-Ordinary mapping follows your configured Jackson property model. Relationships carry identifiers,
-not automatically loaded graphs. The document APIs preserve wire states that a flat DTO cannot.
+DTO mapping follows your configured Jackson property model. Relationships carry identifiers,
+not automatically loaded objects. The document APIs distinguish absent members, explicit null,
+and empty collections or objects, including states a flat DTO cannot represent.
 
 ## Application boundaries
 

@@ -134,7 +134,8 @@ to each operation.
 ## Read and write an article
 
 This complete Jackson 3 application writes an article, reads it back, and prints its title.
-For Jackson 2, change only the two native-major imports and the factory call.
+For Jackson 2, change the `JsonApiJackson3` and `JsonMapper` imports to their Jackson 2 equivalents
+shown above, and use `JsonApiJackson2.jsonApi(mapper)`.
 
 ```java
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
@@ -193,8 +194,9 @@ mix-ins, and value conversion. Unannotated attributes do not join the mapping au
 
 ## API reference and next steps
 
-The guide examples use four neutral facets: `resources()`, `relationships()`, `documents()`, and
-`patches()`. Continue with [resources](resources.md); use
+The `JsonApi` application API groups operations under `resources()`, `relationships()`,
+`documents()`, and `patches()`. Both Jackson adapters implement these same interfaces. Continue with
+[resources](resources.md); use
 [relationships and documents](relationships-and-documents.md#ordinary-or-advanced) to choose a lower-level path.
 
 The [API Reference](api-reference.md) links rendered Javadoc for released artifacts, including

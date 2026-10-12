@@ -9,8 +9,8 @@ Use the configured `JsonApi api` from [getting started](getting-started.md#confi
 
 ## Relationship linkage documents
 
-The relationship facet handles identifiers as primary `data`. It does not return a related-resource
-DTO or fetch a person. Write a to-one linkage document for an existing author:
+`api.relationships()` reads and writes identifiers as primary `data`, rather than fetching related
+objects or returning their DTOs. Write a to-one linkage document for an existing author:
 
 ```java
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
@@ -101,14 +101,14 @@ Result:
 ```
 
 `readToMany` returns an empty list for this document. To-one and to-many reads reject the other
-cardinality rather than converting it. Top-level links/meta on a linkage document require the
-explicit document or advanced codec path.
+cardinality rather than converting it. For top-level links/meta on a linkage document, use
+`api.documents()` or a Jackson-specific document writer.
 
 ## Preserve document state
 
-Raw reads require a semantic context because a type/id-only object or empty array does not tell the
-reader whether you mean resources or identifiers. For a response body (`responseBody`) containing
-explicit-null primary data:
+`api.documents().read` needs a `DocumentReadContext` that selects resources or identifiers and the
+validation rules to apply. A type/id-only object or empty array cannot distinguish those choices on
+its own. For a response body (`responseBody`) containing explicit-null primary data:
 
 ```json
 {
@@ -135,9 +135,9 @@ String responseJson = api.documents().write(document);
 
 The result has the same JSON shape as the input above.
 
-In the core model, a containing Java null means an absent member. Explicit-null data/linkage uses
-a sealed variant; an empty collection or wrapper stays present-empty. A flat DTO cannot represent
-every one of these states.
+In the core model, a null member reference means the member is absent. Explicit-null `data` uses
+`DocumentData.NullData` (or `RelationshipData.NullLinkage` inside a relationship). Empty collections
+or wrapper objects remain present. A flat DTO cannot represent every one of these states.
 
 For this relationship-endpoint response body (`linkageBody`):
 
@@ -169,13 +169,15 @@ JsonApiDocument linkage = api.documents().read(linkageBody, linkageContext);
 
 `linkage.data()` is a `DocumentData.SingleIdentifier` for `people` / `p1`.
 
-`identifierDefaults()` alone does **not** select relationship-endpoint validation. The document
-facet writes with response/other validation; raw create/update writing with a custom validation
-context is advanced. Ordinary create/update authoring uses [resources](resources.md).
+`identifierDefaults()` selects identifier decoding but keeps the default validation rules; select
+relationship-endpoint validation explicitly as above. `api.documents().write` validates with
+`DocumentUsage.RESPONSE_OR_OTHER` (response or other document use). Use
+[resource operations](resources.md) to author create/update documents, or a Jackson-specific document
+writer when you need a custom validation context.
 
 ## Links-only and meta-only relationships
 
-Ordinary mapped relationships always carry `data`. For a response that intentionally leaves it out,
+DTO-mapped relationships always carry `data`. For a response that intentionally leaves it out,
 construct the relationship in the core model:
 
 ```java
@@ -307,7 +309,7 @@ Result:
 }
 ```
 
-Read error documents through the document facet, not a resource DTO operation:
+Read error documents through `api.documents()`:
 
 ```java
 import com.kazforge.jsonapi.document.DocumentReadContext;
@@ -329,19 +331,22 @@ See [Diagnostics](diagnostics.md) for the four exception families, stable codes,
 and selective application-owned JSON:API error attribution. A diagnostic path is not automatically
 a valid request `source.pointer`; public detail and HTTP policy stay with the application.
 
-## Ordinary or Advanced?
+## Choose an application or Jackson-specific API {#ordinary-or-advanced}
+
+Use `JsonApi` for the operations shown in this guide. The adapters also expose Jackson-specific
+readers, writers, mappers, and binders for direct control over types, validation, and mapping policy:
 
 | Need | Use |
 |------|-----|
-| Homogeneous resource DTOs, linkage, raw documents, typed PATCH | Neutral `JsonApi` facets |
+| Resource DTOs of one declared type, linkage, raw documents, typed PATCH | `JsonApi` application API |
 | Exact absent/null/empty state, links-only relationships, errors | `api.documents()` with core values and explicit read context |
-| Native parameterized Jackson `JavaType`, custom codec validation, per-call mapping policy | Major-specific readers, writers, mappers, binders |
-| Heterogeneous typed primary/included resources | Advanced domain-document reader with explicit `ResourceTypeRegistry` |
+| Parameterized Jackson `JavaType`, custom codec validation, per-call mapping policy | Jackson-specific readers, writers, mappers, binders |
+| Primary/included DTOs of different resource types | Jackson-specific domain-document reader with explicit `ResourceTypeRegistry` |
 
-The advanced factories are on
+The Jackson-specific factories are on
 [`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.2.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html)
 and [`JsonApiJackson2`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson2/0.2.0/com/kazforge/jsonapi/jackson2/JsonApiJackson2.html).
-Advanced typed envelopes bind included resources independently, not into a relationship graph.
-Jackson 2 advanced I/O uses checked `IOException`; its Level-1 stream failures use
+Typed document readers bind included resources independently, not into DTO relationships. Jackson 2
+I/O through the Jackson-specific APIs uses checked `IOException`; `JsonApi` stream operations use
 `UncheckedIOException`. Jackson 3 follows its native unchecked exception model. Caller-owned sources
 and sinks remain open.
