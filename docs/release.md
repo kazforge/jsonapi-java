@@ -8,13 +8,15 @@ This page owns release mechanics. Version and change semantics are defined in
 The [Release workflow](../.github/workflows/release.yml) runs on `main`:
 
 1. release-please maintains a rolling release PR with the root version, changelog,
-   manifest, and public guide dependency examples.
+   manifest, public guide dependency examples, and homepage current-release line.
 2. Merging that PR creates the `v<version>` tag and GitHub Release.
 3. The publish job checks out the tag, builds and signs Maven publications, generates
    SBOMs and provenance attestations, then uploads the bundle to Central for automatic publishing.
 
 `gradle.properties` is the version source. Keep the release-managed markers in
-`docs/site/getting-started.md`; do not update those dependency versions independently.
+`docs/site/getting-started.md` and `docs/site/index.md`; do not update their release versions
+independently. These versions advance when the release PR merges, before Central publication is
+verified; the homepage current-release line is not confirmation of artifact availability.
 
 ## Release PR review
 
@@ -23,7 +25,8 @@ as an accumulator; do not merge it for internal-only changes. Merging is the rel
 
 Before merging:
 
-- Check that the version, manifest, changelog, and guide dependency examples agree.
+- Check that the version, manifest, changelog, guide dependency examples, and homepage current-release
+  line agree.
 - Review [supported API and behavior changes](architecture.md#public-api-ownership),
   including dependency support changes, against ADR-014 and the release notes.
 - For Jackson baseline changes, check the documented

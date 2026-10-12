@@ -91,7 +91,8 @@ Verify public versions in [Maven Central](https://central.sonatype.com/namespace
 For Jackson 2, replace the adapter artifact with `jsonapi-java-jackson2`. Add `jsonapi-java-query`
 separately if you need [query parsing](query-and-representation.md).
 
-Before 1.0, a breaking change ships in a minor release, never a patch release. Review release notes
+Before 1.0, a breaking change ships in a minor release, never a patch release. Review
+[release notes](https://github.com/kazforge/jsonapi-java/releases)
 when upgrading across minors. Raising a supported Java or Jackson minimum is a breaking change too.
 
 ## Configure a runtime
