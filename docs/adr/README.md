@@ -3,8 +3,8 @@
 ADRs record consequential, hard-to-reverse “why” decisions. The current cross-module mental model
 lives in [`docs/architecture.md`](../architecture.md). Stable product direction lives in
 [`docs/vision.md`](../vision.md); current capability lives in module READMEs and
-[`docs/conformance.md`](../conformance.md). Owner and conflict rules are in
-[`AGENTS.md`](../../AGENTS.md).
+[`docs/conformance.md`](../conformance.md). Documentation ownership is summarized in
+[`architecture.md`](../architecture.md#documentation-ownership).
 
 - [ADR-001: Document Codec as the Product Boundary](001-product-boundary.md)
 - [ADR-002: Preserve JSON:API Wire States](002-document-representation.md)
