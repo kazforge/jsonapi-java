@@ -70,6 +70,15 @@ construction, and native diagnostics in `internal.mapping`. The
 - Jackson 3 property, serializer/deserializer, and PATCH-marker mechanics stay adapter-local. The
   `PatchPresence` module is registered only on derived typed-PATCH mappers, never the caller mapper.
 
+## Test ownership
+
+Behavioral characterization lives in the direct Spock specs under
+[`src/test/groovy/com/kazforge/jsonapi/jackson3/contract`](src/test/groovy/com/kazforge/jsonapi/jackson3/contract).
+Adjacent adapter specs cover configured Jackson mechanics, codec and schema checks, and advanced
+entry points; `internal/mapping` and `internal/codec` specs exercise their respective responsibilities.
+The [API test fixtures](../jsonapi-java-api/README.md#shared-test-fixtures) provide reusable passive
+DTOs and the canonical JSON/schema resources. Each consuming spec owns setup and assertions.
+
 ## Non-goals
 
 This module does not provide HTTP or media-type policy, query parsing, field authorization,

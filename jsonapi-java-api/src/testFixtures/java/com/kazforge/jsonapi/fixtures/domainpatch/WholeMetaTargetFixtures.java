@@ -16,9 +16,9 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Whole-meta declaration shapes shared across Jackson majors: valid Object/renamed
- * relationship-meta targets, missing-meta PATCH DTOs, and invalid scalar/list/JDK-scalar
- * declarations. Polymorphic {@code TypeDeserializer} targets stay adapter-local.
+ * Whole-meta declaration shapes reused by Jackson 3 suites: valid Object/renamed relationship-meta
+ * targets, missing-meta PATCH DTOs, and invalid scalar/list/JDK-scalar declarations. Polymorphic
+ * {@code TypeDeserializer} targets stay adapter-local.
  */
 public final class WholeMetaTargetFixtures {
 

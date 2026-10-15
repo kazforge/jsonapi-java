@@ -1,6 +1,6 @@
 /**
- * Passive, application-shaped PATCH fixture carriers shared across Jackson-major adapter suites:
- * ordinary structured values, presence-aware PATCH DTOs, JavaBean-style mutable shapes, and the
+ * Passive, application-shaped PATCH fixture carriers reused by Jackson 3 suites: ordinary
+ * structured values, presence-aware PATCH DTOs, JavaBean-style mutable shapes, and the
  * intentionally invalid declarations exercised by declaration-validation scenarios.
  *
  * <p>This package contains passive carriers only. Scenario catalogs, scenario/expectation
