@@ -21,3 +21,4 @@ lives in [`docs/architecture.md`](../architecture.md). Stable product direction 
 - [ADR-013: KazForge Namespace and Maven Group](013-kazforge-namespace.md)
 - [ADR-014: Unified Release Train and Version Semantics](014-unified-release-train.md)
 - [ADR-015: Share Mapping Semantics, Keep Native Wire Codecs](015-responsibility-based-mapping-and-native-wire-codecs.md)
+- [ADR-016: Jackson 3-Only Product Scope](016-jackson-3-only-product-scope.md)

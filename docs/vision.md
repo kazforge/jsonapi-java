@@ -65,10 +65,11 @@ semantics. Extension-specific behavior requires an explicitly scoped feature.
 - Core remains free of functional third-party runtime dependencies; compile-only nullness metadata
   is allowed.
 - Domain mapping is opt-in and requires no inheritance or framework interface.
-- Jackson majors and query parsing remain separate artifacts in this repository; framework
+- The Jackson 3 runtime and query parsing remain separate artifacts in this repository; framework
   integration is a separate companion product.
-- Native-major adapters share neutral semantic contracts without runtime detection or a
-  lowest-common-denominator Jackson abstraction.
+- Neutral Core and API contracts stay decoupled from Jackson types, while the Jackson 3 adapter
+  keeps mapping semantics and token wire-codec responsibilities internally separated without a
+  generic multi-backend abstraction.
 - A companion framework product stays thin and depends on released lower-layer public contracts,
   never the reverse.
 - Planned modules have no usable entry point until they join the build. `settings.gradle.kts` owns
