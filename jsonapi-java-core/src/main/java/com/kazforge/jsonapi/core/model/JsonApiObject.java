@@ -56,6 +56,13 @@ public record JsonApiObject(
             additionalMembers, "/jsonapi", "Invalid jsonapi member name: ", RESERVED_ADDITIONAL);
   }
 
+  /**
+   * Creates a present-empty {@code jsonapi} object, distinct from an absent containing component.
+   */
+  public static JsonApiObject empty() {
+    return new JsonApiObject(null, null, null, null, Map.of());
+  }
+
   /** Creates a {@code jsonapi} object containing only {@code version}. */
   public static JsonApiObject ofVersion(String version) {
     return new JsonApiObject(version, null, null, null, Map.of());

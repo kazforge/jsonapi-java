@@ -34,14 +34,6 @@ final class IdentifierMetaSupport {
 
   /** Overlays identifier meta while preserving type, id, lid, and additional members. */
   public static ResourceIdentifier withMeta(ResourceIdentifier identifier, @Nullable Meta meta) {
-    return copyPreservingAdditionalMembers(identifier, meta);
-  }
-
-  // NullAway loses the record constructor's nullable map-value annotation across artifacts.
-  @SuppressWarnings("NullAway")
-  private static ResourceIdentifier copyPreservingAdditionalMembers(
-      ResourceIdentifier identifier, @Nullable Meta meta) {
-    return new ResourceIdentifier(
-        identifier.type(), identifier.id(), identifier.lid(), meta, identifier.additionalMembers());
+    return identifier.withMeta(meta);
   }
 }

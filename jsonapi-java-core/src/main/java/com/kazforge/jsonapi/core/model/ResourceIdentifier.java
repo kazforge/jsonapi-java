@@ -58,6 +58,14 @@ public record ResourceIdentifier(
     return new ResourceIdentifier(type, null, lid, null, Map.of());
   }
 
+  /**
+   * Returns a copy replacing metadata, or omitting it when {@code null}, preserving identity and
+   * additional members.
+   */
+  public ResourceIdentifier withMeta(@Nullable Meta meta) {
+    return new ResourceIdentifier(type, id, lid, meta, additionalMembers);
+  }
+
   private static void requireType(@Nullable String type) {
     if (type == null) {
       LocalValidation.fail(

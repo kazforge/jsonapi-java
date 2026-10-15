@@ -5,6 +5,8 @@ import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper
 import com.kazforge.jsonapi.api.ResourceWriteOptions
 import com.kazforge.jsonapi.core.aggregate.ValidationContext
 import com.kazforge.jsonapi.core.model.JsonApiObject
+import com.kazforge.jsonapi.core.model.Links
+import com.kazforge.jsonapi.core.model.Meta
 import com.kazforge.jsonapi.core.model.RelationshipData
 import com.kazforge.jsonapi.core.model.ResourceIdentity
 import com.kazforge.jsonapi.core.validation.EndpointIdentity
@@ -85,6 +87,63 @@ class Jackson3JsonApiResourcesSpec extends Specification {
 
     then:
     actual.id() == "7"
+  }
+
+  def "compiled configuration example overrides jsonapi defaults with a present-empty object"() {
+    given:
+    def runtime = JsonApiJackson3.builder(JsonMapper.builder().build()).jsonApiVersion("1.1").build()
+    def article = new Article("1", "T", "B", List.of(), null)
+
+    when:
+    def explicit = runtime.resources().writeOne(article, RecordConstructionExamples.explicitEmptyJsonApiOptions())
+    def inherited = runtime.resources().writeOne(article, RecordConstructionExamples.metadataOptions())
+    def cleared = runtime.resources().writeOne(article, ResourceWriteOptions.defaults().withEnvelope(
+        DocumentEnvelope.ofJsonApi(JsonApiObject.empty()).withJsonApi(null)))
+
+    then:
+    runtime.documents().read(explicit, DocumentReadContext.resourceDefaults()).jsonapi() == JsonApiObject.empty()
+    explicit.contains('"jsonapi":{}')
+    runtime.documents().read(inherited, DocumentReadContext.resourceDefaults()).jsonapi() == JsonApiObject.ofVersion("1.1")
+    runtime.documents().read(inherited, DocumentReadContext.resourceDefaults()).meta() == Meta.of([request: "req-7"])
+    runtime.documents().read(cleared, DocumentReadContext.resourceDefaults()).jsonapi() == JsonApiObject.ofVersion("1.1")
+  }
+
+  def "envelope helpers preserve absent empty and explicit-null wire states"() {
+    given:
+    def mapper = JsonMapper.builder().build()
+    def article = new Article("1", "T", "B", List.of(), null)
+
+    when:
+    def absent = mapper.readTree(jsonApi.resources().writeOne(article,
+        ResourceWriteOptions.defaults().withEnvelope(DocumentEnvelope.empty())))
+    def empty = mapper.readTree(jsonApi.resources().writeOne(article,
+        ResourceWriteOptions.defaults().withEnvelope(DocumentEnvelope.ofLinks(Links.empty())
+        .withMeta(Meta.empty()).withJsonApi(JsonApiObject.empty()))))
+    def explicitNull = mapper.readTree(jsonApi.resources().writeOne(article,
+        ResourceWriteOptions.defaults().withEnvelope(DocumentEnvelope.ofLinks(Links.ofLinks([self: null]))
+        .withMeta(Meta.of([missing: null])))))
+
+    then:
+    !absent.has("links")
+    !absent.has("meta")
+    !absent.has("jsonapi")
+    empty.path("links") == mapper.readTree('{}')
+    empty.path("meta") == mapper.readTree('{}')
+    empty.path("jsonapi") == mapper.readTree('{}')
+    explicitNull.path("links").has("self")
+    explicitNull.path("links").path("self").isNull()
+    explicitNull.path("meta").has("missing")
+    explicitNull.path("meta").path("missing").isNull()
+  }
+
+  def "compiled relationships example writes a links-only relationship"() {
+    when:
+    def json = jsonApi.documents().write(RecordConstructionExamples.linksOnlyDocument())
+    def tree = JsonMapper.builder().build().readTree(json)
+
+    then:
+    tree.path("data").path("relationships").path("author").path("links").path("related").asString() == "/articles/1/author"
+    !tree.path("data").path("relationships").path("author").has("data")
   }
 
   def "builder linkage mappers serve custom relationship targets"() {
@@ -233,7 +292,7 @@ class Jackson3JsonApiResourcesSpec extends Specification {
   def "sparse-fieldset write provenance reads back with configured exemptions"() {
     given:
     def options = new ResourceWriteOptions(
-        new DocumentEnvelope(null, null, null),
+        DocumentEnvelope.empty(),
         RepresentationSelection.builder()
         .include(IncludePath.of("comments"))
         .fields("articles", "title")

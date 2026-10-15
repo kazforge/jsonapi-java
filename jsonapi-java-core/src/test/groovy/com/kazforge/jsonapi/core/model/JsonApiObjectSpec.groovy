@@ -6,6 +6,12 @@ import spock.lang.Specification
 
 class JsonApiObjectSpec extends Specification {
 
+  def "empty factory represents a present object with no members"() {
+    expect:
+    JsonApiObject.empty() == new JsonApiObject(null, null, null, null, [:])
+    JsonApiObject.empty() != JsonApiObject.ofVersion("1.1")
+  }
+
   def "version factory and additional members are preserved"() {
     when:
     def object = new JsonApiObject("1.1", null, null, Meta.of([count: 1]), ["ext:trace": "abc"])

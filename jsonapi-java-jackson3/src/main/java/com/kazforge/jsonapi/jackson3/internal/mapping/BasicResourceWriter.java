@@ -135,21 +135,7 @@ final class BasicResourceWriter<T, P> {
     if (meta == null) {
       return base;
     }
-    return withMeta(base, meta);
-  }
-
-  // NullAway loses the record constructor's nullable map-value annotation across artifacts.
-  @SuppressWarnings("NullAway")
-  private static ResourceObject withMeta(ResourceObject base, Meta meta) {
-    return new ResourceObject(
-        base.type(),
-        base.id(),
-        base.lid(),
-        base.attributes(),
-        base.relationships(),
-        base.links(),
-        meta,
-        base.additionalMembers());
+    return base.withMeta(meta);
   }
 
   /**

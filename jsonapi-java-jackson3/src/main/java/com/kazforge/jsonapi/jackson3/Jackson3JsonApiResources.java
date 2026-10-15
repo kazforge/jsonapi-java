@@ -316,7 +316,7 @@ final class Jackson3JsonApiResources implements JsonApiResources {
     if (envelope.jsonapi() != null || defaultJsonApi == null) {
       return envelope;
     }
-    return new DocumentEnvelope(envelope.links(), envelope.meta(), defaultJsonApi);
+    return envelope.withJsonApi(defaultJsonApi);
   }
 
   private JsonApiDocumentWriter updateWriter(@Nullable EndpointIdentity expectedIdentity) {
