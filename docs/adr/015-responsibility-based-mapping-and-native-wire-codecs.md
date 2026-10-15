@@ -1,6 +1,6 @@
 # ADR-015: Share Mapping Semantics, Keep Native Wire Codecs
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-016](016-jackson-3-only-product-scope.md)
 **Date:** 2026-09-24
 
 ## Context
