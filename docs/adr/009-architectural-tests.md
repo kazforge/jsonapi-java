@@ -25,7 +25,7 @@ In particular:
 - supported neutral contracts are not redeclared by the Jackson 3 adapter, and internal
   implementation types do not leak through supported public signatures;
 - shared fixtures remain passive application-shaped data and resources, apart from the neutral
-  resource loader; behavioral orchestration and assertions remain adapter-local. The API module
+  resource loader; behavioral orchestration and assertions remain adapter-local. The Jackson 3 module
   owns the shared-fixture architecture checks;
 - characterization specs live directly in the Jackson 3 test source set. Following the Jackson
   3-only decision in ADR-016, shared fixtures have no assertion or orchestration exception;

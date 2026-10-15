@@ -32,8 +32,8 @@ import tools.jackson.databind.json.JsonMapper
 
 /**
  * Adapter-local cross-check of direct writer output and corpus documents against the pinned JSON:API
- * 1.1 draft schemas owned by the Jackson API test fixtures. Pin/integrity of those resources lives
- * in the test-fixture resources; this spec owns the adapter-specific schema checks.
+ * 1.1 draft schemas owned by this adapter's test resources. Pin/integrity of those resources lives
+ * alongside the schemas; this spec owns the adapter-specific schema checks.
  *
  * The draft schemas are unreleased and not an official conformance oracle: a schema result never
  * changes a conformance status in docs/conformance.md.

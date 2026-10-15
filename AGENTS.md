@@ -11,7 +11,7 @@ Read the affected module README, package documentation (`package-info.java`), fo
 Javadoc, and corresponding tests before changing a contract. Sources are under `<module>/src/main/`;
 Spock specs are under `src/test/groovy/`, with Java test code under `src/test/java/`.
 Shared fixture and corpus maintenance starts with the
-[API module's fixture documentation](jsonapi-java-api/README.md#shared-test-fixtures) and the
+[Jackson 3 fixture documentation](jsonapi-java-jackson3/README.md#test-fixtures) and the
 affected resource README.
 
 [`build-logic/`](build-logic/) owns shared Java/test/nullness/coverage and formatting configuration;

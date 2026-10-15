@@ -1,4 +1,4 @@
-package com.kazforge.jsonapi.architecture
+package com.kazforge.jsonapi.jackson3.architecture
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses

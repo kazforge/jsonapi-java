@@ -76,8 +76,18 @@ Behavioral characterization lives in the direct Spock specs under
 [`src/test/groovy/com/kazforge/jsonapi/jackson3/contract`](src/test/groovy/com/kazforge/jsonapi/jackson3/contract).
 Adjacent adapter specs cover configured Jackson mechanics, codec and schema checks, and advanced
 entry points; `internal/mapping` and `internal/codec` specs exercise their respective responsibilities.
-The [API test fixtures](../jsonapi-java-api/README.md#shared-test-fixtures) provide reusable passive
-DTOs and the canonical JSON/schema resources. Each consuming spec owns setup and assertions.
+Each consuming spec owns setup and assertions.
+
+### Test fixtures
+
+This module's ordinary test source set owns passive application-shaped DTOs, the
+[canonical JSON corpus](src/test/resources/jsonapi/corpus/1.1/README.md),
+[pinned draft schemas](src/test/resources/jsonapi/schema/vendor/1.1-pr1603/README.md), and the
+`TestFixtureResources` classpath loader. These are test-only inputs shared across this adapter's
+suites, not a published test-fixtures variant.
+The [fixture package documentation](src/test/java/com/kazforge/jsonapi/fixtures/package-info.java)
+and [ADR-009](../docs/adr/009-architectural-tests.md) describe the passive-fixture boundary;
+adapter-local architecture checks enforce it.
 
 ## Non-goals
 
