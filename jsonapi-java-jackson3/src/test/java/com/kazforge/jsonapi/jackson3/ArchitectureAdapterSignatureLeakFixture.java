@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson3;
 
 import com.kazforge.jsonapi.jackson3.internal.codec.ArchitectureAdapterInternalException;
-import com.kazforge.jsonapi.jackson3.internal.mapping.PropertyRole;
+import com.kazforge.jsonapi.jackson3.internal.mapping.EffectiveRepresentation;
 import java.util.List;
 
 /** Test-only supported signatures exposing unsupported implementation types. */
@@ -17,7 +17,7 @@ public final class ArchitectureAdapterSignatureLeakFixture {
     throw new ArchitectureAdapterInternalException();
   }
 
-  public List<PropertyRole> leaksMappingInternalArgument() {
-    return List.of(PropertyRole.ATTRIBUTE);
+  public List<EffectiveRepresentation> leaksMappingInternalArgument() {
+    return List.of();
   }
 }

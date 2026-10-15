@@ -25,7 +25,7 @@ import org.jspecify.annotations.Nullable;
  * @param <T> opaque backend-native type token
  */
 @NullMarked
-public sealed interface RelationshipShape<T>
+sealed interface RelationshipShape<T>
     permits RelationshipShape.Ordinary, RelationshipShape.Wrapped {
 
   /** Whether the relationship is declared to-many. */

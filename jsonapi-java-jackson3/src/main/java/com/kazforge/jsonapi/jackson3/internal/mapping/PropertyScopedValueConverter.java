@@ -1,12 +1,15 @@
 package com.kazforge.jsonapi.jackson3.internal.mapping;
 
+import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.JsonToken;
+import tools.jackson.databind.BeanDescription;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.PropertyName;
+import tools.jackson.databind.SerializationConfig;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.ValueDeserializer;
 import tools.jackson.databind.ValueSerializer;
@@ -14,9 +17,11 @@ import tools.jackson.databind.deser.DeserializationContextExt;
 import tools.jackson.databind.deser.SettableBeanProperty;
 import tools.jackson.databind.deser.bean.BeanDeserializerBase;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 import tools.jackson.databind.ser.BeanPropertyWriter;
 import tools.jackson.databind.ser.PropertyWriter;
 import tools.jackson.databind.ser.SerializationContextExt;
+import tools.jackson.databind.ser.ValueSerializerModifier;
 import tools.jackson.databind.ser.bean.BeanSerializerBase;
 import tools.jackson.databind.util.TokenBuffer;
 
@@ -235,4 +240,30 @@ final class PropertyScopedValueConverter {
 
   private record SerializerPropertyResolution(
       boolean beanSerializerAvailable, @Nullable BeanPropertyWriter property) {}
+
+  /** Registers raw-value-capable copies of Jackson's bean property writers. */
+  private static final class RawValuePropertyModule extends SimpleModule {
+
+    private RawValuePropertyModule() {
+      super("jsonapi-java-raw-property-values");
+      setSerializerModifier(new RawValuePropertyModifier());
+    }
+
+    private static final class RawValuePropertyModifier extends ValueSerializerModifier {
+
+      @Override
+      public List<BeanPropertyWriter> changeProperties(
+          SerializationConfig config,
+          BeanDescription.Supplier beanDescription,
+          List<BeanPropertyWriter> properties) {
+        for (int i = 0; i < properties.size(); i++) {
+          BeanPropertyWriter property = properties.get(i);
+          if (!property.isUnwrapping() && !(property instanceof RawValueBeanPropertyWriter)) {
+            properties.set(i, new RawValueBeanPropertyWriter(property));
+          }
+        }
+        return properties;
+      }
+    }
+  }
 }

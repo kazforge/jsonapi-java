@@ -23,7 +23,7 @@ import org.jspecify.annotations.Nullable;
  * @param <T> opaque backend-native type token
  */
 @NullMarked
-public sealed interface ReadRelationshipShape<T>
+sealed interface ReadRelationshipShape<T>
     permits ReadRelationshipShape.Direct,
         ReadRelationshipShape.Mapped,
         ReadRelationshipShape.Wrapped {
