@@ -45,12 +45,6 @@ tasks.named<JavaCompile>("compileJava").configure {
     }
 }
 
-plugins.withId("java-test-fixtures") {
-    tasks.named<JavaCompile>("compileTestFixturesJava").configure {
-        options.errorprone.enabled.set(false)
-    }
-}
-
 // Test runtime selection: workers default to the Java 21 baseline so a plain local
 // build behaves exactly as before. CI passes -PtestJavaVersion=<matrix> to run the
 // suite on a newer runtime while compilation stays on the 21 toolchain above.

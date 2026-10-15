@@ -17,7 +17,7 @@ import tools.jackson.databind.annotation.JsonSerialize;
  * Identifier-meta conversion fixtures owned by {@code IdentifierMetaConversionAuthoritySpec}:
  * generic {@code JavaType} preservation, configured naming, custom serializers, and custom
  * linkage-mapper targets. Shared wrapper/container/lid/additional-member carriers live in the
- * Jackson API test fixtures.
+ * Jackson 3 adapter test fixtures.
  */
 public final class IdentifierMetaFixtures {
 

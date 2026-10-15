@@ -3,7 +3,7 @@
 Version-neutral JSON:API documents used by Jackson 3 adapter tests. This corpus is the normative
 shared wire-input inventory for codec, mapping, and PATCH semantics; do not fork per-suite copies.
 The files ship as classpath resources under
-`jsonapi/corpus/1.1/` and are loaded with the small resource helper in the test-fixture source set.
+`jsonapi/corpus/1.1/` and are loaded with the small resource helper in the Jackson 3 test source set.
 
 ## Layout
 

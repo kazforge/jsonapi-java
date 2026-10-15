@@ -17,7 +17,7 @@ dependencies {
     if (jacksonTestVersion == "current") {
         testImplementation(libs.jackson3.current.databind)
     }
-    testImplementation(testFixtures(project(":jsonapi-java-api")))
+    testImplementation(libs.jackson.annotations)
     testImplementation(libs.groovy.json)
     testImplementation(libs.archunit)
     // JSON-only schema checks use this adapter's Jackson, not the validator's requested versions.
