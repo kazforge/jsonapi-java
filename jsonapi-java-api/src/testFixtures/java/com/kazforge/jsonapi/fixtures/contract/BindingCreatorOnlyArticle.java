@@ -7,7 +7,7 @@ import com.kazforge.jsonapi.annotation.JsonApiResource;
 /**
  * Creator-only attribute carrier for the shared binding-construction contract: Jackson binds the
  * immutable record components through the effective canonical creator without any explicit
- * annotation beyond the JSON:API roles, so both adapters exercise the same neutral carrier.
+ * annotation beyond the JSON:API roles, so the adapter exercises a neutral carrier.
  */
 @JsonApiResource(type = "binding-creator")
 public record BindingCreatorOnlyArticle(@JsonApiId String id, @JsonApiAttribute String title) {}

@@ -15,7 +15,7 @@ import spock.lang.Specification
  * Resource-level mapping-definition characterization contract. Every listed invariant is observed
  * through the Level-1 {@code writeOne} entry point as a {@link JsonApiMappingException} carrying the
  * diagnostic code, the resource class, the resource-relative property path, and the exact message,
- * because these definition semantics are shared by both Jackson adapters rather than adapter-local
+ * because these definition semantics are mapping contracts rather than adapter-local
  * diagnostics. It also pins the cross-phase precedence that does not depend on property order,
  * relationship-meta target resolution by logical identity under the target's wire name, and a
  * representative read-parity table through {@code readOne}. Concrete adapter subclasses supply the

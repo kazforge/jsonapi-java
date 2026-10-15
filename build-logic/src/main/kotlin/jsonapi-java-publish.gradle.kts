@@ -47,10 +47,6 @@ publishing {
                             "Jackson 3 runtime, codec, mapping, and PATCH binding."
                         }
 
-                        "jsonapi-java-jackson2" -> {
-                            "Jackson 2 runtime, codec, mapping, and PATCH binding."
-                        }
-
                         else -> {
                             "JSON:API document, mapping, and validation library."
                         }

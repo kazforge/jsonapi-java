@@ -1,8 +1,8 @@
 # JSON:API 1.1 document fixtures
 
-Version-neutral JSON:API documents used by adapter tests. Jackson 2 and Jackson 3 tests share this
-corpus as the normative shared wire-input inventory for semantics that must match across Jackson
-majors; do not fork major-specific copies. The files ship as classpath resources under
+Version-neutral JSON:API documents used by Jackson 3 adapter tests. This corpus is the normative
+shared wire-input inventory for codec, mapping, and PATCH semantics; do not fork per-suite copies.
+The files ship as classpath resources under
 `jsonapi/corpus/1.1/` and are loaded with the small resource helper in the test-fixture source set.
 
 ## Layout
@@ -22,7 +22,7 @@ the named documents under `envelope-binding/` and `patch/`.
 
 ## Normative coverage
 
-The corpus names representative wire inputs where cross-major drift would be costly. Filenames are
+The corpus names representative wire inputs where behavioral drift would be costly. Filenames are
 stable fixture identifiers; adapter specs own contexts, decoded values, diagnostics, and assertions.
 
 | Group | Representative resources |
@@ -35,9 +35,8 @@ stable fixture identifiers; adapter specs own contexts, decoded values, diagnost
 
 ## Regression rule
 
-For a future bug whose observable behavior must match across Jackson 2 and Jackson 3, add or extend
-one neutral corpus case where the wire scenario is major-independent, consume it from both adapter
-suites, and keep any major-specific mechanic proof local.
+For a future bug, add or extend one neutral corpus case, consume it from the affected adapter
+specs, and keep native mechanic proof local.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 # Changelog
 
-Consumer-visible changes for the unified release train shared by all seven
+Consumer-visible changes for the unified release train shared by the
 `com.kazforge:jsonapi-java-*` artifacts. Version and change semantics follow
 [ADR-014](docs/adr/014-unified-release-train.md); release-please maintains future
 entries. Tags are named `v<version>`.

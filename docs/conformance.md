@@ -80,14 +80,13 @@ relationship endpoint role) are independent choices.
 
 | Feature | Status | Boundary |
 |---------|--------|----------|
-| JSON serialization | supported | Jackson 2 and Jackson 3 validate before emission |
+| JSON serialization | supported | Jackson 3 validates before emission |
 | JSON deserialization | supported | Token-driven decode through core construction, followed by aggregate validation |
 | Ambiguous primary data | supported | Caller supplies explicit `PrimaryDataKind`; shared object/empty-array cases are valid under both applicable kinds |
 | Deterministic emission | supported | Standard member order, insertion-ordered additional members, canonical `hreflang`, and exact UTF-8 behavior |
 | Malformed-input diagnostics | supported | Category, pointer, and safe source location; parser cursor is the fallback when an exception lacks location |
 | Caller-owned sources and sinks | supported | Supplied streams, writers, parsers, and generators remain open; callers own buffering and flushing |
 | Shared negative wire corpus | supported | Read-only neutral inputs; behavioral expectations remain adapter-local |
-| Jackson 2 advanced stream I/O | supported | Advanced APIs retain checked `IOException`; the Level-1 runtime adapts unavoidable stream failures to `UncheckedIOException` |
 
 ## Draft-schema cross-check (supplemental)
 
@@ -110,7 +109,7 @@ Schema provenance, pins, and fixture-specific invariants live in the
 
 | Feature | Status | Boundary |
 |---------|--------|----------|
-| Annotated domain-to-resource mapping | supported | Both Jackson adapters; configured Jackson owns visible property behavior |
+| Annotated domain-to-resource mapping | supported | Jackson 3; configured Jackson owns visible property behavior |
 | Independent id/lid roles | supported | Separate write, read, relationship, and inclusion identities; usage legality remains core validation |
 | Relationship data presence | supported | Every selected mapped relationship emits `data`; a data-less wire relationship binds no linkage while relationship meta can still bind |
 | Compound inclusion | supported | Explicit include selection plus application policy; no automatic graph traversal |
@@ -118,8 +117,8 @@ Schema provenance, pins, and fixture-specific invariants live in the
 | Link decoration | supported | Adds resource and mapped-relationship links only; never creates or resurrects relationships |
 | Flat resource-to-DTO binding | supported | Validated document first, linkage-oriented, never reads `included` |
 | Typed domain envelopes | supported | Advanced explicit type registry; included resources bind independently in wire order and are not injected into relationships |
-| Presence-aware PATCH commands | supported | Low-level supplied-change projection in both adapters |
-| Direct typed PATCH DTOs | supported | `PatchPresence` preserves omitted, explicit-null, and supplied states in both adapters |
+| Presence-aware PATCH commands | supported | Low-level supplied-change projection in Jackson 3 |
+| Direct typed PATCH DTOs | supported | `PatchPresence` preserves omitted, explicit-null, and supplied states in Jackson 3 |
 | Recursive structured PATCH | supported | `jsonapi-java` mapping feature beyond JSON:API attribute-level presence; neutral `StructuredPatch` and opt-in nested typed `PatchPresence` shapes ([ADR-010](adr/010-resource-patch-binding.md)) |
 | PATCH container values | supported | `List`, `Set`, arrays, and maps are atomic whole-value replacements; no element-addressed collection PATCH semantics |
 | Domain graph hydration | out of scope | Linkage resolution remains application policy |
@@ -129,7 +128,7 @@ Schema provenance, pins, and fixture-specific invariants live in the
 
 | Feature | Status | Boundary |
 |---------|--------|----------|
-| Neutral `JsonApi` root and four facets | supported | Jackson 2 and Jackson 3 provide configured native-major runtimes |
+| Neutral `JsonApi` root and four facets | supported | Jackson 3 provides the configured runtime |
 | Homogeneous resource reads | supported | One-resource and collection operations are strict; incompatible primary shapes are not coerced |
 | Resource, create, and update writes | supported | Select the corresponding core validation usage; expected update identity is explicit |
 | Relationship operations | supported | Separate strict to-one, explicit-null, and to-many linkage documents |

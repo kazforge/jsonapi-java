@@ -42,10 +42,11 @@ supported line requires an explicit maintainer decision and is breaking;
 documented boundaries and review, not a bespoke signature-compatibility mechanism.
 
 Java 21 is the runtime and build minimum. CI deliberately exercises a newer LTS without
-automatically raising that minimum. Jackson 2 and Jackson 3 are separate supported dependency lines;
-the [Jackson 2](../jsonapi-java-jackson2/README.md#jackson-support) and
-[Jackson 3](../jsonapi-java-jackson3/README.md#jackson-support) adapter READMEs own their concrete
-minimums and sustainable LTS baselines.
+automatically raising that minimum. Jackson 3 is the supported runtime for the next breaking
+`0.3.0` release; published `0.2.0` artifacts are unchanged. The
+[Jackson 3 adapter README](../jsonapi-java-jackson3/README.md#jackson-support) owns its concrete
+minimum and sustainable LTS baseline. [ADR-016](adr/016-jackson-3-only-product-scope.md) records
+the product decision; the mapping module remains separate until its consolidation is implemented.
 
 Production compilation, the default build, and published Jackson dependency declarations use those
 minimums. Separate [version-catalog references](../gradle/libs.versions.toml) supply
@@ -70,25 +71,25 @@ does not establish tested Spring Boot integration.
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable wire model, local invariants, aggregate validation | None |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free semantic mapping roles | None |
 | [`jsonapi-java-api`](../jsonapi-java-api/README.md) | Backend-independent application, document, mapping, representation, diagnostic, and PATCH contracts currently implemented by configured Jackson | Core |
-| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Backend-neutral mapping semantics consumed by the backend runtimes; published but unsupported consumer API | API |
+| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Backend-neutral mapping semantics consumed by Jackson 3; published but unsupported consumer API | API |
 | [`jsonapi-java-query`](../jsonapi-java-query/README.md) | Neutral query selection parsing and opaque parameter preservation | Core and neutral Jackson representation contracts |
 | [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Native Jackson 3 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
-| [`jsonapi-java-jackson2`](../jsonapi-java-jackson2/README.md) | Native Jackson 2 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
 
-The production dependency shape is a DAG: mapping depends on API, API depends on core, and each
-backend depends on mapping while retaining its direct API, annotations, and core dependencies.
+The production dependency shape is a DAG: mapping depends on API, API depends on core, and Jackson 3
+depends on mapping while retaining its direct API, annotations, and core dependencies.
 
-The two Jackson adapters share JSON:API mapping semantics, not Jackson mechanics. The neutral API
+The mapping module owns JSON:API mapping semantics, not Jackson mechanics. The neutral API
 contains no production Jackson-major imports. `jsonapi-java-mapping` implements compound inclusion,
 resource reads and writes, link decoration, typed envelopes, the Level-1 primary-data shape policy,
 both PATCH projections, and mapping-definition invariants behind narrow unsupported backend
 capabilities; its [package documentation](../jsonapi-java-mapping/src/main/java/com/kazforge/jsonapi/mapping/internal/package-info.java)
-maps each area to the type that owns its contract. Each adapter remains the configured authority
+maps each area to the type that owns its contract. The Jackson 3 adapter remains the configured authority
 for property and type discovery, names, construction, conversion, native diagnostics, and
 parser/generator behavior. Its token-driven wire codec stays local to that Jackson major; there is
 no generic JSON tree/IR codec, runtime-major detection, or supported Gson backend. This is a
 responsibility boundary, not a lowest-common-denominator Jackson abstraction.
-[ADR-015](adr/015-responsibility-based-mapping-and-native-wire-codecs.md) owns the rationale.
+[ADR-015](adr/015-responsibility-based-mapping-and-native-wire-codecs.md) records the original split;
+[ADR-016](adr/016-jackson-3-only-product-scope.md) supersedes its multi-backend product scope.
 The separate Spring companion depends on released lower-layer public contracts; no lower layer
 depends on a framework.
 

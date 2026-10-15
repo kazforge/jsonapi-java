@@ -30,8 +30,12 @@ Before merging:
 - Review [supported API and behavior changes](architecture.md#public-api-ownership),
   including dependency support changes, against ADR-014 and the release notes.
 - For Jackson baseline changes, check the documented
-  [Jackson 2](../jsonapi-java-jackson2/README.md#jackson-support) and
   [Jackson 3](../jsonapi-java-jackson3/README.md#jackson-support) support and run the checks below.
+- For `0.3.0`, confirm the breaking Jackson 2 adapter withdrawal is in the release notes and no
+  `jsonapi-java-jackson2` artifact or dependency appears in staged publications or release SBOMs.
+  Historical `0.2.0` artifacts remain immutable. Mapping consolidation is a separate transition
+  step; check the final artifact inventory against [ADR-016](adr/016-jackson-3-only-product-scope.md)
+  before releasing.
 - Confirm required PR checks pass.
 
 ## Publication verification
@@ -41,7 +45,7 @@ on Maven Central under `com.kazforge` before announcing availability. Verify sig
 publications, per-module `cyclonedx` SBOMs, and GitHub provenance/SBOM attestations for
 the primary JARs. Published artifacts are immutable; corrections require a new train version.
 
-After publication, verify that javadocs.dev renders the new version for all six consumer artifacts,
+After publication, verify that javadocs.dev renders the new version for all five consumer artifacts,
 including class links and assets. Update `site/api-reference.md` and the guide's class links explicitly
 to that version; never use `latest`. If hosting is unavailable, use source Javadoc links pinned to the
 matching `v<version>` release tag and label them as source, not rendered documentation.
@@ -52,19 +56,17 @@ When changing a Jackson minimum or test-version selection, test both selections:
 
 ```bash
 ./gradlew clean build
-./gradlew :jsonapi-java-jackson2:test :jsonapi-java-jackson3:test -PjacksonTestVersion=current
+./gradlew :jsonapi-java-jackson3:test -PjacksonTestVersion=current
 ```
 
-Generate consumer metadata for both adapters:
+Generate consumer metadata for Jackson 3:
 
 ```bash
-./gradlew :jsonapi-java-jackson2:generatePomFileForMavenJavaPublication \
-  :jsonapi-java-jackson2:generateMetadataFileForMavenJavaPublication \
-  :jsonapi-java-jackson3:generatePomFileForMavenJavaPublication \
+./gradlew :jsonapi-java-jackson3:generatePomFileForMavenJavaPublication \
   :jsonapi-java-jackson3:generateMetadataFileForMavenJavaPublication
 ```
 
-Repeat with `-PjacksonTestVersion=current`. Compare each adapter's
+Repeat with `-PjacksonTestVersion=current`. Compare Jackson 3's
 `build/publications/mavenJava/pom-default.xml` and `module.json` using `xmllint` and `jq`.
 Both selections must publish the documented Jackson minimums with ordinary version declarations:
 no strict constraints, forced versions, platforms, or version ranges.

@@ -2,7 +2,7 @@ package com.kazforge.jsonapi.api;
 
 /**
  * Backend-independent Level-1 JSON:API application entry point, currently implemented by the
- * configured Jackson 2 and Jackson 3 runtimes.
+ * configured Jackson 3 runtime.
  *
  * <p>Level 1 coordinates ordinary client and server operations: strict resource reads,
  * single/collection writes, create/update authoring, linkage documents, raw documents with explicit
