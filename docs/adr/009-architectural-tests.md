@@ -7,7 +7,7 @@
 
 Gradle controls artifact dependencies, but it cannot prevent production code from referring to an
 unintended type already present on a compile or test classpath. Compilation also cannot express the
-package responsibility DAGs inside core and the Jackson adapters.
+package responsibility DAGs inside core and the Jackson 3 adapter.
 
 ## Decision
 
@@ -15,19 +15,15 @@ Use ArchUnit as a `testImplementation`-only dependency where package or type bou
 executable enforcement. It is the repository-wide tool for those checks; do not replace it with
 source-import or classpath scanners, and never publish it as a runtime dependency.
 
-Architecture specifications enforce allowlists for the neutral API, the mapping
-implementation namespace, each Jackson adapter,
-shared fixtures, and query parsing. In particular:
+Architecture specifications enforce allowlists for the neutral API, the Jackson 3 adapter,
+shared fixtures, and query parsing, following [ADR-016](016-jackson-3-only-product-scope.md).
+In particular:
 
-- neutral production code stays free of either Jackson major and major-specific adapter packages;
-- neutral production code does not depend on the mapping implementation namespace;
-- mapping implementation production code depends only on neutral contracts, core, and platform
-  types, never on a backend or backend-native library;
-- each adapter uses only its own Jackson major and supported lower-layer contracts;
+- neutral production code stays free of Jackson and adapter implementation dependencies;
+- the Jackson 3 adapter uses native `tools.jackson.*` types and supported lower-layer contracts;
 - sibling modules do not depend on `core.internal`;
-- supported neutral contracts are not redeclared by adapters, and shared internal helpers do not
-  leak through supported public signatures; the mapping implementation namespace is treated as
-  shared internal implementation for that signature check;
+- supported neutral contracts are not redeclared by the Jackson 3 adapter, and internal
+  implementation types do not leak through supported public signatures;
 - shared fixtures remain passive application-shaped data and resources, apart from the neutral
   resource loader; behavioral orchestration and assertions remain adapter-local. The API module
   owns the shared-fixture architecture checks;
@@ -35,9 +31,9 @@ shared fixtures, and query parsing. In particular:
   3-only decision in ADR-016, shared fixtures have no assertion or orchestration exception;
   `com.kazforge.jsonapi.fixtures.contract` retains only passive application-shaped carriers.
 
-The neutral API artifact owns no production shared internal helper namespace: cross-artifact mapping
-helpers live in the unsupported mapping implementation namespace, while native wire/codec helpers
-stay in each adapter. Supported signatures must not expose those implementation types.
+The neutral API artifact owns supported contracts, not implementation helpers. Mapping orchestration
+lives in `com.kazforge.jsonapi.jackson3.internal.mapping`, and native wire codecs live in
+`com.kazforge.jsonapi.jackson3.internal.codec`. Both packages are unsupported implementation details.
 
 Core preserves its downward responsibility DAG: aggregate validation may depend on model, internal,
 and validation responsibilities; model may depend on internal and validation; internal may depend on
@@ -45,9 +41,10 @@ validation. The reverse edges are forbidden. The declared Gradle project edges t
 source of truth for physical module dependencies; ArchUnit enforces production-code boundaries,
 not build declarations.
 
-Each Jackson adapter independently preserves its local DAG: the public composition root may depend
-on mapping and internal implementation packages, and the ordinary internal package may depend on
-mapping; reverse and sibling-internal edges are forbidden. Same-package recursive models are allowed,
+The Jackson 3 adapter preserves its local DAG: the public composition root may depend on adapter
+mapping contracts and both internal packages. Adapter mapping contracts do not depend on composition
+or internals; internal mapping and codecs do not depend back on composition or on each other.
+Codecs also do not depend on adapter mapping contracts. Same-package recursive models are allowed,
 so there is no blanket cycle ban.
 
 Every responsibility selector must match production classes so rules cannot pass vacuously. A

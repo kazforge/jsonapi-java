@@ -17,7 +17,7 @@ runtime. User workflows belong to the [public guide](https://jsonapi.kazforge.co
 | [`com.kazforge.jsonapi.diagnostic`](src/main/java/com/kazforge/jsonapi/diagnostic/package-info.java) | Stable codec/mapping diagnostics and locations |
 
 Each package's documentation owns its invariants. The packages carry backend-independent contract
-and value shapes only: configured Jackson in each adapter derives the observable property
+and value shapes only: configured Jackson in the Jackson 3 adapter derives the observable property
 semantics, and mapping implementation lives in the unsupported internal mapping package of
 [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md).
 
