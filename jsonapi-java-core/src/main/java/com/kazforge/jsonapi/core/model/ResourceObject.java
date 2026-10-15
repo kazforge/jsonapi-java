@@ -61,6 +61,53 @@ public record ResourceObject(
     return new ResourceObject(type, id, null, null, null, null, null, Map.of());
   }
 
+  /** Returns a copy with the given local identifier, or without it when {@code null}. */
+  public ResourceObject withLid(@Nullable String lid) {
+    return new ResourceObject(
+        type, id, lid, attributes, relationships, links, meta, additionalMembers);
+  }
+
+  /** Returns a copy replacing attributes, or omitting them when {@code null}. */
+  public ResourceObject withAttributes(@Nullable Attributes attributes) {
+    return new ResourceObject(
+        type, id, lid, attributes, relationships, links, meta, additionalMembers);
+  }
+
+  /** Returns a copy replacing relationships, or omitting them when {@code null}. */
+  public ResourceObject withRelationships(@Nullable Relationships relationships) {
+    return new ResourceObject(
+        type, id, lid, attributes, relationships, links, meta, additionalMembers);
+  }
+
+  /** Returns a copy replacing links, or omitting them when {@code null}. */
+  public ResourceObject withLinks(@Nullable Links links) {
+    return new ResourceObject(
+        type, id, lid, attributes, relationships, links, meta, additionalMembers);
+  }
+
+  /** Returns a copy replacing metadata, or omitting it when {@code null}. */
+  public ResourceObject withMeta(@Nullable Meta meta) {
+    return new ResourceObject(
+        type, id, lid, attributes, relationships, links, meta, additionalMembers);
+  }
+
+  /**
+   * Returns a copy replacing (not merging) additional members, preserving JSON-null values.
+   *
+   * <p>The canonical constructor validates and snapshots the map; {@code null} clears it.
+   */
+  public ResourceObject withAdditionalMembers(@Nullable Map<String, @Nullable Object> members) {
+    return new ResourceObject(
+        type,
+        id,
+        lid,
+        attributes,
+        relationships,
+        links,
+        meta,
+        members == null ? Map.of() : members);
+  }
+
   /**
    * Whether the {@code id} member is present; empty and whitespace values still count as present.
    */

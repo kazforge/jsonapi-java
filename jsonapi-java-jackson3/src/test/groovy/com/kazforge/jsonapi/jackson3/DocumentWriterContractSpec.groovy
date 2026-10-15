@@ -96,7 +96,7 @@ class DocumentWriterContractSpec extends Specification {
     def resourceMapper = JsonApiJackson3.resourceMapper(mapper)
     def mapped = resourceMapper.toMappedDocument(
         new Article("1", "Title", "Body", List.of(), new Person("9", "Dan")),
-        new DocumentEnvelope(null, Meta.of(["myext:version": "1.0"]), null),
+        DocumentEnvelope.ofMeta(Meta.of(["myext:version": "1.0"])),
         RepresentationSelection.builder()
         .include(IncludePath.of("author"))
         .fields("articles", "title")

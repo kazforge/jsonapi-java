@@ -1073,20 +1073,20 @@ class DocumentReaderSpec extends Specification {
   }
 
   private static ResourceObject resource(String type, String id) {
-    return new ResourceObject(type, id, null, null, null, null, null, Map.of())
+    return ResourceObject.of(type, id)
   }
 
   private static ResourceObject resource(String type, String id, Attributes attributes) {
-    return new ResourceObject(type, id, null, attributes, null, null, null, Map.of())
+    return ResourceObject.of(type, id).withAttributes(attributes)
   }
 
   private static ResourceObject resourceWithRelationships(
       String type, String id, Relationships relationships) {
-    return new ResourceObject(type, id, null, null, relationships, null, null, Map.of())
+    return ResourceObject.of(type, id).withRelationships(relationships)
   }
 
   private static ResourceObject resourceWithLinks(String type, String id, Links links) {
-    return new ResourceObject(type, id, null, null, null, links, null, Map.of())
+    return ResourceObject.of(type, id).withLinks(links)
   }
 
   private static ResourceObject resourceWithAll(

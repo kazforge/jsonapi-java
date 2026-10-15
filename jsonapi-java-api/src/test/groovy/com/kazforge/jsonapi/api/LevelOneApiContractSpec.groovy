@@ -17,7 +17,7 @@ class LevelOneApiContractSpec extends Specification {
     def options = ResourceWriteOptions.defaults()
 
     then:
-    options.envelope() == new DocumentEnvelope(null, null, null)
+    options.envelope() == DocumentEnvelope.empty()
     options.selection() == RepresentationSelection.none()
   }
 
@@ -65,8 +65,10 @@ class LevelOneApiContractSpec extends Specification {
     expect:
     ResourceWriteOptions.defaults().envelope().jsonapi() == null
     new ResourceWriteOptions(
-        new DocumentEnvelope(null, null, JsonApiObject.ofVersion("1.1")),
+        DocumentEnvelope.ofJsonApi(JsonApiObject.ofVersion("1.1")),
         RepresentationSelection.none()).envelope().jsonapi() == JsonApiObject.ofVersion("1.1")
+    ResourceWriteOptions.defaults().withEnvelope(DocumentEnvelope.ofJsonApi(JsonApiObject.empty()))
+        .envelope().jsonapi() == JsonApiObject.empty()
   }
 
   def "typed single document requires a resource and allows absent top-level members"() {

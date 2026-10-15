@@ -31,8 +31,7 @@ public record ResourceWriteOptions(DocumentEnvelope envelope, RepresentationSele
 
   /** Returns options with no envelope members and no selection. */
   public static ResourceWriteOptions defaults() {
-    return new ResourceWriteOptions(
-        new DocumentEnvelope(null, null, null), RepresentationSelection.none());
+    return new ResourceWriteOptions(DocumentEnvelope.empty(), RepresentationSelection.none());
   }
 
   /** Returns options with the given envelope and this selection. */
