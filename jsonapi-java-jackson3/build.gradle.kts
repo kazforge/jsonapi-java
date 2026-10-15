@@ -12,7 +12,7 @@ dependencies {
     api(project(":jsonapi-java-api"))
     api(project(":jsonapi-java-annotations"))
     api(project(":jsonapi-java-core"))
-    implementation(project(":jsonapi-java-mapping"))
+    testCompileOnly(libs.jspecify)
     api(libs.jackson3.databind)
     if (jacksonTestVersion == "current") {
         testImplementation(libs.jackson3.current.databind)

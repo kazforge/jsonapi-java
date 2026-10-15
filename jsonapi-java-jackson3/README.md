@@ -24,7 +24,7 @@ framework boundaries.
 |---------|----------------|
 | [`com.kazforge.jsonapi.jackson3`](src/main/java/com/kazforge/jsonapi/jackson3/package-info.java) | Public configured runtime, factory, codec, mapping/binding, typed-envelope, and PATCH entry points |
 | [`com.kazforge.jsonapi.jackson3.mapping`](src/main/java/com/kazforge/jsonapi/jackson3/mapping/package-info.java) | Public [`RelationshipLinkageMapper`](src/main/java/com/kazforge/jsonapi/jackson3/mapping/RelationshipLinkageMapper.java) contract |
-| [`com.kazforge.jsonapi.jackson3.internal`](src/main/java/com/kazforge/jsonapi/jackson3/internal/package-info.java) | Mapping, binding, PATCH, and module implementation; unsupported API |
+| [`com.kazforge.jsonapi.jackson3.internal.mapping`](src/main/java/com/kazforge/jsonapi/jackson3/internal/mapping/package-info.java) | Mapping orchestration, binding, PATCH, and configured Jackson mechanics; unsupported API |
 | [`com.kazforge.jsonapi.jackson3.internal.codec`](src/main/java/com/kazforge/jsonapi/jackson3/internal/codec/package-info.java) | Self-contained token codec and wire-helper implementation; unsupported API |
 
 ## Runtime entry point
@@ -50,10 +50,9 @@ Use them when Level 1 is not enough, for example a parameterized root `JavaType`
 typed envelopes over an explicit `ResourceTypeRegistry`, or direct codec and mapping composition.
 Each type's Javadoc owns its contract.
 
-Neutral contracts come from [`jsonapi-java-api`](../jsonapi-java-api/README.md) and backend-neutral
-mapping semantics from [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md). This adapter
-implements their capability interfaces over configured Jackson 3: property and type discovery,
-naming, conversion, construction, and native diagnostics. The
+Neutral contracts come from [`jsonapi-java-api`](../jsonapi-java-api/README.md). This adapter owns
+mapping orchestration and configured Jackson 3 property and type discovery, naming, conversion,
+construction, and native diagnostics in `internal.mapping`. The
 [architecture overview](../docs/architecture.md) owns that split.
 
 ## Jackson 3 boundary
@@ -64,10 +63,9 @@ naming, conversion, construction, and native diagnostics. The
   parsers, and generators remain open.
 - Factories never mutate the caller mapper. Capabilities derive isolated mappers only when native
   modules or introspection state require it.
-- The public composition package may depend on mapping and the two internal responsibilities;
-  mapping and `internal.codec` do not depend back on composition or on sibling internals.
-- Supported signatures do not expose the unsupported `com.kazforge.jsonapi.mapping.internal`
-  helpers or this adapter's `internal` implementation packages, and this module does not redeclare
+- The public composition package may depend on mapping contracts and the two internal responsibilities;
+  `internal.mapping` and `internal.codec` do not depend back on composition or on each other.
+- Supported signatures do not expose this adapter's `internal` implementation packages, and this module does not redeclare
   neutral contract types.
 - Jackson 3 property, serializer/deserializer, and PATCH-marker mechanics stay adapter-local. The
   `PatchPresence` module is registered only on derived typed-PATCH mappers, never the caller mapper.

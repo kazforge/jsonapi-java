@@ -1,7 +1,7 @@
 package com.kazforge.jsonapi.jackson3;
 
-import com.kazforge.jsonapi.jackson3.internal.MetaBindingModule;
 import com.kazforge.jsonapi.jackson3.internal.codec.JsonApiDocumentModule;
+import com.kazforge.jsonapi.jackson3.internal.mapping.MetaBindingModule;
 import java.util.Objects;
 import tools.jackson.databind.json.JsonMapper;
 

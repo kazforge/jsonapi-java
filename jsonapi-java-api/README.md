@@ -18,8 +18,8 @@ runtime. User workflows belong to the [public guide](https://jsonapi.kazforge.co
 
 Each package's documentation owns its invariants. The packages carry backend-independent contract
 and value shapes only: configured Jackson in each adapter derives the observable property
-semantics, and backend-neutral mapping implementation lives in the unsupported
-[`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) module.
+semantics, and mapping implementation lives in the unsupported internal mapping package of
+[`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md).
 
 ## Level-1 contract
 
@@ -32,10 +32,9 @@ owns that split.
 
 - No production signature imports `tools.jackson.*`, `com.fasterxml.jackson.*`, or a major-specific
   adapter package.
-- This artifact ships only supported contract packages. Cross-artifact mapping helpers live in
-  `jsonapi-java-mapping`'s unsupported internal namespace, and native wire/codec helpers stay in
-  each adapter's internal package; neither may appear in supported public signatures per
-  [ADR-015](../docs/adr/015-responsibility-based-mapping-and-native-wire-codecs.md).
+- This artifact ships only supported contract packages. Mapping and native wire/codec helpers live
+  in Jackson 3's distinct internal packages; neither may appear in supported public signatures per
+  [ADR-016](../docs/adr/016-jackson-3-only-product-scope.md).
 
 ## Shared test fixtures
 

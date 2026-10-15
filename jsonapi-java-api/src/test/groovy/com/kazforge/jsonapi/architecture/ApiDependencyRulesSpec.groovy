@@ -30,8 +30,7 @@ class ApiDependencyRulesSpec extends Specification {
   def "neutral contract responsibility #packagePattern is non-empty"(String packagePattern) {
     expect:
     commonClasses.any { candidate ->
-      resideInAPackage(packagePattern).test(candidate) &&
-          !resideInAPackage("com.kazforge.jsonapi.mapping.internal..").test(candidate)
+      resideInAPackage(packagePattern).test(candidate)
     }
 
     where:
@@ -42,7 +41,6 @@ class ApiDependencyRulesSpec extends Specification {
     expect:
     classes()
         .that().resideInAnyPackage(CONTRACT_PACKAGES)
-        .and().resideOutsideOfPackage("com.kazforge.jsonapi.mapping.internal..")
         .should().onlyDependOnClassesThat()
         .resideInAnyPackage(([
           "java..",
@@ -56,12 +54,10 @@ class ApiDependencyRulesSpec extends Specification {
 
   def "neutral production types do not depend on mapping implementation detail"() {
     expect:
-    // The mapping contract prefix also contains implementation; the allowlist alone is insufficient.
     noClasses()
         .that().resideInAnyPackage(CONTRACT_PACKAGES)
-        .and().resideOutsideOfPackage("com.kazforge.jsonapi.mapping.internal..")
         .should().dependOnClassesThat()
-        .resideInAPackage("com.kazforge.jsonapi.mapping.internal..")
+        .resideInAnyPackage("com.kazforge.jsonapi.jackson3..", "com.kazforge.jsonapi.mapping.internal..")
         .check(commonClasses)
   }
 }

@@ -35,7 +35,7 @@ class SharedFixtureDependencyRulesSpec extends Specification {
     noClasses()
         .that().resideInAPackage("com.kazforge.jsonapi.fixtures..")
         .should().dependOnClassesThat()
-        .resideInAPackage("com.kazforge.jsonapi.mapping.internal..")
+        .resideInAPackage("com.kazforge.jsonapi.jackson3.internal.mapping..")
         .allowEmptyShould(false)
         .check(sharedFixtureClasses)
   }

@@ -2,7 +2,7 @@ package com.kazforge.jsonapi.jackson3;
 
 import com.kazforge.jsonapi.api.JsonApiRelationships;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
-import com.kazforge.jsonapi.mapping.internal.PrimaryDataShape;
+import com.kazforge.jsonapi.jackson3.internal.mapping.PrimaryDataShape;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;

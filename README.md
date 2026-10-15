@@ -29,7 +29,6 @@ published together as one release train.
 | [`jsonapi-java-core`](jsonapi-java-core/README.md) | Dependency-free document model and validation |
 | [`jsonapi-java-annotations`](jsonapi-java-annotations/README.md) | Domain-mapping role annotations |
 | [`jsonapi-java-api`](jsonapi-java-api/README.md) | Neutral application and capability contracts |
-| [`jsonapi-java-mapping`](jsonapi-java-mapping/README.md) | Internal runtime dependency of Jackson 3; **unsupported consumer API** |
 | [`jsonapi-java-query`](jsonapi-java-query/README.md) | Neutral query-parameter parsing |
 | [`jsonapi-java-jackson3`](jsonapi-java-jackson3/README.md) | Native Jackson 3 runtime |
 
