@@ -29,10 +29,11 @@ changes it.
 | `com.kazforge:jsonapi-java-jackson3` | Release-train version |
 
 The single version source is the root `version` Gradle property (`gradle.properties`); every module
-inherits it, and a release moves all five artifacts to the same version in one train
-([ADR-016](016-jackson-3-only-product-scope.md)). There are no independent or hybrid artifact
-trains: no artifact gets its own version line, and no artifact skips a train release because it did
-not change. Supported dependency lines are an API-compatibility concern, not a versioning mechanism.
+inherits it, and starting with `0.3.0` ([ADR-016](016-jackson-3-only-product-scope.md)) a release
+moves all five artifacts to the same version in one train. There are no independent or hybrid
+artifact trains: no artifact gets its own version line, and no artifact skips a train release
+because it did not change. Supported dependency lines are an API-compatibility concern, not a
+versioning mechanism.
 
 Rationale:
 

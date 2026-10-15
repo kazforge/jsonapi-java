@@ -14,10 +14,8 @@ backends.
 
 ## Decision
 
-- Starting with the breaking `0.3.0` minor release, `jsonapi-java` supports **Jackson 3 only**
-  (`tools.jackson.*`). `0.2.0` is the last published dual-major release; no `0.2.x` maintenance
-  release is planned, and `0.3.0` is the next intended release under
-  [ADR-014](014-unified-release-train.md).
+- Starting with the breaking `0.3.0` minor release ([ADR-014](014-unified-release-train.md)),
+  `jsonapi-java` supports **Jackson 3 only** (`tools.jackson.*`).
 - The unified release train publishes five consumer artifacts:
   - `com.kazforge:jsonapi-java-core`
   - `com.kazforge:jsonapi-java-annotations`
