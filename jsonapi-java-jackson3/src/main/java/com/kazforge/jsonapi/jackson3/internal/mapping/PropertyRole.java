@@ -7,7 +7,7 @@ package com.kazforge.jsonapi.jackson3.internal.mapping;
  * its target relationship by logical identity until the resolver matches it. See {@link
  * SemanticProperty}.
  */
-public enum PropertyRole {
+enum PropertyRole {
   ID,
   LOCAL_ID,
   ATTRIBUTE,

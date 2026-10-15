@@ -11,7 +11,7 @@ import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.core.importer.ImportOption
 import com.kazforge.jsonapi.jackson3.ArchitectureAdapterSignatureLeakFixture
 import com.kazforge.jsonapi.jackson3.internal.codec.ArchitectureAdapterInternalException
-import com.kazforge.jsonapi.jackson3.internal.mapping.PropertyRole
+import com.kazforge.jsonapi.jackson3.internal.mapping.EffectiveRepresentation
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -169,10 +169,10 @@ class Jackson3DependencyRulesSpec extends Specification {
         .importClasses(
         ArchitectureAdapterSignatureLeakFixture,
         ArchitectureAdapterInternalException,
-        PropertyRole)
+        EffectiveRepresentation)
     def fixture = fixtureClasses.get(ArchitectureAdapterSignatureLeakFixture)
     def internalException = fixtureClasses.get(ArchitectureAdapterInternalException)
-    def mappingInternal = fixtureClasses.get(PropertyRole)
+    def mappingInternal = fixtureClasses.get(EffectiveRepresentation)
 
     expect:
     isSupportedAdapterType(fixture)

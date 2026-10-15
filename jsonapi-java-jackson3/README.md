@@ -27,6 +27,10 @@ framework boundaries.
 | [`com.kazforge.jsonapi.jackson3.internal.mapping`](src/main/java/com/kazforge/jsonapi/jackson3/internal/mapping/package-info.java) | Mapping orchestration, binding, PATCH, and configured Jackson mechanics; unsupported API |
 | [`com.kazforge.jsonapi.jackson3.internal.codec`](src/main/java/com/kazforge/jsonapi/jackson3/internal/codec/package-info.java) | Self-contained token codec and wire-helper implementation; unsupported API |
 
+The [`internal.mapping` package map](src/main/java/com/kazforge/jsonapi/jackson3/internal/mapping/package-info.java)
+groups entry points for definition/introspection, writes, inclusion, reads, PATCH, and shared mechanics.
+These collaborators stay together to preserve package-private access, not to impose additional layers.
+
 ## Runtime entry point
 
 [`JsonApiJackson3`](src/main/java/com/kazforge/jsonapi/jackson3/JsonApiJackson3.java) creates the
