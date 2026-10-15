@@ -1,14 +1,14 @@
 ---
 title: "Configure the JSON:API Jackson runtime"
-description: "Configure jsonapi-java with Jackson 2 or Jackson 3: identifier conversion, relationship linkage mappers, representation policy, and resource link decorators."
+description: "Configure jsonapi-java with Jackson 3: identifier conversion, relationship linkage mappers, representation policy, and resource link decorators."
 ---
 
 # Configure the JSON:API Jackson runtime {#configuration}
 
 Use `jsonApi(mapper)` for the [default runtime](getting-started.md#configure-a-runtime): default
 identifier conversion and built-in relationship identifier targets, with include requests denied,
-no link decorators, and no default `jsonapi` object. Use the builder to change those choices.
-Both Jackson versions expose the same five optional builder settings.
+no link decorators, and no default `jsonapi` object. Use the builder to change those choices through
+its five optional settings.
 
 ## Choose the configuration scope
 
@@ -24,8 +24,8 @@ immutable, thread-safe `JsonApi` across requests. Callbacks are retained and reu
 keep them safe for concurrent invocation and keep mutable request state outside them. Use the
 mutable builder only during setup.
 
-The examples below are **independent recipes**. Start each with a fresh `builder` from the matching
-bootstrap tab; they are not steps in an all-options configuration.
+The examples below are **independent recipes**. Start each with a fresh `builder` from the bootstrap
+setup below; they are not steps in an all-options configuration.
 
 ## Configure Jackson first
 
@@ -36,33 +36,17 @@ properties. Jackson-ignored properties stay ignored, and attributes require role
 For example, if your DTO uses `bodyText` but your JSON naming convention is `body_text`, configure Jackson's
 naming strategy before creating the runtime:
 
-=== "Jackson 3"
+```java
+import com.kazforge.jsonapi.api.JsonApi;
+import com.kazforge.jsonapi.jackson3.JsonApiJackson3;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.json.JsonMapper;
 
-    ```java
-    import com.kazforge.jsonapi.api.JsonApi;
-    import com.kazforge.jsonapi.jackson3.JsonApiJackson3;
-    import tools.jackson.databind.PropertyNamingStrategies;
-    import tools.jackson.databind.json.JsonMapper;
-
-    JsonMapper mapper = JsonMapper.builder()
-        .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-        .build();
-    var builder = JsonApiJackson3.builder(mapper);
-    ```
-
-=== "Jackson 2"
-
-    ```java
-    import com.kazforge.jsonapi.api.JsonApi;
-    import com.kazforge.jsonapi.jackson2.JsonApiJackson2;
-    import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-    import com.fasterxml.jackson.databind.json.JsonMapper;
-
-    JsonMapper mapper = JsonMapper.builder()
-        .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-        .build();
-    var builder = JsonApiJackson2.builder(mapper);
-    ```
+JsonMapper mapper = JsonMapper.builder()
+    .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+    .build();
+var builder = JsonApiJackson3.builder(mapper);
+```
 
 With no optional builder settings, `JsonApi api = builder.build()` uses the same defaults as
 `jsonApi(mapper)`. For a property declared `@JsonApiAttribute String bodyText`, the default Jackson
@@ -131,13 +115,11 @@ public record ArticleReferenceView(
 ) {}
 ```
 
-Use the matching major's `RelationshipLinkageMapper` import:
-`com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper` for Jackson 3, or
-`com.kazforge.jsonapi.jackson2.mapping.RelationshipLinkageMapper` for Jackson 2. The rest of this
-to-one example is shared:
+Register a `RelationshipLinkageMapper` for `AuthorReference`:
 
 ```java
 import com.kazforge.jsonapi.core.model.RelationshipData;
+import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import java.util.Map;
 
 RelationshipLinkageMapper authorReferences = (linkage, targetType) -> {
@@ -158,8 +140,8 @@ Reading the [article document](resources.md#write-relationships-read-linkage) in
 class or the wire resource type. This mapper is deliberately for to-one author references; support
 other linkage shapes explicitly if you use the same target in to-many properties.
 
-This is the only builder setting whose callback uses a Jackson-specific type: `targetType` is the
-matching Jackson version's `JavaType`, even when the lambda does not use it. The mapper converts
+This is the only builder setting whose callback uses a Jackson-specific type: `targetType` is
+Jackson's `tools.jackson.databind.JavaType`, even when the lambda does not use it. The mapper converts
 relationship identifiers into DTO values on reads and when binding PATCH changes. It neither
 serializes relationships on writes nor reads `included` or fetches related objects. Your application
 owns any lookup; use representation selection and policy to include already available author objects
@@ -280,11 +262,10 @@ A per-write envelope takes precedence. For example, to emit an explicit empty `j
 import com.kazforge.jsonapi.api.ResourceWriteOptions;
 import com.kazforge.jsonapi.core.model.JsonApiObject;
 import com.kazforge.jsonapi.document.DocumentEnvelope;
-import java.util.Map;
 
-JsonApiObject explicit = new JsonApiObject(null, null, null, null, Map.of());
+JsonApiObject explicit = JsonApiObject.empty();
 ResourceWriteOptions options = ResourceWriteOptions.defaults()
-    .withEnvelope(new DocumentEnvelope(null, null, explicit));
+    .withEnvelope(DocumentEnvelope.ofJsonApi(explicit));
 
 String json = api.resources().writeOne(new Article("1", "A draft"), options);
 ```

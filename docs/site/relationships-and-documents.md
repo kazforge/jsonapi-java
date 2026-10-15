@@ -199,16 +199,8 @@ Relationships relationships = Relationships.ofRelationships(
     Map.of("author", authorLink)
 );
 
-ResourceObject articleResource = new ResourceObject(
-    "articles",
-    "1",
-    null,           // lid
-    null,           // attributes
-    relationships,
-    null,           // resource links
-    null,           // resource meta
-    Map.of()
-);
+ResourceObject articleResource = ResourceObject.of("articles", "1")
+    .withRelationships(relationships);
 DocumentData articleData = new DocumentData.SingleResource(articleResource);
 JsonApiDocument authorDocument = JsonApiDocument.withData(articleData);
 
@@ -333,8 +325,9 @@ a valid request `source.pointer`; public detail and HTTP policy stay with the ap
 
 ## Choose an application or Jackson-specific API {#ordinary-or-advanced}
 
-Use `JsonApi` for the operations shown in this guide. The adapters also expose Jackson-specific
-readers, writers, mappers, and binders for direct control over types, validation, and mapping policy:
+Use `JsonApi` for the operations shown in this guide. The Jackson 3 adapter also exposes
+Jackson-specific readers, writers, mappers, and binders for direct control over types, validation,
+and mapping policy:
 
 | Need | Use |
 |------|-----|
@@ -344,9 +337,7 @@ readers, writers, mappers, and binders for direct control over types, validation
 | Primary/included DTOs of different resource types | Jackson-specific domain-document reader with explicit `ResourceTypeRegistry` |
 
 The Jackson-specific factories are on
-[`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.2.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html)
-and [`JsonApiJackson2`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson2/0.2.0/com/kazforge/jsonapi/jackson2/JsonApiJackson2.html).
-Typed document readers bind included resources independently, not into DTO relationships. Jackson 2
-I/O through the Jackson-specific APIs uses checked `IOException`; `JsonApi` stream operations use
-`UncheckedIOException`. Jackson 3 follows its native unchecked exception model. Caller-owned sources
-and sinks remain open.
+[`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.3.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html).
+Typed document readers bind included resources independently, not into DTO relationships. Jackson 3
+APIs follow Jackson 3's unchecked exception model; `JsonApi` stream operations wrap `IOException` in
+`UncheckedIOException`. Caller-owned sources and sinks remain open.

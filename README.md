@@ -11,9 +11,6 @@ break compatibility; patch releases do not.
 
 Use `com.kazforge:jsonapi-java-jackson3`. Packages use `com.kazforge.jsonapi.*`.
 
-The next breaking release, **0.3.0**, supports Jackson 3 only; published **0.2.0** artifacts remain
-unchanged. The public guide still documents 0.2.0 until the release-timed documentation update.
-
 **[Install and run the first example](https://jsonapi.kazforge.com/getting-started/)**. The
 [user guide](https://jsonapi.kazforge.com/) owns user workflows; its
 [API-reference section](https://jsonapi.kazforge.com/getting-started/#api-reference-and-next-steps)
@@ -21,8 +18,7 @@ links Javadoc.
 
 ## Modules
 
-Five artifacts consumers may depend on directly, plus one internal runtime artifact; all six are
-published together as one release train.
+Five consumer artifacts are published together as one release train.
 
 | Module | Purpose |
 |--------|---------|

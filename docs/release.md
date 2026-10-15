@@ -31,11 +31,11 @@ Before merging:
   including dependency support changes, against ADR-014 and the release notes.
 - For Jackson baseline changes, check the documented
   [Jackson 3](../jsonapi-java-jackson3/README.md#jackson-support) support and run the checks below.
-- For `0.3.0`, confirm the breaking Jackson 2 adapter withdrawal is in the release notes and no
-  `jsonapi-java-jackson2` artifact or dependency appears in staged publications or release SBOMs.
-  Historical `0.2.0` artifacts remain immutable. Mapping consolidation is a separate transition
-  step; check the final artifact inventory against [ADR-016](adr/016-jackson-3-only-product-scope.md)
-  before releasing.
+- For `0.3.0`, confirm the breaking withdrawal of `jsonapi-java-jackson2` and the separately
+  published internal `jsonapi-java-mapping` artifact is in the release notes, and that neither
+  artifact or dependency appears in staged publications or release SBOMs. Historical `0.2.0`
+  artifacts remain immutable; check the five-artifact inventory against
+  [ADR-016](adr/016-jackson-3-only-product-scope.md) before releasing.
 - Confirm required PR checks pass.
 
 ## Publication verification

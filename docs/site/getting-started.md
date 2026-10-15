@@ -1,29 +1,25 @@
 ---
-title: "Install JSON:API for Java with Jackson 2 or Jackson 3"
-description: "Install a jsonapi-java adapter from Maven Central for Java 21+ and Jackson 2 or Jackson 3, and read and write a resource DTO."
+title: "Install JSON:API for Java with Jackson 3"
+description: "Install jsonapi-java from Maven Central for Java 21+ and Jackson 3, and read and write a resource DTO."
 ---
 
-# Install JSON:API for Java with Jackson 2 or Jackson 3 {#getting-started}
+# Install JSON:API for Java with Jackson 3 {#getting-started}
 
 ## Choose an artifact
 
-Six artifacts are for your application to depend on. Pick **one** native Jackson adapter for the
-mapper your application already uses; the library does not detect or switch Jackson majors at
-runtime.
+Five consumer artifacts are published together on one release train:
 
 | Artifact (`com.kazforge`) | When to use it |
 |---------------------------|----------------|
-| `jsonapi-java-jackson3` | Configured `tools.jackson.databind.json.JsonMapper` |
-| `jsonapi-java-jackson2` | Configured `com.fasterxml.jackson.databind.json.JsonMapper` |
+| `jsonapi-java-jackson3` | Native runtime for a configured `tools.jackson.databind.json.JsonMapper` |
 | `jsonapi-java-query` | Optional parsing of `include`, `fields`, `sort`, and opaque parameters |
 | `jsonapi-java-core` | Immutable documents and validation without a JSON backend |
 | `jsonapi-java-api` | Neutral `JsonApi`, mapping, representation, and PATCH contracts; no runtime by itself |
 | `jsonapi-java-annotations` | Mapping role annotations without a runtime dependency |
 
-An adapter brings API, annotations, and core transitively. The public `com.kazforge.jsonapi.mapping`
-package ships in `jsonapi-java-api`; the similarly named `jsonapi-java-mapping` artifact is only an
-internal runtime dependency of the adapters, not consumer API. Packages containing `internal` are
-also unsupported. Java visibility alone is not a compatibility promise.
+`jsonapi-java-jackson3` brings API, annotations, and core transitively. The public
+`com.kazforge.jsonapi.mapping` package ships in `jsonapi-java-api`. Packages containing `internal`
+are unsupported implementation details, and Java visibility alone is not a compatibility promise.
 
 ## Compatibility
 
@@ -31,15 +27,17 @@ also unsupported. Java visibility alone is not a compatibility promise.
 |-------------|-------------------|
 | Java | 21 |
 | Jackson 3 (`jsonapi-java-jackson3`) | `jackson-databind` 3.1.7 |
-| Jackson 2 (`jsonapi-java-jackson2`) | `jackson-databind` and `jackson-datatype-jdk8` 2.21.7 |
 
-Jackson 2 and 3 are separate supported lines; pick the adapter matching your application's Jackson
-major. Compatible newer versions can be selected by your dependency management; the adapter does not
-force a platform or override your application's Jackson version. LTS baselines and policy are
+Compatible newer Jackson 3 versions can be selected by your dependency management; the adapter does
+not force a platform or override your application's Jackson version. The LTS baseline and policy are
 maintained in the
-[Jackson 2 support section](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson2/README.md#jackson-support)
-and [Jackson 3 support section](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson3/README.md#jackson-support).
-The supported Jackson lines are not a Spring Boot compatibility matrix.
+[Jackson 3 support section](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson3/README.md#jackson-support).
+The supported Jackson line is not a Spring Boot compatibility matrix.
+
+Starting in `0.3.0`, `jsonapi-java` supports Jackson 3 (`tools.jackson.*`) only;
+`jsonapi-java-jackson2` and the separately published internal `jsonapi-java-mapping` artifact from
+`0.2.0` are discontinued. Historical `0.2.0` artifacts remain on Maven Central without ongoing
+support.
 
 ## Dependency declarations
 
@@ -88,8 +86,7 @@ Verify public versions in [Maven Central](https://central.sonatype.com/namespace
 
 <!-- x-release-please-end -->
 
-For Jackson 2, replace the adapter artifact with `jsonapi-java-jackson2`. Add `jsonapi-java-query`
-separately if you need [query parsing](query-and-representation.md).
+Add `jsonapi-java-query` separately if you need [query parsing](query-and-representation.md).
 
 Before 1.0, a breaking change ships in a minor release, never a patch release. Review
 [release notes](https://github.com/kazforge/jsonapi-java/releases)
@@ -97,45 +94,28 @@ when upgrading across minors. Raising a supported Java or Jackson minimum is a b
 
 ## Configure a runtime
 
-Configure Jackson first, then pass the mapper to the matching factory. Keep the resulting immutable,
+Configure Jackson first, then pass the mapper to `JsonApiJackson3`. Keep the resulting immutable,
 thread-safe runtime for your application's lifetime. Factories do not mutate your mapper.
 
-=== "Jackson 3"
+```java
+import com.kazforge.jsonapi.api.JsonApi;
+import com.kazforge.jsonapi.jackson3.JsonApiJackson3;
+import tools.jackson.databind.json.JsonMapper;
 
-    ```java
-    import com.kazforge.jsonapi.api.JsonApi;
-    import com.kazforge.jsonapi.jackson3.JsonApiJackson3;
-    import tools.jackson.databind.json.JsonMapper;
+JsonMapper mapper = JsonMapper.builder()
+    .build();
 
-    JsonMapper mapper = JsonMapper.builder()
-        .build();
-
-    JsonApi api = JsonApiJackson3.jsonApi(mapper);
-    ```
-
-=== "Jackson 2"
-
-    ```java
-    import com.kazforge.jsonapi.api.JsonApi;
-    import com.kazforge.jsonapi.jackson2.JsonApiJackson2;
-    import com.fasterxml.jackson.databind.json.JsonMapper;
-
-    JsonMapper mapper = JsonMapper.builder()
-        .build();
-
-    JsonApi api = JsonApiJackson2.jsonApi(mapper);
-    ```
+JsonApi api = JsonApiJackson3.jsonApi(mapper);
+```
 
 For non-default application-lifetime settings, use the [configuration guide](configuration.md).
-It covers the matching builder's identifier conversion, linkage mappers, representation policy,
+It covers the builder's identifier conversion, linkage mappers, representation policy,
 decorators, and optional resource-write `jsonapi.version`. Selection and document envelopes belong
 to each operation.
 
 ## Read and write an article
 
-This complete Jackson 3 application writes an article, reads it back, and prints its title.
-For Jackson 2, change the `JsonApiJackson3` and `JsonMapper` imports to their Jackson 2 equivalents
-shown above, and use `JsonApiJackson2.jsonApi(mapper)`.
+This complete application writes an article, reads it back, and prints its title:
 
 ```java
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
@@ -195,13 +175,11 @@ mix-ins, and value conversion. Unannotated attributes do not join the mapping au
 ## API reference and next steps
 
 The `JsonApi` application API groups operations under `resources()`, `relationships()`,
-`documents()`, and `patches()`. Both Jackson adapters implement these same interfaces. Continue with
-[resources](resources.md); use
+`documents()`, and `patches()`. Continue with [resources](resources.md); use
 [relationships and documents](relationships-and-documents.md#ordinary-or-advanced) to choose a lower-level path.
 
 The [API Reference](api-reference.md) links rendered Javadoc for released artifacts, including
-[`JsonApi`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/api/JsonApi.html),
-[`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.2.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html),
-and [`JsonApiJackson2`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson2/0.2.0/com/kazforge/jsonapi/jackson2/JsonApiJackson2.html).
-These links target 0.2.0, not `main`. Exhaustive method/overload contracts belong in Javadoc,
+[`JsonApi`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/api/JsonApi.html)
+and [`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.3.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html).
+These links target 0.3.0, not `main`. Exhaustive method/overload contracts belong in Javadoc,
 not in this guide.

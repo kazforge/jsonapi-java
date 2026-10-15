@@ -1,18 +1,16 @@
 ---
 title: "JSON:API 1.1 for Java 21+"
-description: "Read and write JSON:API 1.1 in Java 21+ with Jackson 2 or Jackson 3. Map DTOs, validate documents, preserve PATCH presence, and parse queries."
+description: "Read and write JSON:API 1.1 in Java 21+ with Jackson 3. Map DTOs, validate documents, preserve PATCH presence, and parse queries."
 ---
 
 # JSON:API 1.1 for Java 21+ {#jsonapi-java}
 
 Read and write [JSON:API 1.1](https://jsonapi.org/) documents in Java 21+ without handing over your
-endpoints, persistence, or application architecture. jsonapi-java supports **Jackson 2 and Jackson 3**
-for DTO mapping, document validation, presence-aware PATCH, and relationship linkage, with a separate
-query parser for includes, sparse fieldsets, sort, and opaque parameters.
+endpoints, persistence, or application architecture. jsonapi-java uses **Jackson 3** for DTO
+mapping, document validation, presence-aware PATCH, and relationship linkage, with a separate query
+parser for includes, sparse fieldsets, sort, and opaque parameters.
 
-The permanent coordinates are `com.kazforge:jsonapi-java-jackson3` or
-`com.kazforge:jsonapi-java-jackson2`. Choose the adapter for your application's Jackson major;
-both implement the same `JsonApi` operations. [Install and run an example](getting-started.md).
+The runtime coordinate is `com.kazforge:jsonapi-java-jackson3`. [Install and run an example](getting-started.md).
 
 ## Release status
 
