@@ -8,7 +8,7 @@ import spock.lang.Specification
 
 /**
  * Direct behavioral proof for the neutral mapping helpers shared by the mapping orchestration and
- * both adapters' cooperation surfaces: identifier-meta locations and copies, resource-type
+ * the adapter's cooperation surfaces: identifier-meta locations and copies, resource-type
  * matching, and supplied PATCH presence state.
  */
 class MappingInternalHelpersSpec extends Specification {

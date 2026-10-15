@@ -1,7 +1,7 @@
 # jsonapi-java-api
 
-Backend-independent application contracts and values implemented by the configured Jackson 2 and
-Jackson 3 runtimes. This module defines contracts and values; it has no standalone Jackson
+Backend-independent application contracts and values implemented by the configured Jackson 3
+runtime. This module defines contracts and values; it has no standalone Jackson
 runtime. User workflows belong to the [public guide](https://jsonapi.kazforge.com/getting-started/).
 
 ## Packages and entry points

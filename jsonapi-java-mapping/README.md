@@ -1,8 +1,8 @@
 # jsonapi-java-mapping
 
-Backend-neutral JSON:API mapping semantics shared by the Jackson 2 and Jackson 3 runtimes. This
-module is published on the unified release train so backend runtimes can consume it, but it is not
-supported consumer API.
+Backend-neutral JSON:API mapping semantics consumed by the Jackson 3 runtime. This module remains
+published on the unified release train during the transition described in
+[ADR-016](../docs/adr/016-jackson-3-only-product-scope.md), but it is not supported consumer API.
 
 Application workflows use the adapters described in the
 [public guide](https://jsonapi.kazforge.com/getting-started/), not this module's internal types.

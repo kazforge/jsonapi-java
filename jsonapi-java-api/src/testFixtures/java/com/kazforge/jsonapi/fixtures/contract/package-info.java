@@ -2,10 +2,11 @@
  * Shared backend-neutral characterization contracts for the observable mapping and binding
  * semantics that later extraction slices move. Abstract Spock specs in this package typically bind
  * to the Level-1 {@code JsonApi} contract; each adapter supplies concrete subclasses that provide
- * its configured runtime only, so Jackson 2 and Jackson 3 run the same observable contract.
- * Extraction slices that have no Level-1 entry point instead expose a narrow abstract hook: the
- * adapter subclass performs the native invocation and returns only neutral observable results or
- * failures. Scenarios and assertions stay shared; adapter mechanics stay in the concrete subclass.
+ * its configured runtime only; Jackson 3 runs the observable contract independently of its
+ * mechanics. Extraction slices that have no Level-1 entry point instead expose a narrow abstract
+ * hook: the adapter subclass performs the native invocation and returns only neutral observable
+ * results or failures. Scenarios and assertions stay shared; adapter mechanics stay in the concrete
+ * subclass.
  *
  * <p>Contract specs observe JSON:API member semantics, never backend mechanics. Fixture carriers in
  * this package may use Jackson-major-neutral annotations such as {@code @JsonProperty} purely as

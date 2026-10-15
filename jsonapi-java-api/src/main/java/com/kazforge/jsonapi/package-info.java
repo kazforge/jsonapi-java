@@ -1,6 +1,6 @@
 /**
- * Supported backend-independent contracts shared by the Jackson 2 and Jackson 3 adapters and by
- * framework integrations.
+ * Supported backend-independent contracts shared by the Jackson 3 adapter and by framework
+ * integrations.
  *
  * <p>{@link com.kazforge.jsonapi.api.JsonApi} is the Level-1 application entry point for ordinary
  * resource, relationship, document, and PATCH operations.
@@ -10,12 +10,12 @@
  * in {@code representation}, and stable failures in {@code diagnostic}.
  *
  * <p>No supported signature imports {@code tools.jackson.*}, {@code com.fasterxml.jackson.*}, or a
- * major-specific adapter package. The current Jackson 2 and Jackson 3 adapters derive observable
- * property semantics through caller-configured Jackson (discovery, visibility, external names,
- * construction, and conversion); native Jackson mechanics stay in each adapter. This artifact ships
- * only supported contract packages. Cross-artifact mapping helpers live in the unsupported {@code
+ * major-specific adapter package. The Jackson 3 adapter derives observable property semantics
+ * through caller-configured Jackson (discovery, visibility, external names, construction, and
+ * conversion); native Jackson mechanics stay in the adapter. This artifact ships only supported
+ * contract packages. Cross-artifact mapping helpers live in the unsupported {@code
  * com.kazforge.jsonapi.mapping.internal} namespace of the mapping artifact, and native wire helpers
- * stay in each adapter's internal package; neither appears in supported public signatures.
+ * stay in the adapter's internal package; neither appears in supported public signatures.
  *
  * <p>Wire-visible presence is preserved. On document and envelope values, Java {@code null} means
  * that a member is absent and core sealed variants represent explicit JSON {@code null}. PATCH DTOs

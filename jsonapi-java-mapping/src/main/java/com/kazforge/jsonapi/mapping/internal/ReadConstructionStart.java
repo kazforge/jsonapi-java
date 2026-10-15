@@ -10,12 +10,12 @@ import org.jspecify.annotations.NullMarked;
  * the read definition already carries.
  *
  * <p>The location is assembled once by {@link
- * ReadResourceDefinition#constructionStarts(MappingLocation, MappingLocation)} so both Jackson
- * adapters cannot drift in their backend-name to JSON:API-location translation. The paired {@link
- * ReadProperty} keeps the effective native property available to the adapter's nested path walker
- * without a second lookup and without a separately supplied effective-type token; the native type
- * stays owned by the adapter through that token. This is unsupported implementation detail for
- * backend cooperation, not consumer SPI.
+ * ReadResourceDefinition#constructionStarts(MappingLocation, MappingLocation)} to centralize
+ * backend-name to JSON:API-location translation. The paired {@link ReadProperty} keeps the
+ * effective native property available to the adapter's nested path walker without a second lookup
+ * and without a separately supplied effective-type token; the native type stays owned by the
+ * adapter through that token. This is unsupported implementation detail for backend cooperation,
+ * not consumer SPI.
  *
  * @param <P> opaque backend-native property token
  */
