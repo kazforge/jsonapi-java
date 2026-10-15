@@ -1,5 +1,5 @@
 /**
- * Shared Jackson-major-neutral test fixtures and canonical JSON:API resources.
+ * Passive test fixtures and canonical JSON:API resources reused by Jackson 3 suites.
  *
  * <p>Fixture subpackages contain application-shaped carriers whose behavior is limited to what is
  * needed to represent or observe the shape under test, such as access-counting probes. {@link

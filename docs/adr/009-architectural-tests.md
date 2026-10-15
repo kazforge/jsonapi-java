@@ -31,10 +31,9 @@ shared fixtures, and query parsing. In particular:
 - shared fixtures remain passive application-shaped data and resources, apart from the neutral
   resource loader; behavioral orchestration and assertions remain adapter-local. The API module
   owns the shared-fixture architecture checks;
-- shared characterization contract specs under `com.kazforge.jsonapi.fixtures.contract` are the
-  sanctioned shared-assertion exception: abstract Spock specs asserting neutral Level-1 observable
-  semantics, executed through adapter-supplied concrete subclasses, depending only on Groovy, Spock,
-  and the neutral packages the passive fixtures may use.
+- characterization specs live directly in the Jackson 3 test source set. Following the Jackson
+  3-only decision in ADR-016, shared fixtures have no assertion or orchestration exception;
+  `com.kazforge.jsonapi.fixtures.contract` retains only passive application-shaped carriers.
 
 The neutral API artifact owns no production shared internal helper namespace: cross-artifact mapping
 helpers live in the unsupported mapping implementation namespace, while native wire/codec helpers

@@ -38,15 +38,15 @@ owns that split.
 
 ## Shared test fixtures
 
-The `java-test-fixtures` variant provides passive, major-neutral application-shaped DTOs, the
+The `java-test-fixtures` variant provides passive application-shaped DTOs reused by Jackson 3 tests, the
 [canonical JSON corpus](src/testFixtures/resources/jsonapi/corpus/1.1/README.md),
 [pinned draft schemas](src/testFixtures/resources/jsonapi/schema/vendor/1.1-pr1603/README.md), the
-neutral `TestFixtureResources` loader, and the shared characterization contract specs in
-[`com.kazforge.jsonapi.fixtures.contract`](src/testFixtures/java/com/kazforge/jsonapi/fixtures/contract/package-info.java),
-which every adapter runs through a concrete subclass. The
+neutral `TestFixtureResources` loader. Behavioral characterization lives directly in the
+[Jackson 3 contract specs](../jsonapi-java-jackson3/src/test/groovy/com/kazforge/jsonapi/jackson3/contract).
+The
 [fixture package documentation](src/testFixtures/java/com/kazforge/jsonapi/fixtures/package-info.java)
 and [ADR-009](../docs/adr/009-architectural-tests.md) describe the passive-fixture boundary and
-shared-contract exception.
+test ownership.
 
 See the [architecture overview](../docs/architecture.md) and
 [conformance checklist](../docs/conformance.md).

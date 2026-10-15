@@ -9,7 +9,5 @@ dependencies {
     testFixturesImplementation(project(":jsonapi-java-annotations"))
     testFixturesImplementation(libs.jackson.annotations)
     testFixturesCompileOnly(libs.jspecify)
-    testFixturesImplementation(libs.spock.core)
-    testFixturesImplementation(libs.groovy.json)
     testImplementation(libs.archunit)
 }

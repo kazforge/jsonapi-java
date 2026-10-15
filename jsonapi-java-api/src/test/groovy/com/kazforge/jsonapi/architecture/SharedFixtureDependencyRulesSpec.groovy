@@ -40,40 +40,12 @@ class SharedFixtureDependencyRulesSpec extends Specification {
         .check(sharedFixtureClasses)
   }
 
-  def "shared passive fixtures outside the contract package depend only on allowed packages"() {
+  def "shared passive fixtures depend only on allowed application-shaped packages"() {
     expect:
     classes()
         .that().resideInAPackage("com.kazforge.jsonapi.fixtures..")
-        .and().resideOutsideOfPackage("com.kazforge.jsonapi.fixtures.contract..")
         .should().onlyDependOnClassesThat()
         .resideInAnyPackage(APPLICATION_PACKAGES)
-        .allowEmptyShould(false)
-        .check(sharedFixtureClasses)
-  }
-
-  def "shared contract-fixture carriers depend only on allowed application-shaped packages"() {
-    expect:
-    classes()
-        .that().resideInAPackage("com.kazforge.jsonapi.fixtures.contract..")
-        .and().haveSimpleNameNotEndingWith("CharacterizationSpec")
-        .should().onlyDependOnClassesThat()
-        .resideInAnyPackage(APPLICATION_PACKAGES)
-        .allowEmptyShould(false)
-        .check(sharedFixtureClasses)
-  }
-
-  def "shared characterization contract specs depend only on allowed contract packages"() {
-    expect:
-    classes()
-        .that().resideInAPackage("com.kazforge.jsonapi.fixtures.contract..")
-        .and().haveSimpleNameEndingWith("CharacterizationSpec")
-        .should().onlyDependOnClassesThat()
-        .resideInAnyPackage(([
-          "groovy..",
-          "org.codehaus.groovy..",
-          "spock..",
-          "org.spockframework..",
-        ] + APPLICATION_PACKAGES.toList()) as String[])
         .allowEmptyShould(false)
         .check(sharedFixtureClasses)
   }
