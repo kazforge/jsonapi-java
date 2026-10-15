@@ -40,7 +40,7 @@ owns that split.
 
 The `java-test-fixtures` variant provides passive application-shaped DTOs reused by Jackson 3 tests, the
 [canonical JSON corpus](src/testFixtures/resources/jsonapi/corpus/1.1/README.md),
-[pinned draft schemas](src/testFixtures/resources/jsonapi/schema/vendor/1.1-pr1603/README.md), the
+[pinned draft schemas](src/testFixtures/resources/jsonapi/schema/vendor/1.1-pr1603/README.md), and the
 neutral `TestFixtureResources` loader. Behavioral characterization lives directly in the
 [Jackson 3 contract specs](../jsonapi-java-jackson3/src/test/groovy/com/kazforge/jsonapi/jackson3/contract).
 The

@@ -6,7 +6,6 @@ import com.kazforge.jsonapi.representation.RepresentationPolicy
 import tools.jackson.databind.json.JsonMapper
 
 import com.kazforge.jsonapi.core.model.ResourceIdentifier
-import com.kazforge.jsonapi.core.model.ResourceObject
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic
 import com.kazforge.jsonapi.fixtures.compoundwrite.WrappedLinkageArticle
@@ -27,7 +26,7 @@ import spock.lang.Specification
  * {@code JsonApi} contract: include paths produce compound documents whose {@code included} array
  * keeps wire order, explicit-empty and absent include requests are wire-visible states, fieldsets
  * select fields by JSON:API member name, and typed reads carry included resources as core
- * {@link ResourceObject} values in wire order with absent and empty {@code included} distinct.
+ * {@code ResourceObject} values in wire order with absent and empty {@code included} distinct.
  * Deeper traversal invariants belong to the internal mapping tests. Local runtime setup allows inclusion.
  */
 class Jackson3InclusionFieldsetCharacterizationSpec extends Specification {
