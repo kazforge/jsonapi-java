@@ -1,9 +1,8 @@
 # jsonapi-java
 
-> JSON:API 1.1 for Java 21+ with native Jackson 2 and Jackson 3 runtimes: document read/write, DTO mapping, validation, relationship linkage, and presence-aware PATCH reading.
+> JSON:API 1.1 for Java 21+ with a native Jackson 3 runtime: document read/write, DTO mapping, validation, relationship linkage, and presence-aware PATCH reading.
 
-Choose one adapter matching your application's Jackson major:
-`com.kazforge:jsonapi-java-jackson2` or `com.kazforge:jsonapi-java-jackson3`.
+Use `com.kazforge:jsonapi-java-jackson3` for the Jackson 3 runtime.
 Optional query parsing is provided separately by `com.kazforge:jsonapi-java-query`.
 For release availability, installation, and version selection, use Getting started below.
 
@@ -17,7 +16,7 @@ discovery index, not a separate API reference.
 ## Guides
 
 - [Overview](https://jsonapi.kazforge.com/): Capabilities and application boundaries.
-- [Getting started](https://jsonapi.kazforge.com/getting-started/): Release availability, installation, adapter choice, compatibility, and a first DTO example.
+- [Getting started](https://jsonapi.kazforge.com/getting-started/): Release availability, installation, compatibility, and a first DTO example.
 - [Configuration](https://jsonapi.kazforge.com/configuration/): Jackson setup, runtime defaults, linkage mappers, representation policy, and link decorators.
 - [Resources](https://jsonapi.kazforge.com/resources/): DTO read/write, collections, create/update authoring, and top-level metadata.
 - [Relationships and documents](https://jsonapi.kazforge.com/relationships-and-documents/): Linkage and error documents, absent/null/empty states, and choosing the application or Jackson-specific API.

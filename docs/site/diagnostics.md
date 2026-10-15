@@ -110,8 +110,8 @@ only `lineNumber()`, `columnNumber()`, `charOffset()`, and `byteOffset()`, never
 A negative component is unavailable. `SourceLocation.UNKNOWN` has no available components, and
 `isKnown()` means **at least one** is available, not that all four are usable.
 
-Adapters copy best-effort parsing positions from Jackson. Availability and precision vary with
-Jackson major, input form, and failure; a byte offset need not accompany a character offset, and
+The adapter copies best-effort parsing positions from Jackson. Availability and precision vary with
+input form and failure; a byte offset need not accompany a character offset, and
 the reported position need not be the exact offending character. Treat positions as diagnostic
 context, not another spelling of a JSON Pointer. Line, column, and offsets are not standard JSON:API
 error-source members.
@@ -180,16 +180,16 @@ Your application owns HTTP status, safe detail, response emission, logging/redac
 [`ErrorObject`][error-object] is only a core value. To wrap and serialize selected errors, use the
 existing [error-document example](relationships-and-documents.md#error-documents).
 
-[read-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/JsonApiDocumentReadException.html
-[mapping-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/JsonApiMappingException.html
-[validation-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.2.0/com/kazforge/jsonapi/core/validation/JsonApiValidationException.html
-[query-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.2.0/com/kazforge/jsonapi/query/JsonApiQueryException.html
-[codec-category]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/CodecFailureCategory.html
-[validation-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.2.0/com/kazforge/jsonapi/core/validation/ValidationRuleCode.html
-[mapping-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/MappingDiagnostic.html
-[query-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.2.0/com/kazforge/jsonapi/query/QueryDiagnostic.html
-[mapping-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/MappingLocation.html
-[source-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/diagnostic/SourceLocation.html
-[error-source]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.2.0/com/kazforge/jsonapi/core/model/ErrorSource.html
-[error-object]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.2.0/com/kazforge/jsonapi/core/model/ErrorObject.html
+[read-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/diagnostic/JsonApiDocumentReadException.html
+[mapping-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/diagnostic/JsonApiMappingException.html
+[validation-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.3.0/com/kazforge/jsonapi/core/validation/JsonApiValidationException.html
+[query-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.3.0/com/kazforge/jsonapi/query/JsonApiQueryException.html
+[codec-category]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/diagnostic/CodecFailureCategory.html
+[validation-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.3.0/com/kazforge/jsonapi/core/validation/ValidationRuleCode.html
+[mapping-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/diagnostic/MappingDiagnostic.html
+[query-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.3.0/com/kazforge/jsonapi/query/QueryDiagnostic.html
+[mapping-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/diagnostic/MappingLocation.html
+[source-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/diagnostic/SourceLocation.html
+[error-source]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.3.0/com/kazforge/jsonapi/core/model/ErrorSource.html
+[error-object]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.3.0/com/kazforge/jsonapi/core/model/ErrorObject.html
 [error-spec]: https://jsonapi.org/format/1.1/#error-objects

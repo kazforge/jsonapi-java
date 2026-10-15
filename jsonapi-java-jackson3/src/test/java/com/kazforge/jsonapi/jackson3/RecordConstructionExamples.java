@@ -13,7 +13,7 @@ import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.document.DocumentEnvelope;
 import java.util.Map;
 
-/** Compile-checked replacement snippets for the KAZ-243 public-guide handoff. */
+/** Compile-checked replacement snippets for public-guide record construction examples. */
 final class RecordConstructionExamples {
 
   private RecordConstructionExamples() {}

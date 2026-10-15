@@ -42,11 +42,11 @@ supported line requires an explicit maintainer decision and is breaking;
 documented boundaries and review, not a bespoke signature-compatibility mechanism.
 
 Java 21 is the runtime and build minimum. CI deliberately exercises a newer LTS without
-automatically raising that minimum. Jackson 3 is the supported runtime for the next breaking
-`0.3.0` release; published `0.2.0` artifacts are unchanged. The
+automatically raising that minimum. Jackson 3 is the supported runtime from the breaking
+`0.3.0` release onward; historical `0.2.0` artifacts remain unchanged. The
 [Jackson 3 adapter README](../jsonapi-java-jackson3/README.md#jackson-support) owns its concrete
 minimum and sustainable LTS baseline. [ADR-016](adr/016-jackson-3-only-product-scope.md) records
-the product decision; the mapping module remains separate until its consolidation is implemented.
+the product decision.
 
 Production compilation, the default build, and published Jackson dependency declarations use those
 minimums. Separate [version-catalog references](../gradle/libs.versions.toml) supply
@@ -54,8 +54,8 @@ Renovate-maintained current-test versions for test classpaths only. Advancing a 
 does not change published metadata or the support floor;
 [dependency-baseline acceptance](release.md#dependency-baseline-acceptance) exercises each selection.
 
-Consumer/framework dependency management may select newer compatible Jackson versions within the
-appropriate major. Published dependencies use ordinary version declarations, without strict
+Consumer/framework dependency management may select newer compatible Jackson 3 versions.
+Published dependencies use ordinary version declarations, without strict
 constraints, forced versions, platforms, or version ranges. Baselines follow sustainable Jackson LTS
 lines rather than older affected patches managed by Spring Boot. The separate
 `kazforge/jsonapi-java-spring` companion consumes released public `jsonapi-java` contracts and
@@ -92,7 +92,7 @@ responsibility boundary, not a lowest-common-denominator Jackson abstraction.
 The separate Spring companion depends on released lower-layer public contracts; no lower layer
 depends on a framework.
 
-Package direction inside core and each Jackson adapter is a module-local constraint stated in that
+Package direction inside core and the Jackson 3 adapter is a module-local constraint stated in that
 module's README. [ADR-007](adr/007-module-boundaries.md) owns the module split and
 [ADR-009](adr/009-architectural-tests.md) owns its executable enforcement.
 

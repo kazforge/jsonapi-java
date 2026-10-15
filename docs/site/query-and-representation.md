@@ -5,8 +5,8 @@ description: "Parse JSON:API include, fields, and sort parameters in Java, then 
 
 # Parse JSON:API queries, includes, and sparse fieldsets {#query-and-representation}
 
-Add `com.kazforge:jsonapi-java-query` at the same version as your adapter. This module is independent
-of Jackson major and HTTP framework. Use the article/people write model and `ArticleView` from
+Add `com.kazforge:jsonapi-java-query` at the same version as your adapter. This module has no
+Jackson or HTTP framework dependency. Use the article/people write model and `ArticleView` from
 [resources](resources.md#write-relationships-read-linkage).
 
 ## Parse a request
@@ -60,8 +60,8 @@ unpermitted include, field, or sort tokens, but a successful parse grants no acc
 ## Apply selection with policy
 
 Use `selectedApi` from the [representation policy configuration](configuration.md#representation-policy),
-which permits article-author inclusion and the requested fields. Configure it once with either
-Jackson major, then pass selection separately for each write.
+which permits article-author inclusion and the requested fields. Configure it once on the runtime,
+then pass selection separately for each write.
 
 Use the decoded selection for this write, with the author's data already available:
 
@@ -154,6 +154,6 @@ See [query attribution](diagnostics.md#query-parameters) for decoded parameter n
 [application-owned error responses](diagnostics.md#build-an-application-owned-error-response) for
 selective use of `source.parameter`.
 
-See [`JsonApiQueryParser`](https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.2.0/com/kazforge/jsonapi/query/JsonApiQueryParser.html)
-and [`RepresentationPolicy`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.2.0/com/kazforge/jsonapi/representation/RepresentationPolicy.html)
+See [`JsonApiQueryParser`](https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.3.0/com/kazforge/jsonapi/query/JsonApiQueryParser.html)
+and [`RepresentationPolicy`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/representation/RepresentationPolicy.html)
 for exact parsing and policy contracts.
