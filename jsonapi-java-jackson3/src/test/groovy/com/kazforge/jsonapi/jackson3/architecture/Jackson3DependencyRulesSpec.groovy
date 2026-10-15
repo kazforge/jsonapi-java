@@ -11,7 +11,7 @@ import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.core.importer.ImportOption
 import com.kazforge.jsonapi.jackson3.ArchitectureAdapterSignatureLeakFixture
 import com.kazforge.jsonapi.jackson3.internal.codec.ArchitectureAdapterInternalException
-import com.kazforge.jsonapi.mapping.internal.PropertyRole
+import com.kazforge.jsonapi.jackson3.internal.mapping.PropertyRole
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -70,7 +70,7 @@ class Jackson3DependencyRulesSpec extends Specification {
           candidate.packageName.startsWith("com.kazforge.jsonapi.jackson3.mapping.")
     }
     def internal = jackson3Classes.findAll { JavaClass candidate ->
-      candidate.packageName == "com.kazforge.jsonapi.jackson3.internal"
+      candidate.packageName == "com.kazforge.jsonapi.jackson3.internal.mapping"
     }
     def codec = jackson3Classes.findAll { JavaClass candidate ->
       candidate.packageName == "com.kazforge.jsonapi.jackson3.internal.codec" ||
@@ -84,6 +84,13 @@ class Jackson3DependencyRulesSpec extends Specification {
     !codec.isEmpty()
   }
 
+  def "retired mapping implementation namespace is absent"() {
+    expect:
+    new ClassFileImporter()
+        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+        .importPackages("com.kazforge.jsonapi.mapping.internal..").isEmpty()
+  }
+
   def "jackson3 mapping contracts do not depend on composition or internals"() {
     expect:
     noClasses()
@@ -93,12 +100,12 @@ class Jackson3DependencyRulesSpec extends Specification {
         .dependOnClassesThat()
         .resideInAnyPackage(
         "com.kazforge.jsonapi.jackson3",
-        "com.kazforge.jsonapi.jackson3.internal",
+        "com.kazforge.jsonapi.jackson3.internal.mapping..",
         "com.kazforge.jsonapi.jackson3.internal.codec..")
         .check(jackson3Classes)
   }
 
-  def "jackson3 codec does not depend on composition, mapping, or exact internal"() {
+  def "jackson3 codec does not depend on composition or mapping"() {
     expect:
     noClasses()
         .that()
@@ -108,15 +115,15 @@ class Jackson3DependencyRulesSpec extends Specification {
         .resideInAnyPackage(
         "com.kazforge.jsonapi.jackson3",
         "com.kazforge.jsonapi.jackson3.mapping..",
-        "com.kazforge.jsonapi.jackson3.internal")
+        "com.kazforge.jsonapi.jackson3.internal.mapping..")
         .check(jackson3Classes)
   }
 
-  def "jackson3 exact internal does not depend on composition or codec"() {
+  def "jackson3 internal mapping does not depend on composition or codec"() {
     expect:
     noClasses()
         .that()
-        .resideInAPackage("com.kazforge.jsonapi.jackson3.internal")
+        .resideInAPackage("com.kazforge.jsonapi.jackson3.internal.mapping..")
         .should()
         .dependOnClassesThat()
         .resideInAnyPackage(
@@ -216,8 +223,8 @@ class Jackson3DependencyRulesSpec extends Specification {
   }
 
   private static boolean isMappingInternalPackage(String packageName) {
-    packageName == "com.kazforge.jsonapi.mapping.internal" ||
-        packageName.startsWith("com.kazforge.jsonapi.mapping.internal.")
+    packageName == "com.kazforge.jsonapi.jackson3.internal.mapping" ||
+        packageName.startsWith("com.kazforge.jsonapi.jackson3.internal.mapping.")
   }
 
   private static Set<JavaClass> exposedTypes(JavaClass candidate) {

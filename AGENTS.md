@@ -40,7 +40,7 @@ The [documentation index](docs/README.md) distinguishes the user guide from repo
   model variants represent explicit null data/linkage; Java null represents absence there. See
   [ADR-002](docs/adr/002-document-representation.md) and
   [JSpecify nullness](docs/adr/008-jspecify-nullness.md).
-- `internal` packages and the entire mapping artifact are unsupported consumer API, even when Java
+- `internal` packages are unsupported consumer API, even when Java
   visibility is public. See [public API ownership](docs/architecture.md#public-api-ownership).
 
 ## Verify a change

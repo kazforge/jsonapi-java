@@ -31,8 +31,8 @@ authorization, query execution, relationship mutation, and application of PATCH 
 The supported consumer API is the documented consumer-facing surface under `com.kazforge.jsonapi`,
 including intended public/protected extension points. Module READMEs identify that surface; package
 documentation and Javadoc own its responsibilities and contracts. Java visibility or artifact
-publication alone does not imply consumer support. Packages beneath an `internal` segment and the
-entire `jsonapi-java-mapping` artifact are unsupported implementation detail.
+publication alone does not imply consumer support. Packages beneath an `internal` segment are
+unsupported implementation detail.
 
 Normal API review assesses source and binary compatibility and documented observable behavior.
 Internal changes have no separate compatibility promise, but changes to supported behavior still
@@ -71,18 +71,17 @@ does not establish tested Spring Boot integration.
 | [`jsonapi-java-core`](../jsonapi-java-core/README.md) | Immutable wire model, local invariants, aggregate validation | None |
 | [`jsonapi-java-annotations`](../jsonapi-java-annotations/README.md) | Dependency-free semantic mapping roles | None |
 | [`jsonapi-java-api`](../jsonapi-java-api/README.md) | Backend-independent application, document, mapping, representation, diagnostic, and PATCH contracts currently implemented by configured Jackson | Core |
-| [`jsonapi-java-mapping`](../jsonapi-java-mapping/README.md) | Backend-neutral mapping semantics consumed by Jackson 3; published but unsupported consumer API | API |
 | [`jsonapi-java-query`](../jsonapi-java-query/README.md) | Neutral query selection parsing and opaque parameter preservation | Core and neutral Jackson representation contracts |
-| [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Native Jackson 3 codec, mapping, binding, PATCH, and Level-1 runtime | Mapping, API, annotations, and core |
+| [`jsonapi-java-jackson3`](../jsonapi-java-jackson3/README.md) | Native Jackson 3 codec, mapping, binding, PATCH, and Level-1 runtime | API, annotations, and core |
 
-The production dependency shape is a DAG: mapping depends on API, API depends on core, and Jackson 3
-depends on mapping while retaining its direct API, annotations, and core dependencies.
+The production dependency shape is a DAG: API depends on core, and Jackson 3 depends on API,
+annotations, and core.
 
-The mapping module owns JSON:API mapping semantics, not Jackson mechanics. The neutral API
-contains no production Jackson-major imports. `jsonapi-java-mapping` implements compound inclusion,
+Jackson 3 owns JSON:API mapping semantics and configured Jackson mechanics in `internal.mapping`.
+The neutral API contains no production Jackson-major imports. `jsonapi-java-jackson3` implements compound inclusion,
 resource reads and writes, link decoration, typed envelopes, the Level-1 primary-data shape policy,
-both PATCH projections, and mapping-definition invariants behind narrow unsupported backend
-capabilities; its [package documentation](../jsonapi-java-mapping/src/main/java/com/kazforge/jsonapi/mapping/internal/package-info.java)
+both PATCH projections, and mapping-definition invariants behind narrow unsupported internal
+capabilities; its [package documentation](../jsonapi-java-jackson3/src/main/java/com/kazforge/jsonapi/jackson3/internal/mapping/package-info.java)
 maps each area to the type that owns its contract. The Jackson 3 adapter remains the configured authority
 for property and type discovery, names, construction, conversion, native diagnostics, and
 parser/generator behavior. Its token-driven wire codec stays local to that Jackson major; there is
@@ -115,9 +114,9 @@ flowchart LR
 Flat binding is linkage-oriented and never injects `included` resources into relationships. Typed
 envelopes bind included resources independently through explicit type registration, and PATCH
 projections do not read `included`. For flat binding, typed envelopes, low-level `PatchCommand`,
-and typed `PatchPresence<T>` DTOs alike, `jsonapi-java-mapping` owns the neutral orchestration,
-phase order, and diagnostics. The adapter supplies configured property discovery, identifier
-parsing, conversion, and the single native bean construction through a narrow capability bridge.
+and typed `PatchPresence<T>` DTOs alike, `internal.mapping` owns orchestration, phase order, and
+diagnostics alongside configured property discovery, identifier parsing, conversion, and the
+single native bean construction. Narrow internal capabilities separate those responsibilities.
 
 Writes map application values into the core model, preserve representation provenance, validate,
 then emit:
@@ -135,8 +134,8 @@ flowchart LR
 ```
 
 Mapped relationships produce linkage. Resource-write orchestration, compound-inclusion traversal,
-and additive link decoration live in `jsonapi-java-mapping` behind adapter-supplied capability
-bridges; each adapter keeps configured conversion, effective-type resolution, and relationship
+and additive link decoration live in `jsonapi-java-jackson3`'s `internal.mapping` package;
+the same package keeps configured conversion, effective-type resolution, and relationship
 target resolution. Compound inclusion requires both operation-scoped selection and
 application-scoped policy. Decoration only adds links to already mapped resources and
 relationships. Sparse-fieldset linkage exemptions remain provenance on `MappedDocument`, which the
@@ -144,7 +143,7 @@ writer composes into validation. Callers do not translate mapping state into val
 
 The neutral Level-1 `JsonApi` contract coordinates common resource, relationship, document, and
 PATCH operations; the strict primary-data shape policy those operations apply lives in
-`jsonapi-java-mapping`. Major-specific capability APIs remain public for explicit codec, mapping,
+`jsonapi-java-jackson3`. Major-specific capability APIs remain public for explicit codec, mapping,
 parameterized-type, heterogeneous-envelope, and policy control.
 [ADR-012](adr/012-level-one-application-api-contract.md) owns that boundary.
 
@@ -159,8 +158,8 @@ parameterized-type, heterogeneous-envelope, and policy control.
 | Java property discovery, visibility, external names, mix-ins, creators, serializers, deserializers, and conversion | Caller-configured Jackson |
 | Include paths and fieldsets for one operation | `RepresentationSelection` |
 | Allowed fields/includes and traversal limits | Application/runtime `RepresentationPolicy` |
-| Backend-neutral mapping semantics, phase order, and diagnostics: compound inclusion, resource writes and reads, link decoration, typed envelopes, Level-1 primary-data shape, both PATCH projections, normalized roles and naming, and definition invariants | `jsonapi-java-mapping` internal orchestrators ([package map](../jsonapi-java-mapping/src/main/java/com/kazforge/jsonapi/mapping/internal/package-info.java)) |
-| Native mechanics behind those semantics: identifier parsing, type and relationship-target resolution, linkage-mapper selection, declared meta-target validation, attribute, meta, and identifier conversion, structured-shape introspection, construction-path translation, and final bean construction | Each backend adapter |
+| Backend-neutral mapping semantics, phase order, and diagnostics: compound inclusion, resource writes and reads, link decoration, typed envelopes, Level-1 primary-data shape, both PATCH projections, normalized roles and naming, and definition invariants | `jsonapi-java-jackson3` internal orchestrators ([package map](../jsonapi-java-jackson3/src/main/java/com/kazforge/jsonapi/jackson3/internal/mapping/package-info.java)) |
+| Native mechanics behind those semantics: identifier parsing, type and relationship-target resolution, linkage-mapper selection, declared meta-target validation, attribute, meta, and identifier conversion, structured-shape introspection, construction-path translation, and final bean construction | Jackson 3 internal mapping implementation |
 | Persistence, authorization, HTTP behavior, query execution, and applying updates | Application |
 
 Adapters are constructed from configured mapper instances and never mutate the caller's mapper.

@@ -2,9 +2,9 @@ package com.kazforge.jsonapi.jackson3;
 
 import com.kazforge.jsonapi.core.aggregate.ValidationContext;
 import com.kazforge.jsonapi.document.DocumentReadContext;
-import com.kazforge.jsonapi.jackson3.internal.DomainResourceBinder;
-import com.kazforge.jsonapi.jackson3.internal.DomainResourceWriter;
-import com.kazforge.jsonapi.jackson3.internal.MappingDefinitionCache;
+import com.kazforge.jsonapi.jackson3.internal.mapping.DomainResourceBinder;
+import com.kazforge.jsonapi.jackson3.internal.mapping.DomainResourceWriter;
+import com.kazforge.jsonapi.jackson3.internal.mapping.MappingDefinitionCache;
 import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.mapping.ResourceDecoratorRegistry;
@@ -327,10 +327,10 @@ public final class JsonApiJackson3 {
 
   /**
    * Derives a mapper for resource mapping introspection, attribute conversion, and binder
-   * construction. Registers {@link com.kazforge.jsonapi.jackson3.internal.MetaBindingModule} so
-   * built-in {@code ResourceIdentifier} values can round-trip identifier meta. Does not register
-   * the JSON:API document module because the resource mapper produces core model objects, not
-   * serialized output.
+   * construction. Registers {@link
+   * com.kazforge.jsonapi.jackson3.internal.mapping.MetaBindingModule} so built-in {@code
+   * ResourceIdentifier} values can round-trip identifier meta. Does not register the JSON:API
+   * document module because the resource mapper produces core model objects, not serialized output.
    */
   private static JsonMapper resourceMappingMapper(JsonMapper base) {
     return JsonApiJackson3Assembly.resourceMappingMapper(base);

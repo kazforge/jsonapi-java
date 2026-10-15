@@ -13,9 +13,10 @@
  * major-specific adapter package. The Jackson 3 adapter derives observable property semantics
  * through caller-configured Jackson (discovery, visibility, external names, construction, and
  * conversion); native Jackson mechanics stay in the adapter. This artifact ships only supported
- * contract packages. Cross-artifact mapping helpers live in the unsupported {@code
- * com.kazforge.jsonapi.mapping.internal} namespace of the mapping artifact, and native wire helpers
- * stay in the adapter's internal package; neither appears in supported public signatures.
+ * contract packages. Mapping implementation lives in the unsupported {@code
+ * com.kazforge.jsonapi.jackson3.internal.mapping} package of the Jackson 3 artifact, and native
+ * wire helpers live in its sibling {@code internal.codec} package; neither appears in supported
+ * public signatures.
  *
  * <p>Wire-visible presence is preserved. On document and envelope values, Java {@code null} means
  * that a member is absent and core sealed variants represent explicit JSON {@code null}. PATCH DTOs
