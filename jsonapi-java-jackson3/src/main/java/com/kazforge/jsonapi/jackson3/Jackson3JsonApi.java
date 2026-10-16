@@ -80,6 +80,12 @@ public final class Jackson3JsonApi implements JsonApi {
                 linkageMappers));
     JsonApiDocumentReader resourceReader =
         new JsonApiDocumentReader(baseMapper, DocumentReadContext.resourceDefaults());
+    JsonApiDocumentReader createReader =
+        new JsonApiDocumentReader(
+            baseMapper,
+            DocumentReadContext.resourceDefaults()
+                .withValidationContext(
+                    ValidationContext.defaults().withDocumentUsage(DocumentUsage.CREATE_REQUEST)));
     JsonApiDocumentReader relationshipReader =
         new JsonApiDocumentReader(
             baseMapper,
@@ -111,6 +117,7 @@ public final class Jackson3JsonApi implements JsonApi {
             resourceMapper,
             resourceBinder,
             resourceReader,
+            createReader,
             responseWriter,
             createWriter);
     this.relationships = new Jackson3JsonApiRelationships(relationshipReader, relationshipWriter);

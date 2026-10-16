@@ -14,10 +14,11 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Reads bind directly to the caller-supplied target type and never require a resource-type
  * registry. {@code readOne} requires primary data that is exactly one resource object; {@code
- * readMany} requires a resource collection. Null, absent, identifier, error, and cross-shape
- * document states are never silently coerced. The {@code Class} overloads cover ordinary DTOs; the
- * {@code Type} overloads cover generic targets whose fidelity genuinely requires a full type.
- * Generic typed-document envelopes and heterogeneous binding remain advanced.
+ * readCreate} requires one resource object validated as a create request; {@code readMany} requires
+ * a resource collection. Null, absent, identifier, error, and cross-shape document states are never
+ * silently coerced. The {@code Class} overloads cover ordinary DTOs; the {@code Type} overloads
+ * cover generic targets whose fidelity genuinely requires a full type. Generic typed-document
+ * envelopes and heterogeneous binding remain advanced.
  *
  * <p>Writes coordinate mapping, configured decoration, mapped-document validation, and document
  * emission internally. {@code writeCreateDocument} selects core {@code CREATE_REQUEST} validation
@@ -49,6 +50,28 @@ public interface JsonApiResources {
    * {@code type} denotes the returned value.
    */
   Object readOne(InputStream json, Type type);
+
+  /**
+   * Reads exactly one primary resource DTO using core {@code CREATE_REQUEST} validation. The
+   * primary {@code id} may be absent; {@code lid} remains independent and may identify a matching
+   * primary self-reference. Supplied primary relationships require {@code data}. The complete
+   * document, including included-resource identities and full linkage, is validated before binding;
+   * {@code included} is not used to hydrate DTO relationships. Response reads retain their ordinary
+   * validation semantics.
+   */
+  <T> T readCreate(String json, Class<T> type);
+
+  /** Stream variant of {@link #readCreate(String, Class)}. The stream is not closed. */
+  <T> T readCreate(InputStream json, Class<T> type);
+
+  /**
+   * Generic-target variant of {@link #readCreate(String, Class)}. The caller ensures {@code type}
+   * denotes the returned value.
+   */
+  Object readCreate(String json, Type type);
+
+  /** Stream variant of {@link #readCreate(String, Type)}. The stream is not closed. */
+  Object readCreate(InputStream json, Type type);
 
   /**
    * Reads a resource collection. Requires collection primary data; never coerces one resource,
