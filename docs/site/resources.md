@@ -166,6 +166,15 @@ Result:
 }
 ```
 
+Read the ID-less create request with create validation:
+
+```java
+NewArticle createRequest = api.resources().readCreate(createJson, NewArticle.class);
+```
+
+`createRequest.id()` is null; `createRequest.localId()` is `draft-1`. A create may omit both
+identifiers. A supplied `lid` can identify a matching primary self-reference.
+
 Response writes still require `id`. Create allowances are not a nested-create protocol:
 included resources and unrelated linkage need ids. No annotation infers `lid`, and neither
 identifier role falls back to the other.
@@ -261,6 +270,6 @@ DTO mapping is not a lossless representation of member presence.
 
 Reads validate the whole document before binding. Malformed/invalid input and DTO mapping problems
 remain [distinct failure families](relationships-and-documents.md#diagnostics). The
-[`JsonApiResources`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/api/JsonApiResources.html)
+[`JsonApiResources`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/api/JsonApiResources.html)
 source API documentation owns generic-type and stream overload contracts; caller-supplied streams
 remain open.
