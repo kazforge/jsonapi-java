@@ -52,8 +52,7 @@ final class Jackson3JsonApiResources implements JsonApiResources {
       ResourceConfiguration configuration,
       JsonApiResourceMapper resourceMapper,
       JsonApiResourceBinder resourceBinder,
-      JsonApiDocumentReader resourceReader,
-      JsonApiDocumentReader createReader,
+      ResourceReaders readers,
       JsonApiDocumentWriter responseWriter,
       JsonApiDocumentWriter createWriter) {
     this.baseMapper = Objects.requireNonNull(baseMapper, "baseMapper");
@@ -62,8 +61,9 @@ final class Jackson3JsonApiResources implements JsonApiResources {
         Objects.requireNonNull(configuration.representationPolicy(), "representationPolicy");
     this.resourceMapper = Objects.requireNonNull(resourceMapper, "resourceMapper");
     this.resourceBinder = Objects.requireNonNull(resourceBinder, "resourceBinder");
-    this.resourceReader = Objects.requireNonNull(resourceReader, "resourceReader");
-    this.createReader = Objects.requireNonNull(createReader, "createReader");
+    Objects.requireNonNull(readers, "readers");
+    this.resourceReader = Objects.requireNonNull(readers.response(), "resourceReader");
+    this.createReader = Objects.requireNonNull(readers.create(), "createReader");
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter");
     this.createWriter = Objects.requireNonNull(createWriter, "createWriter");
     this.defaultJsonApi = configuration.defaultJsonApi();
@@ -361,4 +361,6 @@ final class Jackson3JsonApiResources implements JsonApiResources {
 
   record ResourceConfiguration(
       RepresentationPolicy representationPolicy, @Nullable JsonApiObject defaultJsonApi) {}
+
+  record ResourceReaders(JsonApiDocumentReader response, JsonApiDocumentReader create) {}
 }

@@ -116,8 +116,7 @@ public final class Jackson3JsonApi implements JsonApi {
                 representationPolicy, defaultJsonApi),
             resourceMapper,
             resourceBinder,
-            resourceReader,
-            createReader,
+            new Jackson3JsonApiResources.ResourceReaders(resourceReader, createReader),
             responseWriter,
             createWriter);
     this.relationships = new Jackson3JsonApiRelationships(relationshipReader, relationshipWriter);
