@@ -42,6 +42,7 @@ final class Jackson3JsonApiResources implements JsonApiResources {
   private final JsonApiResourceMapper resourceMapper;
   private final JsonApiResourceBinder resourceBinder;
   private final JsonApiDocumentReader resourceReader;
+  private final JsonApiDocumentReader createReader;
   private final JsonApiDocumentWriter responseWriter;
   private final JsonApiDocumentWriter createWriter;
   private final @Nullable JsonApiObject defaultJsonApi;
@@ -51,7 +52,7 @@ final class Jackson3JsonApiResources implements JsonApiResources {
       ResourceConfiguration configuration,
       JsonApiResourceMapper resourceMapper,
       JsonApiResourceBinder resourceBinder,
-      JsonApiDocumentReader resourceReader,
+      ResourceReaders readers,
       JsonApiDocumentWriter responseWriter,
       JsonApiDocumentWriter createWriter) {
     this.baseMapper = Objects.requireNonNull(baseMapper, "baseMapper");
@@ -60,7 +61,9 @@ final class Jackson3JsonApiResources implements JsonApiResources {
         Objects.requireNonNull(configuration.representationPolicy(), "representationPolicy");
     this.resourceMapper = Objects.requireNonNull(resourceMapper, "resourceMapper");
     this.resourceBinder = Objects.requireNonNull(resourceBinder, "resourceBinder");
-    this.resourceReader = Objects.requireNonNull(resourceReader, "resourceReader");
+    Objects.requireNonNull(readers, "readers");
+    this.resourceReader = Objects.requireNonNull(readers.response(), "resourceReader");
+    this.createReader = Objects.requireNonNull(readers.create(), "createReader");
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter");
     this.createWriter = Objects.requireNonNull(createWriter, "createWriter");
     this.defaultJsonApi = configuration.defaultJsonApi();
@@ -92,6 +95,34 @@ final class Jackson3JsonApiResources implements JsonApiResources {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(type, "type");
     return bindSingle(resourceReader.readValue(json), baseMapper.constructType(type));
+  }
+
+  @Override
+  public <T> T readCreate(String json, Class<T> type) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(type, "type");
+    return type.cast(bindSingle(createReader.readValue(json), type));
+  }
+
+  @Override
+  public <T> T readCreate(InputStream json, Class<T> type) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(type, "type");
+    return type.cast(bindSingle(createReader.readValue(json), type));
+  }
+
+  @Override
+  public Object readCreate(String json, Type type) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(type, "type");
+    return bindSingle(createReader.readValue(json), baseMapper.constructType(type));
+  }
+
+  @Override
+  public Object readCreate(InputStream json, Type type) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(type, "type");
+    return bindSingle(createReader.readValue(json), baseMapper.constructType(type));
   }
 
   @Override
@@ -330,4 +361,6 @@ final class Jackson3JsonApiResources implements JsonApiResources {
 
   record ResourceConfiguration(
       RepresentationPolicy representationPolicy, @Nullable JsonApiObject defaultJsonApi) {}
+
+  record ResourceReaders(JsonApiDocumentReader response, JsonApiDocumentReader create) {}
 }

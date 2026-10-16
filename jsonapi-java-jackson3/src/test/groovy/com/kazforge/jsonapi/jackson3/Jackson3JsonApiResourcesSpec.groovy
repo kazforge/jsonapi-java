@@ -83,10 +83,13 @@ class Jackson3JsonApiResourcesSpec extends Specification {
     json.contains('"id":"id-7"')
 
     when:
-    def actual = runtime.resources().readOne(json, FlatArticle)
+    def actual = runtime.resources()."$operation"(json, FlatArticle)
 
     then:
     actual.id() == "7"
+
+    where:
+    operation << ["readOne", "readCreate"]
   }
 
   def "compiled configuration example overrides jsonapi defaults with a present-empty object"() {
@@ -165,13 +168,16 @@ class Jackson3JsonApiResourcesSpec extends Specification {
         '"contributors":{"data":[{"type":"people","id":"p2"}]}}}}'
 
     when:
-    def article = runtime.resources().readOne(json, FlatMappedArticle)
+    def article = runtime.resources()."$operation"(json, FlatMappedArticle)
 
     then:
     article.author() == new FlatAuthor("people", "p1")
     article.contributors() == [
       new FlatAuthor("people", "p2")
     ]
+
+    where:
+    operation << ["readOne", "readCreate"]
   }
 
   def "generic Type overloads retain full type fidelity"() {
