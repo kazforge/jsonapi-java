@@ -53,7 +53,7 @@ Verify public versions in [Maven Central](https://central.sonatype.com/namespace
         mavenCentral()
     }
 
-    val jsonapiVersion = "0.3.0"
+    val jsonapiVersion = "0.4.0"
 
     dependencies {
         implementation("com.kazforge:jsonapi-java-jackson3:$jsonapiVersion")
@@ -66,7 +66,7 @@ Verify public versions in [Maven Central](https://central.sonatype.com/namespace
 
     ```xml
     <properties>
-        <jsonapi.version>0.3.0</jsonapi.version>
+        <jsonapi.version>0.4.0</jsonapi.version>
     </properties>
     <dependencies>
         <dependency>
