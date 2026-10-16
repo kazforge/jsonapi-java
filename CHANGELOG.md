@@ -5,6 +5,13 @@ Consumer-visible changes for the unified release train shared by the
 [ADR-014](docs/adr/014-unified-release-train.md); release-please maintains future
 entries. Tags are named `v<version>`.
 
+## [0.4.0](https://github.com/kazforge/jsonapi-java/compare/v0.3.0...v0.4.0) (2026-10-16)
+
+
+### Features
+
+* **api:** add create-aware resource DTO reads ([08bdd83](https://github.com/kazforge/jsonapi-java/commit/08bdd83e49a383b2c6cac45372dcbf13edbc3870))
+
 ## [0.3.0](https://github.com/kazforge/jsonapi-java/compare/v0.2.0...v0.3.0) (2026-10-15)
 
 
