@@ -15,6 +15,6 @@ Choose the reference matching your dependency version; these links do not follow
 Public mapping contracts ship in `jsonapi-java-api` under `com.kazforge.jsonapi.mapping`. Packages
 containing `internal` are unsupported implementation details, not consumer APIs. If the external
 host is unavailable, the
-[`JsonApi` source Javadoc at `v0.4.0`](https://github.com/kazforge/jsonapi-java/blob/v0.4.0/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/api/JsonApi.java)
+[`JsonApi` source Javadoc](https://github.com/kazforge/jsonapi-java/blob/v0.4.0/jsonapi-java-api/src/main/java/com/kazforge/jsonapi/api/JsonApi.java)
 and the published Javadoc JARs on Maven Central remain available.
 <!-- x-release-please-end -->
