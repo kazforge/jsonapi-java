@@ -60,6 +60,30 @@
         {
           "type": "generic",
           "path": "docs/site/index.md"
+        },
+        {
+          "type": "generic",
+          "path": "docs/site/api-reference.md"
+        },
+        {
+          "type": "generic",
+          "path": "docs/site/resources.md"
+        },
+        {
+          "type": "generic",
+          "path": "docs/site/relationships-and-documents.md"
+        },
+        {
+          "type": "generic",
+          "path": "docs/site/patches.md"
+        },
+        {
+          "type": "generic",
+          "path": "docs/site/query-and-representation.md"
+        },
+        {
+          "type": "generic",
+          "path": "docs/site/diagnostics.md"
         }
       ]
     }
