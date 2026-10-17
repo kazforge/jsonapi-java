@@ -28,11 +28,13 @@ are unsupported implementation details, and Java visibility alone is not a compa
 | Java | 21 |
 | Jackson 3 (`jsonapi-java-jackson3`) | `jackson-databind` 3.1.7 |
 
+<!-- x-release-please-start-version -->
 Compatible newer Jackson 3 versions can be selected by your dependency management; the adapter does
 not force a platform or override your application's Jackson version. The LTS baseline and policy are
 maintained in the
-[Jackson 3 support section](https://github.com/kazforge/jsonapi-java/blob/main/jsonapi-java-jackson3/README.md#jackson-support).
+[Jackson 3 support section](https://github.com/kazforge/jsonapi-java/blob/v0.4.0/jsonapi-java-jackson3/README.md#jackson-support).
 The supported Jackson line is not a Spring Boot compatibility matrix.
+<!-- x-release-please-end -->
 
 Starting in `0.3.0`, `jsonapi-java` supports Jackson 3 (`tools.jackson.*`) only;
 `jsonapi-java-jackson2` and the separately published internal `jsonapi-java-mapping` artifact from
@@ -178,8 +180,10 @@ The `JsonApi` application API groups operations under `resources()`, `relationsh
 `documents()`, and `patches()`. Continue with [resources](resources.md); use
 [relationships and documents](relationships-and-documents.md#ordinary-or-advanced) to choose a lower-level path.
 
+<!-- x-release-please-start-version -->
 The [API Reference](api-reference.md) links rendered Javadoc for released artifacts, including
-[`JsonApi`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/api/JsonApi.html)
-and [`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.3.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html).
-These links target 0.3.0, not `main`. Exhaustive method/overload contracts belong in Javadoc,
+[`JsonApi`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/api/JsonApi.html)
+and [`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.4.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html).
+These links target 0.4.0, not `main`. Exhaustive method/overload contracts belong in Javadoc,
 not in this guide.
+<!-- x-release-please-end -->
