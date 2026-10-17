@@ -36,6 +36,7 @@ Before merging:
   artifact or dependency appears in staged publications or release SBOMs. Historical `0.2.0`
   artifacts remain immutable; check the five-artifact inventory against
   [ADR-016](adr/016-jackson-3-only-product-scope.md) before releasing.
+- Check every public guide Javadoc/class link and source fallback against the **proposed release version**, not the previously published version. Versioned docs must be tag-ready before merging the release PR; check relative links and assets under `/core/<version>/` and leave portal publication to the portal owner.
 - Confirm required PR checks pass.
 
 ## Publication verification
@@ -45,10 +46,10 @@ on Maven Central under `com.kazforge` before announcing availability. Verify sig
 publications, per-module `cyclonedx` SBOMs, and GitHub provenance/SBOM attestations for
 the primary JARs. Published artifacts are immutable; corrections require a new train version.
 
-After publication, verify that javadocs.dev renders the new version for all five consumer artifacts,
-including class links and assets. Update `site/api-reference.md` and the guide's class links explicitly
-to that version; never use `latest`. If hosting is unavailable, use source Javadoc links pinned to the
-matching `v<version>` release tag and label them as source, not rendered documentation.
+After publication, verify that the already-versioned links in the tagged guide resolve for all five
+consumer artifacts. If javadocs.dev is unavailable, link to source Javadocs pinned to the same tag
+and label them as source. Hand the software tag, full SHA and external consumer evidence to the
+portal owner for separate publication; do not amend a released tag or publish from moving `main`.
 
 ## Dependency-baseline acceptance
 

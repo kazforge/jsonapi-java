@@ -108,11 +108,13 @@ ArticlePatch checked = api.patches().bindPatch(validated, ArticlePatch.class);
 `checked` has the same presence states as the earlier patch. A type or id that does not match `target`
 fails endpoint-identity validation before binding.
 
+<!-- x-release-please-start-version -->
 `bindPatch` assumes an already validated update document; it does not revalidate it.
-[`bindCommand`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/api/JsonApiPatches.html#bindCommand(com.kazforge.jsonapi.core.model.JsonApiDocument,java.lang.Class))
+[`bindCommand`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/api/JsonApiPatches.html#bindCommand(com.kazforge.jsonapi.core.model.JsonApiDocument,java.lang.Class))
 is the low-level alternative: it binds that document's supplied changes into a `PatchCommand<T>`
 rather than constructing a typed PATCH DTO, also without parsing or revalidation. See
 [low-level commands](#low-level-commands).
+<!-- x-release-please-end -->
 
 ## Relationships replace linkage
 
@@ -210,7 +212,9 @@ are skipped, unlike typed PATCH. Traversable bean attributes/resource-side meta 
 recursive `StructuredPatch` members, while containers stay atomic. Both paths enforce update shape
 and preserve omission versus null; neither applies changes.
 
-See [`JsonApiPatches`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/api/JsonApiPatches.html),
-[`PatchPresence`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/patch/PatchPresence.html),
-and [`StructuredPatch`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.3.0/com/kazforge/jsonapi/patch/StructuredPatch.html)
+<!-- x-release-please-start-version -->
+See [`JsonApiPatches`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/api/JsonApiPatches.html),
+[`PatchPresence`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/patch/PatchPresence.html),
+and [`StructuredPatch`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/patch/StructuredPatch.html)
 for exact contracts.
+<!-- x-release-please-end -->
