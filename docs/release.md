@@ -51,6 +51,11 @@ consumer artifacts. If javadocs.dev is unavailable, link to source Javadocs pinn
 and label them as source. Hand the software tag, full SHA and external consumer evidence to the
 portal owner for separate publication; do not amend a released tag or publish from moving `main`.
 
+Until the custom-domain cutover, keep `docs/site/llms.txt` and `docs/site/robots.txt` for the
+existing Core Pages root. These root-specific files are not versioned guide content; the portal
+promotion must exclude them from `core/<version>/`. After verified cutover, KAZ-259 owns retiring
+the Core Pages publisher, while portal root discovery is maintained in `jsonapi-docs`.
+
 ## Dependency-baseline acceptance
 
 When changing a Jackson minimum or test-version selection, test both selections:
