@@ -16,9 +16,9 @@ The runtime coordinate is `com.kazforge:jsonapi-java-jackson3`. [Install and run
 
 <!-- x-release-please-start-version -->
 
-Current release: **[0.4.0][current-release]**.
+Current release: **[0.4.1][current-release]**.
 
-[current-release]: https://github.com/kazforge/jsonapi-java/releases/tag/v0.4.0
+[current-release]: https://github.com/kazforge/jsonapi-java/releases/tag/v0.4.1
 
 <!-- x-release-please-end -->
 

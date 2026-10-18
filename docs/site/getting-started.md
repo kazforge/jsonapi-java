@@ -32,7 +32,7 @@ are unsupported implementation details, and Java visibility alone is not a compa
 Compatible newer Jackson 3 versions can be selected by your dependency management; the adapter does
 not force a platform or override your application's Jackson version. The LTS baseline and policy are
 maintained in the
-[Jackson 3 support section](https://github.com/kazforge/jsonapi-java/blob/v0.4.0/jsonapi-java-jackson3/README.md#jackson-support).
+[Jackson 3 support section](https://github.com/kazforge/jsonapi-java/blob/v0.4.1/jsonapi-java-jackson3/README.md#jackson-support).
 The supported Jackson line is not a Spring Boot compatibility matrix.
 <!-- x-release-please-end -->
 
@@ -55,7 +55,7 @@ Verify public versions in [Maven Central](https://central.sonatype.com/namespace
         mavenCentral()
     }
 
-    val jsonapiVersion = "0.4.0"
+    val jsonapiVersion = "0.4.1"
 
     dependencies {
         implementation("com.kazforge:jsonapi-java-jackson3:$jsonapiVersion")
@@ -68,7 +68,7 @@ Verify public versions in [Maven Central](https://central.sonatype.com/namespace
 
     ```xml
     <properties>
-        <jsonapi.version>0.4.0</jsonapi.version>
+        <jsonapi.version>0.4.1</jsonapi.version>
     </properties>
     <dependencies>
         <dependency>
@@ -182,8 +182,8 @@ The `JsonApi` application API groups operations under `resources()`, `relationsh
 
 <!-- x-release-please-start-version -->
 The [API Reference](api-reference.md) links rendered Javadoc for released artifacts, including
-[`JsonApi`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/api/JsonApi.html)
-and [`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.4.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html).
-These links target 0.4.0, not `main`. Exhaustive method/overload contracts belong in Javadoc,
+[`JsonApi`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.1/com/kazforge/jsonapi/api/JsonApi.html)
+and [`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.4.1/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html).
+These links target 0.4.1, not `main`. Exhaustive method/overload contracts belong in Javadoc,
 not in this guide.
 <!-- x-release-please-end -->

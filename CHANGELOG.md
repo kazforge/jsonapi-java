@@ -5,6 +5,13 @@ Consumer-visible changes for the unified release train shared by the
 [ADR-014](docs/adr/014-unified-release-train.md); release-please maintains future
 entries. Tags are named `v<version>`.
 
+## [0.4.1](https://github.com/kazforge/jsonapi-java/compare/v0.4.0...v0.4.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-core to v2.22.4 ([1c6f680](https://github.com/kazforge/jsonapi-java/commit/1c6f680df38c38304c70685b1257581b595ff8c3))
+
 ## [0.4.0](https://github.com/kazforge/jsonapi-java/compare/v0.3.0...v0.4.0) (2026-10-16)
 
 
