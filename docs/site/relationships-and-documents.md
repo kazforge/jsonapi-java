@@ -336,8 +336,10 @@ and mapping policy:
 | Parameterized Jackson `JavaType`, custom codec validation, per-call mapping policy | Jackson-specific readers, writers, mappers, binders |
 | Primary/included DTOs of different resource types | Jackson-specific domain-document reader with explicit `ResourceTypeRegistry` |
 
+<!-- x-release-please-start-version -->
 The Jackson-specific factories are on
-[`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.3.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html).
+[`JsonApiJackson3`](https://www.javadocs.dev/com.kazforge/jsonapi-java-jackson3/0.4.0/com/kazforge/jsonapi/jackson3/JsonApiJackson3.html).
 Typed document readers bind included resources independently, not into DTO relationships. Jackson 3
 APIs follow Jackson 3's unchecked exception model; `JsonApi` stream operations wrap `IOException` in
 `UncheckedIOException`. Caller-owned sources and sinks remain open.
+<!-- x-release-please-end -->
