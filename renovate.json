@@ -56,6 +56,12 @@
       "matchManagers": ["gradle"],
       "matchJsonata": ["sharedVariableName = 'jackson3.current'"],
       "allowedVersions": "/^3\\./"
+    },
+    {
+      "description": "The Jackson core security constraint is a buildscript-only tool dependency, not a consumer runtime fix.",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["com.fasterxml.jackson.core:jackson-core"],
+      "semanticCommitType": "chore"
     }
   ]
 }
