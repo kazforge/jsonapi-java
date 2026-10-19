@@ -1,0 +1,9 @@
+- Overview: index.md
+- Getting started: getting-started.md
+- Configuration: configuration.md
+- Resources: resources.md
+- Relationships and documents: relationships-and-documents.md
+- PATCH: patches.md
+- Query and representation: query-and-representation.md
+- Diagnostics: diagnostics.md
+- API Reference: api-reference.md
