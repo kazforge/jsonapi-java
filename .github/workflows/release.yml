@@ -105,3 +105,65 @@ jobs:
             -H "Authorization: Bearer $CENTRAL_TOKEN" \
             -F "bundle=@build/central-bundle.zip" \
             "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC"
+
+  docs-publish:
+    name: Publish released documentation
+    needs: [release-please, publish]
+    if: ${{ needs.publish.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      group: docs-${{ github.repository }}-${{ needs.release-please.outputs.tag_name }}
+      cancel-in-progress: false
+    steps:
+      - name: Check out immutable software release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          persist-credentials: false
+      - name: Create product and Portal App token
+        id: docs-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: kazforge
+          repositories: |
+            jsonapi-java
+            jsonapi-docs
+          permission-contents: write
+      - name: Publish immutable docs asset and notify Portal
+        env:
+          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          DOCS_TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          [[ -n "$DOCS_TAG" && -f docs/site/index.md ]]
+          [[ -z "$(find docs/site -type l -print -quit)" ]]
+          source_sha="$(git rev-parse HEAD)"
+          label="docs-source-sha=$source_sha;software-tag-sha=$source_sha"
+          archive="$RUNNER_TEMP/docs-site.tar.gz"
+          tar -C docs/site --format=gnu --sort=name --mtime='@0' --owner=0 --group=0 \
+            --numeric-owner -cf - . | gzip -n > "$archive"
+          [[ -s "$archive" ]]
+          existing="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$DOCS_TAG" \
+            --jq '[.assets[] | select(.name == "docs-site.tar.gz")]')"
+          count="$(jq 'length' <<< "$existing")"
+          if [[ "$count" == 0 ]]; then
+            gh release upload "$DOCS_TAG" "$archive#$label" --repo "$GITHUB_REPOSITORY"
+          elif [[ "$count" == 1 ]]; then
+            [[ "$(jq -r '.[0].label // ""' <<< "$existing")" == "$label" ]] || {
+              echo "Conflicting documentation provenance; refusing overwrite" >&2
+              exit 1
+            }
+            mkdir -p "$RUNNER_TEMP/previous"
+            gh release download "$DOCS_TAG" --repo "$GITHUB_REPOSITORY" \
+              --pattern docs-site.tar.gz --dir "$RUNNER_TEMP/previous"
+            cmp "$archive" "$RUNNER_TEMP/previous/docs-site.tar.gz"
+          else
+            echo "Duplicate docs assets on release $DOCS_TAG" >&2
+            exit 1
+          fi
+          gh api --method POST repos/kazforge/jsonapi-docs/dispatches \
+            -f event_type=docs-release-published
