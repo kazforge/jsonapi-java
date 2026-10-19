@@ -14,7 +14,7 @@ archunit = "1.5.1"
 jackson3-minimum = "3.1.7"
 jackson-annotations-minimum = "2.21"
 # Test-only forward compatibility targets, maintained by Renovate.
-jackson3-current = "3.2.3"
+jackson3-current = "3.2.4"
 groovy = "6.0.0"
 json-schema-validator = "3.0.8"
 
