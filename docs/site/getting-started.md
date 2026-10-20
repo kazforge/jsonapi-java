@@ -96,6 +96,9 @@ when upgrading across minors. Raising a supported Java or Jackson minimum is a b
 
 ## Configure a runtime
 
+With Java 21+ and the Jackson 3 dependency above, the snippets below can run inside your
+application code. Declare the DTO as its own Java type and reuse `api` for each operation.
+
 Configure Jackson first, then pass the mapper to `JsonApiJackson3`. Keep the resulting immutable,
 thread-safe runtime for your application's lifetime. Factories do not mutate your mapper.
 
@@ -117,47 +120,26 @@ to each operation.
 
 ## Read and write an article
 
-This complete application writes an article, reads it back, and prints its title:
+Start with a DTO for an article's identity and title:
 
 ```java
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
 import com.kazforge.jsonapi.annotation.JsonApiId;
 import com.kazforge.jsonapi.annotation.JsonApiResource;
-import com.kazforge.jsonapi.api.JsonApi;
-import com.kazforge.jsonapi.jackson3.JsonApiJackson3;
-import tools.jackson.databind.json.JsonMapper;
 
-public class Example {
-    @JsonApiResource(type = "articles")
-    public record Article(
-        @JsonApiId String id,
-        @JsonApiAttribute String title
-    ) {}
-
-    public static void main(String[] args) {
-        JsonMapper mapper = JsonMapper.builder()
-            .build();
-        JsonApi api = JsonApiJackson3.jsonApi(mapper);
-
-        Article article = new Article(
-            "1",
-            "Working with JSON:API"
-        );
-        String json = api.resources().writeOne(article);
-
-        Article readBack = api.resources().readOne(json, Article.class);
-        System.out.println(readBack.title());
-    }
-}
+@JsonApiResource(type = "articles")
+public record Article(
+    @JsonApiId String id,
+    @JsonApiAttribute String title
+) {}
 ```
 
-Console output:
+`@JsonApiResource` supplies the resource `type`; the other annotations place properties in `id`
+and `attributes`. Jackson still owns visibility, property names, creators, mix-ins, and value
+conversion. Unannotated attributes do not join the mapping automatically.
 
-```text
-Working with JSON:API
-```
-
-The serialized document, formatted for display:
+Suppose an API returns this JSON:API document. Here, `responseBody` is a Java `String` containing
+the complete JSON below:
 
 ```json
 {
@@ -171,13 +153,42 @@ The serialized document, formatted for display:
 }
 ```
 
-Role annotations identify JSON:API members. Jackson still owns visibility, property names, creators,
-mix-ins, and value conversion. Unannotated attributes do not join the mapping automatically.
+Read the article from the document's `data` member:
+
+```java
+Article article = api.resources().readOne(responseBody, Article.class);
+```
+
+`article.id()` is `"1"`; `article.title()` is `"Working with JSON:API"`.
+
+To write a document, supply an article DTO. For example, give the article a revised title:
+
+```java
+Article revised = new Article(article.id(), "A practical JSON:API guide");
+String revisedJson = api.resources().writeOne(revised);
+```
+
+`revisedJson` contains this document, formatted here for readability:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "A practical JSON:API guide"
+    }
+  }
+}
+```
+
+These operations map and validate documents. Your application owns HTTP handling and saving changes.
 
 ## API reference and next steps
 
-The `JsonApi` application API groups operations under `resources()`, `relationships()`,
-`documents()`, and `patches()`. Continue with [resources](resources.md); use
+Continue with [resources](resources.md) to read an ID-less create request, add an author, and
+work with collections and metadata. The `JsonApi` API groups operations under `resources()`,
+`relationships()`, `documents()`, and `patches()`; use
 [relationships and documents](relationships-and-documents.md#ordinary-or-advanced) to choose a lower-level path.
 
 <!-- x-release-please-start-version -->
