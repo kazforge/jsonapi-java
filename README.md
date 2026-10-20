@@ -11,10 +11,12 @@ break compatibility; patch releases do not.
 
 Use `com.kazforge:jsonapi-java-jackson3`. Packages use `com.kazforge.jsonapi.*`.
 
-**[Install and run the first example](https://jsonapi.kazforge.com/getting-started/)**. The
+<!-- x-release-please-start-version -->
+**[Install and run the first example](https://jsonapi.kazforge.com/core/0.4.0/getting-started/)**. The
 [user guide](https://jsonapi.kazforge.com/) owns user workflows; its
-[API-reference section](https://jsonapi.kazforge.com/getting-started/#api-reference-and-next-steps)
+[API-reference section](https://jsonapi.kazforge.com/core/0.4.0/getting-started/#api-reference-and-next-steps)
 links Javadoc.
+<!-- x-release-please-end -->
 
 ## Modules
 

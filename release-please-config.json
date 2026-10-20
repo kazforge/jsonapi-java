@@ -51,6 +51,30 @@
       "extra-files": [
         {
           "type": "generic",
+          "path": "README.md"
+        },
+        {
+          "type": "generic",
+          "path": "jsonapi-java-api/README.md"
+        },
+        {
+          "type": "generic",
+          "path": "jsonapi-java-jackson3/README.md"
+        },
+        {
+          "type": "generic",
+          "path": "jsonapi-java-core/README.md"
+        },
+        {
+          "type": "generic",
+          "path": "jsonapi-java-query/README.md"
+        },
+        {
+          "type": "generic",
+          "path": "jsonapi-java-annotations/README.md"
+        },
+        {
+          "type": "generic",
           "path": "gradle.properties"
         },
         {
