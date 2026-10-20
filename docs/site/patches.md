@@ -264,10 +264,8 @@ ArticleRelationshipsPatch authorPatch = api.patches().readPatch(
 
 Resulting presence state:
 
-```text
-authorPatch.author():    Present(ResourceIdentifier[type="people", id="p2"])
-authorPatch.reviewers(): Omitted
-```
+- `authorPatch.author()` is `PatchPresence.Present` containing a `ResourceIdentifier` with `type()` equal to `"people"` and `id()` equal to `"p2"`.
+- `authorPatch.reviewers()` is `PatchPresence.Omitted`.
 
 Intended application behavior: update the article's author reference to `"p2"` (after verifying
 that person `"p2"` exists) and leave the existing `["p2", "p3"]` reviewer links unchanged.
@@ -299,10 +297,8 @@ ArticleRelationshipsPatch clearAuthorPatch = api.patches().readPatch(
 
 Resulting presence state:
 
-```text
-clearAuthorPatch.author():    Present(null)
-clearAuthorPatch.reviewers(): Omitted
-```
+- `clearAuthorPatch.author()` is `PatchPresence.Present` with `value() == null`.
+- `clearAuthorPatch.reviewers()` is `PatchPresence.Omitted`.
 
 Intended application behavior: remove the association between article `"1"` and its author (if
 business rules allow an unattributed article) without deleting the `people` record itself, and
@@ -335,10 +331,8 @@ ArticleRelationshipsPatch clearReviewersPatch = api.patches().readPatch(
 
 Resulting presence state:
 
-```text
-clearReviewersPatch.author():    Omitted
-clearReviewersPatch.reviewers(): Present([])
-```
+- `clearReviewersPatch.author()` is `PatchPresence.Omitted`.
+- `clearReviewersPatch.reviewers()` is `PatchPresence.Present` with an empty list `List.of()` (whereas supplying identifiers produces a list of `ResourceIdentifier` elements carrying each target's `type()` and `id()`).
 
 Intended application behavior: keep author `"p1"` and clear all reviewer links so the article has
 no reviewers.
@@ -364,7 +358,8 @@ When an attribute contains a nested JSON object or array, distinguish three rule
 3. **Atomic replacement of containers:** `List`, `Set`, arrays, and `Map` values are always atomic
    whole-value replacements. There is no element-addressed array or map patching.
 
-Declare a nested `DetailsPatch` record alongside an atomic `List<String>` attribute:
+Declare a nested `DetailsPatch` record alongside an atomic `List<String>` attribute. Each public
+record below is a separate Java type, normally declared in its own file:
 
 ```java
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
@@ -386,11 +381,26 @@ public record StructuredArticlePatch(
 ) {}
 ```
 
-Suppose article `"1"` currently has:
+Suppose article `"1"` currently has this resource representation before the update:
 
-- `details.summary`: `"Initial summary"`
-- `details.language`: `"en"`
-- `tags`: `["jsonapi", "java"]`
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "details": {
+        "summary": "Initial summary",
+        "language": "en"
+      },
+      "tags": [
+        "jsonapi",
+        "java"
+      ]
+    }
+  }
+}
+```
 
 ### Update a single nested member
 
@@ -446,8 +456,27 @@ if (detailsPatch.details() instanceof PatchPresence.Present<DetailsPatch>(Detail
 }
 ```
 
-Intended result: `details.summary` becomes `"Updated summary"`, `details.language` remains `"en"`,
-and `tags` remains `["jsonapi", "java"]`.
+After the application applies the update, `details.summary` is `"Updated summary"`, while the
+omitted `details.language` (`"en"`) and `tags` (`["jsonapi", "java"]`) remain unchanged:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "details": {
+        "summary": "Updated summary",
+        "language": "en"
+      },
+      "tags": [
+        "jsonapi",
+        "java"
+      ]
+    }
+  }
+}
+```
 
 Supplying `"details": {}` binds to `Present(new DetailsPatch(Omitted, Omitted))`—a present empty
 object with zero nested changes, not a request to clear `summary` and `language`. Supplying
