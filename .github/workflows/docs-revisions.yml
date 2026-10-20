@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   publish:
-    uses: kazforge/github-workflows/.github/workflows/publish-docs.yml@28a9b2ba8881cc753d0878567197078b034093a6
+    uses: kazforge/github-workflows/.github/workflows/publish-docs.yml@28a9b2ba8881cc753d0878567197078b034093a6 # v0.1.0
     with:
       app-client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
     secrets:
