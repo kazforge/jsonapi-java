@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://jsonapi.kazforge.com/sitemap.xml

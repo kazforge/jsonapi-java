@@ -4,7 +4,7 @@ This repository keeps user-facing documentation separate from repository-mainten
 
 | Surface | Owns |
 |---------|------|
-| [`site/`](site/) | Canonical [user guide](https://jsonapi.kazforge.com/), built by MkDocs and published through GitHub Pages |
+| [`site/`](site/) | Core-owned source for the [user guide](https://jsonapi.kazforge.com/) |
 | [`architecture.md`](architecture.md) | Current cross-module composition and authority boundaries |
 | [`conformance.md`](conformance.md) | Current JSON:API support status by feature and layer |
 | [`release.md`](release.md) | Release/publication mechanics and dependency-baseline verification |
@@ -18,33 +18,19 @@ This repository keeps user-facing documentation separate from repository-mainten
 Do not add maintainer docs to `site/` merely because MkDocs can render Markdown. Public pages should
 answer a concrete library-user question; repository guidance remains in its canonical document.
 
-## Preview and build
+## Publishing
 
-Run from the repository root on Linux x86_64 with Python 3.14 and its `venv` module installed.
-Windows contributors use WSL2 on x86_64. The locked hashes in `requirements.txt` currently
-target Linux x86_64 CPython 3.13 and 3.14 for CI and local preview; other platforms, architectures,
-or Python versions are not covered by the lock:
+Core owns the guide source and navigation under `docs/site/`.
+[`jsonapi-docs`](https://github.com/kazforge/jsonapi-docs) owns shared MkDocs assembly,
+validation, and GitHub Pages deployment, including portal-root discovery files.
+See its README for preview and build instructions.
 
-```bash
-python3 -m venv .venv-docs
-. .venv-docs/bin/activate
-python -m pip install --only-binary :all: --require-hashes --requirement docs/requirements.txt
-mkdocs serve --strict
-```
-
-Open <http://127.0.0.1:8000/>. Build the deployable site without starting a server with:
-
-```bash
-mkdocs build --strict
-```
-
-Generated output is `build/docs-site/` and is not committed.
+Core publishes immutable release documentation snapshots and append-only documentation revisions
+through the shared workflow. The [release lifecycle](release.md) owns publication mechanics;
+Core does not build or deploy a standalone site.
 
 ## Edit a public page
 
 1. Add or edit Markdown and assets below `docs/site/`.
-2. Add the page to the deliberately shallow `nav` in [`../mkdocs.yml`](../mkdocs.yml).
-3. Use relative links between site pages and run `mkdocs build --strict` before sending the change.
-
-The GitHub Actions workflow validates the same build for relevant pull requests and deploys only from
-`main` through the GitHub Pages artifact flow.
+2. Add the page to [`site/nav.yml`](site/nav.yml), keeping `index.md` first.
+3. Use relative links between site pages and check links and assets under `/core/<version>/`.

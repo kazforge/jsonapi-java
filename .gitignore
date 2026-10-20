@@ -29,7 +29,6 @@ replay_pid*
 .gradle/
 build/
 .kotlin/
-/.venv-docs/
 
 # Eclipse / Java LSP
 .project

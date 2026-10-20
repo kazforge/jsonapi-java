@@ -12,6 +12,9 @@ The [Release workflow](../.github/workflows/release.yml) runs on `main`:
 2. Merging that PR creates the `v<version>` tag and GitHub Release.
 3. The publish job checks out the tag, builds and signs Maven publications, generates
    SBOMs and provenance attestations, then uploads the bundle to Central for automatic publishing.
+4. After the Maven publish job succeeds, `docs-publish` calls the shared documentation workflow
+   to package `docs/site/` from the software tag as the immutable `docs-site.tar.gz` release asset
+   and notify `jsonapi-docs` for assembly, validation, and deployment.
 
 `gradle.properties` is the version source. Keep the release-managed markers in
 `docs/site/getting-started.md` and `docs/site/index.md`; do not update their release versions
@@ -47,14 +50,16 @@ publications, per-module `cyclonedx` SBOMs, and GitHub provenance/SBOM attestati
 the primary JARs. Published artifacts are immutable; corrections require a new train version.
 
 After publication, verify that the already-versioned links in the tagged guide resolve for all five
-consumer artifacts. If javadocs.dev is unavailable, link to source Javadocs pinned to the same tag
-and label them as source. Hand the software tag, full SHA and external consumer evidence to the
-portal owner for separate publication; do not amend a released tag or publish from moving `main`.
+consumer artifacts and that the shared portal publishes the release guide. If javadocs.dev is
+unavailable, link to source Javadocs pinned to the same tag and label them as source.
 
-Until the custom-domain cutover, keep `docs/site/llms.txt` and `docs/site/robots.txt` for the
-existing Core Pages root. These root-specific files are not versioned guide content; the portal
-promotion must exclude them from `core/<version>/`. After verified cutover, KAZ-259 owns retiring
-the Core Pages publisher, while portal root discovery is maintained in `jsonapi-docs`.
+The [documentation revision workflow](../.github/workflows/docs-revisions.yml) calls the same shared
+publisher for changes confined to `docs/site/` on `main`. It appends `docs-site-r<N>.tar.gz` assets
+to the current software release, preserving the original snapshot and earlier revisions. Keep
+revisions compatible with that released API. The portal selects the highest numeric revision
+without changing software versions or guide URLs. Do not amend released tags or replace assets.
+
+Portal-root discovery files are maintained by `jsonapi-docs`, not Core.
 
 ## Dependency-baseline acceptance
 

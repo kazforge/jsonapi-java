@@ -7,8 +7,8 @@
   "semanticCommits": "enabled",
   "packageRules": [
     {
-      "description": "CI actions, the Gradle wrapper, and documentation dependencies are tooling, not consumer bug fixes.",
-      "matchManagers": ["github-actions", "gradle-wrapper", "pip_requirements"],
+      "description": "CI actions and the Gradle wrapper are tooling, not consumer bug fixes.",
+      "matchManagers": ["github-actions", "gradle-wrapper"],
       "semanticCommitType": "chore"
     },
     {

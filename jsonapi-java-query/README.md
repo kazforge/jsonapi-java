@@ -1,9 +1,11 @@
 # jsonapi-java-query
 
+<!-- x-release-please-start-version -->
 Framework- and Jackson-major-neutral parsing of JSON:API query selection. The module parses
 `include`, `fields[TYPE]`, and `sort`, while preserving `page`, `filter`, and unknown parameters as
 ordered opaque values. User examples belong to
-[Query and representation](https://jsonapi.kazforge.com/query-and-representation/).
+[Query and representation](https://jsonapi.kazforge.com/core/0.4.0/query-and-representation/).
+<!-- x-release-please-end -->
 
 The [`com.kazforge.jsonapi.query`](src/main/java/com/kazforge/jsonapi/query/package-info.java) package
 provides [`JsonApiQueryParser`](src/main/java/com/kazforge/jsonapi/query/JsonApiQueryParser.java),

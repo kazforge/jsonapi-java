@@ -1,8 +1,10 @@
 # jsonapi-java-annotations
 
+<!-- x-release-please-start-version -->
 Runtime-visible, dependency-free annotations that assign JSON:API semantic roles to domain classes,
 records, and properties for later adapter mapping. User examples belong to
-[Resources](https://jsonapi.kazforge.com/resources/).
+[Resources](https://jsonapi.kazforge.com/core/0.4.0/resources/).
+<!-- x-release-please-end -->
 
 The public API is the
 [`com.kazforge.jsonapi.annotation`](src/main/java/com/kazforge/jsonapi/annotation/package-info.java)
