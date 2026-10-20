@@ -34,7 +34,7 @@ The 0.x line is intended for real library use, but public API refinement remains
 | Change runtime defaults or distinguish per-operation settings | [Configuration](configuration.md) |
 | Map create requests and responses, relationships, and collections | [Resources](resources.md) |
 | Work with linkage, errors, or exact document state | [Relationships and documents](relationships-and-documents.md) |
-| Distinguish an omitted update from an explicit null | [PATCH](patches.md) |
+| Read partial updates and distinguish omitted, null, and supplied values | [PATCH](patches.md) |
 | Parse query parameters and select fields/included resources | [Query and representation](query-and-representation.md) |
 | Diagnose validation, mapping, or query failures | [Diagnostics](diagnostics.md) |
 | Look up exact API contracts for a release | [API Reference](api-reference.md) |

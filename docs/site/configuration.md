@@ -290,7 +290,7 @@ Keep task details on their owning pages:
 | Include paths, sparse fieldsets, and `ResourceWriteOptions` | [Apply selection with policy](query-and-representation.md#apply-selection-with-policy) |
 | Document links, meta, and explicit `jsonapi` | [Top-level state](resources.md#top-level-state) |
 | Expected identity for update writes | [Author an update document](resources.md#author-an-update-document) |
-| Expected identity for validated PATCH reads | [Typed update presence](patches.md#typed-update-presence) |
+| Expected identity for validated PATCH reads | [Validate endpoint identity](patches.md#validate-endpoint-identity) |
 | Explicit document read/validation context | [Preserve document state](relationships-and-documents.md#preserve-document-state) |
 
 For requirements beyond these `JsonApi` settings, see
