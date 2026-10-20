@@ -332,8 +332,8 @@ only top-level members. To preserve absent, explicit-null, and empty document me
 
 ## Author an update document
 
-To author an update for an existing article, supply its `type` and `id` and, when known, the
-expected endpoint identity:
+When your Java code authors an outbound update request from a DTO, use `writeUpdateDocument` with
+the resource's `type` and `id` and, when known, the expected endpoint identity:
 
 ```java
 import com.kazforge.jsonapi.core.validation.EndpointIdentity;
@@ -343,8 +343,12 @@ String updateJson = api.resources().writeUpdateDocument(created, target);
 ```
 
 This produces the same JSON as `responseJson` above, validated as an update request against
-`target`. An identity mismatch fails validation. It writes the selected DTO members, not a diff.
-For partial updates, omitted members, and explicit nulls, continue with the [PATCH guide](patches.md).
+`target` (an identity mismatch fails validation). It serializes the selected DTO members rather
+than calculating an entity diff or omitting `null` fields.
+
+To read and bind an incoming partial update while distinguishing omitted members, explicit `null`,
+and supplied values, use `api.patches().readPatch(...)` in the [PATCH guide](patches.md). Neither
+operation mutates persisted state.
 
 ## Naming and failures
 
