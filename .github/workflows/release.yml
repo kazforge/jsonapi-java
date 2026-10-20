@@ -112,7 +112,7 @@ jobs:
     if: ${{ needs.publish.result == 'success' }}
     permissions:
       contents: read
-    uses: kazforge/github-workflows/.github/workflows/publish-docs.yml@28a9b2ba8881cc753d0878567197078b034093a6
+    uses: kazforge/github-workflows/.github/workflows/publish-docs.yml@28a9b2ba8881cc753d0878567197078b034093a6 # v0.1.0
     with:
       release-tag: ${{ needs.release-please.outputs.tag_name }}
       app-client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
