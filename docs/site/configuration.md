@@ -5,10 +5,10 @@ description: "Configure jsonapi-java with Jackson 3: identifier conversion, rela
 
 # Configure the JSON:API Jackson runtime {#configuration}
 
-Use `jsonApi(mapper)` for the [default runtime](getting-started.md#configure-a-runtime): default
-identifier conversion and built-in relationship identifier targets, with include requests denied,
-no link decorators, and no default `jsonapi` object. Use the builder to change those choices through
-its five optional settings.
+Use `JsonApiJackson3.jsonApi(mapper)` for the [default runtime](getting-started.md#configure-a-runtime):
+default identifier conversion and built-in relationship identifier targets, with include requests
+denied, no link decorators, and no default `jsonapi` object. Use `JsonApiJackson3.builder(mapper)`
+to change those choices through its five optional application-lifetime settings.
 
 ## Choose the configuration scope
 
@@ -24,8 +24,11 @@ immutable, thread-safe `JsonApi` across requests. Callbacks are retained and reu
 keep them safe for concurrent invocation and keep mutable request state outside them. Use the
 mutable builder only during setup.
 
-The examples below are **independent recipes**. Start each with a fresh `builder` from the bootstrap
-setup below; they are not steps in an all-options configuration.
+The sections below are **independent recipes**, not cumulative steps in an all-options runtime.
+Start each recipe with a fresh `builder` from the bootstrap setup below, and reuse the
+[`Article` record](getting-started.md#read-and-write-an-article) and the
+[article/people relationship DTOs](resources.md#write-relationships-read-linkage) unless a recipe
+declares its own DTO. Output JSON is formatted for readability.
 
 ## Configure Jackson first
 
@@ -33,8 +36,23 @@ Jackson controls property discovery, visibility, JSON property names, creators, 
 serializers/deserializers, and value conversion. JSON:API annotations assign member roles to those
 properties. Jackson-ignored properties stay ignored, and attributes require role annotations.
 
-For example, if your DTO uses `bodyText` but your JSON naming convention is `body_text`, configure Jackson's
-naming strategy before creating the runtime:
+Suppose an article DTO includes a multi-word `bodyText` attribute:
+
+```java
+import com.kazforge.jsonapi.annotation.JsonApiAttribute;
+import com.kazforge.jsonapi.annotation.JsonApiId;
+import com.kazforge.jsonapi.annotation.JsonApiResource;
+
+@JsonApiResource(type = "articles")
+public record ArticleDraft(
+    @JsonApiId String id,
+    @JsonApiAttribute String title,
+    @JsonApiAttribute String bodyText
+) {}
+```
+
+To expose `bodyText` as `body_text` on the wire, configure Jackson's naming strategy before
+creating the builder or runtime:
 
 ```java
 import com.kazforge.jsonapi.api.JsonApi;
@@ -46,13 +64,33 @@ JsonMapper mapper = JsonMapper.builder()
     .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
     .build();
 var builder = JsonApiJackson3.builder(mapper);
+JsonApi api = builder.build();
+
+ArticleDraft draft = new ArticleDraft("1", "Working with JSON:API", "A draft");
+String draftJson = api.resources().writeOne(draft);
 ```
 
-With no optional builder settings, `JsonApi api = builder.build()` uses the same defaults as
-`jsonApi(mapper)`. For a property declared `@JsonApiAttribute String bodyText`, the default Jackson
-naming produces `"attributes":{"bodyText":"A draft"}`; this mapper produces
-`"attributes":{"body_text":"A draft"}`. Selections and policy allowances must then use `body_text`.
-Register application value serializers/deserializers on Jackson before runtime construction too;
+With no optional builder settings, `builder.build()` uses the same defaults as
+`JsonApiJackson3.jsonApi(mapper)`. Default Jackson naming would write `bodyText` as `"bodyText"`;
+with `SNAKE_CASE`, `draftJson` uses `"body_text"`:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "Working with JSON:API",
+      "body_text": "A draft"
+    }
+  }
+}
+```
+
+Reading `draftJson` with `api.resources().readOne(draftJson, ArticleDraft.class)` binds
+`"body_text"` back to `bodyText`. Sparse-fieldset selections and representation-policy allowances
+must then use the wire name `body_text`, not the Java property name `bodyText`. Register
+application value serializers and deserializers on Jackson before runtime construction too;
 attribute conversion follows that configured mapper rather than a separate JSON:API conversion rule.
 
 Runtime construction derives the mappers it needs **without mutating the caller mapper**. Finish
@@ -64,8 +102,8 @@ The default `identifierConverter` calls `toString()` on writes. On reads it retu
 unchanged, then the binder uses configured Jackson to coerce it to the declared Java identity type.
 Keep that default unless your application needs a different identifier wire format.
 
-For example, an application can expose its internal string `7` as `ref-7`. Supply both directions,
-not just a write-side lambda:
+For example, an application can expose its internal identifier `"7"` as `"ref-7"` on the wire.
+Supply both directions, not just a write-side conversion:
 
 ```java
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
@@ -85,19 +123,46 @@ IdentifierConverter references = new IdentifierConverter() {
     }
 };
 JsonApi api = builder.identifierConverter(references).build();
+
+Article article = new Article("7", "Working with JSON:API");
+String refJson = api.resources().writeOne(article);
 ```
 
-Using the `Article` from [getting started](getting-started.md#read-and-write-an-article), writing
-`new Article("7", "A draft")` now emits `"id":"ref-7"`; reading it into `Article.class` returns id
-`7`. The same converter serves `id` and `lid` across the runtime's mapped resource and PATCH paths,
-but those remain separate protocol roles with no fallback between them. Choose a format appropriate
-for every mapped identity, not an article-only prefix on a runtime also used for people.
+`refJson` carries `"ref-7"` in `data.id`:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "ref-7",
+    "attributes": {
+      "title": "Working with JSON:API"
+    }
+  }
+}
+```
+
+Read that document back into `Article`:
+
+```java
+Article readBack = api.resources().readOne(refJson, Article.class);
+```
+
+`readBack.id()` is `"7"`, while `readBack.title()` is `"Working with JSON:API"`. On writes, the
+converter formats `id` and `lid` values extracted from mapped domain objects—including related
+domain objects written as relationship linkage—while direct `ResourceIdentifier` linkage keeps its
+supplied wire identifiers unchanged. On reads and PATCH binding, the configured `parse` method
+applies to mapped resource `id` and `lid` properties; reading relationship linkage into
+`ResourceIdentifier` keeps the wire identifiers without invoking `parse`. `id` and `lid` remain
+separate protocol roles with no fallback between them. Choose a format appropriate for every mapped
+domain identity on that runtime, not an article-only prefix on a runtime also used for people.
 
 ## Custom relationship linkage targets
 
 The `linkageMappers` registry is empty by default. Flat reads can use `ResourceIdentifier` and its
 built-in optional/collection/array shapes. Register a mapper when an application DTO instead needs
-its own reference type—for example, an `AuthorReference`, not a fully loaded `Person`.
+its own reference type—for example, an `AuthorReference`, not a fully loaded `Person`. Each public
+record below is a separate Java type, normally declared in its own file:
 
 ```java
 import com.kazforge.jsonapi.annotation.JsonApiAttribute;
@@ -115,7 +180,8 @@ public record ArticleReferenceView(
 ) {}
 ```
 
-Register a `RelationshipLinkageMapper` for `AuthorReference`:
+Register a `RelationshipLinkageMapper` for `AuthorReference` and read the
+`articleJson` document from [Resources](resources.md#write-relationships-read-linkage):
 
 ```java
 import com.kazforge.jsonapi.core.model.RelationshipData;
@@ -132,13 +198,18 @@ RelationshipLinkageMapper authorReferences = (linkage, targetType) -> {
 JsonApi api = builder
     .linkageMappers(Map.of(AuthorReference.class, authorReferences))
     .build();
+
+ArticleReferenceView view = api.resources().readOne(
+    articleJson,
+    ArticleReferenceView.class
+);
+AuthorReference author = view.author();
 ```
 
-Reading the [article document](resources.md#write-relationships-read-linkage) into
-`ArticleReferenceView.class` now gives `new AuthorReference("people", "p1")` instead of a
-`ResourceIdentifier`. Registration is keyed by the relationship target class, not the owning article
-class or the wire resource type. This mapper is deliberately for to-one author references; support
-other linkage shapes explicitly if you use the same target in to-many properties.
+`author` is `new AuthorReference("people", "p1")` instead of a `ResourceIdentifier`. Registration
+is keyed by the relationship target class (`AuthorReference.class`), not the owning article class
+or the wire resource type. This mapper is deliberately for to-one author references; support other
+linkage shapes explicitly if you use the same target in to-many properties.
 
 This is the only builder setting whose callback uses a Jackson-specific type: `targetType` is
 Jackson's `tools.jackson.databind.JavaType`, even when the lambda does not use it. The mapper converts
@@ -192,8 +263,8 @@ JsonApi selectedApi = builder.representationPolicy(policy).build();
 Before this change, `include=author` fails under the default deny-includes policy. Now that request
 is permitted, and `fields[articles]=title,author` is permitted too. Without an include selection,
 the author is still only linkage, not an included resource. See
-[apply selection with policy](query-and-representation.md#apply-selection-with-policy) to pass the
-selection to `selectedApi` and observe the result.
+[apply selection with policy](query-and-representation.md#apply-selection-with-policy) to pass a
+parsed selection to `selectedApi` and observe the resulting JSON document.
 
 Include allowances pair the **owning resource type** with the relationship's **wire name**. A nested
 path needs permission at every segment: `author.articles` would also need the `people` / `articles`
@@ -229,11 +300,30 @@ ResourceDecoratorRegistry decorators = ResourceDecoratorRegistry.builder()
     ))
     .build();
 JsonApi api = builder.decorators(decorators).build();
+
+String decoratedJson = api.resources().writeOne(
+    new Article("1", "Working with JSON:API")
+);
 ```
 
-A write of article `1` previously had no resource links; it now adds
-`"links":{"self":"/articles/1"}` inside `data`. This example assumes path-safe article ids;
-your application owns URI construction and encoding.
+Writing article `"1"` now adds a resource-level `links` object inside `data`:
+
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "Working with JSON:API"
+    },
+    "links": {
+      "self": "/articles/1"
+    }
+  }
+}
+```
+
+This example assumes path-safe article IDs; your application owns URI construction and encoding.
 
 Lookup is an exact match on the effective raw domain class; subclasses need their own registration.
 Decoration is additive and limited to resource links and links on already-mapped relationships. It
@@ -250,13 +340,40 @@ should advertise a protocol version when the write does not explicitly supply th
 
 ```java
 JsonApi api = builder.jsonApiVersion("1.1").build();
+
+String versionedJson = api.resources().writeOne(
+    new Article("1", "Working with JSON:API")
+);
 ```
 
-Writing an article now adds `"jsonapi":{"version":"1.1"}` at the top level. This default applies to
-`api.resources()` writes, including collections and create/update authoring. `api.documents()` and
-`api.relationships()` writes do not inherit this default.
+`versionedJson` includes `"jsonapi": {"version": "1.1"}` at the document root:
 
-A per-write envelope takes precedence. For example, to emit an explicit empty `jsonapi` object:
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "Working with JSON:API"
+    }
+  },
+  "jsonapi": {
+    "version": "1.1"
+  }
+}
+```
+
+This default applies to `api.resources()` writes, including collections and create/update authoring.
+`api.documents()` and `api.relationships()` writes do not inherit this default.
+
+A per-write `DocumentEnvelope` can either inherit or replace that configured default:
+
+- When the envelope's `jsonapi` component is absent (`null`)—such as `ResourceWriteOptions.defaults()`
+  or an envelope that supplies only `meta` or `links`—the write inherits the configured
+  `{"version": "1.1"}` default.
+- When the envelope supplies an explicit `JsonApiObject`, it replaces the configured default
+  completely (with no merge). For example, `JsonApiObject.empty()` writes an empty `jsonapi`
+  object for that call:
 
 ```java
 import com.kazforge.jsonapi.api.ResourceWriteOptions;
@@ -267,12 +384,11 @@ JsonApiObject explicit = JsonApiObject.empty();
 ResourceWriteOptions options = ResourceWriteOptions.defaults()
     .withEnvelope(DocumentEnvelope.ofJsonApi(explicit));
 
-String json = api.resources().writeOne(new Article("1", "A draft"), options);
+String json = api.resources().writeOne(new Article("1", "Working with JSON:API"), options);
 ```
 
-The result has `"jsonapi":{}`, not `"jsonapi":{"version":"1.1"}`. An explicit object replaces the
-default completely—there is no merge. Leaving the envelope's `jsonapi` component absent (`null`)
-inherits the configured default, even if the envelope supplies other members.
+In `json`, the top-level `"jsonapi"` member is `{}` rather than `{"version": "1.1"}`, while
+`"data"` is unchanged.
 
 `jsonapi.version` advertises the document's protocol version. It does not configure the library
 artifact version, business API versioning, HTTP content negotiation, or extension/profile support.
