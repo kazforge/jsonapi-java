@@ -217,13 +217,11 @@ class LevelOneApiContractSpec extends Specification {
     def offending = []
     apiTypes.each { type ->
       (type.methods.toList() + type.declaredMethods.toList()).each { method ->
-        ([method.genericReturnType] + method.genericParameterTypes.toList()).each { param ->
-          // typeName renders the full parameterized form; the forbidden roots are matched
-          // anywhere in it so nested type arguments cannot hide an implementation type.
-          def name = param.typeName
-          if (isForbiddenSignature(name)) {
-            offending.add(type.simpleName + "#" + method.name + " -> " + name)
-          }
+        // typeName renders the full parameterized form, including nested type arguments.
+        ([method.genericReturnType] + method.genericParameterTypes.toList())
+        .findAll { isForbiddenSignature(it.typeName) }
+        .each { param ->
+          offending.add(type.simpleName + "#" + method.name + " -> " + param.typeName)
         }
       }
     }
