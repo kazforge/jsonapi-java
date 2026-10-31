@@ -272,17 +272,17 @@ Your application owns HTTP statuses, public error codes, safe messages, authoriz
 logging/redaction policy.
 
 <!-- x-release-please-start-version -->
-[read-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/diagnostic/JsonApiDocumentReadException.html
-[mapping-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/diagnostic/JsonApiMappingException.html
-[validation-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.4.0/com/kazforge/jsonapi/core/validation/JsonApiValidationException.html
-[query-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.4.0/com/kazforge/jsonapi/query/JsonApiQueryException.html
-[codec-category]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/diagnostic/CodecFailureCategory.html
-[validation-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.4.0/com/kazforge/jsonapi/core/validation/ValidationRuleCode.html
-[mapping-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/diagnostic/MappingDiagnostic.html
-[query-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.4.0/com/kazforge/jsonapi/query/QueryDiagnostic.html
-[mapping-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/diagnostic/MappingLocation.html
-[source-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/diagnostic/SourceLocation.html
-[error-source]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.4.0/com/kazforge/jsonapi/core/model/ErrorSource.html
-[error-object]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.4.0/com/kazforge/jsonapi/core/model/ErrorObject.html
+[read-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.1/com/kazforge/jsonapi/diagnostic/JsonApiDocumentReadException.html
+[mapping-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.1/com/kazforge/jsonapi/diagnostic/JsonApiMappingException.html
+[validation-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.4.1/com/kazforge/jsonapi/core/validation/JsonApiValidationException.html
+[query-exception]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.4.1/com/kazforge/jsonapi/query/JsonApiQueryException.html
+[codec-category]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.1/com/kazforge/jsonapi/diagnostic/CodecFailureCategory.html
+[validation-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.4.1/com/kazforge/jsonapi/core/validation/ValidationRuleCode.html
+[mapping-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.1/com/kazforge/jsonapi/diagnostic/MappingDiagnostic.html
+[query-code]: https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.4.1/com/kazforge/jsonapi/query/QueryDiagnostic.html
+[mapping-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.1/com/kazforge/jsonapi/diagnostic/MappingLocation.html
+[source-location]: https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.1/com/kazforge/jsonapi/diagnostic/SourceLocation.html
+[error-source]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.4.1/com/kazforge/jsonapi/core/model/ErrorSource.html
+[error-object]: https://www.javadocs.dev/com.kazforge/jsonapi-java-core/0.4.1/com/kazforge/jsonapi/core/model/ErrorObject.html
 <!-- x-release-please-end -->
 [error-spec]: https://jsonapi.org/format/1.1/#error-objects

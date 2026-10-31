@@ -3,7 +3,7 @@
 <!-- x-release-please-start-version -->
 Runtime-visible, dependency-free annotations that assign JSON:API semantic roles to domain classes,
 records, and properties for later adapter mapping. User examples belong to
-[Resources](https://jsonapi.kazforge.com/core/0.4.0/resources/).
+[Resources](https://jsonapi.kazforge.com/core/0.4.1/resources/).
 <!-- x-release-please-end -->
 
 The public API is the

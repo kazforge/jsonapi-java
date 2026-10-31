@@ -3,7 +3,7 @@
 <!-- x-release-please-start-version -->
 Backend-independent application contracts and values implemented by the configured Jackson 3
 runtime. This module defines contracts and values; it has no standalone Jackson
-runtime. User workflows belong to the [public guide](https://jsonapi.kazforge.com/core/0.4.0/getting-started/).
+runtime. User workflows belong to the [public guide](https://jsonapi.kazforge.com/core/0.4.1/getting-started/).
 <!-- x-release-please-end -->
 
 ## Packages and entry points

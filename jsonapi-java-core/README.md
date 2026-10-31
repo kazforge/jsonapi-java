@@ -3,7 +3,7 @@
 <!-- x-release-please-start-version -->
 Dependency-free Java representation of [JSON:API v1.1](https://jsonapi.org/) documents, with local
 construction invariants and aggregate document validation. User examples belong to
-[Relationships and documents](https://jsonapi.kazforge.com/core/0.4.0/relationships-and-documents/).
+[Relationships and documents](https://jsonapi.kazforge.com/core/0.4.1/relationships-and-documents/).
 <!-- x-release-please-end -->
 
 ## Packages and entry points
