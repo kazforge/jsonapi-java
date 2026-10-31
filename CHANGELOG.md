@@ -5,6 +5,13 @@ Consumer-visible changes for the unified release train shared by the
 [ADR-014](docs/adr/014-unified-release-train.md); release-please maintains future
 entries. Tags are named `v<version>`.
 
+## [0.4.1](https://github.com/kazforge/jsonapi-java/compare/v0.4.0...v0.4.1) (2026-10-31)
+
+
+### Bug Fixes
+
+* **ci:** verify Gradle plugin and constrain vulnerable Guava ([1e4029e](https://github.com/kazforge/jsonapi-java/commit/1e4029e1dd7f9c0c920285d6e758043cda8d6827))
+
 ## [0.4.0](https://github.com/kazforge/jsonapi-java/compare/v0.3.0...v0.4.0) (2026-10-16)
 
 

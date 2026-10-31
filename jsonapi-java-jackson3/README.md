@@ -4,7 +4,7 @@ Native Jackson 3 implementation of the major-neutral Level-1 JSON:API contract, 
 document codec, mapping, flat binding, typed-envelope, and PATCH capabilities.
 
 <!-- x-release-please-start-version -->
-User setup and examples belong to the [public guide](https://jsonapi.kazforge.com/core/0.4.0/getting-started/).
+User setup and examples belong to the [public guide](https://jsonapi.kazforge.com/core/0.4.1/getting-started/).
 <!-- x-release-please-end -->
 
 ## Jackson support
