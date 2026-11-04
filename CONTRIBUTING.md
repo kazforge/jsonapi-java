@@ -22,6 +22,13 @@ description of the change and checks run. Use the [module map](README.md#modules
 Use [Conventional Commits](docs/adr/014-unified-release-train.md#conventional-commits--version-bumps)
 for commit messages and PR titles.
 
+### Release notes
+
+Use `feat`, `fix`, and `perf` for consumer-visible changes. Routine dependency, build,
+and CI maintenance should use `chore` or `ci`, which Release Please hides.
+Renovate defaults routine updates to `chore`; vulnerability-alert fixes use `fix`.
+Mark other consumer-visible bug fixes and breaking changes explicitly.
+
 ## Dependency verification
 
 Dependencies are checksum-verified by [`gradle/verification-metadata.xml`](gradle/verification-metadata.xml).
