@@ -16,7 +16,7 @@ jackson-annotations-minimum = "2.21"
 # Test-only forward compatibility targets, maintained by Renovate.
 jackson3-current = "3.2.4"
 groovy = "6.0.0"
-json-schema-validator = "3.0.8"
+json-schema-validator = "3.0.9"
 
 [libraries]
 spock-core = { module = "org.spockframework:spock-core", version.ref = "spock" }
