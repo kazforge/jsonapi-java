@@ -87,9 +87,8 @@ public final class IncludedResources {
       List<Set<ResourceIdentity>> identitiesByPosition) {
     List<Set<ResourceIdentity>> copied =
         identitiesByPosition.stream()
-            .map(
-                identities ->
-                    Set.copyOf(Objects.requireNonNull(identities, "identities at a position")))
+            .map(identities ->
+                Set.copyOf(Objects.requireNonNull(identities, "identities at a position")))
             .collect(Collectors.toCollection(ArrayList::new));
     return List.copyOf(copied);
   }
