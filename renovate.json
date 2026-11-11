@@ -21,6 +21,12 @@
       "enabled": false
     },
     {
+      "description": "Keep the CycloneDX Jackson constraint separate from the Jackson 3 compatibility target.",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["com.fasterxml.jackson.core:jackson-core"],
+      "groupName": "Jackson 2 tooling"
+    },
+    {
       "description": "Keep the current Jackson 3 compatibility test dependencies on major 3.",
       "matchManagers": ["gradle"],
       "matchJsonata": ["sharedVariableName = 'jackson3.current'"],
