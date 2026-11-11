@@ -6,7 +6,7 @@ import org.cyclonedx.gradle.CyclonedxDirectTask
 buildscript {
     dependencies {
         constraints {
-            classpath("com.fasterxml.jackson.core:jackson-core:2.22.4") {
+            classpath("com.fasterxml.jackson.core:jackson-core:2.23.0") {
                 because("CycloneDX 3.5.0 resolves 2.22.2, affected by GHSA-p6pp-m3f8-5c89 and GHSA-7hhh-6rmp-j9qf")
             }
             classpath("com.google.guava:guava:33.8.0-jre") {
