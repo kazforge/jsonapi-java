@@ -311,7 +311,7 @@ See [query attribution](diagnostics.md#query-parameters) for decoded parameter n
 selective use of `source.parameter`.
 
 <!-- x-release-please-start-version -->
-See [`JsonApiQueryParser`](https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.4.0/com/kazforge/jsonapi/query/JsonApiQueryParser.html)
-and [`RepresentationPolicy`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/representation/RepresentationPolicy.html)
+See [`JsonApiQueryParser`](https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.4.1/com/kazforge/jsonapi/query/JsonApiQueryParser.html)
+and [`RepresentationPolicy`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.1/com/kazforge/jsonapi/representation/RepresentationPolicy.html)
 for exact parsing and policy contracts.
 <!-- x-release-please-end -->
