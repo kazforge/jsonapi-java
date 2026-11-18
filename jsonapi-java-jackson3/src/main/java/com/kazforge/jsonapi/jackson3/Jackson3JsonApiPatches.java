@@ -67,14 +67,14 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   public <T> BoundResource<T> readPatchWithSources(String json, Class<T> dtoType) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(dtoType, DTO_TYPE);
-    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType), dtoType);
+    return patchDtoReader.readWithSources(json, dtoType);
   }
 
   @Override
   public <T> BoundResource<T> readPatchWithSources(InputStream json, Class<T> dtoType) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(dtoType, DTO_TYPE);
-    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType), dtoType);
+    return patchDtoReader.readWithSources(json, dtoType);
   }
 
   @Override
@@ -82,7 +82,7 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   public BoundResource<?> readPatchWithSources(String json, Type dtoType) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(dtoType, DTO_TYPE);
-    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType), Object.class);
+    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType));
   }
 
   @Override
@@ -90,7 +90,7 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   public BoundResource<?> readPatchWithSources(InputStream json, Type dtoType) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(dtoType, DTO_TYPE);
-    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType), Object.class);
+    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType));
   }
 
   @Override

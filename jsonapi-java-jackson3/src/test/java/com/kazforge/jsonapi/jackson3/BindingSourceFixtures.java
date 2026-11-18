@@ -62,8 +62,13 @@ public final class BindingSourceFixtures {
       @JsonApiAttribute List<Details> items,
       @JsonApiAttribute Details[] array,
       @JsonApiAttribute Optional<Details> optional,
+      @JsonApiAttribute List<String> labels,
       @JsonApiRelationship ResourceIdentifier author,
       @JsonApiRelationship List<ResourceIdentifier> comments) {}
+
+  @JsonApiResource(type = "source-things")
+  public record StringListPatch(
+      @JsonApiId String id, @JsonApiAttribute PatchPresence<List<String>> labels) {}
 
   @JsonApiResource(type = "source-things")
   public record Patch(

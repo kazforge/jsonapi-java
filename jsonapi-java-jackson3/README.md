@@ -48,7 +48,9 @@ existing resource-relative diagnostics; successful source locations are document
 Source lookup follows effective bean properties, transparent `PatchPresence`/`Optional` wrappers,
 and stock index-preserving arrays and `List` implementations (`ArrayList`/`LinkedList`). It supports
 direct relationship identifiers and proven `RelationshipLinkage` occurrence/meta locations, not included
-resource hydration. Descendants of maps, opaque/custom conversion, ambiguous nested spellings,
+resource hydration. A wrapper's identifier-meta object is attributed, but its descendants are
+unresolved because the bound meta value converts again inside the DTO. Descendants of maps,
+opaque/custom conversion, ambiguous nested spellings,
 null/omitted parents, and unproven polymorphic shapes are unresolved. Sets and merged/null-skipping
 containers do not establish positional correspondence. A caller may query an exact ancestor explicitly;
 the runtime never silently substitutes one. The neutral type Javadocs own the path/presence contract.

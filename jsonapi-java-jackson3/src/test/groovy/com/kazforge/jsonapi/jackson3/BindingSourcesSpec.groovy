@@ -32,6 +32,7 @@ import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.Mutable
 import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.Merged
 import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.Patch
 import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.PolymorphicValue
+import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.StringListPatch
 import com.kazforge.jsonapi.jackson3.CloseTrackingFixtures.TrackingInputStream
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatAuthor
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatMappedArticle
@@ -291,13 +292,47 @@ class BindingSourcesSpec extends Specification {
     matches(bound, ['author'], PRESENT_VALUE, '/data/relationships/author/data')
     matches(bound, ['author', 'meta', 'role'], UNRESOLVED, null)
     matches(bound, ['comments', '0', 'target'], UNRESOLVED, null)
+    matches(bound, ['comments', '0', 'meta'], PRESENT_VALUE,
+    '/data/relationships/comments/data/0/meta')
     matches(bound, [
       'comments',
       '0',
       'meta',
       'pinned'
-    ], PRESENT_VALUE,
-    '/data/relationships/comments/data/0/meta/pinned')
+    ], UNRESOLVED, null)
+  }
+
+  def "plain string lists keep element presence without inventing member children"() {
+    when:
+    def bound = api().resources().readCreateWithSources(
+        '{"data":{"type":"source-things","attributes":{"labels":["a","b"]}}}', Create)
+    def patch = api().patches().readPatchWithSources(
+        '{"data":{"type":"source-things","id":"1","attributes":{"labels":["a"]}}}',
+        StringListPatch)
+
+    then:
+    bound.resource().labels() == ["a", "b"]
+    matches(bound, ['labels'], PRESENT_VALUE, '/data/attributes/labels')
+    matches(bound, ['labels', '0'], PRESENT_VALUE, '/data/attributes/labels/0')
+    matches(bound, ['labels', '1'], PRESENT_VALUE, '/data/attributes/labels/1')
+    patch.resource().labels().value() == ["a"]
+    matches(patch, ['labels', '0'], PRESENT_VALUE, '/data/attributes/labels/0')
+  }
+
+  def "polymorphic Optional content stays opaque below the supplied value"() {
+    given:
+    def type = new TypeReference<GenericValue<Optional<PolymorphicValue>>>() {}.getType()
+    def runtime = JsonApiJackson3.jsonApi(JsonMapper.builder().build())
+
+    when:
+    def bound = runtime.resources().readCreateWithSources(
+        '{"data":{"type":"things","attributes":{"value":{"kind":"renamed","newName":"wire"}}}}', type)
+
+    then:
+    def dto = (GenericValue<Optional<PolymorphicValue>>) bound.resource()
+    dto.value().get().value == "wire"
+    matches(bound, ['value'], PRESENT_VALUE, '/data/attributes/value')
+    matches(bound, ['value', 'value'], UNRESOLVED, null)
   }
 
   def "direct linkage and three meta locations are distinct for #operation"() {
@@ -320,12 +355,14 @@ class BindingSourcesSpec extends Specification {
     matches(bound, ['metadata', 'value'], PRESENT_VALUE, '/data/meta/value')
     matches(bound, ['authorMetadata', 'value'], PRESENT_VALUE, '/data/relationships/author/meta/value')
     matches(bound, ['owners', '0', 'target', 'id'], PRESENT_VALUE, '/data/relationships/owners/data/0/id')
+    matches(bound, ['owners', '0', 'meta'], PRESENT_VALUE,
+    '/data/relationships/owners/data/0/meta')
     matches(bound, [
       'owners',
       '0',
       'meta',
       'value'
-    ], PRESENT_VALUE, '/data/relationships/owners/data/0/meta/value')
+    ], UNRESOLVED, null)
     matches(bound, ['tags', '0'], UNRESOLVED, null)
 
     where:

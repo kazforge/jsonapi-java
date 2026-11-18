@@ -13,6 +13,7 @@ import com.kazforge.jsonapi.mapping.BoundResource;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -231,13 +232,13 @@ final class BindingSources {
   private Node value(
       @Nullable Object wire,
       JavaType type,
-      ValueDeserializer<?> deserializer,
+      @Nullable ValueDeserializer<?> deserializer,
       @Nullable SettableBeanProperty property,
       MappingLocation location) {
     if (wire == null) {
       return present(location, true, Map.of());
     }
-    if (property != null && property.getValueTypeDeserializer() != null) {
+    if (deserializer == null || (property != null && property.getValueTypeDeserializer() != null)) {
       return present(location, false, Map.of());
     }
     Map<String, Node> children = Map.of();
@@ -251,6 +252,9 @@ final class BindingSources {
         && deserializer.getClass() == Jdk8OptionalDeserializer.class
         && (property == null || !customized(property))) {
       JavaType inner = type.containedType(0);
+      if (polymorphic(inner)) {
+        return present(location, false, Map.of());
+      }
       return value(
           wire,
           inner,
@@ -309,19 +313,25 @@ final class BindingSources {
   /** Accepted alternative spellings are not guessed to be the property's canonical wire member. */
   private boolean ambiguous(
       Map<?, ?> wire, SettableBeanProperty property, boolean caseInsensitive) {
+    Locale locale = mapper.deserializationConfig().getLocale();
     for (Object key : wire.keySet()) {
       if (key instanceof String name
           && !name.equals(property.getName())
-          && ((caseInsensitive && name.equalsIgnoreCase(property.getName()))
+          && ((caseInsensitive && folded(name, locale).equals(folded(property.getName(), locale)))
               || property.findAliases(mapper.deserializationConfig()).stream()
                   .anyMatch(alias ->
                       caseInsensitive
-                          ? name.equalsIgnoreCase(alias.getSimpleName())
+                          ? folded(name, locale).equals(folded(alias.getSimpleName(), locale))
                           : name.equals(alias.getSimpleName())))) {
         return true;
       }
     }
     return false;
+  }
+
+  /** Jackson's case-insensitive lookup lowercases with the configured locale. */
+  private static String folded(String name, Locale locale) {
+    return name.toLowerCase(locale);
   }
 
   private boolean indexed(
@@ -341,13 +351,19 @@ final class BindingSources {
             && implementation != StringCollectionDeserializer.class)) {
       return false;
     }
-    var instantiator = ((ContainerDeserializerBase<?>) deserializer).getValueInstantiator();
+    ContainerDeserializerBase<?> container = (ContainerDeserializerBase<?>) deserializer;
+    var instantiator = container.getValueInstantiator();
     var standard =
         instantiator == null
             ? null
             : JDKValueInstantiators.findStdValueInstantiator(
                 mapper.deserializationConfig(), instantiator.getValueClass());
-    return standard != null && instantiator.getClass() == standard.getClass();
+    if (standard == null || instantiator.getClass() != standard.getClass()) {
+      return false;
+    }
+    // Buffered object-identity elements need not finish at their input positions.
+    ValueDeserializer<Object> content = container.getContentDeserializer();
+    return content == null || content.getObjectIdReader(mapper._deserializationContext()) == null;
   }
 
   private Map<String, Node> array(
@@ -370,7 +386,11 @@ final class BindingSources {
           polymorphic
               ? present(location.append(segment), wire.get(index) == null, Map.of())
               : value(
-                  wire.get(index), content, contentDeserializer, null, location.append(segment)));
+                  wire.get(index),
+                  content,
+                  contentDeserializer,
+                  property,
+                  location.append(segment)));
     }
     return children;
   }
@@ -459,9 +479,9 @@ final class BindingSources {
         instanceof
         ReadRelationshipShape.Wrapped<JavaType>(
             boolean toMany,
-            JavaType metaType,
+            JavaType ignoredMeta,
             ReadRelationshipShape<JavaType> targetShape)) {
-      addWrapped(children, identifier, type, toMany, metaType, targetShape, location);
+      addWrapped(children, identifier, type, toMany, targetShape, location);
     } else {
       addDirectIdentifier(children, identifier, location);
     }
@@ -473,7 +493,6 @@ final class BindingSources {
       ResourceIdentifier identifier,
       JavaType type,
       boolean toMany,
-      JavaType metaType,
       ReadRelationshipShape<JavaType> targetShape,
       MappingLocation location) {
     // A nullable to-one mapper may short-circuit the wrapper before its meta is bound.
@@ -487,16 +506,11 @@ final class BindingSources {
                 && directLinkageConversion(targetType, rootDeserializer(targetType), null)
             ? occurrence(identifier, targetType, targetShape, location)
             : UNRESOLVED);
+    // Identifier meta converts once before the wrapper record converts again; a custom
+    // serializer/deserializer pair may change member correspondence, so only the object is exact.
     children.put(
         "meta",
-        identifier.meta() == null
-            ? OMITTED
-            : value(
-                identifier.meta().members(),
-                metaType,
-                rootDeserializer(metaType),
-                null,
-                location.append("meta")));
+        identifier.meta() == null ? OMITTED : present(location.append("meta"), false, Map.of()));
   }
 
   private static void addDirectIdentifier(
