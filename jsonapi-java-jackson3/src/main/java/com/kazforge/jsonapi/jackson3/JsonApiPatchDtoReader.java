@@ -162,11 +162,11 @@ public final class JsonApiPatchDtoReader {
         documentReader.readValue(json), binderMapper.constructType(dtoType), dtoType);
   }
 
-  BoundResource<?> readWithSources(String json, JavaType dtoType) {
+  BoundResource<Object> readWithSources(String json, JavaType dtoType) {
     return fromDocumentWithSources(documentReader.readValue(json), dtoType, Object.class);
   }
 
-  BoundResource<?> readWithSources(InputStream json, JavaType dtoType) {
+  BoundResource<Object> readWithSources(InputStream json, JavaType dtoType) {
     return fromDocumentWithSources(documentReader.readValue(json), dtoType, Object.class);
   }
 
