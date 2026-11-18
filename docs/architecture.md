@@ -118,6 +118,15 @@ and typed `PatchPresence<T>` DTOs alike, `internal.mapping` owns orchestration, 
 diagnostics alongside configured property discovery, identifier parsing, conversion, and the
 single native bean construction. Narrow internal capabilities separate those responsibilities.
 
+Create and typed PATCH can additionally return `BoundResource<T>`. Its request-local source lookup
+is captured from the same operation-specific definition and wire presence, without a second bean
+conversion. The validated-document PATCH bind path does not re-parse or re-validate. Source snapshots
+contain names, presence and exact document-relative pointers, not raw values or a live view of the DTO.
+`BindingSource` distinguishes known omission from unresolved attribution. Custom/ambiguous mappings
+and unsupported index correspondence never produce guessed pointers. This successful-binding contract
+does not change diagnostic coordinates or atomic versus recursive PATCH policy.
+[ADR-017](adr/017-successful-binding-source-attribution.md) owns that rationale.
+
 Writes map application values into the core model, preserve representation provenance, validate,
 then emit:
 

@@ -7,17 +7,19 @@ import java.util.StringJoiner;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A validated mapping-diagnostic location: a JSON Pointer (RFC 6901) that is absent ({@code null})
- * on the owning {@link JsonApiMappingException} when no member location applies. This is the
- * structural building block behind the mapping-location contract; producers never assemble
- * diagnostic pointers by raw string concatenation of unconstrained input.
+ * A validated mapping location expressed as a JSON Pointer (RFC 6901). Diagnostics and successful
+ * binding attribution share this structural building block; producers never assemble pointers by
+ * raw string concatenation of unconstrained input. On {@link JsonApiMappingException}, no
+ * applicable member location is represented by an absent ({@code null}) location.
  *
  * <p><strong>Coordinate contract.</strong> Mapping producers address members of one resource object
  * with resource-relative pointers such as {@code /type}, {@code /id}, {@code /lid}, {@code
  * /attributes/headline}, {@code /relationships/author/data}, {@code /meta}, {@code
  * /relationships/author/meta}, {@code /relationships/author/data/meta}, and {@code
- * /relationships/comments/data/0/meta}. Typed-envelope composition prepends document-relative
- * prefixes ({@code /data}, {@code /data/<index>}, {@code /included/<index>}) through {@link
+ * /relationships/comments/data/0/meta}. These are diagnostic coordinates; successful {@link
+ * com.kazforge.jsonapi.mapping.BindingSource} attribution is always document-relative and addresses
+ * an actually supplied value. Typed-envelope composition prepends document-relative prefixes
+ * ({@code /data}, {@code /data/<index>}, {@code /included/<index>}) through {@link
  * #append(MappingLocation)}, which cannot produce malformed syntax because both operands are built
  * from validated, individually escaped, non-empty segments. Failures without a meaningful member
  * location are represented as an absent location, never as {@code ""} or {@code /}.

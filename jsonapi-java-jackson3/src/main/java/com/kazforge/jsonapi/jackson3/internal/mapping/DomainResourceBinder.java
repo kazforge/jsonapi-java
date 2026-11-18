@@ -7,6 +7,7 @@ import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.mapping.BoundResource;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import java.util.Map;
 import java.util.Objects;
@@ -75,9 +76,29 @@ public final class DomainResourceBinder
   public Object fromResource(ResourceObject resource, JavaType targetType) {
     Objects.requireNonNull(resource, "resource");
     Objects.requireNonNull(targetType, "targetType");
-    Class<?> rawType = targetType.getRawClass();
+    ReadResourceMapping mapping = cache.resolveRead(targetType);
+    return bind(resource, targetType, mapping, mapping.readDefinition());
+  }
+
+  /** Binds once and captures sources for a Level-1 primary-resource operation. */
+  public <T> BoundResource<T> fromResourceWithSources(
+      ResourceObject resource, JavaType targetType, Class<T> resultType) {
+    Objects.requireNonNull(resource, "resource");
+    Objects.requireNonNull(targetType, "targetType");
+    Objects.requireNonNull(resultType, "resultType");
     ReadResourceMapping mapping = cache.resolveRead(targetType);
     ReadResourceDefinition<ReadMappingProperty> definition = mapping.readDefinition();
+    T dto = resultType.cast(bind(resource, targetType, mapping, definition));
+    return new BindingSources(mapper, linkageMappers, null)
+        .read(dto, resource, definition, targetType);
+  }
+
+  private Object bind(
+      ResourceObject resource,
+      JavaType targetType,
+      ReadResourceMapping mapping,
+      ReadResourceDefinition<ReadMappingProperty> definition) {
+    Class<?> rawType = targetType.getRawClass();
     reader.requireResourceType(resource, definition, rawType);
     // Whole-meta declared-target validation for the read/write domain-mapping role.
     wholeMetaTarget.validateReadWriteTargets(mapping, rawType);

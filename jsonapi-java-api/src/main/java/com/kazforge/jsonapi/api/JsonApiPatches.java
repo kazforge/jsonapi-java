@@ -1,6 +1,7 @@
 package com.kazforge.jsonapi.api;
 
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
+import com.kazforge.jsonapi.mapping.BoundResource;
 import com.kazforge.jsonapi.patch.PatchCommand;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -42,6 +43,47 @@ public interface JsonApiPatches {
   Object readPatch(InputStream json, Type dtoType);
 
   /**
+   * Opt-in variant of {@link #readPatch(String, Class)} returning the same binding's DTO and exact
+   * request-local source attribution. Attribution does not change atomic replacement or recursive
+   * presence-aware PATCH semantics.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  default <T> BoundResource<T> readPatchWithSources(String json, Class<T> dtoType) {
+    throw new UnsupportedOperationException("PATCH binding source attribution is not supported");
+  }
+
+  /**
+   * Stream variant of {@link #readPatchWithSources(String, Class)}. The stream is not closed.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  default <T> BoundResource<T> readPatchWithSources(InputStream json, Class<T> dtoType) {
+    throw new UnsupportedOperationException("PATCH binding source attribution is not supported");
+  }
+
+  /**
+   * Generic-target variant of {@link #readPatchWithSources(String, Class)}. Callers narrow the DTO
+   * themselves because a plain {@code Type} cannot recover its type argument.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  @SuppressWarnings("java:S1452")
+  default BoundResource<?> readPatchWithSources(String json, Type dtoType) {
+    throw new UnsupportedOperationException("PATCH binding source attribution is not supported");
+  }
+
+  /**
+   * Stream variant of {@link #readPatchWithSources(String, Type)}. The stream is not closed.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  @SuppressWarnings("java:S1452")
+  default BoundResource<?> readPatchWithSources(InputStream json, Type dtoType) {
+    throw new UnsupportedOperationException("PATCH binding source attribution is not supported");
+  }
+
+  /**
    * Decodes, validates as an update request, and binds only the supplied changes into a {@link
    * PatchCommand}.
    */
@@ -81,6 +123,27 @@ public interface JsonApiPatches {
    * value.
    */
   Object bindPatch(JsonApiDocument document, Type dtoType);
+
+  /**
+   * Opt-in variant of {@link #bindPatch(JsonApiDocument, Class)} returning the same binding's DTO
+   * and source attribution, without re-parsing or re-validating the document.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  default <T> BoundResource<T> bindPatchWithSources(JsonApiDocument document, Class<T> dtoType) {
+    throw new UnsupportedOperationException("PATCH binding source attribution is not supported");
+  }
+
+  /**
+   * Generic-target variant of {@link #bindPatchWithSources(JsonApiDocument, Class)}. Callers narrow
+   * the DTO themselves because a plain {@code Type} cannot recover its type argument.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  @SuppressWarnings("java:S1452")
+  default BoundResource<?> bindPatchWithSources(JsonApiDocument document, Type dtoType) {
+    throw new UnsupportedOperationException("PATCH binding source attribution is not supported");
+  }
 
   /**
    * Binds an already-validated update document into a {@link PatchCommand} without re-parsing or

@@ -1,6 +1,7 @@
 package com.kazforge.jsonapi.api;
 
 import com.kazforge.jsonapi.core.validation.EndpointIdentity;
+import com.kazforge.jsonapi.mapping.BoundResource;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
@@ -72,6 +73,47 @@ public interface JsonApiResources {
 
   /** Stream variant of {@link #readCreate(String, Type)}. The stream is not closed. */
   Object readCreate(InputStream json, Type type);
+
+  /**
+   * Opt-in variant of {@link #readCreate(String, Class)} returning the same binding's DTO and exact
+   * request-local source attribution. The default implementation explicitly does not support
+   * attribution; custom implementations need not change their existing DTO-only operations.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  default <T> BoundResource<T> readCreateWithSources(String json, Class<T> type) {
+    throw new UnsupportedOperationException("Create binding source attribution is not supported");
+  }
+
+  /**
+   * Stream variant of {@link #readCreateWithSources(String, Class)}. The stream is not closed.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  default <T> BoundResource<T> readCreateWithSources(InputStream json, Class<T> type) {
+    throw new UnsupportedOperationException("Create binding source attribution is not supported");
+  }
+
+  /**
+   * Generic-target variant of {@link #readCreateWithSources(String, Class)}. A plain {@code Type}
+   * cannot recover the result's type argument; callers narrow the DTO themselves.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  @SuppressWarnings("java:S1452")
+  default BoundResource<?> readCreateWithSources(String json, Type type) {
+    throw new UnsupportedOperationException("Create binding source attribution is not supported");
+  }
+
+  /**
+   * Stream variant of {@link #readCreateWithSources(String, Type)}. The stream is not closed.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support attribution
+   */
+  @SuppressWarnings("java:S1452")
+  default BoundResource<?> readCreateWithSources(InputStream json, Type type) {
+    throw new UnsupportedOperationException("Create binding source attribution is not supported");
+  }
 
   /**
    * Reads a resource collection. Requires collection primary data; never coerces one resource,

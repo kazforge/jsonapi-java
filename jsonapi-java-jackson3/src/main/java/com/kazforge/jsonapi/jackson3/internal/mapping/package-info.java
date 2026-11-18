@@ -29,6 +29,11 @@
  *       bind linkage across reads and PATCH; {@link PropertyScopedValueConverter} preserves
  *       configured property conversion, {@link BeanConstruction} constructs DTOs, and {@link
  *       WholeMetaTarget} validates declared meta targets.
+ *   <li>successful-binding attribution: {@link BindingSources} snapshots the operation's resolved
+ *       definition and actual wire presence after binding. {@link EffectiveReadShapes} shares the
+ *       effective deserialization-property authority with construction-path translation; structured
+ *       PATCH shape metadata remains owned by {@link StructuredValueBinder}. Snapshots retain no
+ *       raw values or native metadata and are independent of later DTO mutation.
  * </ul>
  *
  * <p>These areas stay in one package because definition, conversion, construction, and linkage

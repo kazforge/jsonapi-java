@@ -22,3 +22,4 @@ lives in [`docs/architecture.md`](../architecture.md). Stable product direction 
 - [ADR-014: Unified Release Train and Version Semantics](014-unified-release-train.md)
 - [ADR-015: Share Mapping Semantics, Keep Native Wire Codecs](015-responsibility-based-mapping-and-native-wire-codecs.md)
 - [ADR-016: Jackson 3-Only Product Scope](016-jackson-3-only-product-scope.md)
+- [ADR-017: Exact Successful-Binding Source Attribution](017-successful-binding-source-attribution.md)

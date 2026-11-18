@@ -2,6 +2,7 @@ package com.kazforge.jsonapi.jackson3;
 
 import com.kazforge.jsonapi.api.JsonApiPatches;
 import com.kazforge.jsonapi.core.model.JsonApiDocument;
+import com.kazforge.jsonapi.mapping.BoundResource;
 import com.kazforge.jsonapi.patch.PatchCommand;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -63,6 +64,36 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   }
 
   @Override
+  public <T> BoundResource<T> readPatchWithSources(String json, Class<T> dtoType) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(dtoType, DTO_TYPE);
+    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType), dtoType);
+  }
+
+  @Override
+  public <T> BoundResource<T> readPatchWithSources(InputStream json, Class<T> dtoType) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(dtoType, DTO_TYPE);
+    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType), dtoType);
+  }
+
+  @Override
+  @SuppressWarnings("java:S1452")
+  public BoundResource<?> readPatchWithSources(String json, Type dtoType) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(dtoType, DTO_TYPE);
+    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType), Object.class);
+  }
+
+  @Override
+  @SuppressWarnings("java:S1452")
+  public BoundResource<?> readPatchWithSources(InputStream json, Type dtoType) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(dtoType, DTO_TYPE);
+    return patchDtoReader.readWithSources(json, baseMapper.constructType(dtoType), Object.class);
+  }
+
+  @Override
   public <T> PatchCommand<T> readCommand(String json, Class<T> resourceType) {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
@@ -104,6 +135,23 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
     Objects.requireNonNull(document, DOCUMENT);
     Objects.requireNonNull(dtoType, DTO_TYPE);
     return patchDtoReader.fromDocument(document, baseMapper.constructType(dtoType));
+  }
+
+  @Override
+  public <T> BoundResource<T> bindPatchWithSources(JsonApiDocument document, Class<T> dtoType) {
+    Objects.requireNonNull(document, DOCUMENT);
+    Objects.requireNonNull(dtoType, DTO_TYPE);
+    return patchDtoReader.fromDocumentWithSources(
+        document, baseMapper.constructType(dtoType), dtoType);
+  }
+
+  @Override
+  @SuppressWarnings("java:S1452")
+  public BoundResource<?> bindPatchWithSources(JsonApiDocument document, Type dtoType) {
+    Objects.requireNonNull(document, DOCUMENT);
+    Objects.requireNonNull(dtoType, DTO_TYPE);
+    return patchDtoReader.fromDocumentWithSources(
+        document, baseMapper.constructType(dtoType), Object.class);
   }
 
   @Override
