@@ -1,13 +1,10 @@
 package com.kazforge.jsonapi.jackson3.internal.mapping;
 
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
+import com.kazforge.jsonapi.jackson3.internal.mapping.EffectiveReadShapes.Member;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JavaType;
@@ -39,10 +36,12 @@ final class FlatConstructionPaths {
   private static final Shape NO_SHAPE = new Shape(List.of());
 
   private final JsonMapper mapper;
+  private final EffectiveReadShapes shapes;
   private final Map<JavaType, Shape> shapeCache = new ConcurrentHashMap<>();
 
   FlatConstructionPaths(JsonMapper mapper) {
     this.mapper = mapper;
+    this.shapes = new EffectiveReadShapes(mapper);
   }
 
   /**
@@ -69,7 +68,7 @@ final class FlatConstructionPaths {
       if (shape == null) {
         walking = false;
       } else {
-        Shape.Member member = shape.memberByName(name);
+        EffectiveReadShapes.Member member = shape.memberByName(name);
         if (member != null) {
           pointer = pointer.append(member.wireName());
           current = member.type();
@@ -120,29 +119,7 @@ final class FlatConstructionPaths {
     if (!(deserializer instanceof BeanDeserializerBase bean)) {
       return null;
     }
-    Class<?> activeView = mapper.deserializationConfig().getActiveView();
-    List<Shape.Member> members = new ArrayList<>();
-    Set<String> seen = new HashSet<>();
-    addMembers(bean.properties(), members, seen, activeView);
-    addMembers(bean.creatorProperties(), members, seen, activeView);
-    return new Shape(List.copyOf(members));
-  }
-
-  private static void addMembers(
-      Iterator<SettableBeanProperty> properties,
-      List<Shape.Member> members,
-      Set<String> seen,
-      @Nullable Class<?> activeView) {
-    while (properties.hasNext()) {
-      SettableBeanProperty property = properties.next();
-      boolean eligible =
-          !property.isInjectionOnly()
-              && (activeView == null || property.visibleInView(activeView))
-              && seen.add(property.getName());
-      if (eligible) {
-        members.add(new Shape.Member(property.getName(), property.getType(), isWalkable(property)));
-      }
-    }
+    return new Shape(shapes.members(type, bean));
   }
 
   private static boolean isOptional(JavaType type) {
@@ -157,24 +134,15 @@ final class FlatConstructionPaths {
   }
 
   /** Resolved walkable bean shape: effective deserialization members keyed by external name. */
-  private record Shape(List<Member> members) {
+  private record Shape(List<EffectiveReadShapes.Member> members) {
 
     @Nullable Member memberByName(String name) {
-      for (Member member : members) {
+      for (EffectiveReadShapes.Member member : members) {
         if (member.wireName().equals(name)) {
           return member;
         }
       }
       return null;
     }
-
-    /**
-     * One walkable member. The wire name is the configured Jackson external name used as the {@code
-     * convertValue} map key; the type is the effective deserialization type of the configured bean
-     * deserializer's property for that name. {@code walkable} is false when the effective property
-     * carries a custom property-scoped deserializer, so the walker stops after this member's own
-     * wire segment.
-     */
-    record Member(String wireName, JavaType type, boolean walkable) {}
   }
 }

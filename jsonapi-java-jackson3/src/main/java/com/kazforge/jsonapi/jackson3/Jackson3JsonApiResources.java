@@ -12,6 +12,7 @@ import com.kazforge.jsonapi.core.validation.DocumentUsage;
 import com.kazforge.jsonapi.core.validation.EndpointIdentity;
 import com.kazforge.jsonapi.document.DocumentEnvelope;
 import com.kazforge.jsonapi.jackson3.internal.mapping.PrimaryDataShape;
+import com.kazforge.jsonapi.mapping.BoundResource;
 import com.kazforge.jsonapi.mapping.MappedDocument;
 import com.kazforge.jsonapi.representation.RepresentationPolicy;
 import java.io.InputStream;
@@ -123,6 +124,38 @@ final class Jackson3JsonApiResources implements JsonApiResources {
     Objects.requireNonNull(json, "json");
     Objects.requireNonNull(type, "type");
     return bindSingle(createReader.readValue(json), baseMapper.constructType(type));
+  }
+
+  @Override
+  public <T> BoundResource<T> readCreateWithSources(String json, Class<T> type) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(type, "type");
+    return bindWithSources(createReader.readValue(json), baseMapper.constructType(type), type);
+  }
+
+  @Override
+  public <T> BoundResource<T> readCreateWithSources(InputStream json, Class<T> type) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(type, "type");
+    return bindWithSources(createReader.readValue(json), baseMapper.constructType(type), type);
+  }
+
+  @Override
+  @SuppressWarnings("java:S1452")
+  public BoundResource<?> readCreateWithSources(String json, Type type) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(type, "type");
+    return bindWithSources(
+        createReader.readValue(json), baseMapper.constructType(type), Object.class);
+  }
+
+  @Override
+  @SuppressWarnings("java:S1452")
+  public BoundResource<?> readCreateWithSources(InputStream json, Type type) {
+    Objects.requireNonNull(json, "json");
+    Objects.requireNonNull(type, "type");
+    return bindWithSources(
+        createReader.readValue(json), baseMapper.constructType(type), Object.class);
   }
 
   @Override
@@ -301,6 +334,12 @@ final class Jackson3JsonApiResources implements JsonApiResources {
     ResourceObject resource =
         PrimaryDataShape.requireSingleResource(document, javaType.getRawClass());
     return resourceBinder.fromResource(resource, javaType);
+  }
+
+  private <T> BoundResource<T> bindWithSources(
+      JsonApiDocument document, JavaType type, Class<T> resultType) {
+    ResourceObject resource = PrimaryDataShape.requireSingleResource(document, type.getRawClass());
+    return resourceBinder.fromResourceWithSources(resource, type, resultType);
   }
 
   private <T> List<T> bindCollection(JsonApiDocument document, JavaType javaType, Class<T> type) {

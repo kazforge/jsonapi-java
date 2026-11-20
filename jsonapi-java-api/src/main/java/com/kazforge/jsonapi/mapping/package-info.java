@@ -12,6 +12,13 @@
  * com.kazforge.jsonapi.mapping.IncludedResources} preserve document shape and wire order for
  * advanced heterogeneous envelopes. {@link com.kazforge.jsonapi.mapping.RelationshipLinkage} is the
  * opt-in carrier for meta owned by one relationship identifier occurrence.
+ *
+ * <p>{@link com.kazforge.jsonapi.mapping.BoundResource} carries a successfully bound primary DTO
+ * together with immutable request-local source lookup. {@link
+ * com.kazforge.jsonapi.mapping.BindingSource} distinguishes known omission, explicit wire null,
+ * supplied non-null values, and unresolved attribution. Only supplied values carry exact
+ * document-relative locations. This is input attribution, not validation, update policy, or
+ * construction-failure path translation.
  */
 @NullMarked
 package com.kazforge.jsonapi.mapping;

@@ -4,6 +4,7 @@ import com.kazforge.jsonapi.core.model.ResourceObject;
 import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.jackson3.internal.mapping.DomainResourceBinder;
+import com.kazforge.jsonapi.mapping.BoundResource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -62,6 +63,11 @@ public final class JsonApiResourceBinder {
     Objects.requireNonNull(resource, RESOURCE);
     Objects.requireNonNull(targetType, TARGET_TYPE);
     return binder.fromResource(resource, targetType);
+  }
+
+  <T> BoundResource<T> fromResourceWithSources(
+      ResourceObject resource, JavaType targetType, Class<T> resultType) {
+    return binder.fromResourceWithSources(resource, targetType, resultType);
   }
 
   /**

@@ -30,6 +30,15 @@ major-specific readers, writers, mapping/binding, parameterized Jackson types, a
 typed envelopes remain adapter capabilities. [ADR-012](../docs/adr/012-level-one-application-api-contract.md)
 owns that split.
 
+Create and typed PATCH binding additionally offer `readCreateWithSources`, `readPatchWithSources`,
+and non-revalidating `bindPatchWithSources` on the existing facets. They return
+[`BoundResource<T>`](src/main/java/com/kazforge/jsonapi/mapping/BoundResource.java): the DTO plus
+request-local lookup by logical Java property-name/index segments. Only actually supplied values
+have exact document-relative locations; known omission and unresolved attribution stay distinct.
+[`BindingSource`](src/main/java/com/kazforge/jsonapi/mapping/BindingSource.java) owns wire-presence
+semantics, independently of validation and PATCH replacement policy. DTO-only APIs are unchanged.
+The new facet methods default to explicit unsupported behavior for existing custom implementations.
+
 ## Boundary
 
 - No production signature imports `tools.jackson.*`, `com.fasterxml.jackson.*`, or a major-specific

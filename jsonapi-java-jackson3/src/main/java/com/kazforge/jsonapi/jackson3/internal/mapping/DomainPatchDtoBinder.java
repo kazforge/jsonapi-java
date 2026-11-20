@@ -6,6 +6,7 @@ import com.kazforge.jsonapi.diagnostic.JsonApiMappingException;
 import com.kazforge.jsonapi.diagnostic.MappingDiagnostic;
 import com.kazforge.jsonapi.diagnostic.MappingLocation;
 import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.mapping.BoundResource;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import com.kazforge.jsonapi.patch.PatchPresence;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ public final class DomainPatchDtoBinder implements TypedPatchBackend<MappingProp
   private final StructuredValueBinder structuredBinder;
   private final WholeMetaTarget wholeMetaTarget;
   private final TypedPatchBinder<MappingProperty, JavaType> binder;
+  private final Map<Class<?>, RelationshipLinkageMapper> linkageMappers;
 
   public DomainPatchDtoBinder(
       JsonMapper mapper,
@@ -61,6 +63,7 @@ public final class DomainPatchDtoBinder implements TypedPatchBackend<MappingProp
       Map<Class<?>, RelationshipLinkageMapper> linkageMappers) {
     this.mapper = Objects.requireNonNull(mapper, "mapper");
     this.cache = Objects.requireNonNull(cache, "cache");
+    this.linkageMappers = Map.copyOf(linkageMappers);
     this.converter = new PatchMemberConverter(mapper, identifierConverter, linkageMappers);
     this.structuredBinder = new StructuredValueBinder(mapper);
     this.wholeMetaTarget = new WholeMetaTarget(mapper);
@@ -74,6 +77,20 @@ public final class DomainPatchDtoBinder implements TypedPatchBackend<MappingProp
     Class<?> rawType = targetType.getRawClass();
     ResourceMapping mapping = cache.resolve(targetType);
     return binder.bind(resource, toDefinition(mapping), targetType, rawType);
+  }
+
+  /** Binds once and captures sources for a Level-1 primary-resource operation. */
+  public <T> BoundResource<T> fromResourceWithSources(
+      ResourceObject resource, JavaType targetType, Class<T> resultType) {
+    Objects.requireNonNull(resource, "resource");
+    Objects.requireNonNull(targetType, "targetType");
+    Objects.requireNonNull(resultType, "resultType");
+    TypedPatchDefinition<MappingProperty, JavaType> definition =
+        toDefinition(cache.resolve(targetType));
+    T dto =
+        resultType.cast(binder.bind(resource, definition, targetType, targetType.getRawClass()));
+    return new BindingSources(mapper, linkageMappers, structuredBinder)
+        .patch(dto, resource, definition, targetType);
   }
 
   private TypedPatchDefinition<MappingProperty, JavaType> toDefinition(ResourceMapping mapping) {

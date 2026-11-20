@@ -17,6 +17,11 @@
  * com.kazforge.jsonapi.api.ResourceCollectionDocument} carry neutral per-operation state and add no
  * Jackson mechanics.
  *
+ * <p>Resource create and typed PATCH operations offer opt-in {@link
+ * com.kazforge.jsonapi.mapping.BoundResource} results with exact successful-binding source
+ * attribution. Existing DTO-only operations remain independent of source collection; new source
+ * methods default to explicit unsupported behavior for external facet implementations.
+ *
  * <p>No type in this package imports or models backend implementation types. The facade adds no
  * unified failure family: document-read, core validation, and mapping failures retain their focused
  * contracts, and each adapter documents how its transport I/O failures cross the Level-1 boundary.

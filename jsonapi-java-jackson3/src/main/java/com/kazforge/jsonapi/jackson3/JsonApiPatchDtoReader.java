@@ -12,6 +12,7 @@ import com.kazforge.jsonapi.jackson3.internal.mapping.MappingDefinitionCache;
 import com.kazforge.jsonapi.jackson3.internal.mapping.MetaBindingModule;
 import com.kazforge.jsonapi.jackson3.internal.mapping.PatchPresenceModule;
 import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper;
+import com.kazforge.jsonapi.mapping.BoundResource;
 import com.kazforge.jsonapi.mapping.IdentifierConverter;
 import java.io.InputStream;
 import java.util.Map;
@@ -149,5 +150,36 @@ public final class JsonApiPatchDtoReader {
           "fromDocument requires DocumentData.SingleResource primary data");
     }
     return binder.fromResource(resource, dtoType);
+  }
+
+  <T> BoundResource<T> readWithSources(String json, Class<T> dtoType) {
+    return fromDocumentWithSources(documentReader.readValue(json), dtoType);
+  }
+
+  <T> BoundResource<T> readWithSources(InputStream json, Class<T> dtoType) {
+    return fromDocumentWithSources(documentReader.readValue(json), dtoType);
+  }
+
+  BoundResource<Object> readWithSources(String json, JavaType dtoType) {
+    return fromDocumentWithSources(documentReader.readValue(json), dtoType, Object.class);
+  }
+
+  BoundResource<Object> readWithSources(InputStream json, JavaType dtoType) {
+    return fromDocumentWithSources(documentReader.readValue(json), dtoType, Object.class);
+  }
+
+  <T> BoundResource<T> fromDocumentWithSources(JsonApiDocument document, Class<T> dtoType) {
+    return fromDocumentWithSources(document, binderMapper.constructType(dtoType), dtoType);
+  }
+
+  <T> BoundResource<T> fromDocumentWithSources(
+      JsonApiDocument document, JavaType dtoType, Class<T> resultType) {
+    Objects.requireNonNull(document, "document");
+    Objects.requireNonNull(dtoType, DTO_TYPE);
+    if (!(document.data() instanceof DocumentData.SingleResource(ResourceObject resource))) {
+      throw new IllegalArgumentException(
+          "fromDocument requires DocumentData.SingleResource primary data");
+    }
+    return binder.fromResourceWithSources(resource, dtoType, resultType);
   }
 }

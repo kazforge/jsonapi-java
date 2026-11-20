@@ -40,6 +40,21 @@ configured [`Jackson3JsonApi`](src/main/java/com/kazforge/jsonapi/jackson3/Jacks
 runtime implementing neutral [`JsonApi`](../jsonapi-java-api/README.md). Its builder owns
 application-lifetime collaborators/policy; request selection and envelopes remain per operation.
 
+The resource-create and typed-PATCH facets implement the neutral opt-in `WithSources` operations.
+They capture immutable source metadata from the same configured binding, without a second conversion.
+The validated-document PATCH path does not parse or validate again. Binding failures retain their
+existing resource-relative diagnostics; successful source locations are document-relative.
+
+Source lookup follows effective bean properties, transparent `PatchPresence`/`Optional` wrappers,
+and stock index-preserving arrays and `List` implementations (`ArrayList`/`LinkedList`). It supports
+direct relationship identifiers and proven `RelationshipLinkage` occurrence/meta locations, not included
+resource hydration. A wrapper's identifier-meta object is attributed, but its descendants are
+unresolved because the bound meta value converts again inside the DTO. Descendants of maps,
+opaque/custom conversion, ambiguous nested spellings,
+null/omitted parents, and unproven polymorphic shapes are unresolved. Sets and merged/null-skipping
+containers do not establish positional correspondence. A caller may query an exact ancestor explicitly;
+the runtime never silently substitutes one. The neutral type Javadocs own the path/presence contract.
+
 ## Advanced entry points
 
 [`JsonApiJackson3`](src/main/java/com/kazforge/jsonapi/jackson3/JsonApiJackson3.java) creates each
