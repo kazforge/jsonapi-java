@@ -47,6 +47,7 @@ import tools.jackson.databind.ser.UnrolledBeanSerializer;
 final class BindingSources {
 
   private static final MappingLocation DATA = MappingLocation.of("data");
+  private static final String TARGET = "target";
   private static final Node OMITTED = new Node(new BindingSource(Presence.OMITTED, null), Map.of());
   private static final Node UNRESOLVED =
       new Node(new BindingSource(Presence.UNRESOLVED, null), Map.of());
@@ -164,22 +165,7 @@ final class BindingSources {
     }
     if (property.role() == PropertyRole.RELATIONSHIP
         && input.wire() instanceof RelationshipData data) {
-      JavaType type = MappingTypeSupport.unwrapTransportWrappers(effective.getType());
-      if (customized(effective)) {
-        return present(input.location(), false, Map.of());
-      }
-      ReadRelationshipShape<JavaType> shape =
-          RelationshipLinkageSupport.readRelationshipShape(
-              type, property, linkageMappers, mapper.getTypeFactory());
-      if (shape instanceof ReadRelationshipShape.Mapped<JavaType>) {
-        return present(input.location(), false, Map.of());
-      }
-      BeanDeserializer bean =
-          linkageBean(effective.getType(), effective.getValueDeserializer(), effective);
-      if (bean == null) {
-        return present(input.location(), false, Map.of());
-      }
-      return linkage(data, type, shape, bean, input.location());
+      return relationship(data, property, effective, input.location());
     }
     return value(
         input.wire(),
@@ -187,6 +173,28 @@ final class BindingSources {
         effective.getValueDeserializer(),
         effective,
         input.location());
+  }
+
+  private Node relationship(
+      RelationshipData data,
+      MappingPropertyView property,
+      SettableBeanProperty effective,
+      MappingLocation location) {
+    JavaType type = MappingTypeSupport.unwrapTransportWrappers(effective.getType());
+    if (customized(effective)) {
+      return present(location, false, Map.of());
+    }
+    ReadRelationshipShape<JavaType> shape =
+        RelationshipLinkageSupport.readRelationshipShape(
+            type, property, linkageMappers, mapper.getTypeFactory());
+    if (shape instanceof ReadRelationshipShape.Mapped<JavaType>) {
+      return present(location, false, Map.of());
+    }
+    BeanDeserializer bean =
+        linkageBean(effective.getType(), effective.getValueDeserializer(), effective);
+    return bean == null
+        ? present(location, false, Map.of())
+        : linkage(data, type, shape, bean, location);
   }
 
   private static Input input(ResourceObject resource, SemanticProperty property) {
@@ -445,7 +453,7 @@ final class BindingSources {
     var members = shapes.members(type, (BeanDeserializerBase) deserializer);
     List<String> required =
         MappingTypeSupport.isLinkageType(type)
-            ? List.of("target", "meta")
+            ? List.of(TARGET, "meta")
             : List.of("type", "id", "lid", "meta");
     Set<String> names = new HashSet<>();
     for (var member : members) {
@@ -530,7 +538,7 @@ final class BindingSources {
       JavaType targetType = MappingTypeSupport.linkageTargetType(type);
       SettableBeanProperty target =
           shapes.members(type, bean).stream()
-              .filter(member -> "target".equals(member.logicalName()))
+              .filter(member -> TARGET.equals(member.logicalName()))
               .map(EffectiveReadShapes.Member::property)
               .findFirst()
               .orElseThrow();
@@ -539,7 +547,7 @@ final class BindingSources {
         targetNode = occurrence(identifier, targetType, targetShape, targetBean, location);
       }
     }
-    children.put("target", targetNode);
+    children.put(TARGET, targetNode);
     // Identifier meta converts once before the wrapper record converts again; a custom
     // serializer/deserializer pair may change member correspondence, so only the object is exact.
     children.put(
