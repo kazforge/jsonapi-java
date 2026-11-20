@@ -554,6 +554,32 @@ does not match `target`, `api.documents().read(...)` fails with `ENDPOINT_IDENTI
 binding runs. `bindPatch` assumes a pre-validated update document and does not re-parse or
 revalidate it.
 
+### Locate supplied PATCH values {#patch-source-attribution}
+
+When validation needs exact source pointers, use `bindPatchWithSources` **instead of**
+`bindPatch` on the already-validated document:
+
+```java
+import com.kazforge.jsonapi.mapping.BindingSource;
+import com.kazforge.jsonapi.mapping.BoundResource;
+import java.util.List;
+
+BoundResource<ArticlePatch> boundPatch = api.patches()
+    .bindPatchWithSources(validated, ArticlePatch.class);
+ArticlePatch sourcedPatch = boundPatch.resource();
+
+BindingSource clearedSubtitle = boundPatch.source(List.of("subtitle"));
+BindingSource omittedTitle = boundPatch.source(List.of("title"));
+```
+
+For `clearSubtitleBody`, `clearedSubtitle` is `PRESENT_NULL` at
+`/data/attributes/subtitle`; `omittedTitle` is `OMITTED` and has no pointer.
+`source()` accepts logical Java property-path segments; only proven supplied values have
+document-relative locations. Unknown or opaque correspondence is `UNRESOLVED`, never a
+guessed pointer. Input presence does not change PATCH replacement semantics. For ordinary
+reads without separate endpoint validation, `readPatchWithSources` provides the same
+source-aware result.
+
 ## Low-level commands {#low-level-commands}
 
 For generic infrastructure or change inspection without a dedicated `PatchPresence` DTO, bind
@@ -575,12 +601,12 @@ For `titleUpdateBody`, `identity` is `"1"` and `command.changes()` contains one 
 `author` do not appear in `command.changes()`.
 
 <!-- x-release-please-start-version -->
-[`bindCommand`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/api/JsonApiPatches.html#bindCommand(com.kazforge.jsonapi.core.model.JsonApiDocument,java.lang.Class))
+[`bindCommand`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.5.0/com/kazforge/jsonapi/api/JsonApiPatches.html#bindCommand(com.kazforge.jsonapi.core.model.JsonApiDocument,java.lang.Class))
 is the pre-validated counterpart to `readCommand`, binding a `JsonApiDocument` into a
 `PatchCommand<T>` without re-parsing or revalidation. When an ordinary DTO contains a traversable
 bean attribute or resource/relationship `meta`, the low-level command represents supplied nested
 changes as a recursive
-[`StructuredPatch`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/patch/StructuredPatch.html)
+[`StructuredPatch`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.5.0/com/kazforge/jsonapi/patch/StructuredPatch.html)
 while keeping containers atomic.
 <!-- x-release-please-end -->
 
@@ -604,10 +630,10 @@ the standard [diagnostic families](diagnostics.md):
   `null`.
 
 <!-- x-release-please-start-version -->
-See [`JsonApiPatches`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/api/JsonApiPatches.html),
-[`PatchPresence`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/patch/PatchPresence.html),
-[`PatchCommand`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/patch/PatchCommand.html),
-[`PatchChange`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/patch/PatchChange.html),
-and [`StructuredPatch`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/patch/StructuredPatch.html)
+See [`JsonApiPatches`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.5.0/com/kazforge/jsonapi/api/JsonApiPatches.html),
+[`PatchPresence`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.5.0/com/kazforge/jsonapi/patch/PatchPresence.html),
+[`PatchCommand`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.5.0/com/kazforge/jsonapi/patch/PatchCommand.html),
+[`PatchChange`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.5.0/com/kazforge/jsonapi/patch/PatchChange.html),
+and [`StructuredPatch`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.5.0/com/kazforge/jsonapi/patch/StructuredPatch.html)
 for exact contracts.
 <!-- x-release-please-end -->

@@ -5,6 +5,14 @@ Consumer-visible changes for the unified release train shared by the
 [ADR-014](docs/adr/014-unified-release-train.md); release-please maintains future
 entries. Tags are named `v<version>`.
 
+## [0.5.0](https://github.com/kazforge/jsonapi-java/compare/v0.4.0...v0.5.0) (2026-11-20)
+
+
+### Features
+
+* **mapping:** add source attribution to create and typed patch binding ([914601b](https://github.com/kazforge/jsonapi-java/commit/914601bd5935d5ea9c5e393594847896c9c606f2))
+
+
 ## [0.4.0](https://github.com/kazforge/jsonapi-java/compare/v0.3.0...v0.4.0) (2026-10-16)
 
 
