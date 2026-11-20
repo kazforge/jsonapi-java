@@ -49,6 +49,20 @@ public final class BindingSourceFixtures {
       PatchPresence<String> missing,
       @JsonProperty("a/b~c") PatchPresence<String> escaped) {}
 
+  public static final class GetterOnlyPatch {
+    public PatchPresence<String> title;
+    public PatchPresence<String> missing;
+
+    public List<String> getExtras() {
+      return new ArrayList<>();
+    }
+  }
+
+  public abstract static class FilteredTargetMixin {
+    @JsonIgnoreProperties(value = "meta", allowGetters = true)
+    public abstract ResourceIdentifier target();
+  }
+
   @JsonApiResource(type = "articles")
   public record GenericSourcePatch<T>(
       @JsonApiId String id, @JsonApiAttribute PatchPresence<T> title) {}
@@ -99,6 +113,7 @@ public final class BindingSourceFixtures {
   public record Contextual(
       @JsonApiId String id,
       @JsonApiAttribute @JsonIgnoreProperties("value") Details filtered,
+      @JsonApiAttribute @JsonIgnoreProperties("value") List<Optional<Details>> filteredItems,
       @JsonApiAttribute Unwrapped flattened) {}
 
   @JsonApiResource(type = "ignored-source")

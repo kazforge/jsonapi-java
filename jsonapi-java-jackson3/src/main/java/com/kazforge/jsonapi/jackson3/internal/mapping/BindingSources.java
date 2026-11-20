@@ -36,10 +36,12 @@ import tools.jackson.databind.deser.std.ContainerDeserializerBase;
 import tools.jackson.databind.deser.std.NullifyingDeserializer;
 import tools.jackson.databind.ext.jdk8.Jdk8OptionalDeserializer;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ser.BeanSerializer;
+import tools.jackson.databind.ser.UnrolledBeanSerializer;
 
 /**
  * Opt-in source snapshot assembly after successful binding, using the operation's resolved
- * definition and effective configured deserializers. No conversion, DTO access, or wire re-read
+ * definition and effective configured conversion shapes. No conversion, DTO access, or wire re-read
  * occurs here. The returned tree retains names, presence and pointers only.
  */
 final class BindingSources {
@@ -169,12 +171,15 @@ final class BindingSources {
       ReadRelationshipShape<JavaType> shape =
           RelationshipLinkageSupport.readRelationshipShape(
               type, property, linkageMappers, mapper.getTypeFactory());
-      if (shape instanceof ReadRelationshipShape.Mapped<JavaType>
-          || !directLinkageConversion(
-              effective.getType(), effective.getValueDeserializer(), effective)) {
+      if (shape instanceof ReadRelationshipShape.Mapped<JavaType>) {
         return present(input.location(), false, Map.of());
       }
-      return linkage(data, type, shape, effective, input.location());
+      BeanDeserializer bean =
+          linkageBean(effective.getType(), effective.getValueDeserializer(), effective);
+      if (bean == null) {
+        return present(input.location(), false, Map.of());
+      }
+      return linkage(data, type, shape, bean, input.location());
     }
     return value(
         input.wire(),
@@ -286,12 +291,12 @@ final class BindingSources {
       Node node;
       if (ambiguous(wire, property, deserializer.isCaseInsensitive())) {
         node = UNRESOLVED;
-      } else if (!wire.containsKey(wireName)) {
-        node = OMITTED;
       } else if (typedShape != null
           && typedShape.presenceAware()
           && typedShape.memberByWire(wireName) == null) {
         node = UNRESOLVED;
+      } else if (!wire.containsKey(wireName)) {
+        node = OMITTED;
       } else if (property.getValueTypeDeserializer() != null) {
         node = present(location.append(wireName), wire.get(wireName) == null, Map.of());
       } else {
@@ -396,32 +401,46 @@ final class BindingSources {
   }
 
   /** Final Jackson conversion must preserve the built-in linkage/occurrence structure too. */
-  private boolean directLinkageConversion(
-      JavaType type, ValueDeserializer<?> deserializer, @Nullable SettableBeanProperty property) {
+  private @Nullable BeanDeserializer linkageBean(
+      JavaType type,
+      @Nullable ValueDeserializer<?> deserializer,
+      @Nullable SettableBeanProperty property) {
+    if (deserializer == null) {
+      return null;
+    }
     if (WrapperCustomization.isPatchPresence(type)
         && deserializer instanceof PatchPresenceDeserializer) {
       JavaType inner = type.containedType(0);
-      return directLinkageConversion(inner, rootDeserializer(inner), null);
+      return linkageBean(inner, rootDeserializer(inner), null);
     }
     if (type.getRawClass() == Optional.class
         && type.containedTypeCount() == 1
         && deserializer.getClass() == Jdk8OptionalDeserializer.class) {
       JavaType inner = type.containedType(0);
-      return directLinkageConversion(
+      return linkageBean(
           inner,
           mapper._deserializationContext().findContextualValueDeserializer(inner, property),
           property);
     }
     if (type.isContainerType()) {
       if (!indexed(type, deserializer, property) || polymorphic(type.getContentType())) {
-        return false;
+        return null;
       }
       JavaType content = type.getContentType();
-      return directLinkageConversion(
-          content, ((ContainerDeserializerBase<?>) deserializer).getContentDeserializer(), null);
+      return linkageBean(
+          content,
+          ((ContainerDeserializerBase<?>) deserializer).getContentDeserializer(),
+          property);
     }
-    if (deserializer.getClass() != BeanDeserializer.class) {
-      return false;
+    return ordinaryLinkageBean(type, deserializer);
+  }
+
+  private @Nullable BeanDeserializer ordinaryLinkageBean(
+      JavaType type, ValueDeserializer<?> deserializer) {
+    Class<?> serializer = mapper._serializationContext().findRootValueSerializer(type).getClass();
+    if (deserializer.getClass() != BeanDeserializer.class
+        || (serializer != BeanSerializer.class && serializer != UnrolledBeanSerializer.class)) {
+      return null;
     }
     var members = shapes.members(type, (BeanDeserializerBase) deserializer);
     List<String> required =
@@ -436,34 +455,39 @@ final class BindingSources {
       }
     }
     if (!names.containsAll(required)) {
-      return false;
+      return null;
     }
     if (MappingTypeSupport.isLinkageType(type)) {
-      return members.stream().noneMatch(member -> customized(member.property()));
+      return members.stream().noneMatch(member -> customized(member.property()))
+          ? (BeanDeserializer) deserializer
+          : null;
     }
-    return type.getRawClass() == ResourceIdentifier.class;
+    return type.getRawClass() == ResourceIdentifier.class ? (BeanDeserializer) deserializer : null;
   }
 
   private Node linkage(
       RelationshipData data,
       JavaType type,
       ReadRelationshipShape<JavaType> shape,
-      SettableBeanProperty property,
+      BeanDeserializer bean,
       MappingLocation location) {
     Map<String, Node> children = new LinkedHashMap<>();
     if (data instanceof RelationshipData.SingleLinkage(ResourceIdentifier identifier)) {
-      return occurrence(identifier, type, shape, location);
+      return occurrence(identifier, type, shape, bean, location);
     }
     if (data
-            instanceof
-            RelationshipData.IdentifierCollectionLinkage(List<ResourceIdentifier> identifiers)
-        && indexed(type, rootDeserializer(type), property)) {
+        instanceof
+        RelationshipData.IdentifierCollectionLinkage(List<ResourceIdentifier> identifiers)) {
       for (int index = 0; index < identifiers.size(); index++) {
         String segment = Integer.toString(index);
         children.put(
             segment,
             occurrence(
-                identifiers.get(index), type.getContentType(), shape, location.append(segment)));
+                identifiers.get(index),
+                type.getContentType(),
+                shape,
+                bean,
+                location.append(segment)));
       }
     }
     return present(location, false, children);
@@ -473,6 +497,7 @@ final class BindingSources {
       ResourceIdentifier identifier,
       JavaType type,
       ReadRelationshipShape<JavaType> shape,
+      BeanDeserializer bean,
       MappingLocation location) {
     Map<String, Node> children = new LinkedHashMap<>();
     if (shape
@@ -481,7 +506,7 @@ final class BindingSources {
             boolean toMany,
             JavaType ignoredMeta,
             ReadRelationshipShape<JavaType> targetShape)) {
-      addWrapped(children, identifier, type, toMany, targetShape, location);
+      addWrapped(children, identifier, type, toMany, targetShape, bean, location);
     } else {
       addDirectIdentifier(children, identifier, location);
     }
@@ -494,18 +519,27 @@ final class BindingSources {
       JavaType type,
       boolean toMany,
       ReadRelationshipShape<JavaType> targetShape,
+      BeanDeserializer bean,
       MappingLocation location) {
     // A nullable to-one mapper may short-circuit the wrapper before its meta is bound.
     if (!toMany && targetShape instanceof ReadRelationshipShape.Mapped<JavaType>) {
       return;
     }
-    JavaType targetType = MappingTypeSupport.linkageTargetType(type);
-    children.put(
-        "target",
-        targetShape instanceof ReadRelationshipShape.Direct<JavaType>
-                && directLinkageConversion(targetType, rootDeserializer(targetType), null)
-            ? occurrence(identifier, targetType, targetShape, location)
-            : UNRESOLVED);
+    Node targetNode = UNRESOLVED;
+    if (targetShape instanceof ReadRelationshipShape.Direct<JavaType>) {
+      JavaType targetType = MappingTypeSupport.linkageTargetType(type);
+      SettableBeanProperty target =
+          shapes.members(type, bean).stream()
+              .filter(member -> "target".equals(member.logicalName()))
+              .map(EffectiveReadShapes.Member::property)
+              .findFirst()
+              .orElseThrow();
+      BeanDeserializer targetBean = linkageBean(targetType, target.getValueDeserializer(), target);
+      if (targetBean != null) {
+        targetNode = occurrence(identifier, targetType, targetShape, targetBean, location);
+      }
+    }
+    children.put("target", targetNode);
     // Identifier meta converts once before the wrapper record converts again; a custom
     // serializer/deserializer pair may change member correspondence, so only the object is exact.
     children.put(

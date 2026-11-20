@@ -153,13 +153,11 @@ public final class JsonApiPatchDtoReader {
   }
 
   <T> BoundResource<T> readWithSources(String json, Class<T> dtoType) {
-    return fromDocumentWithSources(
-        documentReader.readValue(json), binderMapper.constructType(dtoType), dtoType);
+    return fromDocumentWithSources(documentReader.readValue(json), dtoType);
   }
 
   <T> BoundResource<T> readWithSources(InputStream json, Class<T> dtoType) {
-    return fromDocumentWithSources(
-        documentReader.readValue(json), binderMapper.constructType(dtoType), dtoType);
+    return fromDocumentWithSources(documentReader.readValue(json), dtoType);
   }
 
   BoundResource<Object> readWithSources(String json, JavaType dtoType) {
@@ -168,6 +166,10 @@ public final class JsonApiPatchDtoReader {
 
   BoundResource<Object> readWithSources(InputStream json, JavaType dtoType) {
     return fromDocumentWithSources(documentReader.readValue(json), dtoType, Object.class);
+  }
+
+  <T> BoundResource<T> fromDocumentWithSources(JsonApiDocument document, Class<T> dtoType) {
+    return fromDocumentWithSources(document, binderMapper.constructType(dtoType), dtoType);
   }
 
   <T> BoundResource<T> fromDocumentWithSources(

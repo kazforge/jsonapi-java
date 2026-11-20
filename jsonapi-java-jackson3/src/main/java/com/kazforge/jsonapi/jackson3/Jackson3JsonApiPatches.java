@@ -141,8 +141,7 @@ final class Jackson3JsonApiPatches implements JsonApiPatches {
   public <T> BoundResource<T> bindPatchWithSources(JsonApiDocument document, Class<T> dtoType) {
     Objects.requireNonNull(document, DOCUMENT);
     Objects.requireNonNull(dtoType, DTO_TYPE);
-    return patchDtoReader.fromDocumentWithSources(
-        document, baseMapper.constructType(dtoType), dtoType);
+    return patchDtoReader.fromDocumentWithSources(document, dtoType);
   }
 
   @Override

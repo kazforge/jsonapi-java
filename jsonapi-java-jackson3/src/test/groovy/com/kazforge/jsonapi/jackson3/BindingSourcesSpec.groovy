@@ -25,6 +25,8 @@ import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.Contextual
 import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.Details
 import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.DetailsMixin
 import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.GenericSourcePatch
+import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.GetterOnlyPatch
+import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.FilteredTargetMixin
 import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.IgnoredRoot
 import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.LinkPatch
 import com.kazforge.jsonapi.jackson3.BindingSourceFixtures.Links
@@ -38,17 +40,23 @@ import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatAuthor
 import com.kazforge.jsonapi.jackson3.LinkageMapperFixtures.FlatMappedArticle
 import com.kazforge.jsonapi.jackson3.mapping.RelationshipLinkageMapper
 import com.kazforge.jsonapi.mapping.BoundResource
+import com.kazforge.jsonapi.mapping.RelationshipLinkage
 import com.kazforge.jsonapi.mapping.BindingSource.Presence
 import com.kazforge.jsonapi.patch.PatchPresence
 import java.util.concurrent.atomic.AtomicInteger
+import java.lang.reflect.Type
 import spock.lang.Specification
 import tools.jackson.core.JsonParser
+import tools.jackson.core.JsonGenerator
 import tools.jackson.core.type.TypeReference
 import tools.jackson.databind.DeserializationContext
 import tools.jackson.databind.InjectableValues
 import tools.jackson.databind.PropertyNamingStrategies
 import tools.jackson.databind.MapperFeature
 import tools.jackson.databind.ValueDeserializer
+import tools.jackson.databind.ValueSerializer
+import tools.jackson.databind.SerializationContext
+import tools.jackson.databind.JavaType
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.databind.module.SimpleModule
 
@@ -228,6 +236,127 @@ class BindingSourcesSpec extends Specification {
     dto.value().getFirst().value == "wire"
     matches(bound, ['value', '0'], PRESENT_VALUE, '/data/attributes/value/0')
     matches(bound, ['value', '0', 'value'], UNRESOLVED, null)
+  }
+
+  def "optional list elements retain enclosing property ignorals"() {
+    when:
+    def bound = JsonApiJackson3.jsonApi(JsonMapper.builder().build()).resources().readCreateWithSources(
+        '{"data":{"type":"contextual-source","attributes":{' +
+        '"filteredItems":[{"value":"ignored","postalCode":"wire"}]}}}', Contextual)
+
+    then:
+    bound.resource().filteredItems().getFirst().get().value() == null
+    bound.resource().filteredItems().getFirst().get().postalCode() == "wire"
+    matches(bound, ['filteredItems', '0', 'value'], UNRESOLVED, null)
+    matches(bound, [
+      'filteredItems',
+      '0',
+      'postalCode'
+    ], PRESENT_VALUE,
+    '/data/attributes/filteredItems/0/postalCode')
+  }
+
+  def "recursive PATCH omission excludes setterless properties outside its accepted shape"() {
+    given:
+    def runtime = JsonApiJackson3.jsonApi(JsonMapper.builder()
+        .enable(MapperFeature.USE_GETTERS_AS_SETTERS).build())
+    def type = new TypeReference<GenericSourcePatch<GetterOnlyPatch>>() {}.getType()
+
+    when:
+    def bound = runtime.patches().readPatchWithSources(
+        '{"data":{"type":"articles","id":"1","attributes":{"title":{"title":"wire"}}}}', type)
+
+    then:
+    ((GenericSourcePatch<GetterOnlyPatch>) bound.resource()).title().value().title.value() == "wire"
+    matches(bound, ['title', 'title'], PRESENT_VALUE, '/data/attributes/title/title')
+    matches(bound, ['title', 'missing'], OMITTED, null)
+    matches(bound, ['title', 'extras'], UNRESOLVED, null)
+  }
+
+  def "custom identifier serialization keeps relationship ancestors but not member correspondence for #operation"() {
+    given:
+    def serializations = new AtomicInteger()
+    def module = new SimpleModule().addSerializer(ResourceIdentifier, new ValueSerializer<ResourceIdentifier>() {
+          @Override
+          void serialize(ResourceIdentifier value, JsonGenerator gen, SerializationContext context) {
+            serializations.incrementAndGet()
+            gen.writeStartObject()
+            gen.writeStringProperty("type", value.type())
+            gen.writeStringProperty("lid", "local-" + value.id())
+            gen.writeEndObject()
+          }
+        })
+    def runtime = JsonApiJackson3.jsonApi(JsonMapper.builder().addModule(module).build())
+    def json = '{"data":{"type":"source-links","id":"1","relationships":{' +
+        '"author":{"data":{"type":"people","id":"p1"}},' +
+        '"owners":{"data":[{"type":"people","id":"p2","meta":{"value":"owner"}}]}}}}'
+
+    when:
+    def bound = operation == "create"
+        ? runtime.resources().readCreateWithSources(json, Links)
+        : runtime.patches().readPatchWithSources(json, LinkPatch)
+    def author = operation == "create" ? bound.resource().author() : bound.resource().author().value()
+
+    then:
+    author.id() == null
+    author.lid() == "local-p1"
+    matches(bound, ['author'], PRESENT_VALUE, '/data/relationships/author/data')
+    matches(bound, ['author', 'id'], UNRESOLVED, null)
+    matches(bound, ['author', 'lid'], UNRESOLVED, null)
+    matches(bound, ['owners', '0', 'target', 'id'], UNRESOLVED, null)
+    matches(bound, ['owners', '0', 'meta'], PRESENT_VALUE, '/data/relationships/owners/data/0/meta')
+    serializations.get() == 2
+
+    where:
+    operation << ["create", "patch"]
+  }
+
+  def "wrapped identifier lookup respects the effective target property for #operation"() {
+    given:
+    def runtime = JsonApiJackson3.jsonApi(JsonMapper.builder()
+        .addMixIn(RelationshipLinkage, FilteredTargetMixin).build())
+    def json = '{"data":{"type":"source-links","id":"1","relationships":{' +
+        '"owners":{"data":[{"type":"people","id":"p2","meta":{"value":"owner"}}]}}}}'
+
+    when:
+    def bound = operation == "create"
+        ? runtime.resources().readCreateWithSources(json, Links)
+        : runtime.patches().readPatchWithSources(json, LinkPatch)
+    def owners = operation == "create" ? bound.resource().owners() : bound.resource().owners().value()
+
+    then:
+    owners.getFirst().target().meta() == null
+    owners.getFirst().meta().value() == "owner"
+    matches(bound, [
+      'owners',
+      '0',
+      'target',
+      'meta'
+    ], UNRESOLVED, null)
+    matches(bound, ['owners', '0', 'meta'], PRESENT_VALUE, '/data/relationships/owners/data/0/meta')
+
+    where:
+    operation << ["create", "patch"]
+  }
+
+  def "validated Class source binding resolves types through the same derived mapper as DTO-only binding"() {
+    given:
+    def mapper = new JsonMapper(JsonMapper.builder()) {
+          @Override
+          JavaType constructType(Type type) {
+            if (type == Patch) {
+              throw new IllegalArgumentException("caller mapper rejects Patch")
+            }
+            super.constructType(type)
+          }
+        }
+    def runtime = JsonApiJackson3.jsonApi(mapper)
+    def document = new JsonApiDocument(new DocumentData.SingleResource(
+        ResourceObject.of("source-things", "1")), null, null, null, null, null, [:])
+
+    expect:
+    runtime.patches().bindPatchWithSources(document, Patch).resource() ==
+        runtime.patches().bindPatch(document, Patch)
   }
 
   def "erased Optional keeps its property source without resolving an unknown inner type"() {
