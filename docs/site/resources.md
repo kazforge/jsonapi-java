@@ -41,6 +41,30 @@ Article requested = api.resources().readCreate(createBody, Article.class);
 `readOne` is for reading a response resource, which requires an `id`; it rejects this ID-less
 request. Reading a create request does not save an article or assign an identifier.
 
+### Locate supplied create values {#create-source-attribution}
+
+When validation errors need exact request pointers, use the opt-in source-aware read instead of
+guessing JSON member names from Java property names:
+
+```java
+import com.kazforge.jsonapi.mapping.BindingSource;
+import com.kazforge.jsonapi.mapping.BoundResource;
+import java.util.List;
+
+BoundResource<Article> bound = api.resources()
+    .readCreateWithSources(createBody, Article.class);
+Article sourcedArticle = bound.resource();
+
+BindingSource titleSource = bound.source(List.of("title"));
+BindingSource idSource = bound.source(List.of("id"));
+```
+
+For this request, `titleSource` is `PRESENT_VALUE` at `/data/attributes/title`, while
+`idSource` is `OMITTED` and has no pointer. Lookups use logical Java property names;
+locations use configured JSON:API names, including renames. Only supplied values receive
+pointers: never invent one for `OMITTED` or `UNRESOLVED`. Source presence does not itself
+validate or persist a resource.
+
 ### Write and read the created resource
 
 Your application owns validation of business rules, authorization, and persistence. Suppose it
@@ -359,7 +383,7 @@ DTO mapping is not a lossless representation of member presence.
 <!-- x-release-please-start-version -->
 Reads validate the whole document before binding. Malformed/invalid input and DTO mapping problems
 remain [distinct failure families](relationships-and-documents.md#diagnostics). The
-[`JsonApiResources`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.4.0/com/kazforge/jsonapi/api/JsonApiResources.html)
+[`JsonApiResources`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.5.0/com/kazforge/jsonapi/api/JsonApiResources.html)
 source API documentation owns generic-type and stream overload contracts; caller-supplied streams
 remain open.
 <!-- x-release-please-end -->
