@@ -5,6 +5,13 @@ Consumer-visible changes for the unified release train shared by the
 [ADR-014](docs/adr/014-unified-release-train.md); release-please maintains future
 entries. Tags are named `v<version>`.
 
+## [0.5.1](https://github.com/kazforge/jsonapi-java/compare/v0.5.0...v0.5.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* **codec:** reject resource-only members on relationship primary identifiers ([d8977b4](https://github.com/kazforge/jsonapi-java/commit/d8977b47c15c6f1fe49df942cb0a89e7719f7d05))
+
 ## [0.5.0](https://github.com/kazforge/jsonapi-java/compare/v0.4.0...v0.5.0) (2026-11-20)
 
 
