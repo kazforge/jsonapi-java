@@ -14,7 +14,9 @@ import java.util.Objects;
  * <p>In particular, {@link #identifierDefaults()} selects identifier decoding with {@link
  * ValidationContext#defaults()}; it does not select relationship-endpoint validation. Callers
  * reading relationship linkage must also supply a validation context whose primary-data context is
- * {@link com.kazforge.jsonapi.core.validation.PrimaryDataContext#RELATIONSHIP}.
+ * {@link com.kazforge.jsonapi.core.validation.PrimaryDataContext#RELATIONSHIP}. With that
+ * combination, {@code attributes}, {@code relationships}, and {@code links} are rejected on primary
+ * identifiers rather than treated as unknown or profile members.
  */
 public record DocumentReadContext(
     ValidationContext validationContext, PrimaryDataKind primaryDataKind) {

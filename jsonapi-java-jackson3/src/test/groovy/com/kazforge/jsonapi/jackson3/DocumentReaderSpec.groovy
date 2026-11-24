@@ -390,6 +390,27 @@ class DocumentReaderSpec extends Specification {
     ex.ruleCode() == ValidationRuleCode.PRIMARY_DATA_CONTEXT_MISMATCH
   }
 
+  def "relationship identifier rejection leaves the parser on the offending member value"() {
+    given:
+    def parser = mapper.createParser(readCorpusText('negative/relationship-identifier-with-links.json'))
+    def reader = JsonApiJackson3.reader(mapper, DocumentReadContext.of(
+        relationshipContext(), PrimaryDataKind.RESOURCE_IDENTIFIER))
+
+    when:
+    reader.readValue(parser)
+
+    then:
+    def ex = thrown(JsonApiDocumentReadException)
+    ex.jsonPointer() == '/data/1/links'
+    ex.sourceLocation().lineNumber() == 4
+    ex.message == 'Local validation failed'
+    ex.cause == null
+    parser.currentToken() == JsonToken.START_OBJECT
+
+    cleanup:
+    parser.close()
+  }
+
   @Unroll
   def "empty String input #description reports MALFORMED_JSON"() {
     when:
