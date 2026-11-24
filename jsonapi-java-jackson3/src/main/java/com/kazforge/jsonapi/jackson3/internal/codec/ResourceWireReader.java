@@ -71,14 +71,18 @@ final class ResourceWireReader {
   }
 
   static List<ResourceIdentifier> readResourceIdentifiers(
-      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer) {
+      JsonParser parser,
+      ValidationContext validationContext,
+      JsonPointerAccumulator pointer,
+      boolean rejectResourceMembers) {
     WireTokens.expectToken(parser, JsonToken.START_ARRAY, pointer);
     List<ResourceIdentifier> identifiers = new ArrayList<>();
     int index = 0;
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
       pointer.capture(ReadLocations.token(parser));
-      identifiers.add(readResourceIdentifier(parser, validationContext, pointer));
+      identifiers.add(
+          readResourceIdentifier(parser, validationContext, pointer, rejectResourceMembers));
       pointer.pop();
       index++;
     }
@@ -86,7 +90,10 @@ final class ResourceWireReader {
   }
 
   static ResourceIdentifier readResourceIdentifier(
-      JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer) {
+      JsonParser parser,
+      ValidationContext validationContext,
+      JsonPointerAccumulator pointer,
+      boolean rejectResourceMembers) {
     IdentifierDraft draft = new IdentifierDraft(validationContext);
     WireObjectMembers.forEachMember(
         parser,
@@ -94,7 +101,7 @@ final class ResourceWireReader {
         name ->
             IDENTIFIER_MEMBERS.contains(name)
                 || MemberClassifier.isRetainedStructuralMember(name, validationContext),
-        name -> draft.readMember(name, parser, pointer));
+        name -> draft.readMember(name, parser, pointer, rejectResourceMembers));
     return draft.build(pointer);
   }
 
@@ -161,7 +168,8 @@ final class ResourceWireReader {
       return RelationshipData.NullLinkage.INSTANCE;
     }
     if (token == JsonToken.START_OBJECT) {
-      ResourceIdentifier identifier = readResourceIdentifier(parser, validationContext, pointer);
+      ResourceIdentifier identifier =
+          readResourceIdentifier(parser, validationContext, pointer, false);
       return ValidationPointers.construct(
           pointer.path(),
           "/relationships/data",
@@ -169,7 +177,7 @@ final class ResourceWireReader {
     }
     if (token == JsonToken.START_ARRAY) {
       List<ResourceIdentifier> identifiers =
-          readResourceIdentifiers(parser, validationContext, pointer);
+          readResourceIdentifiers(parser, validationContext, pointer, false);
       return ValidationPointers.construct(
           pointer.path(),
           "/relationships/data",
@@ -262,16 +270,22 @@ final class ResourceWireReader {
       this.validationContext = validationContext;
     }
 
-    void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer) {
+    void readMember(
+        String name,
+        JsonParser parser,
+        JsonPointerAccumulator pointer,
+        boolean rejectResourceMembers) {
       switch (name) {
         case JsonApiMembers.TYPE -> type = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.ID -> id = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.LID -> lid = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.META -> meta = WireMetaReader.readMeta(parser, pointer);
         default -> {
-          if (IDENTIFIER_MEMBERS.contains(name)) {
-            throw WireTokens.unexpected(
-                "Unexpected resource identifier member handling for: " + name, pointer, parser);
+          if (rejectResourceMembers && RESOURCE_MEMBERS.contains(name)) {
+            throw new JsonApiValidationException(
+                ValidationRuleCode.PRIMARY_DATA_CONTEXT_MISMATCH,
+                pointer.path(),
+                "Relationship endpoint primary identifiers cannot contain resource object members");
           }
           if (MemberClassifier.isRetainedStructuralMember(name, validationContext)) {
             WireTokens.putOpen(additional, name, WireOpenValues.readOpenValue(parser, pointer));

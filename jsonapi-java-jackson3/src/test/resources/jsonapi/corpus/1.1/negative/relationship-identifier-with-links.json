@@ -1,0 +1,6 @@
+{
+  "data": [
+    {"type": "people", "id": "1"},
+    {"type": "people", "id": "2", "links": {}}
+  ]
+}
