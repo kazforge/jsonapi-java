@@ -12,8 +12,10 @@ import org.jspecify.annotations.Nullable;
  * <p>The facet is linkage-only: it expresses to-one, explicit-null, and to-many identifier primary
  * data without domain DTO registration and without hydrating related-resource documents. A to-one
  * read never accepts a collection and a to-many read never accepts one identifier or null;
- * cross-shape states fail instead of coercing. Related-resource handling and top-level document
- * members on linkage documents stay on the documents facet or an advanced path.
+ * cross-shape states fail instead of coercing. Linkage primary data rejects resource-only
+ * {@code attributes}, {@code relationships}, and {@code links} members instead of silently
+ * discarding them. Related-resource handling and top-level document members on linkage documents
+ * stay on the documents facet or an advanced path.
  */
 public interface JsonApiRelationships {
 

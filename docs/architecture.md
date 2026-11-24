@@ -101,6 +101,12 @@ module's README. [ADR-007](adr/007-module-boundaries.md) owns the module split a
 Reads are document-first. Wire JSON is decoded through public core constructors and aggregate
 validation before any application binding:
 
+For relationship-endpoint identifier primary data, the native decoder rejects resource-only
+`attributes`, `relationships`, and `links` members while consuming the original token stream.
+The explicit relationship endpoint role selects this check; other identifier reads retain their
+existing tolerance of unrecognized wire members. Core model validation cannot recover members
+that have already been discarded during decoding.
+
 ```mermaid
 flowchart LR
   JSON["Wire JSON"] --> DECODE["Adapter token decode"]

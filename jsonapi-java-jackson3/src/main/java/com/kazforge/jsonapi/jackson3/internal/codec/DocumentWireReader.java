@@ -10,6 +10,7 @@ import com.kazforge.jsonapi.core.model.Links;
 import com.kazforge.jsonapi.core.model.Meta;
 import com.kazforge.jsonapi.core.model.ResourceIdentifier;
 import com.kazforge.jsonapi.core.model.ResourceObject;
+import com.kazforge.jsonapi.core.validation.PrimaryDataContext;
 import com.kazforge.jsonapi.core.validation.LinksContext;
 import com.kazforge.jsonapi.diagnostic.CodecFailureCategory;
 import com.kazforge.jsonapi.diagnostic.JsonApiDocumentReadException;
@@ -74,6 +75,8 @@ final class DocumentWireReader {
       ValidationContext validationContext,
       JsonPointerAccumulator pointer) {
     JsonToken token = parser.currentToken();
+    boolean relationshipPrimary =
+        validationContext.primaryDataContext() == PrimaryDataContext.RELATIONSHIP;
     if (token == JsonToken.VALUE_NULL) {
       return DocumentData.NullData.INSTANCE;
     }
@@ -87,7 +90,8 @@ final class DocumentWireReader {
         }
         case RESOURCE_IDENTIFIER -> {
           ResourceIdentifier identifier =
-              ResourceWireReader.readResourceIdentifier(parser, validationContext, pointer);
+              ResourceWireReader.readResourceIdentifier(
+                   parser, validationContext, pointer, relationshipPrimary);
           yield ValidationPointers.construct(
               pointer.path(), PATH_DATA, () -> new DocumentData.SingleIdentifier(identifier));
         }
@@ -103,7 +107,8 @@ final class DocumentWireReader {
         }
         case RESOURCE_IDENTIFIER -> {
           List<ResourceIdentifier> identifiers =
-              ResourceWireReader.readResourceIdentifiers(parser, validationContext, pointer);
+              ResourceWireReader.readResourceIdentifiers(
+                   parser, validationContext, pointer, relationshipPrimary);
           yield ValidationPointers.construct(
               pointer.path(), PATH_DATA, () -> new DocumentData.IdentifierCollection(identifiers));
         }

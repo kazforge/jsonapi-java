@@ -72,13 +72,22 @@ final class ResourceWireReader {
 
   static List<ResourceIdentifier> readResourceIdentifiers(
       JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer) {
+    return readResourceIdentifiers(parser, validationContext, pointer, false);
+  }
+
+  static List<ResourceIdentifier> readResourceIdentifiers(
+      JsonParser parser,
+      ValidationContext validationContext,
+      JsonPointerAccumulator pointer,
+      boolean rejectResourceOnlyMembers) {
     WireTokens.expectToken(parser, JsonToken.START_ARRAY, pointer);
     List<ResourceIdentifier> identifiers = new ArrayList<>();
     int index = 0;
     while (parser.nextToken() != JsonToken.END_ARRAY) {
       pointer.pushIndex(index);
       pointer.capture(ReadLocations.token(parser));
-      identifiers.add(readResourceIdentifier(parser, validationContext, pointer));
+      identifiers.add(
+          readResourceIdentifier(parser, validationContext, pointer, rejectResourceOnlyMembers));
       pointer.pop();
       index++;
     }
@@ -87,7 +96,15 @@ final class ResourceWireReader {
 
   static ResourceIdentifier readResourceIdentifier(
       JsonParser parser, ValidationContext validationContext, JsonPointerAccumulator pointer) {
-    IdentifierDraft draft = new IdentifierDraft(validationContext);
+    return readResourceIdentifier(parser, validationContext, pointer, false);
+  }
+
+  static ResourceIdentifier readResourceIdentifier(
+      JsonParser parser,
+      ValidationContext validationContext,
+      JsonPointerAccumulator pointer,
+      boolean rejectResourceOnlyMembers) {
+    IdentifierDraft draft = new IdentifierDraft(validationContext, rejectResourceOnlyMembers);
     WireObjectMembers.forEachMember(
         parser,
         pointer,
@@ -252,14 +269,16 @@ final class ResourceWireReader {
 
   private static final class IdentifierDraft {
     private final ValidationContext validationContext;
+    private final boolean rejectResourceOnlyMembers;
     private @Nullable String type;
     private @Nullable String id;
     private @Nullable String lid;
     private @Nullable Meta meta;
     private final Map<String, @Nullable Object> additional = WireTokens.newNullableMap();
 
-    IdentifierDraft(ValidationContext validationContext) {
+    IdentifierDraft(ValidationContext validationContext, boolean rejectResourceOnlyMembers) {
       this.validationContext = validationContext;
+      this.rejectResourceOnlyMembers = rejectResourceOnlyMembers;
     }
 
     void readMember(String name, JsonParser parser, JsonPointerAccumulator pointer) {
@@ -268,6 +287,15 @@ final class ResourceWireReader {
         case JsonApiMembers.ID -> id = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.LID -> lid = WireTokens.readRequiredString(parser, pointer);
         case JsonApiMembers.META -> meta = WireMetaReader.readMeta(parser, pointer);
+        case JsonApiMembers.ATTRIBUTES, JsonApiMembers.RELATIONSHIPS, JsonApiMembers.LINKS -> {
+          if (rejectResourceOnlyMembers) {
+            throw new JsonApiValidationException(
+                ValidationRuleCode.PRIMARY_DATA_CONTEXT_MISMATCH,
+                pointer.path(),
+                "Relationship primary data cannot contain resource-only members");
+          }
+          WireTokens.skipValue(parser);
+        }
         default -> {
           if (IDENTIFIER_MEMBERS.contains(name)) {
             throw WireTokens.unexpected(
