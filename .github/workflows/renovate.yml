@@ -38,7 +38,7 @@ jobs:
         uses: renovatebot/github-action@7b402fe76b7bc4273576663a09be2f0f85266e2f # v47.0.0
         with:
           token: ${{ steps.app-token.outputs.token }}
-          renovate-image: ghcr.io/renovatebot/renovate:44.138.0@sha256:32027ed5e5e450f76ee372fcd6e72c8114db7fdb28c97c520515a03ea4a0d77b
+          renovate-image: ghcr.io/renovatebot/renovate:45.1.0@sha256:1438b77f8ed338e64c7a8bf53d40724fb6229690bcd3a42264158b0768ba9aba
         env:
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_ALLOWED_UNSAFE_EXECUTIONS: gradleWrapper
