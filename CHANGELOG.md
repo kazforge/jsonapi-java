@@ -5,6 +5,13 @@ Consumer-visible changes for the unified release train shared by the
 [ADR-014](docs/adr/014-unified-release-train.md); release-please maintains future
 entries. Tags are named `v<version>`.
 
+## [0.6.0](https://github.com/kazforge/jsonapi-java/compare/v0.5.1...v0.6.0) (2026-11-27)
+
+
+### Features
+
+* **api:** support typed nullable single-resource writes ([46e2f4c](https://github.com/kazforge/jsonapi-java/commit/46e2f4cdddabe1b374340f03ea4503da271a5b7e))
+
 ## [0.5.1](https://github.com/kazforge/jsonapi-java/compare/v0.5.0...v0.5.1) (2026-11-24)
 
 
