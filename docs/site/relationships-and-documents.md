@@ -153,10 +153,10 @@ on a linkage document, use `api.documents()` below.
 
 ## Preserve document state
 
-`api.resources()` binds a single resource object (`readOne`) or a resource array (`readMany`) to a
-flat Java DTO. A DTO cannot represent every valid JSON:API document—such as a response whose
-primary `data` is `null` (`GET /articles/1/author` when no author is assigned) or a metadata-only
-document where `data` is omitted.
+`api.resources()` reads bind a single resource object (`readOne`) or a resource array (`readMany`)
+to a flat Java DTO. These reads are strict: a DTO cannot represent every valid JSON:API document,
+such as a response whose primary `data` is `null` (`GET /articles/1/author` when no author is
+assigned) or a metadata-only document where `data` is omitted.
 
 `api.documents()` reads and writes the immutable core `JsonApiDocument` model so your application
 can distinguish **absent members**, **explicit `null`**, and **empty collections**:
@@ -166,6 +166,11 @@ can distinguish **absent members**, **explicit `null`**, and **empty collections
 | Absent `data` | `{"meta": {"total": 0}}` | `document.data()` is `null` (`hasDataMember()` is `false`) | `relationship.data()` is `null` (`hasDataMember()` is `false`) |
 | Explicit `null` | `{"data": null}` | `DocumentData.NullData` (`hasDataMember()` is `true`) | `RelationshipData.NullLinkage` |
 | Empty collection | `{"data": []}` | `DocumentData.ResourceCollection(List.of())` or `DocumentData.IdentifierCollection(List.of())` | `RelationshipData.IdentifierCollectionLinkage.empty()` |
+
+`api.documents()` reads and writes these document states directly. On writes, an ordinary
+single-resource response does not need a raw document merely to emit explicit-null primary `data`:
+[`writeNullableOne`](resources.md#write-an-absent-resource) keeps that response in the typed resource
+pipeline. Relationship-linkage documents still use `api.relationships()`.
 
 Suppose an endpoint returns `responseBody` containing explicit-null primary `data`:
 

@@ -95,7 +95,39 @@ A client reads that response with `readOne`:
 Article saved = api.resources().readOne(responseJson, Article.class);
 ```
 
-`saved.id()` is `"1"`. Both response reads and response writes require the resource's `id`.
+`saved.id()` is `"1"`. `writeOne` and `readOne` require an identified resource object. When a
+response may be absent, use `writeNullableOne` below to preserve explicit-null primary `data`.
+
+### Write an absent resource
+
+Use `writeNullableOne` when a single-resource response may be absent. The complete declared Java
+type is mandatory, even when the value is `null`:
+
+```java
+String absentJson = api.resources().writeNullableOne(null, Article.class);
+```
+
+The response keeps a present `data` member with an explicit JSON `null` value:
+
+```json
+{
+  "data": null
+}
+```
+
+A present value must be assignable to the declared type and uses the ordinary typed write path.
+For parameterized DTOs, pass the full parameterized `Type` so generic information is retained. The
+declared type also selects the JSON:API resource type and validates sparse fieldsets and include
+paths for an absent value.
+
+[`ResourceWriteOptions`](#top-level-state) behave the same as for `writeOne`. An explicit include
+request emits `"included": []` when no resource is written; omitting the include request leaves
+`included` absent. The stream overloads leave the caller's stream open.
+
+`writeNullableOne` never coerces `null` into absent `data`, an empty collection, or a linkage
+document. Strict reads still reject explicit-null primary data; use
+[documents](relationships-and-documents.md#preserve-document-state) for read-side states a DTO
+cannot represent.
 
 ### Author a create document
 
@@ -293,8 +325,11 @@ List<Article> listed = api.resources().readMany(collectionJson, Article.class);
 and reads back as an empty list.
 
 `readOne` requires one resource object; `readMany` requires a resource array, including `[]`.
-Neither coerces null, absent `data`, linkage documents, or errors into a DTO or an empty list.
-For those states, use [documents](relationships-and-documents.md#preserve-document-state).
+On read, neither coerces null, absent `data`, linkage documents, or errors into a DTO or an empty
+list. For those read states, use
+[documents](relationships-and-documents.md#preserve-document-state). For a write that intentionally
+represents an absent resource, use [`writeNullableOne`](#write-an-absent-resource) instead of a raw
+document.
 
 ## Top-level state
 
@@ -331,6 +366,8 @@ This adds a top-level `meta` object to the resource document:
   }
 }
 ```
+
+The same options apply to `writeNullableOne` when the resource is absent.
 
 Read the DTO and document-level state together:
 

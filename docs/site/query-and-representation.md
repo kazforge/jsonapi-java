@@ -146,7 +146,7 @@ Compare this with the default write in
   the `Person` instance (`ada`) that your application supplied on `article`.
 
 Inclusion never fetches related objects automatically; your application loads permitted objects
-before calling `writeOne`.
+before calling `writeOne` or `writeNullableOne`.
 
 When reading that compound document back with `readOneDocument`, the primary DTO and `included`
 resources stay separate:
