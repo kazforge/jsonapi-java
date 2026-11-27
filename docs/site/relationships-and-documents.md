@@ -143,6 +143,11 @@ List<ResourceIdentifier> noAuthors = api.relationships().readToMany(emptyAuthors
 
 `readToOne` and `readToMany` enforce cardinality rather than converting across shapes: `readToOne`
 rejects `"data": []`, and `readToMany` rejects `"data": null` or a single identifier object.
+Both reject `attributes`, `relationships`, and `links` on a primary identifier. For example, a
+second identifier with `"links": {}` fails with `PRIMARY_DATA_CONTEXT_MISMATCH` at `/data/1/links`.
+The same rule applies to `api.documents().read(...)` with identifier decoding and the `RELATIONSHIP`
+endpoint role.
+
 `api.relationships()` reads and writes data-only linkage documents; for top-level `links` or `meta`
 on a linkage document, use `api.documents()` below.
 
