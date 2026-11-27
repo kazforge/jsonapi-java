@@ -36,6 +36,7 @@ import tools.jackson.databind.json.JsonMapper;
 final class Jackson3JsonApiResources implements JsonApiResources {
 
   private static final String RESOURCE = "resource";
+  private static final String RESOURCE_TYPE = "resourceType";
   private static final String OPTIONS = "options";
 
   private final JsonMapper baseMapper;
@@ -240,6 +241,26 @@ final class Jackson3JsonApiResources implements JsonApiResources {
   }
 
   @Override
+  public String writeNullableOne(
+      @Nullable Object resource, Type resourceType, ResourceWriteOptions options) {
+    Objects.requireNonNull(resourceType, RESOURCE_TYPE);
+    Objects.requireNonNull(options, OPTIONS);
+    return responseWriter.writeValueAsString(mappedNullableSingle(resource, resourceType, options));
+  }
+
+  @Override
+  public void writeNullableOne(
+      @Nullable Object resource,
+      Type resourceType,
+      ResourceWriteOptions options,
+      OutputStream out) {
+    Objects.requireNonNull(resourceType, RESOURCE_TYPE);
+    Objects.requireNonNull(options, OPTIONS);
+    Objects.requireNonNull(out, "out");
+    responseWriter.writeValue(out, mappedNullableSingle(resource, resourceType, options));
+  }
+
+  @Override
   public String writeMany(Iterable<?> resources) {
     return writeMany(resources, ResourceWriteOptions.defaults());
   }
@@ -369,6 +390,16 @@ final class Jackson3JsonApiResources implements JsonApiResources {
   private MappedDocument mappedSingle(Object resource, ResourceWriteOptions options) {
     return resourceMapper.toMappedDocument(
         resource, effectiveEnvelope(options), options.selection(), representationPolicy);
+  }
+
+  private MappedDocument mappedNullableSingle(
+      @Nullable Object resource, Type resourceType, ResourceWriteOptions options) {
+    return resourceMapper.toMappedNullableDocument(
+        resource,
+        baseMapper.constructType(resourceType),
+        effectiveEnvelope(options),
+        options.selection(),
+        representationPolicy);
   }
 
   private MappedDocument mappedCreate(Object resource, ResourceWriteOptions options) {

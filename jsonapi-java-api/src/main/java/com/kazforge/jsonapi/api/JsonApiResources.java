@@ -166,6 +166,63 @@ public interface JsonApiResources {
   /** Writes one resource with the given options to the given stream. The stream is not closed. */
   void writeOne(Object resource, ResourceWriteOptions options, OutputStream out);
 
+  /**
+   * Writes one optional resource with default options and returns the JSON document.
+   *
+   * <p>A null {@code resource} emits explicit {@code "data": null}; it never omits {@code data} or
+   * coerces the result to another shape. {@code resourceType} is mandatory and denotes the complete
+   * declared Java resource type, including generic arguments, even when {@code resource} is null. A
+   * present resource must be assignable to that type and is written through the ordinary typed
+   * document path.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support nullable writes
+   */
+  default String writeNullableOne(@Nullable Object resource, Type resourceType) {
+    return writeNullableOne(resource, resourceType, ResourceWriteOptions.defaults());
+  }
+
+  /**
+   * Writes one optional resource with the given options and returns the JSON document.
+   *
+   * <p>Envelope, inclusion, and sparse-fieldset semantics match {@link #writeOne(Object,
+   * ResourceWriteOptions)}. An explicit include request produces {@code "included": []} when the
+   * resource is absent, while an omitted include request leaves {@code included} absent. Fieldset
+   * entries and include paths are validated against the declared primary type even when the
+   * resource is null.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support nullable writes
+   */
+  default String writeNullableOne(
+      @Nullable Object resource, Type resourceType, ResourceWriteOptions options) {
+    throw new UnsupportedOperationException(
+        "Typed nullable single-resource writes are not supported");
+  }
+
+  /**
+   * Writes one optional resource with default options to the given stream. The stream is not
+   * closed.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support nullable writes
+   */
+  default void writeNullableOne(@Nullable Object resource, Type resourceType, OutputStream out) {
+    writeNullableOne(resource, resourceType, ResourceWriteOptions.defaults(), out);
+  }
+
+  /**
+   * Writes one optional resource with the given options to the given stream. The stream is not
+   * closed.
+   *
+   * @throws UnsupportedOperationException when this implementation does not support nullable writes
+   */
+  default void writeNullableOne(
+      @Nullable Object resource,
+      Type resourceType,
+      ResourceWriteOptions options,
+      OutputStream out) {
+    throw new UnsupportedOperationException(
+        "Typed nullable single-resource writes are not supported");
+  }
+
   /** Writes a resource collection with default options and returns the JSON document. */
   String writeMany(Iterable<?> resources);
 

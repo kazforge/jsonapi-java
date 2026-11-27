@@ -69,7 +69,17 @@ final class BasicResourceWriter<T, P> {
   public void validateFieldset(
       Object resource, T declaredType, List<String> fields, FieldPolicy fieldPolicy) {
     Objects.requireNonNull(resource, RESOURCE);
+    validateFieldset(declaredType, resource.getClass(), fields, fieldPolicy);
+  }
+
+  /**
+   * Validates a present fieldset against the mapped write definition without requiring a resource
+   * instance, reporting the given owner class in diagnostics.
+   */
+  public void validateFieldset(
+      T declaredType, Class<?> ownerClass, List<String> fields, FieldPolicy fieldPolicy) {
     Objects.requireNonNull(declaredType, DECLARED_TYPE);
+    Objects.requireNonNull(ownerClass, "ownerClass");
     Objects.requireNonNull(fields, "fields");
     Objects.requireNonNull(fieldPolicy, "fieldPolicy");
     if (fields.isEmpty()) {
@@ -85,13 +95,13 @@ final class BasicResourceWriter<T, P> {
         // name stays in the message per the mapping-location contract.
         throw JsonApiMappingException.withoutLocation(
             MappingDiagnostic.INVALID_FIELDSET_FIELD,
-            resource.getClass(),
+            ownerClass,
             "Unknown fieldset field '" + name + "' on " + definition.resourceType());
       }
       if (!fieldPolicy.allows(definition.resourceType(), name)) {
         throw JsonApiMappingException.withoutLocation(
             MappingDiagnostic.DENIED_FIELDSET_FIELD,
-            resource.getClass(),
+            ownerClass,
             "Fieldset field denied for " + definition.resourceType() + "." + name);
       }
     }

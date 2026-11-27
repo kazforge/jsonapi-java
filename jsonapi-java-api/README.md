@@ -30,6 +30,12 @@ major-specific readers, writers, mapping/binding, parameterized Jackson types, a
 typed envelopes remain adapter capabilities. [ADR-012](../docs/adr/012-level-one-application-api-contract.md)
 owns that split.
 
+Single-resource writes additionally offer `writeNullableOne`: a null resource emits explicit
+`data: null`, and the mandatory declared `Type` keeps complete generic type information and governs
+present-value assignability, include-path validation, and primary sparse-fieldset validation. A
+present resource uses the ordinary typed write path. The new methods default to explicit unsupported
+behavior for existing custom implementations.
+
 Create and typed PATCH binding additionally offer `readCreateWithSources`, `readPatchWithSources`,
 and non-revalidating `bindPatchWithSources` on the existing facets. They return
 [`BoundResource<T>`](src/main/java/com/kazforge/jsonapi/mapping/BoundResource.java): the DTO plus

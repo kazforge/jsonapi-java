@@ -10,6 +10,8 @@ import com.kazforge.jsonapi.document.DocumentReadContext
 import com.kazforge.jsonapi.representation.RepresentationSelection
 import spock.lang.Specification
 
+import java.lang.reflect.Type
+
 class LevelOneApiContractSpec extends Specification {
 
   def "write options defaults compose empty envelope and empty selection"() {
@@ -172,6 +174,7 @@ class LevelOneApiContractSpec extends Specification {
     JsonApiResources.getMethod("readOneDocument", String, Class) != null
     JsonApiResources.getMethod("readManyDocument", String, Class) != null
     JsonApiResources.getMethod("writeOne", Object, ResourceWriteOptions) != null
+    JsonApiResources.getMethod("writeNullableOne", Object, Type, ResourceWriteOptions) != null
     JsonApiResources.getMethod("writeMany", Iterable, ResourceWriteOptions) != null
     JsonApiResources.getMethod("writeCreateDocument", Object, ResourceWriteOptions) != null
     JsonApiResources.getMethod("writeUpdateDocument", Object, EndpointIdentity, ResourceWriteOptions) != null
@@ -184,6 +187,15 @@ class LevelOneApiContractSpec extends Specification {
     JsonApiPatches.getMethod("readCommand", String, Class) != null
     JsonApiPatches.getMethod("bindPatch", com.kazforge.jsonapi.core.model.JsonApiDocument, Class) != null
     JsonApiPatches.getMethod("bindCommand", com.kazforge.jsonapi.core.model.JsonApiDocument, Class) != null
+  }
+
+  def "nullable single-resource writes are additive defaults for custom implementations"() {
+    expect:
+    JsonApiResources.getMethod("writeNullableOne", Object, Type).isDefault()
+    JsonApiResources.getMethod("writeNullableOne", Object, Type, ResourceWriteOptions).isDefault()
+    JsonApiResources.getMethod("writeNullableOne", Object, Type, OutputStream).isDefault()
+    JsonApiResources.getMethod(
+        "writeNullableOne", Object, Type, ResourceWriteOptions, OutputStream).isDefault()
   }
 
   def "neutrality scan flags forbidden packages anywhere in a rendered signature"() {
