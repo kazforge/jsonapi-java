@@ -146,7 +146,7 @@ Compare this with the default write in
   the `Person` instance (`ada`) that your application supplied on `article`.
 
 Inclusion never fetches related objects automatically; your application loads permitted objects
-before calling `writeOne`.
+before calling `writeOne` or `writeNullableOne`.
 
 When reading that compound document back with `readOneDocument`, the primary DTO and `included`
 resources stay separate:
@@ -311,7 +311,7 @@ See [query attribution](diagnostics.md#query-parameters) for decoded parameter n
 selective use of `source.parameter`.
 
 <!-- x-release-please-start-version -->
-See [`JsonApiQueryParser`](https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.5.1/com/kazforge/jsonapi/query/JsonApiQueryParser.html)
-and [`RepresentationPolicy`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.5.1/com/kazforge/jsonapi/representation/RepresentationPolicy.html)
+See [`JsonApiQueryParser`](https://www.javadocs.dev/com.kazforge/jsonapi-java-query/0.6.0/com/kazforge/jsonapi/query/JsonApiQueryParser.html)
+and [`RepresentationPolicy`](https://www.javadocs.dev/com.kazforge/jsonapi-java-api/0.6.0/com/kazforge/jsonapi/representation/RepresentationPolicy.html)
 for exact parsing and policy contracts.
 <!-- x-release-please-end -->
