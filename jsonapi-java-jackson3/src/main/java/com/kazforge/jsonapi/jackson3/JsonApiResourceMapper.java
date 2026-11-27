@@ -169,7 +169,41 @@ public final class JsonApiResourceMapper {
       RepresentationPolicy policy) {
     Objects.requireNonNull(resource, RESOURCE);
     Objects.requireNonNull(resourceType, RESOURCE_TYPE);
+    return toMappedDocument(
+        resource, resourceType, envelope, effectiveRepresentation(selection, policy));
+  }
+
+  /**
+   * Maps an optional domain object using a complete declared type. A present resource uses the
+   * ordinary typed mapped-document path. An absent resource emits explicit {@link
+   * DocumentData.NullData} while the declared type still governs primary fieldset validation and
+   * include-path validation, without a resource instance.
+   */
+  MappedDocument toMappedNullableDocument(
+      @Nullable Object resource,
+      JavaType resourceType,
+      @Nullable DocumentEnvelope envelope,
+      RepresentationSelection selection,
+      RepresentationPolicy policy) {
+    Objects.requireNonNull(resourceType, RESOURCE_TYPE);
     EffectiveRepresentation representation = effectiveRepresentation(selection, policy);
+    if (resource != null) {
+      return toMappedDocument(resource, resourceType, envelope, representation);
+    }
+    writer.validateAbsentResource(resourceType, representation);
+    IncludedResourcesResult includedResult =
+        inclusionEngine.collectIncluded(
+            List.of(), List.of(), List.of(), resourceType, representation);
+    JsonApiDocument document =
+        buildDocument(DocumentData.NullData.INSTANCE, envelope, includedResult.included());
+    return new MappedDocument(document, includedResult.sparseFieldsetLinkageExemptions());
+  }
+
+  private MappedDocument toMappedDocument(
+      Object resource,
+      JavaType resourceType,
+      @Nullable DocumentEnvelope envelope,
+      EffectiveRepresentation representation) {
     List<Object> snapshot = List.of(resource);
     ResourceObject resourceObject = writer.toResource(resource, resourceType, representation);
     List<ResourceObject> primary = List.of(resourceObject);

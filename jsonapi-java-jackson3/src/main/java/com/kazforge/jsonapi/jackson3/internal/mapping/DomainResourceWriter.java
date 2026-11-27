@@ -92,6 +92,23 @@ public final class DomainResourceWriter implements WriteResourceBackend<JavaType
   }
 
   /**
+   * Validates the declared primary write definition and any present fieldset for an absent
+   * resource. Resolving the declared mapping rejects unknown or non-resource types; no property is
+   * read and no decorator is invoked.
+   */
+  public void validateAbsentResource(
+      JavaType declaredType, EffectiveRepresentation representation) {
+    Objects.requireNonNull(declaredType, DECLARED_TYPE);
+    Objects.requireNonNull(representation, REPRESENTATION);
+    ResourceMapping mapping = mappingFor(declaredType);
+    List<String> fields = representation.fieldsFor(mapping.resourceType());
+    if (fields != null) {
+      basicWriter.validateFieldset(
+          declaredType, declaredType.getRawClass(), fields, representation.policy().fieldPolicy());
+    }
+  }
+
+  /**
    * Selective create-request emission mirroring {@link #toResourceSelective} except for primary
    * identity: when both identity roles yield nothing, the resource maps with absent {@code id} and
    * {@code lid} instead of failing, leaving that leniency to core {@code CREATE_REQUEST}
